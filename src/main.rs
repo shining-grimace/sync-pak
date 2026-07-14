@@ -1,3 +1,3 @@
-fn main() {
-    println!("Hello, world!");
+fn main() -> Result<(), slint::PlatformError> {
+    sync_pak::run()
 }

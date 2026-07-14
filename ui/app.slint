@@ -1,0 +1,94 @@
+import { Button, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    title: "SyncPak";
+    preferred-width: 900px;
+    preferred-height: 620px;
+    min-width: 360px;
+    min-height: 520px;
+    background: #f7f2e8;
+
+    VerticalBox {
+        padding: 36px;
+        spacing: 28px;
+
+        HorizontalBox {
+            alignment: start;
+
+            Text {
+                text: "SYNCPAK";
+                color: #2c2925;
+                font-size: 17px;
+                font-weight: 800;
+                letter-spacing: 2px;
+            }
+        }
+
+        VerticalBox {
+            spacing: 14px;
+            alignment: center;
+
+            Text {
+                text: "Your files, your cloud.";
+                color: #171512;
+                font-size: 36px;
+                font-weight: 800;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            Text {
+                text: "SyncPak copies folders directly between this device and a cloud provider you choose. SyncPak does not operate an intermediary file service.";
+                color: #454039;
+                font-size: 18px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                max-width: 660px;
+            }
+
+            Rectangle {
+                height: 16px;
+                background: transparent;
+            }
+
+            Rectangle {
+                background: #fffaf0;
+                border-color: #2c2925;
+                border-width: 2px;
+                border-radius: 12px;
+                max-width: 660px;
+                min-height: 92px;
+
+                Text {
+                    text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider.";
+                    color: #2c2925;
+                    font-size: 16px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    wrap: word-wrap;
+                    x: 24px;
+                    width: parent.width - 48px;
+                    height: parent.height;
+                }
+            }
+
+            Rectangle {
+                height: 16px;
+                background: transparent;
+            }
+
+            Button {
+                text: "Add your first provider";
+                primary: true;
+                min-width: 260px;
+            }
+
+            Button {
+                text: "Read how SyncPak protects your privacy";
+                min-width: 320px;
+            }
+        }
+
+        Rectangle { vertical-stretch: 1; }
+    }
+}

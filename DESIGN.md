@@ -6,9 +6,12 @@ This app, with stylised name "SyncPak", is a GUI tool for synchronising local di
 Vision: Create a free-to-use, no-nonsense, privacy-focused tool that's configured once and then syncs directories between places effortlessly.
 
 Target OSs (all supported in first release):
-- Linux
-- Android
-- Windows
+- Linux distributions which still receive vendor security updates and can run the current
+  Flathub runtime, using Wayland or X11. Ubuntu 22.04 LTS and newer are the baseline for
+  Snap testing; the current Ubuntu LTS and current Fedora release are tested for every
+  release.
+- Android 11 and newer (API level 30+, ARM64 only)
+- Windows 10 and newer
 
 Supported cloud providers:
 - Cloudflare R2 (using the S3-compatible API under the hood)
@@ -50,16 +53,20 @@ Language and Accessibility:
 - Full Unicode (UTF-8) support should be throughout (and attempting to use a path not supported by UTF-8 should fail)
 
 Storage model:
-- Most settings and configurations should be stored in a single JSON file (use `serde_json` when working with it)
+- All non-secret settings, provider metadata, and sync connection configurations should be
+  stored in a single JSON file (use `serde_json` when working with it)
 - The config file should be stored according to XDG standards on Linux, or app-specific directories on Android, and whatever the best practice is on Windows
-- Secure credentials (cloud provider credentials config, as JSON) should be stored in a platform-backed credential facility
+- Secret provider credentials, represented as a separate JSON document, should be stored
+  only in a platform-backed credential facility
 
 ## Credential Management
 
-The ordinary configuration file stores a stable provider ID, a user-visible provider
-name, and the provider type, but no access keys, secret keys, session tokens, or other
-secret values. The provider ID is used to retrieve the corresponding credential JSON
-from platform-backed secure storage:
+The ordinary configuration file stores non-secret provider metadata: an immutable provider
+ID, a user-visible provider name, the provider type, and any non-secret provider options.
+It contains no access keys, secret keys, session tokens, or other secret values. The
+provider ID is generated once when the provider is created, is never changed or reused,
+and is used as the reference for retrieving the separate credential JSON from
+platform-backed secure storage:
 
 - Linux uses a Secret Service-compatible keyring available within the Snap or Flatpak
   sandbox.
@@ -112,7 +119,7 @@ Connections are displayed as responsive cards. Each card uses a simple endpoint 
 the local folder on one side, a directional arrow in the middle, and the provider, bucket,
 and remote path on the other. Archive cards instead use an archive-box symbol and show the
 retention value. The connection name is the primary heading, followed by a text mode badge
-(`Read-only`, `Mirror`, or `Archive`) and any current queue status.
+(`Add-only`, `Mirror`, or `Archive`) and any current queue status.
 
 Long paths use middle truncation visually while exposing the complete value through an
 accessible label and a copy action. Mode, direction, and status must never be communicated
@@ -127,8 +134,13 @@ A section of the app is dedicated to listing, adding, editing, verifying, and de
 
 Provider config should:
 - Focus on important, required fields and hide advanced fields which would rarely get used
+- Have an immutable provider ID generated when the config is first created. Editing or
+  recreating its credentials must not change that ID, and a deleted ID must not be reused.
 
-Provider configs are stored in secure platform-managed storage.
+The provider config's non-secret metadata is stored in the ordinary JSON configuration
+file. Only its separate credential JSON is stored in secure platform-managed storage,
+keyed by the immutable provider ID. The ordinary configuration must never contain secret
+credential values.
 
 If a provider is edited, nothing should be done to change the associated sync connections automatically. Trying to delete a provider should ask the user for confirmation, and list which sync connections are associated with the provider, noting that they'll be deleted as well.
 
@@ -137,10 +149,12 @@ If a provider is edited, nothing should be done to change the associated sync co
 A section of the app is dedicated to listing, adding, editing, running, and deleting sync connections. Sync operations are run manually from a GUI; there will be no scheduling feature.
 
 A sync connection config stores:
+- An immutable connection ID generated when the connection is first created. Editing the
+  connection must not change that ID, and a deleted ID must not be reused.
 - A user-friendly name
-- A remote provider paired with a directory path
+- The immutable provider ID for the remote provider, paired with a directory path
 - A local directory path
-- Mode: read-only, mirror (stateless), or archive
+- Mode: add-only, mirror (stateless), or archive
 - (For archives only) Keep last N archives for this connection (defaults to 1, required to be at least 1)
 - The remote provider bucket name (if possible, let the user select it from a list, but allow that the fetching of the list of buckets might be forbidden using the provided credentials, so use free-text input when the select method is unusable)
 
@@ -150,7 +164,7 @@ When sync operations are run, missing directories will be created as needed in t
 
 Connection configs are allowed to overlap (share the same providers, remote paths, or local paths).
 
-Read-only mode copies new files from source to destination without overwriting or deleting
+Add-only mode copies new files from source to destination without overwriting or deleting
 anything. It can run as upload, download, or additive both ways. In both-ways mode, paths
 which exist on only one side are copied to the other side; paths which differ are skipped
 with warnings. Files which exist only at the destination are not noteworthy.
@@ -170,7 +184,7 @@ modification time as a local file time or remote object metadata where the desti
 supports it.
 
 If either modification time is unavailable, files of the same size are treated as changed
-rather than assumed equal. Read-only mode skips such files with a warning, while mirror
+rather than assumed equal. Add-only mode skips such files with a warning, while mirror
 mode includes them in the overwrite preview. For symlinks, the link target text is compared
 directly. Directory metadata and permissions are compared separately and handled on a
 best-effort basis.
@@ -197,9 +211,12 @@ boundary as needed to keep the complete filename within 200 UTF-8 bytes. ZIP ent
 are stored with the ZIP UTF-8 flag. A non-UTF-8 source path is a fatal preflight error and
 must never be converted lossily.
 
-Archive zips are only deleted as per settings after one has successfully saved. The keep-last-N policy applies to both local and remote archives.
+Archive zips are only deleted as per settings after one has successfully saved. The
+keep-last-N policy applies to both local and remote archives. Archives must be associated
+with the immutable connection ID, independently of the editable connection name, so that
+retention remains safe and correct after a connection is renamed.
 
-To initiate a sync, the user chooses the direction: upload, download, or both ways. Both ways is only available for read-only mode connections.
+To initiate a sync, the user chooses the direction: upload, download, or both ways. Both ways is only available for add-only mode connections.
 
 The sync operation occurs while a modal UI is shown; this has a loading indicator as needed, and will list files that are done or in progress, leaving the UI shown at the end so the user can browse the list of affected files before dismissing the modal.
 
@@ -269,13 +286,13 @@ snackbar and, on Android, the system notification.
 ## Welcome
 
 Shown on first use. It explains the local-to-provider model, credential storage, Android
-advertising disclosure where applicable, and the difference between read-only, mirror,
+advertising disclosure where applicable, and the difference between add-only, mirror,
 and archive modes. Its primary action creates a provider; a secondary action opens Privacy
 & About. It should not request permissions before explaining them.
 
 ## Connections List
 
-Displays the responsive connection cards described above, with filters for All, Read-only,
+Displays the responsive connection cards described above, with filters for All, Add-only,
 Mirror, and Archive. The empty state guides the user to add a provider first or create a
 connection when a provider exists. Run opens the direction dialog; Edit opens the
 connection form; Delete opens a confirmation dialog. Queued and running connections open
@@ -312,7 +329,7 @@ files will not be touched. The destructive action repeats the provider name.
 
 ## Run Direction
 
-Shows Upload and Download for every mode, plus Both ways only for read-only mode. Each
+Shows Upload and Download for every mode, plus Both ways only for add-only mode. Each
 choice depicts source and destination explicitly. For archive mode it also shows the
 resulting ZIP destination and retention policy. Continue starts inventory and preflight;
 it does not yet modify files.
@@ -320,7 +337,7 @@ it does not yet modify files.
 ## Preflight and Mirror Confirmation
 
 Shows inventory progress followed by a categorized plan. Fatal issues prevent
-starting. Read-only and archive operations can start when preflight succeeds. Mirror plans
+starting. Add-only and archive operations can start when preflight succeeds. Mirror plans
 separately list additions, overwrites, and deletions with counts, sizes, expandable paths,
 and a required confirmation checkbox. If there are no destructive actions, the mirror can
 start without the destructive confirmation.
@@ -380,8 +397,9 @@ plain-language message.
 - Credential note: `Your provider credentials are protected using this device's secure
   storage and are sent only to that provider.`
 - Modes heading: `Choose how each connection behaves`
-- Read-only summary: `Copy new files without overwriting or deleting anything.`
-- Mirror summary: `Make a destination match its source after previewing destructive changes.`
+- Add-only summary: `Copy new files without overwriting or deleting anything.`
+- Mirror summary: `Attempt to make a destination match its source after previewing
+  destructive changes. Any issues are listed when the operation finishes.`
 - Archive summary: `Create timestamped ZIP archives and keep the number you choose.`
 - Primary action: `Add your first provider`
 - Secondary action: `Read how SyncPak protects your privacy`
@@ -397,7 +415,7 @@ plain-language message.
 - Empty body without providers: `Add a cloud provider, then create a connection to choose
   what to copy.`
 - Empty body with providers: `Create a connection to link a local folder with cloud storage.`
-- Filters: `All`, `Read-only`, `Mirror`, `Archive`
+- Filters: `All`, `Add-only`, `Mirror`, `Archive`
 - Card endpoint labels: `On this device`, `In {provider}`
 - Archive retention: `Keeps the last {count} archives`
 - Active action: `View activity`
@@ -416,10 +434,11 @@ plain-language message.
 - Remote help: `Leave empty to use the root of the bucket.`
 - Retention help: `After a new archive is saved successfully, older archives made by this
   connection are deleted until this many remain.`
-- Read-only description: `Copies files that exist only at the source. Existing changed
+- Add-only description: `Copies files that exist only at the source. Existing changed
   files are skipped, and nothing is overwritten or deleted.`
-- Mirror description: `Makes the destination an exact copy of the source. Overwrites and
-  deletions are always shown for confirmation before the run starts.`
+- Mirror description: `Attempts to make the destination match the source. Overwrites and
+  deletions are always shown for confirmation before the run starts. Any files or metadata
+  that could not be matched are listed when the operation finishes.`
 - Archive description: `Creates a timestamped ZIP from the source and stores it at the
   destination. Older archives are removed according to this connection's retention setting.`
 - Bucket loading: `Loading buckets…`
@@ -481,8 +500,8 @@ plain-language message.
 - Fatal heading: `This operation cannot start`
 - Fatal body: `Resolve the issues below, then run the connection again. No files were changed.`
 - Mirror title: `Review mirror changes`
-- Mirror warning: `The destination will be made to match the source. Review every overwrite
-  and deletion before continuing.`
+- Mirror warning: `SyncPak will attempt to make the destination match the source. Review
+  every overwrite and deletion before continuing. Any issues will be listed in the result.`
 - Mirror checkbox: `I understand that the listed destination files will be overwritten or deleted.`
 - Counts: `{additions} new`, `{overwrites} overwrites`, `{deletions} deletions`, `{skipped} skipped`
 - Start actions: `Start upload`, `Start download`, `Create archive`, `Start mirror`
@@ -581,8 +600,8 @@ using its intended packaging/security model.
 ## 2. Domain and Persistence Foundation
 
 - Define versioned, serializable provider metadata and connection configurations.
-- Implement atomic JSON writes, schema migration, validation, stable IDs, and secure-secret
-  references.
+- Implement atomic JSON writes, schema migration, validation, immutable provider and
+  connection IDs, and secure-secret references.
 - Separate small modules for configuration, credential storage, filesystem access, provider
   capabilities, comparison/planning, execution, queueing, and UI models. Keep each focused
   on one responsibility and normally below 200 lines of code.
@@ -606,7 +625,7 @@ Exit criterion: all providers pass the same supported-capability behavior suite.
 - Implement case-sensitive relative-path inventory, UTF-8/case collision preflight, hidden
   files, empty directories, symlinks, and best-effort metadata discovery.
 - Implement type, size, and normalized modification-time comparison.
-- Produce immutable operation plans for read-only, mirror, and archive directions without
+- Produce immutable operation plans for add-only, mirror, and archive directions without
   changing either endpoint.
 - Test large trees, Unicode, timestamp precision differences, missing timestamps, overlapping paths,
   and platform-specific filesystem behavior.
@@ -617,7 +636,7 @@ Exit criterion: golden tests demonstrate every source/destination state produces
 
 - Implement temporary local downloads, provider-confirmed uploads, multipart cleanup, bounded retries,
   cancellation, progress events, and copy-before-delete ordering.
-- Deliver read-only upload, download, and additive both-ways operation first.
+- Deliver add-only upload, download, and additive both-ways operation first.
 - Add stateless mirror with plan invalidation and destructive confirmation requirements.
 - Add archive creation in both directions, portable naming, temporary-file cleanup, and
   keep-last-N pruning.

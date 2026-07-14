@@ -2,5 +2,19 @@
 name = "sync-pak"
 version = "0.1.0"
 edition = "2024"
+build = "build.rs"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+slint = { version = "=1.17.1", default-features = false, features = ["accessibility", "compat-1-2", "std"] }
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+slint = { version = "=1.17.1", default-features = false, features = ["backend-winit", "renderer-femtovg"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+slint = { version = "=1.17.1", default-features = false, features = ["backend-android-activity-06", "renderer-femtovg"] }
+
+[build-dependencies]
+slint-build = "=1.17.1"
