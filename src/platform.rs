@@ -3,7 +3,8 @@ use std::sync::Arc;
 use keyring_core::{CredentialStore, Entry};
 
 use crate::capabilities::{
-    CapabilityError, FolderPicker, FolderPickerCompletion, ProtectedCredentialStore,
+    BackgroundExecution, CapabilityError, FolderPicker, FolderPickerCompletion,
+    ProtectedCredentialStore,
 };
 
 const SERVICE_NAME: &str = "com.shininggrimace.syncpak.providers";
@@ -54,6 +55,18 @@ impl FolderPicker for PlatformFolderPicker {
     }
 }
 
+pub struct PlatformBackgroundExecution;
+
+impl BackgroundExecution for PlatformBackgroundExecution {
+    fn start(&self, connection_name: &str) -> Result<(), CapabilityError> {
+        start_background_execution(connection_name)
+    }
+
+    fn stop(&self) -> Result<(), CapabilityError> {
+        stop_background_execution()
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn platform_credential_store() -> keyring_core::Result<Arc<CredentialStore>> {
     zbus_secret_service_keyring_store::Store::new().map(|store| store as Arc<CredentialStore>)
@@ -82,6 +95,26 @@ fn pick_folder(completion: FolderPickerCompletion) -> Result<(), CapabilityError
 #[cfg(target_os = "android")]
 fn pick_folder(completion: FolderPickerCompletion) -> Result<(), CapabilityError> {
     crate::android_folder_picker::pick_folder(completion)
+}
+
+#[cfg(target_os = "android")]
+fn start_background_execution(connection_name: &str) -> Result<(), CapabilityError> {
+    crate::android_foreground_execution::start(connection_name)
+}
+
+#[cfg(target_os = "android")]
+fn stop_background_execution() -> Result<(), CapabilityError> {
+    crate::android_foreground_execution::stop()
+}
+
+#[cfg(not(target_os = "android"))]
+fn start_background_execution(_: &str) -> Result<(), CapabilityError> {
+    Err(CapabilityError::Unsupported)
+}
+
+#[cfg(not(target_os = "android"))]
+fn stop_background_execution() -> Result<(), CapabilityError> {
+    Err(CapabilityError::Unsupported)
 }
 
 fn map_keyring_error(error: keyring_core::Error) -> CapabilityError {

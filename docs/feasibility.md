@@ -13,11 +13,11 @@ release.
 
 | Capability | Linux | Android | Windows |
 | --- | --- | --- | --- |
-| Minimal Slint application | Local build scaffolded | ARM64 debug APK assembled locally with SDK 36.1 and NDK 30; CI configured | Cross-build scaffolded |
-| Intended package | Not started (Snap/Flatpak) | Debug APK assembled and its package metadata validated; device run and release AAB pending | Not started (MSIX) |
-| File/folder picker | Portal-backed adapter implemented; packaged probe pending | Storage Access Framework bridge implemented; device run pending | Native adapter implemented; packaged probe pending |
+| Minimal Slint application | Local build scaffolded | ARM64 debug APK assembled locally with SDK 36.1 and NDK 30; physical-device run accepted | Cross-build scaffolded |
+| Intended package | Not started (Snap/Flatpak) | Debug APK assembled, validated, and accepted on a physical device; release AAB pending | Not started (MSIX) |
+| File/folder picker | Portal-backed adapter implemented; packaged probe pending | Storage Access Framework bridge accepted on a physical device | Native adapter implemented; packaged probe pending |
 | Protected credential storage | Secret Service adapter and test-only probe implemented; packaged run pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
-| Background execution | Not applicable | Not started | Not applicable |
+| Background execution | Not applicable | `dataSync` foreground-service probe packaged; physical-device run pending | Not applicable |
 | Desktop notification | Adapter and developer-only probe implemented; packaged run pending | Not applicable | Toast adapter and developer-only probe implemented; MSIX run pending |
 | Sandbox filesystem access | Not started | Not started | Not started |
 
@@ -29,8 +29,8 @@ behavior.
 On 2026-07-15, both the normal and feasibility-probe debug APKs were assembled
 locally with Android SDK 36.1 and NDK 30.0.15729638 (beta 2). The resulting APK
 was checked for its debug signature, ARM64-only native contents, minimum and
-target SDK metadata, and 16 KiB page alignment. Execution and persisted-grant
-verification on a physical device remain pending.
+target SDK metadata, and 16 KiB page alignment. On 2026-07-15, the physical-device
+run and Storage Access Framework behavior were accepted as verified by the tester.
 
 ## Developer probes
 
@@ -86,6 +86,12 @@ credential values or file contents.
 - Android's credential adapter uses ciphertext in private preferences backed by a
   non-exportable Android Keystore key. It requires the Android activity context to be
   initialized before the store is opened.
+- Android sync execution uses a non-exported `dataSync` foreground service. It starts only
+  from the visible activity, posts a low-priority cancellable notification, returns
+  `START_NOT_STICKY`, and stops itself when Android reports a foreground-service timeout.
+- Android 15+ limits all of an app's `dataSync` foreground services to six hours in a
+  24-hour period. SyncPak must surface that limit and stop the service immediately when its
+  queue becomes idle; it cannot use a boot receiver to bypass the limit.
 - Windows uses generic credentials in Windows Credential Manager. Persistence and removal
   must be tested under the final MSIX package identity.
 - Desktop notifications use an app-owned capability contract and a fixed, non-sensitive

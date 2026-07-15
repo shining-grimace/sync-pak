@@ -19,6 +19,15 @@ public final class SyncPakActivity extends NativeActivity {
         });
     }
 
+    public void startSyncExecution(String connectionName) {
+        Intent intent = SyncExecutionService.startIntent(this, connectionName);
+        startForegroundService(intent);
+    }
+
+    public void stopSyncExecution() {
+        stopService(new Intent(this, SyncExecutionService.class));
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

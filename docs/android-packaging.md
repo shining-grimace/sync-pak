@@ -15,14 +15,20 @@ Set `ANDROID_HOME` if the SDK is not in `$HOME/Android/Sdk`, then run:
 JAVA_HOME=/path/to/android-studio/jbr ./android/gradlew --project-dir android :app:assembleDebug
 ```
 
+When the project is opened from the `android` directory in Android Studio, no shell
+environment setup is required. The Cargo task receives the SDK selected by Gradle, the JVM
+running Gradle as `JAVA_HOME`, and Android platform 36.1 explicitly. This is important
+because Android Studio does not necessarily export its bundled JDK to child processes even
+though Gradle itself is already using that JDK.
+
 The debug APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`. This package
 is for device feasibility testing; it is not the release AAB and does not establish Google
 Play readiness.
 
-To build the developer-only folder-picker probe, add `-PfeasibilityProbes=true`. That build
-opens the system picker shortly after startup and logs only selected, cancelled, or failed;
-it never logs the returned URI. Normal builds do not start the probe and expose no feasibility
-controls in the application UI.
+To build the developer-only capability probes, add `-PfeasibilityProbes=true`. That build
+starts the foreground-service probe and opens the system picker shortly after startup. It
+logs only capability outcomes and never logs the returned URI. Normal builds do not start
+the probes or expose feasibility controls in the application UI.
 
 ## Folder selection
 
@@ -37,6 +43,25 @@ Storage Access Framework bridge:
 Folder selection is asynchronous because Android delivers the result after the system picker
 closes. Only one request may be active, and cancellation returns no selection. The bridge
 does not request broad storage permissions.
+
+## Foreground execution
+
+Long-running Android transfers use a non-exported foreground service declared with the
+`dataSync` type and its type-specific permission. The Rust capability bridge starts it only
+from the visible activity. Its low-priority `Sync operations` notification opens SyncPak
+when tapped and offers a `Cancel` action; the service is not restarted automatically after
+Android stops it.
+
+Android 13+ may keep foreground-service notices out of the notification drawer until the
+user grants notification permission, although the service can still start and remains
+visible in Android's active-apps interface. The complete UI must request that permission in
+context when the user starts their first operation. The service also stops when Android
+delivers the API 35+ timeout callback.
+
+The developer-only probe starts the service with the label `Android background probe`
+shortly before opening the folder picker. This lets a device test confirm that the service
+and notification remain active while the activity is obscured. Use the notification's
+`Cancel` action to finish the probe.
 
 ## Physical-device probe
 

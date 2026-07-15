@@ -17,6 +17,11 @@ pub trait DesktopNotifier {
     fn show(&self, notification: &DesktopNotification<'_>) -> Result<(), CapabilityError>;
 }
 
+pub trait BackgroundExecution {
+    fn start(&self, connection_name: &str) -> Result<(), CapabilityError>;
+    fn stop(&self) -> Result<(), CapabilityError>;
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DesktopNotification<'a> {
     pub title: &'a str,
