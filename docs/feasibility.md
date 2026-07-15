@@ -13,17 +13,17 @@ release.
 
 | Capability | Linux | Android | Windows |
 | --- | --- | --- | --- |
-| Minimal Slint application | Local build scaffolded | Cross-build scaffolded | Cross-build scaffolded |
-| Intended package | Not started (Snap/Flatpak) | Not started (AAB) | Not started (MSIX) |
+| Minimal Slint application | Local build scaffolded | ARM64 library and debug APK scaffolded in CI | Cross-build scaffolded |
+| Intended package | Not started (Snap/Flatpak) | Debug APK packaging added; device run and release AAB pending | Not started (MSIX) |
 | File/folder picker | Portal-backed adapter implemented; packaged probe pending | Android Storage Access Framework adapter required | Native adapter implemented; packaged probe pending |
 | Protected credential storage | Secret Service adapter and test-only probe implemented; packaged run pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
 | Background execution | Not applicable | Not started | Not applicable |
 | Desktop notification | Adapter and developer-only probe implemented; packaged run pending | Not applicable | Toast adapter and developer-only probe implemented; MSIX run pending |
 | Sandbox filesystem access | Not started | Not started | Not started |
 
-Continuous builds compile the shared Slint application on Linux and Windows and build its
-Android library for AArch64. Passing those jobs proves source portability, not packaging or
-runtime behavior.
+Continuous builds compile the shared Slint application on Linux and Windows and package an
+ARM64 Android debug APK with a minimum SDK of 30 and target SDK of 35. Passing those jobs
+proves source portability and package assembly, not runtime behavior.
 
 ## Developer probes
 
@@ -68,6 +68,10 @@ credential values or file contents.
 - Android folder selection cannot be modelled as a filesystem path. The Storage Access
   Framework returns a tree content URI and persistable permission grant, so the filesystem
   capability uses a platform-neutral selection type that can carry either a path or URI.
+- Slint currently runs through Android `NativeActivity`, and its Rust event surface does not
+  deliver activity-result data. The folder picker therefore requires a small Android-side
+  activity bridge that returns the selected tree URI and grant flags to Rust; launching the
+  picker without that result bridge is not considered an implementation.
 - Protected-storage errors are reduced to redaction-safe categories before reaching the
   UI. The test-only feasibility probe writes a fixed, non-secret JSON value, reads it back,
   and immediately deletes it; developer probes must not appear in the user-facing UI.
@@ -92,3 +96,5 @@ credential values or file contents.
   design; an app screenshot is not a stable theme specification.
 - Test-account ownership, credential rotation, usage limits, and cleanup policy must be
   established before provider probes are automated.
+- The Android package still needs release signing ownership and credentials before CI can
+  produce the Google Play AAB.

@@ -44,14 +44,20 @@ jobs:
 
   android:
     runs-on: ubuntu-latest
-    env:
-      CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER: aarch64-linux-android30-clang
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
       - uses: Swatinem/rust-cache@v2
-      - name: Add Android NDK tools to PATH
-        run: echo "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
-      - run: cargo build --locked --lib --target aarch64-linux-android
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install APK packager
+        run: cargo install cargo-apk --version 0.10.0 --locked
+      - name: Build ARM64 debug APK
+        run: cargo apk build --target aarch64-linux-android --lib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: syncpak-android-debug
+          path: target/debug/apk/*.apk
+          if-no-files-found: error
