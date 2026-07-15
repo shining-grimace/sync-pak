@@ -7,27 +7,6 @@ build = "build.rs"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[package.metadata.android]
-package = "com.shininggrimace.syncpak"
-build_targets = ["aarch64-linux-android"]
-apk_name = "syncpak"
-strip = "strip"
-
-[package.metadata.android.sdk]
-min_sdk_version = 30
-target_sdk_version = 35
-
-[package.metadata.android.application]
-label = "SyncPak"
-theme = "@android:style/Theme.Material.Light.NoActionBar"
-extract_native_libs = true
-uses_cleartext_traffic = false
-
-[package.metadata.android.application.activity]
-config_changes = "orientation|keyboardHidden|screenSize"
-exported = true
-resizeable_activity = true
-
 [features]
 feasibility-probes = []
 
@@ -51,6 +30,7 @@ slint = { version = "=1.17.1", default-features = false, features = ["backend-wi
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-native-keyring-store = "=1.0.0"
+jni = "=0.22.4"
 slint = { version = "=1.17.1", default-features = false, features = ["backend-android-activity-06", "renderer-femtovg"] }
 
 [build-dependencies]

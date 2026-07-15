@@ -3,7 +3,7 @@ use std::sync::Arc;
 use keyring_core::{CredentialStore, Entry};
 
 use crate::capabilities::{
-    CapabilityError, FolderPicker, FolderSelection, ProtectedCredentialStore,
+    CapabilityError, FolderPicker, FolderPickerCompletion, ProtectedCredentialStore,
 };
 
 const SERVICE_NAME: &str = "com.shininggrimace.syncpak.providers";
@@ -49,8 +49,8 @@ impl ProtectedCredentialStore for PlatformCredentialStore {
 pub struct PlatformFolderPicker;
 
 impl FolderPicker for PlatformFolderPicker {
-    fn pick_folder(&self) -> Result<Option<FolderSelection>, CapabilityError> {
-        pick_folder()
+    fn pick_folder(&self, completion: FolderPickerCompletion) -> Result<(), CapabilityError> {
+        pick_folder(completion)
     }
 }
 
@@ -70,16 +70,18 @@ fn platform_credential_store() -> keyring_core::Result<Arc<CredentialStore>> {
 }
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
-fn pick_folder() -> Result<Option<FolderSelection>, CapabilityError> {
-    Ok(rfd::FileDialog::new()
+fn pick_folder(completion: FolderPickerCompletion) -> Result<(), CapabilityError> {
+    let selection = rfd::FileDialog::new()
         .set_title("Choose a folder for SyncPak")
         .pick_folder()
-        .map(FolderSelection::FileSystem))
+        .map(crate::capabilities::FolderSelection::FileSystem);
+    completion(Ok(selection));
+    Ok(())
 }
 
 #[cfg(target_os = "android")]
-fn pick_folder() -> Result<Option<FolderSelection>, CapabilityError> {
-    Err(CapabilityError::Unsupported)
+fn pick_folder(completion: FolderPickerCompletion) -> Result<(), CapabilityError> {
+    crate::android_folder_picker::pick_folder(completion)
 }
 
 fn map_keyring_error(error: keyring_core::Error) -> CapabilityError {

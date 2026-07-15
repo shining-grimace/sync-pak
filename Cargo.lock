@@ -4960,6 +4960,7 @@ name = "sync-pak"
 version = "0.1.0"
 dependencies = [
  "android-native-keyring-store",
+ "jni 0.22.4",
  "keyring-core",
  "notify-rust",
  "rfd",

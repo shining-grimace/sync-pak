@@ -13,17 +13,24 @@ release.
 
 | Capability | Linux | Android | Windows |
 | --- | --- | --- | --- |
-| Minimal Slint application | Local build scaffolded | ARM64 library and debug APK scaffolded in CI | Cross-build scaffolded |
-| Intended package | Not started (Snap/Flatpak) | Debug APK packaging added; device run and release AAB pending | Not started (MSIX) |
-| File/folder picker | Portal-backed adapter implemented; packaged probe pending | Android Storage Access Framework adapter required | Native adapter implemented; packaged probe pending |
+| Minimal Slint application | Local build scaffolded | ARM64 debug APK assembled locally with SDK 36.1 and NDK 30; CI configured | Cross-build scaffolded |
+| Intended package | Not started (Snap/Flatpak) | Debug APK assembled and its package metadata validated; device run and release AAB pending | Not started (MSIX) |
+| File/folder picker | Portal-backed adapter implemented; packaged probe pending | Storage Access Framework bridge implemented; device run pending | Native adapter implemented; packaged probe pending |
 | Protected credential storage | Secret Service adapter and test-only probe implemented; packaged run pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
 | Background execution | Not applicable | Not started | Not applicable |
 | Desktop notification | Adapter and developer-only probe implemented; packaged run pending | Not applicable | Toast adapter and developer-only probe implemented; MSIX run pending |
 | Sandbox filesystem access | Not started | Not started | Not started |
 
 Continuous builds compile the shared Slint application on Linux and Windows and package an
-ARM64 Android debug APK with a minimum SDK of 30 and target SDK of 35. Passing those jobs
-proves source portability and package assembly, not runtime behavior.
+ARM64 Android folder-picker probe APK with a minimum SDK of 30, target SDK of 36, and compile
+SDK of 36.1. Passing those jobs proves source portability and package assembly, not runtime
+behavior.
+
+On 2026-07-15, both the normal and feasibility-probe debug APKs were assembled
+locally with Android SDK 36.1 and NDK 30.0.15729638 (beta 2). The resulting APK
+was checked for its debug signature, ARM64-only native contents, minimum and
+target SDK metadata, and 16 KiB page alignment. Execution and persisted-grant
+verification on a physical device remain pending.
 
 ## Developer probes
 
@@ -68,10 +75,9 @@ credential values or file contents.
 - Android folder selection cannot be modelled as a filesystem path. The Storage Access
   Framework returns a tree content URI and persistable permission grant, so the filesystem
   capability uses a platform-neutral selection type that can carry either a path or URI.
-- Slint currently runs through Android `NativeActivity`, and its Rust event surface does not
-  deliver activity-result data. The folder picker therefore requires a small Android-side
-  activity bridge that returns the selected tree URI and grant flags to Rust; launching the
-  picker without that result bridge is not considered an implementation.
+- Android uses a small `NativeActivity` subclass to receive the asynchronous picker result.
+  It takes the persistable read/write permissions actually granted, returns cancellation
+  separately, and passes only the content tree URI into the shared capability model.
 - Protected-storage errors are reduced to redaction-safe categories before reaching the
   UI. The test-only feasibility probe writes a fixed, non-secret JSON value, reads it back,
   and immediately deletes it; developer probes must not appear in the user-facing UI.

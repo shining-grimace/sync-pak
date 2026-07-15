@@ -7,8 +7,11 @@ pub trait ProtectedCredentialStore {
 }
 
 pub trait FolderPicker {
-    fn pick_folder(&self) -> Result<Option<FolderSelection>, CapabilityError>;
+    fn pick_folder(&self, completion: FolderPickerCompletion) -> Result<(), CapabilityError>;
 }
+
+pub type FolderPickerCompletion =
+    Box<dyn FnOnce(Result<Option<FolderSelection>, CapabilityError>) + Send + 'static>;
 
 pub trait DesktopNotifier {
     fn show(&self, notification: &DesktopNotification<'_>) -> Result<(), CapabilityError>;
@@ -23,7 +26,6 @@ pub struct DesktopNotification<'a> {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FolderSelection {
     FileSystem(PathBuf),
-    #[allow(dead_code, reason = "constructed by the planned Android SAF adapter")]
     AndroidTreeUri(String),
 }
 
@@ -38,6 +40,7 @@ impl FolderSelection {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CapabilityError {
+    Busy,
     InvalidReference,
     NotFound,
     Unsupported,
@@ -49,6 +52,7 @@ pub enum CapabilityError {
 impl std::fmt::Display for CapabilityError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(match self {
+            Self::Busy => "Another operating system request is already in progress.",
             Self::InvalidReference => "The protected credential reference is invalid.",
             Self::NotFound => "The protected credential was not found.",
             Self::Unsupported => "This capability is not implemented on this platform yet.",
@@ -60,3 +64,16 @@ impl std::fmt::Display for CapabilityError {
 }
 
 impl std::error::Error for CapabilityError {}
+
+#[cfg(test)]
+mod tests {
+    use super::FolderSelection;
+
+    #[test]
+    fn android_tree_uri_is_preserved_exactly() {
+        let uri = "content://com.android.externalstorage.documents/tree/primary%3ADocuments";
+        let selection = FolderSelection::AndroidTreeUri(uri.to_owned());
+
+        assert_eq!(selection.display_value(), Ok(uri));
+    }
+}
