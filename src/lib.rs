@@ -1,6 +1,7 @@
 pub mod capabilities;
 #[cfg(test)]
 mod feasibility;
+pub mod notifications;
 pub mod platform;
 
 pub use capabilities::CapabilityError;

@@ -18,12 +18,24 @@ release.
 | File/folder picker | Portal-backed adapter implemented; packaged probe pending | Android Storage Access Framework adapter required | Native adapter implemented; packaged probe pending |
 | Protected credential storage | Secret Service adapter and test-only probe implemented; packaged run pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
 | Background execution | Not applicable | Not started | Not applicable |
-| Desktop notification | Not started | Not applicable | Not started |
+| Desktop notification | Adapter and developer-only probe implemented; packaged run pending | Not applicable | Toast adapter and developer-only probe implemented; MSIX run pending |
 | Sandbox filesystem access | Not started | Not started | Not started |
 
 Continuous builds compile the shared Slint application on Linux and Windows and build its
 Android library for AArch64. Passing those jobs proves source portability, not packaging or
 runtime behavior.
+
+## Developer probes
+
+Run the desktop-notification probe with:
+
+```text
+cargo run --example desktop_notification --features feasibility-probes
+```
+
+The command displays one fixed notification and does not read application data. On Windows,
+`SYNCPAK_WINDOWS_APP_ID` can supply the package application user model ID. A run without that
+identity is useful only for unpackaged development and does not satisfy the MSIX evidence row.
 
 ## Provider evidence
 
@@ -66,6 +78,13 @@ credential values or file contents.
   initialized before the store is opened.
 - Windows uses generic credentials in Windows Credential Manager. Persistence and removal
   must be tested under the final MSIX package identity.
+- Desktop notifications use an app-owned capability contract and a fixed, non-sensitive
+  developer probe; the probe is an example executable and never appears in the user UI.
+- Linux notification delivery still needs to be exercised through the desktop session bus
+  from the Snap and Flatpak packages.
+- Windows notification attribution depends on the application user model ID. The adapter
+  accepts the final MSIX identity, while an unpackaged probe may use the notification
+  library's development fallback; installed-package behavior remains the required evidence.
 
 ## Open inputs
 

@@ -7,9 +7,15 @@ build = "build.rs"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+feasibility-probes = []
+
 [dependencies]
 keyring-core = "=1.0.0"
 slint = { version = "=1.17.1", default-features = false, features = ["accessibility", "compat-1-2", "std"] }
+
+[target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
+notify-rust = "=4.18.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 rfd = { version = "=0.17.2", default-features = false, features = ["wayland", "xdg-portal"] }
@@ -28,3 +34,7 @@ slint = { version = "=1.17.1", default-features = false, features = ["backend-an
 
 [build-dependencies]
 slint-build = "=1.17.1"
+
+[[example]]
+name = "desktop_notification"
+required-features = ["feasibility-probes"]

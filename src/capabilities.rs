@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 pub trait ProtectedCredentialStore {
     fn save(&self, provider_id: &str, credential_json: &[u8]) -> Result<(), CapabilityError>;
     fn load(&self, provider_id: &str) -> Result<Vec<u8>, CapabilityError>;
@@ -6,6 +8,16 @@ pub trait ProtectedCredentialStore {
 
 pub trait FolderPicker {
     fn pick_folder(&self) -> Result<Option<FolderSelection>, CapabilityError>;
+}
+
+pub trait DesktopNotifier {
+    fn show(&self, notification: &DesktopNotification<'_>) -> Result<(), CapabilityError>;
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct DesktopNotification<'a> {
+    pub title: &'a str,
+    pub body: &'a str,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -48,4 +60,3 @@ impl std::fmt::Display for CapabilityError {
 }
 
 impl std::error::Error for CapabilityError {}
-use std::path::PathBuf;
