@@ -8,12 +8,22 @@ build = "build.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+keyring-core = "=1.0.0"
 slint = { version = "=1.17.1", default-features = false, features = ["accessibility", "compat-1-2", "std"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+rfd = { version = "=0.17.2", default-features = false, features = ["wayland", "xdg-portal"] }
+zbus-secret-service-keyring-store = { version = "=1.0.0", features = ["crypto-rust"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+rfd = { version = "=0.17.2", default-features = false, features = ["common-controls-v6"] }
+windows-native-keyring-store = { version = "=1.1.0", default-features = false }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 slint = { version = "=1.17.1", default-features = false, features = ["backend-winit", "renderer-femtovg"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
+android-native-keyring-store = "=1.0.0"
 slint = { version = "=1.17.1", default-features = false, features = ["backend-android-activity-06", "renderer-femtovg"] }
 
 [build-dependencies]

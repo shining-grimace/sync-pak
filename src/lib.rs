@@ -1,3 +1,10 @@
+pub mod capabilities;
+#[cfg(test)]
+mod feasibility;
+pub mod platform;
+
+pub use capabilities::CapabilityError;
+
 slint::include_modules!();
 
 /// Opens the SyncPak application window and runs its event loop.

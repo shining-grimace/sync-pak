@@ -392,7 +392,7 @@ plain-language message.
 ## Welcome
 
 - Heading: `Your files, your cloud.`
-- Body: `SyncPak copies folders directly between this device and a cloud provider you
+- Body: `SyncPak copies folders directly between this device and cloud providers you
   choose. SyncPak does not operate an intermediary file service.`
 - Credential note: `Your provider credentials are protected using this device's secure
   storage and are sent only to that provider.`

@@ -15,8 +15,8 @@ release.
 | --- | --- | --- | --- |
 | Minimal Slint application | Local build scaffolded | Cross-build scaffolded | Cross-build scaffolded |
 | Intended package | Not started (Snap/Flatpak) | Not started (AAB) | Not started (MSIX) |
-| File/folder picker | Not started | Not started | Not started |
-| Protected credential storage | Not started | Not started | Not started |
+| File/folder picker | Portal-backed adapter implemented; packaged probe pending | Android Storage Access Framework adapter required | Native adapter implemented; packaged probe pending |
+| Protected credential storage | Secret Service adapter and test-only probe implemented; packaged run pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
 | Background execution | Not applicable | Not started | Not applicable |
 | Desktop notification | Not started | Not applicable | Not started |
 | Sandbox filesystem access | Not started | Not started | Not started |
@@ -45,6 +45,27 @@ credential values or file contents.
   sandboxes. An unpackaged desktop test is not equivalent evidence.
 - Provider probes should target capability contracts because bucket listing, metadata, and
   multipart support can differ by provider and credential policy.
+
+## Capability findings
+
+- Linux folder selection uses the XDG desktop portal, which is appropriate for both normal
+  desktop sessions and Flatpak. Portal availability and persistent access must still be
+  tested inside the Flatpak and Snap packages.
+- Windows folder selection returns a filesystem path. Its access must be repeated from an
+  installed MSIX to expose any package capability differences.
+- Android folder selection cannot be modelled as a filesystem path. The Storage Access
+  Framework returns a tree content URI and persistable permission grant, so the filesystem
+  capability uses a platform-neutral selection type that can carry either a path or URI.
+- Protected-storage errors are reduced to redaction-safe categories before reaching the
+  UI. The test-only feasibility probe writes a fixed, non-secret JSON value, reads it back,
+  and immediately deletes it; developer probes must not appear in the user-facing UI.
+- Linux currently targets Secret Service directly. The Flatpak and Snap prototypes must
+  confirm that their sandbox policy exposes only the intended credential collection.
+- Android's credential adapter uses ciphertext in private preferences backed by a
+  non-exportable Android Keystore key. It requires the Android activity context to be
+  initialized before the store is opened.
+- Windows uses generic credentials in Windows Credential Manager. Persistence and removal
+  must be tested under the final MSIX package identity.
 
 ## Open inputs
 
