@@ -2,3 +2,10 @@
 /android/.gradle/
 /android/**/build/
 /android/local.properties
+/.flatpak-builder/
+/builddir/
+/repo/
+/parts/
+/prime/
+/stage/
+/snap/*.snap

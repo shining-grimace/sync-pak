@@ -1,0 +1,47 @@
+name: sync-pak
+title: SyncPak
+version: '0.1.0'
+summary: Add-only folder copies between this device and cloud providers
+description: |
+  SyncPak is a cross-platform application for copying local folders directly
+  to cloud providers. This is a strictly confined feasibility package.
+base: core24
+confinement: strict
+grade: devel
+
+platforms:
+  amd64:
+
+apps:
+  sync-pak:
+    command: bin/sync-pak
+    environment:
+      GTK_USE_PORTAL: '1'
+    plugs:
+      - desktop
+      - network
+      - opengl
+      - password-manager-service
+      - wayland
+      - x11
+
+parts:
+  sync-pak:
+    plugin: rust
+    source: .
+    rust-cargo-parameters:
+      - --locked
+      - --release
+    build-packages:
+      - libegl1-mesa-dev
+      - libfontconfig1-dev
+      - libgl1-mesa-dev
+      - libwayland-dev
+      - libxkbcommon-dev
+      - pkg-config
+    stage-packages:
+      - libegl1
+      - libfontconfig1
+      - libgl1
+      - libwayland-client0
+      - libxkbcommon0

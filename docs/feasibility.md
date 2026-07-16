@@ -13,18 +13,24 @@ release.
 
 | Capability | Linux | Android | Windows |
 | --- | --- | --- | --- |
-| Minimal Slint application | Local build scaffolded | ARM64 debug APK assembled locally with SDK 36.1 and NDK 30; physical-device run accepted | Cross-build scaffolded |
-| Intended package | Not started (Snap/Flatpak) | Debug APK assembled, validated, and accepted on a physical device; release AAB pending | Not started (MSIX) |
-| File/folder picker | Portal-backed adapter implemented; packaged probe pending | Storage Access Framework bridge accepted on a physical device | Native adapter implemented; packaged probe pending |
-| Protected credential storage | Secret Service adapter and test-only probe implemented; packaged run pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
+| Minimal Slint application | Flatpak package built and installed locally; desktop-session run pending | ARM64 debug APK assembled locally with SDK 36.1 and NDK 30; physical-device run accepted | Cross-build scaffolded |
+| Intended package | Flatpak feasibility package built and installed locally; strict Snap manifest created, with Snap and desktop-session runs pending | Debug APK assembled, validated, and accepted on a physical device; release AAB pending | Not started (MSIX) |
+| File/folder picker | Portal-backed adapter implemented; Flatpak runtime probe pending | Storage Access Framework bridge accepted on a physical device | Native adapter implemented; packaged probe pending |
+| Protected credential storage | Secret Service adapter and test-only probe implemented; Flatpak runtime probe pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
 | Background execution | Not applicable | `dataSync` foreground-service probe packaged; physical-device run pending | Not applicable |
-| Desktop notification | Adapter and developer-only probe implemented; packaged run pending | Not applicable | Toast adapter and developer-only probe implemented; MSIX run pending |
-| Sandbox filesystem access | Not started | Not started | Not started |
+| Desktop notification | Adapter and developer-only probe implemented; Flatpak runtime probe pending | Not applicable | Toast adapter and developer-only probe implemented; MSIX run pending |
+| Sandbox filesystem access | Flatpak has no broad filesystem permission; portal-grant runtime probe pending | Not started | Not started |
 
-Continuous builds compile the shared Slint application on Linux and Windows and package an
-ARM64 Android folder-picker probe APK with a minimum SDK of 30, target SDK of 36, and compile
-SDK of 36.1. Passing those jobs proves source portability and package assembly, not runtime
-behavior.
+Continuous builds compile the shared Slint application on Linux and Windows, build the Flatpak
+feasibility package, and package an ARM64 Android folder-picker probe APK with a minimum SDK
+of 30, target SDK of 36, and compile SDK of 36.1. Passing those jobs proves source portability
+and package assembly, not runtime behavior.
+
+On 2026-07-16, the local Flatpak feasibility package built and installed successfully with
+the Freedesktop 25.08 runtime and Rust SDK extension. Its exported permissions are limited to
+networking, display integration, and the two named session-bus services; it does not request
+home, host, or other broad filesystem access. A desktop-session run remains necessary before
+the Linux rows can be marked complete.
 
 On 2026-07-15, both the normal and feasibility-probe debug APKs were assembled
 locally with Android SDK 36.1 and NDK 30.0.15729638 (beta 2). The resulting APK
@@ -70,6 +76,12 @@ credential values or file contents.
 - Linux folder selection uses the XDG desktop portal, which is appropriate for both normal
   desktop sessions and Flatpak. Portal availability and persistent access must still be
   tested inside the Flatpak and Snap packages.
+- The Flatpak feasibility manifest requests no filesystem permission. It relies on the
+  folder-selection portal and only exposes the Secret Service and notification D-Bus names;
+  runtime testing must confirm each service works from the installed package.
+- The Snap feasibility manifest is strictly confined and deliberately omits `home` and
+  `removable-media`. Its Secret Service interface may require a manual user connection, so
+  the protected-storage unavailable state is part of the required package test.
 - Windows folder selection returns a filesystem path. Its access must be repeated from an
   installed MSIX to expose any package capability differences.
 - Android folder selection cannot be modelled as a filesystem path. The Storage Access

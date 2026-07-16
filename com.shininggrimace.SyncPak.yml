@@ -1,0 +1,41 @@
+id: com.shininggrimace.SyncPak
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: sync-pak
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/sync-pak/cargo
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --share=network
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.Notifications
+
+modules:
+  - name: sync-pak
+    buildsystem: simple
+    build-commands:
+      - cargo build --offline --release --locked
+      - install -Dm755 target/release/sync-pak /app/bin/sync-pak
+    sources:
+      - flatpak/cargo-sources.json
+      - type: dir
+        path: .
+        skip:
+          - .flatpak-builder
+          - .git
+          - android/.gradle
+          - android/app/build
+          - builddir
+          - flatpak/build
+          - repo
+          - target
