@@ -7,6 +7,10 @@ pub mod capabilities;
 mod feasibility;
 pub mod notifications;
 pub mod platform;
+#[cfg(feature = "provider-probes")]
+pub mod provider_probe;
+#[cfg(feature = "provider-probes")]
+mod provider_probe_config;
 
 pub use capabilities::CapabilityError;
 

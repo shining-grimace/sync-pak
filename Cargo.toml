@@ -9,10 +9,14 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 feasibility-probes = []
+provider-probes = ["dep:aws-config", "dep:aws-sdk-s3", "dep:tokio"]
 
 [dependencies]
+aws-config = { version = "=1.9.0", default-features = false, features = ["rt-tokio", "rustls"], optional = true }
+aws-sdk-s3 = { version = "=1.138.1", default-features = false, features = ["rt-tokio", "rustls"], optional = true }
 keyring-core = "=1.0.0"
 slint = { version = "=1.17.1", default-features = false, features = ["accessibility", "compat-1-2", "std"] }
+tokio = { version = "=1.52.4", features = ["macros", "rt-multi-thread"], optional = true }
 
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
 notify-rust = "=4.18.0"
@@ -39,3 +43,7 @@ slint-build = "=1.17.1"
 [[example]]
 name = "desktop_notification"
 required-features = ["feasibility-probes"]
+
+[[example]]
+name = "provider_operations"
+required-features = ["provider-probes"]

@@ -52,10 +52,11 @@ identity is useful only for unpackaged development and does not satisfy the MSIX
 
 ## Provider evidence
 
-Authenticated list, upload, download, and delete probes are still required for Cloudflare
-R2, Backblaze B2, and AWS S3. Each probe must use an isolated test bucket or prefix and
-credentials supplied through CI secrets. Logs must contain identifiers only and never
-credential values or file contents.
+The `provider_operations` example now supplies the test-only authenticated list, upload,
+download, verification, and delete harness for Cloudflare R2, Backblaze B2, and AWS S3.
+Credentialed runs are still required for every provider. Each run must use an isolated test
+bucket or prefix and credentials supplied through CI secrets. Logs must contain no credential
+values or file contents; see `docs/provider-probes.md`.
 
 ## Design decisions to validate
 

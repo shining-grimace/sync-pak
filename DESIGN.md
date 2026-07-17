@@ -15,7 +15,7 @@ Target OSs (all supported in first release):
 
 Supported cloud providers:
 - Cloudflare R2 (using the S3-compatible API under the hood)
-- Backblaze B2
+- Backblaze B2 (using its S3-compatible API and a manually created application key)
 - AWS S3
 
 Intended distribution:
@@ -473,6 +473,8 @@ plain-language message.
 - Common fields: `Provider name`, `Provider type`, `Access key ID`, `Secret access key`
 - Cloudflare R2 fields: `Account ID`, `Access key ID`, `Secret access key`
 - Backblaze B2 fields: `Key ID`, `Application key`
+- Backblaze B2 credential help: `Create an application key in Backblaze B2; the same key
+  pair works with its S3-compatible API. Do not use the master application key.`
 - AWS S3 fields: `Access key ID`, `Secret access key`, `Region`
 - Advanced heading: `Advanced`
 - Advanced fields where supported: `Custom endpoint`, `Session token`
