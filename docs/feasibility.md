@@ -54,9 +54,17 @@ identity is useful only for unpackaged development and does not satisfy the MSIX
 
 The `provider_operations` example now supplies the test-only authenticated list, upload,
 download, verification, and delete harness for Cloudflare R2, Backblaze B2, and AWS S3.
-Credentialed runs are still required for every provider. Each run must use an isolated test
-bucket or prefix and credentials supplied through CI secrets. Logs must contain no credential
-values or file contents; see `docs/provider-probes.md`.
+On 2026-07-17, all three providers passed this probe against isolated test buckets or
+prefixes. Each run used the provider's S3-compatible API where applicable and completed
+the upload, download, content verification, and cleanup sequence.
+
+Credentialed runs must continue to use isolated test buckets or prefixes and credentials
+supplied through CI secrets. Logs must contain no credential values or file contents; see
+`docs/provider-probes.md`.
+
+The provider-operation proof is complete. Roadmap milestone 1 remains open until the
+pending Linux sandbox-package and installed Windows MSIX runtime checks in the matrix are
+accepted; source builds alone do not meet its packaging/security-model exit criterion.
 
 ## Design decisions to validate
 
