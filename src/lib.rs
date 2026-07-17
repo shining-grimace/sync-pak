@@ -3,6 +3,7 @@ mod android_folder_picker;
 #[cfg(target_os = "android")]
 mod android_foreground_execution;
 pub mod capabilities;
+pub mod configuration;
 #[cfg(test)]
 mod feasibility;
 pub mod notifications;
