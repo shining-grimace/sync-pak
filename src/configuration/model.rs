@@ -113,6 +113,32 @@ pub struct ConnectionConfig {
     pub keep_last_archives: Option<u32>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ConnectionDraft {
+    pub name: String,
+    pub provider_id: ProviderId,
+    pub bucket: String,
+    pub remote_path: String,
+    pub local_path: String,
+    pub mode: SyncMode,
+    pub keep_last_archives: Option<u32>,
+}
+
+impl ConnectionDraft {
+    pub fn into_config(self, id: ConnectionId) -> ConnectionConfig {
+        ConnectionConfig {
+            id,
+            name: self.name,
+            provider_id: self.provider_id,
+            bucket: self.bucket,
+            remote_path: self.remote_path,
+            local_path: self.local_path,
+            mode: self.mode,
+            keep_last_archives: self.keep_last_archives,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SyncMode {
