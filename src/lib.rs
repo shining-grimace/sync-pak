@@ -31,6 +31,8 @@ pub mod provider_probe;
 #[cfg(feature = "provider-probes")]
 mod provider_probe_config;
 pub mod queue;
+#[cfg(feature = "provider-s3")]
+pub mod s3_transport;
 
 pub use capabilities::CapabilityError;
 
