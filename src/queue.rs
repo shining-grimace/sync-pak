@@ -60,6 +60,9 @@ impl OperationQueue {
 
     /// Stores an immutable terminal result on its activity entry.
     pub fn finish(&mut self, operation_id: Uuid, result: ExecutionResult) -> bool {
+        let Some(state) = terminal_queue_state(result.state) else {
+            return false;
+        };
         let Some(entry) = self
             .entries
             .iter_mut()
@@ -67,9 +70,32 @@ impl OperationQueue {
         else {
             return false;
         };
-        entry.state = queue_state(result.state);
+        entry.state = state;
         entry.result = Some(result);
         true
+    }
+
+    /// Cancels a queued operation without starting it, retaining it in activity history.
+    pub fn cancel_queued(&mut self, operation_id: Uuid) -> bool {
+        let Some(entry) = self
+            .entries
+            .iter_mut()
+            .find(|entry| entry.operation_id == operation_id && entry.state == QueueState::Queued)
+        else {
+            return false;
+        };
+        entry.state = QueueState::Cancelled;
+        entry.result = Some(ExecutionResult::cancelled_before_start());
+        true
+    }
+
+    /// Removes queued work for a connection before its configuration is deleted.
+    pub fn remove_queued_for_connection(&mut self, connection_id: &str) -> usize {
+        let before = self.entries.len();
+        self.entries.retain(|entry| {
+            entry.state != QueueState::Queued || entry.plan.connection_id != connection_id
+        });
+        before - self.entries.len()
     }
 
     pub fn entries(&self) -> impl Iterator<Item = &QueueEntry> {
@@ -85,14 +111,12 @@ impl OperationQueue {
     }
 }
 
-fn queue_state(state: ExecutionState) -> QueueState {
+fn terminal_queue_state(state: ExecutionState) -> Option<QueueState> {
     match state {
-        ExecutionState::Cancelled => QueueState::Cancelled,
-        ExecutionState::Failed => QueueState::Failed,
-        ExecutionState::Preparing
-        | ExecutionState::Copying
-        | ExecutionState::Finalizing
-        | ExecutionState::Completed => QueueState::Completed,
+        ExecutionState::Cancelled => Some(QueueState::Cancelled),
+        ExecutionState::Failed => Some(QueueState::Failed),
+        ExecutionState::Completed => Some(QueueState::Completed),
+        ExecutionState::Preparing | ExecutionState::Copying | ExecutionState::Finalizing => None,
     }
 }
 
@@ -148,5 +172,45 @@ mod tests {
             stored.result.as_ref().unwrap().state,
             ExecutionState::Cancelled
         );
+    }
+
+    #[test]
+    fn queued_operation_can_be_cancelled_without_starting() {
+        let mut queue = OperationQueue::default();
+        let operation_id = queue.push(OperationPlan::new(
+            "connection",
+            SyncMode::AddOnly,
+            Direction::Upload,
+        ));
+
+        assert!(queue.cancel_queued(operation_id));
+
+        let entry = queue.entries().next().unwrap();
+        assert_eq!(entry.state, QueueState::Cancelled);
+        assert_eq!(
+            entry.result.as_ref().unwrap().state,
+            ExecutionState::Cancelled
+        );
+        assert!(queue.take_next().is_none());
+    }
+
+    #[test]
+    fn deleting_a_connection_removes_only_its_queued_work() {
+        let mut queue = OperationQueue::default();
+        queue.push(OperationPlan::new(
+            "remove",
+            SyncMode::AddOnly,
+            Direction::Upload,
+        ));
+        queue.push(OperationPlan::new(
+            "keep",
+            SyncMode::AddOnly,
+            Direction::Upload,
+        ));
+
+        assert_eq!(queue.remove_queued_for_connection("remove"), 1);
+
+        assert_eq!(queue.entries().count(), 1);
+        assert_eq!(queue.take_next().unwrap().plan.connection_id, "keep");
     }
 }

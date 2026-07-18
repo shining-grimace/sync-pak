@@ -24,6 +24,18 @@ pub struct ExecutionResult {
     pub not_started: Vec<PlannedAction>,
 }
 
+impl ExecutionResult {
+    /// Creates the result for an operation cancelled before any action began.
+    pub fn cancelled_before_start() -> Self {
+        Self {
+            state: ExecutionState::Cancelled,
+            completed: Vec::new(),
+            incomplete: Vec::new(),
+            not_started: Vec::new(),
+        }
+    }
+}
+
 /// Tracks a serial operation's planned actions while it is running.
 pub struct ExecutionProgress {
     completed: Vec<PlannedAction>,
@@ -134,5 +146,15 @@ mod tests {
         assert!(result.incomplete.is_empty());
         assert!(result.not_started.is_empty());
         assert_eq!(result.completed.len(), 3);
+    }
+
+    #[test]
+    fn cancellation_before_start_has_no_affected_actions() {
+        let result = super::ExecutionResult::cancelled_before_start();
+
+        assert_eq!(result.state, ExecutionState::Cancelled);
+        assert!(result.completed.is_empty());
+        assert!(result.incomplete.is_empty());
+        assert!(result.not_started.is_empty());
     }
 }
