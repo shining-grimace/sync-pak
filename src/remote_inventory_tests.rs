@@ -8,10 +8,23 @@ fn object(key: &str, byte_size: u64) -> RemoteObject {
         metadata: ObjectMetadata {
             byte_size,
             modified_unix_seconds: Some(10),
+            source_modified_unix_seconds: None,
             content_type: None,
             entity_tag: None,
         },
     }
+}
+
+#[test]
+fn prefers_syncpak_source_time_over_the_provider_last_modified_time() {
+    let mut remote = object("file", 1);
+    remote.metadata.source_modified_unix_seconds = Some(5);
+
+    let inventory = inventory_from_objects("", [remote]).unwrap();
+    assert_eq!(
+        inventory.entries().next().unwrap().modified_unix_seconds,
+        Some(5)
+    );
 }
 
 #[test]

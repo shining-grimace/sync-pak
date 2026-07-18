@@ -54,7 +54,10 @@ pub fn inventory_from_objects(
                 relative.clone(),
                 kind,
                 object.metadata.byte_size,
-                object.metadata.modified_unix_seconds,
+                object
+                    .metadata
+                    .source_modified_unix_seconds
+                    .or(object.metadata.modified_unix_seconds),
             ),
         )?;
         insert_parent_directories(&mut entries, &relative)?;

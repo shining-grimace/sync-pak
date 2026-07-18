@@ -142,6 +142,7 @@ impl ObjectMetadataReader for S3Transport {
         object_metadata(
             object.content_length(),
             object.last_modified().map(|value| value.secs()),
+            source_modified_time(object.metadata()),
             object.content_type(),
             object.e_tag(),
         )
@@ -171,6 +172,7 @@ fn remote_object(object: &aws_sdk_s3::types::Object) -> ProviderResult<RemoteObj
             object.size(),
             object.last_modified().map(|value| value.secs()),
             None,
+            None,
             object.e_tag(),
         )?,
     })
@@ -179,6 +181,7 @@ fn remote_object(object: &aws_sdk_s3::types::Object) -> ProviderResult<RemoteObj
 fn object_metadata(
     byte_size: Option<i64>,
     modified_unix_seconds: Option<i64>,
+    source_modified_unix_seconds: Option<i64>,
     content_type: Option<&str>,
     entity_tag: Option<&str>,
 ) -> ProviderResult<ObjectMetadata> {
@@ -186,7 +189,16 @@ fn object_metadata(
         byte_size: u64::try_from(byte_size.ok_or(ProviderError::Unexpected)?)
             .map_err(|_| ProviderError::Unexpected)?,
         modified_unix_seconds,
+        source_modified_unix_seconds,
         content_type: content_type.map(ToOwned::to_owned),
         entity_tag: entity_tag.map(ToOwned::to_owned),
     })
+}
+
+fn source_modified_time(
+    metadata: Option<&std::collections::HashMap<String, String>>,
+) -> Option<i64> {
+    metadata
+        .and_then(|metadata| metadata.get("syncpak-source-modified-unix-seconds"))
+        .and_then(|value| value.parse().ok())
 }

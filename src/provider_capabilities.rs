@@ -9,6 +9,7 @@ use std::future::Future;
 pub struct ObjectMetadata {
     pub byte_size: u64,
     pub modified_unix_seconds: Option<i64>,
+    pub source_modified_unix_seconds: Option<i64>,
     pub content_type: Option<String>,
     pub entity_tag: Option<String>,
 }
@@ -150,12 +151,17 @@ mod tests {
             metadata: ObjectMetadata {
                 byte_size: 42,
                 modified_unix_seconds: Some(1_700_000_000),
+                source_modified_unix_seconds: Some(1_600_000_000),
                 content_type: Some("image/png".to_owned()),
                 entity_tag: Some("abc123".to_owned()),
             },
         };
 
         assert_eq!(object.metadata.byte_size, 42);
+        assert_eq!(
+            object.metadata.source_modified_unix_seconds,
+            Some(1_600_000_000)
+        );
         assert_eq!(object.metadata.entity_tag.as_deref(), Some("abc123"));
     }
 

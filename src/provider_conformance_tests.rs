@@ -145,6 +145,7 @@ fn metadata(contents: &[u8]) -> ObjectMetadata {
     ObjectMetadata {
         byte_size: contents.len() as u64,
         modified_unix_seconds: None,
+        source_modified_unix_seconds: None,
         content_type: None,
         entity_tag: None,
     }
