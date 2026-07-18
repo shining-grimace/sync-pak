@@ -5,16 +5,23 @@ mod android_foreground_execution;
 mod app_controller;
 pub mod capabilities;
 pub mod configuration;
-mod connection_controller;
 mod connection_delete_controller;
+mod connection_form_controller;
+mod connection_form_data;
+mod connection_form_state;
+mod connection_list_controller;
 mod diagnostics_controller;
+pub mod execution;
 #[cfg(test)]
 mod feasibility;
+pub mod filesystem;
 mod folder_picker_controller;
 mod form_validation;
 pub mod notifications;
 mod onboarding;
+pub mod planning;
 pub mod platform;
+pub mod provider_capabilities;
 mod provider_delete_controller;
 mod provider_form;
 mod provider_form_controller;
@@ -23,6 +30,7 @@ mod provider_list_controller;
 pub mod provider_probe;
 #[cfg(feature = "provider-probes")]
 mod provider_probe_config;
+pub mod queue;
 
 pub use capabilities::CapabilityError;
 

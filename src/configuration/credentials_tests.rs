@@ -94,6 +94,32 @@ fn ordinary_configuration_never_contains_provider_credentials() {
 }
 
 #[test]
+fn provider_and_connection_configuration_survive_a_restart() {
+    let path = test_path();
+    let store = ConfigStore::at(path.clone());
+    let secrets = MemoryCredentials::default();
+    let provider = ProviderRepository::new(&store, &secrets)
+        .create(provider_draft(), &secret())
+        .unwrap();
+    let connection = ConnectionRepository::new(&store)
+        .create(ConnectionDraft {
+            name: "Photos".to_owned(),
+            provider_id: provider.id.clone(),
+            bucket: "backup".to_owned(),
+            remote_path: "camera".to_owned(),
+            local_path: "/photos".to_owned(),
+            mode: SyncMode::AddOnly,
+            keep_last_archives: None,
+        })
+        .unwrap();
+
+    let restarted = ConfigStore::at(path).load().unwrap();
+
+    assert_eq!(restarted.providers, vec![provider]);
+    assert_eq!(restarted.connections, vec![connection]);
+}
+
+#[test]
 fn failed_metadata_commit_removes_a_newly_saved_credential() {
     let store = ConfigStore::at(test_path());
     let secrets = MemoryCredentials::default();

@@ -31,7 +31,7 @@ pub(crate) fn configure(
     let cancel_config = Rc::clone(configuration);
     let cancel_diagnostics = Rc::clone(&diagnostics);
     window.on_cancel_connection_delete(move || {
-        crate::connection_controller::show_connections(
+        crate::connection_list_controller::show(
             &weak,
             Rc::clone(&cancel_config),
             Rc::clone(&cancel_diagnostics),
@@ -77,7 +77,7 @@ fn delete_connection(
         },
     );
     match result {
-        Ok(_) => crate::connection_controller::show_connections(
+        Ok(_) => crate::connection_list_controller::show(
             weak,
             Rc::clone(configuration),
             Rc::clone(diagnostics),
