@@ -10,7 +10,11 @@ use std::{
 
 use uuid::Uuid;
 
-use super::{DownloadError, download_to_path, download_to_path_with_retry};
+use super::{
+    DownloadError, download_to_path, download_to_path_with_retry,
+    download_to_path_with_retry_and_cancellation,
+};
+use crate::cancellation::CancellationToken;
 use crate::provider_capabilities::{ObjectReader, ProviderError, ProviderResult};
 use crate::retry::{RetryPolicy, RetrySleeper};
 
@@ -38,6 +42,14 @@ struct RecordingSleeper(Mutex<Vec<std::time::Duration>>);
 impl RetrySleeper for RecordingSleeper {
     async fn sleep(&self, delay: std::time::Duration) {
         self.0.lock().unwrap().push(delay);
+    }
+}
+
+struct CancellingSleeper(CancellationToken);
+
+impl RetrySleeper for CancellingSleeper {
+    async fn sleep(&self, _: std::time::Duration) {
+        self.0.cancel();
     }
 }
 
@@ -113,5 +125,33 @@ fn retries_a_transient_read_failure_before_replacing_the_destination() {
 
     assert_eq!(fs::read_to_string(&destination).unwrap(), "contents");
     assert_eq!(sleeper.0.lock().unwrap().len(), 1);
+    fs::remove_dir_all(&directory).unwrap();
+}
+
+#[test]
+fn cancellation_after_a_retry_delay_preserves_the_destination() {
+    let directory = std::env::temp_dir().join(format!("sync-pak-download-{}", Uuid::new_v4()));
+    fs::create_dir(&directory).unwrap();
+    let destination = directory.join("file.txt");
+    fs::write(&destination, "old").unwrap();
+    let cancellation = CancellationToken::default();
+    let reader = FlakyReader(AtomicU8::new(0));
+
+    assert!(matches!(
+        block_on(download_to_path_with_retry_and_cancellation(
+            &reader,
+            "bucket",
+            "key",
+            &destination,
+            &RetryPolicy::default(),
+            &CancellingSleeper(cancellation.clone()),
+            1,
+            &cancellation,
+        )),
+        Err(DownloadError::Cancelled)
+    ));
+
+    assert_eq!(reader.0.load(Ordering::Relaxed), 1);
+    assert_eq!(fs::read_to_string(&destination).unwrap(), "old");
     fs::remove_dir_all(&directory).unwrap();
 }
