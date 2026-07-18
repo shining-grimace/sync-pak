@@ -45,6 +45,12 @@ impl ProtectedCredentialStore for MemoryCredentials {
     }
 }
 
+impl MemoryCredentials {
+    fn is_empty(&self) -> bool {
+        self.0.lock().unwrap().is_empty()
+    }
+}
+
 #[test]
 fn provider_deletion_removes_dependent_connections_and_credentials() {
     let store = ConfigStore::at(test_path());
@@ -85,6 +91,25 @@ fn ordinary_configuration_never_contains_provider_credentials() {
     let saved = fs::read_to_string(path).unwrap();
     assert!(!saved.contains("secret-value"));
     assert!(!saved.contains("access-value"));
+}
+
+#[test]
+fn failed_metadata_commit_removes_a_newly_saved_credential() {
+    let store = ConfigStore::at(test_path());
+    let secrets = MemoryCredentials::default();
+    let invalid_draft = ProviderDraft {
+        name: String::new(),
+        ..provider_draft()
+    };
+
+    assert!(
+        ProviderRepository::new(&store, &secrets)
+            .create(invalid_draft, &secret())
+            .is_err()
+    );
+
+    assert!(secrets.is_empty());
+    assert!(store.load().unwrap().providers.is_empty());
 }
 
 fn provider_draft() -> ProviderDraft {
