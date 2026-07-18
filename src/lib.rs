@@ -5,6 +5,7 @@ mod android_foreground_execution;
 mod app_controller;
 pub mod capabilities;
 pub mod configuration;
+mod connection_controller;
 #[cfg(test)]
 mod feasibility;
 pub mod notifications;

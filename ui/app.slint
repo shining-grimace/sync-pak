@@ -6,15 +6,25 @@ export struct ProviderRow {
     kind: string,
 }
 
+export struct ConnectionRow {
+    name: string,
+    detail: string,
+}
+
 export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <[ProviderRow]> providers;
+    in-out property <[ConnectionRow]> connections;
+    in-out property <[string]> provider-names;
     in-out property <string> status-message;
     callback show-providers();
+    callback show-connections();
     callback show-add-provider();
+    callback show-add-connection();
     callback show-welcome();
     callback show-privacy();
     callback save-provider(string, int, string, string);
+    callback save-connection(string, int, string, string, string, int, string);
 
     init => { Palette.color-scheme = ColorScheme.light; }
     title: "SyncPak";
@@ -32,6 +42,7 @@ export component AppWindow inherits Window {
             alignment: start;
             Text { text: "SYNCPAK"; color: #2c2925; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
             Rectangle { horizontal-stretch: 1; }
+            Button { text: "Connections"; clicked => { root.show-connections(); } }
             Button { text: "Providers"; clicked => { root.show-providers(); } }
         }
 
@@ -99,6 +110,50 @@ export component AppWindow inherits Window {
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.show-providers(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.save-provider(provider-name.text, provider-kind.current-index, access-key.text, secret-key.text); } }
+            }
+        }
+
+        if root.page == 4 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
+            Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
+            if root.connections.length == 0 : VerticalBox {
+                spacing: 8px;
+                Text { text: "No connections yet"; font-size: 22px; font-weight: 700; }
+                Text { text: "Add a cloud provider, then create a connection to choose what to copy."; wrap: word-wrap; }
+            }
+            for connection in root.connections : Rectangle {
+                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; height: 64px;
+                VerticalBox { padding: 10px; spacing: 2px;
+                    Text { text: connection.name; font-weight: 700; }
+                    Text { text: connection.detail; color: #454039; }
+                }
+            }
+        }
+
+        if root.page == 5 : VerticalBox {
+            spacing: 10px;
+            Text { text: "New connection"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
+            if root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
+            Text { text: "Connection name"; font-weight: 700; }
+            connection-name := LineEdit { placeholder-text: "For example, Photos backup"; }
+            Text { text: "Provider"; font-weight: 700; }
+            connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; }
+            Text { text: "Bucket"; font-weight: 700; }
+            connection-bucket := LineEdit { placeholder-text: "Bucket name"; }
+            Text { text: "Remote folder"; font-weight: 700; }
+            connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; }
+            Text { text: "Local folder"; font-weight: 700; }
+            connection-local := LineEdit { placeholder-text: "Full local folder path"; }
+            Text { text: "Mode"; font-weight: 700; }
+            connection-mode := ComboBox { model: ["Add-only", "Mirror", "Archive"]; }
+            Text { text: "Keep last N archives"; font-weight: 700; }
+            connection-retention := LineEdit { text: "1"; enabled: connection-mode.current-index == 2; }
+            HorizontalBox {
+                Button { text: "Back"; clicked => { root.show-connections(); } }
+                Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, connection-retention.text); } }
             }
         }
 

@@ -23,6 +23,7 @@ pub(crate) fn initialize(window: &AppWindow) {
     };
     configure_navigation(window, &configuration);
     configure_save_provider(window, &configuration);
+    crate::connection_controller::configure(window, &configuration);
 }
 
 fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {
