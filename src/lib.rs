@@ -4,6 +4,7 @@ mod android_folder_picker;
 mod android_foreground_execution;
 mod app_controller;
 pub mod atomic_write;
+pub mod cancellation;
 pub mod capabilities;
 pub mod comparison;
 pub mod configuration;
