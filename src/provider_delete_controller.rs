@@ -32,7 +32,7 @@ pub(crate) fn configure(
     let cancel_config = Rc::clone(configuration);
     let cancel_diagnostics = Rc::clone(&diagnostics);
     window.on_cancel_provider_delete(move || {
-        crate::app_controller::show_providers(
+        crate::provider_list_controller::show(
             &weak,
             Rc::clone(&cancel_config),
             Rc::clone(&cancel_diagnostics),
@@ -82,7 +82,7 @@ fn delete_provider(
                 })
         });
     match result {
-        Ok(_) => crate::app_controller::show_providers(
+        Ok(_) => crate::provider_list_controller::show(
             weak,
             Rc::clone(configuration),
             Rc::clone(diagnostics),

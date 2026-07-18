@@ -17,6 +17,8 @@ mod onboarding;
 pub mod platform;
 mod provider_delete_controller;
 mod provider_form;
+mod provider_form_controller;
+mod provider_list_controller;
 #[cfg(feature = "provider-probes")]
 pub mod provider_probe;
 #[cfg(feature = "provider-probes")]
