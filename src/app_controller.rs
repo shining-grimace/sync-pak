@@ -26,6 +26,7 @@ pub(crate) fn initialize(window: &AppWindow) {
     crate::provider_delete_controller::configure(window, &configuration);
     crate::connection_controller::configure(window, &configuration);
     crate::connection_delete_controller::configure(window, &configuration);
+    crate::folder_picker_controller::configure(window);
 }
 
 fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {

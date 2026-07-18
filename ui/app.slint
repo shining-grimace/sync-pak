@@ -49,6 +49,7 @@ export component AppWindow inherits Window {
     callback confirm-connection-delete();
     callback cancel-connection-delete();
     callback request-connection-edit(string);
+    callback select-local-folder();
     callback save-provider(string, int, string, string);
     callback save-connection(string, int, string, string, string, int, string);
 
@@ -180,7 +181,10 @@ export component AppWindow inherits Window {
             Text { text: "Remote folder"; font-weight: 700; }
             connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Local folder"; font-weight: 700; }
-            connection-local := LineEdit { placeholder-text: "Full local folder path"; text <=> root.connection-form-local; }
+            HorizontalBox {
+                connection-local := LineEdit { placeholder-text: "Full local folder path"; text <=> root.connection-form-local; horizontal-stretch: 1; }
+                Button { text: "Select folder"; clicked => { root.select-local-folder(); } }
+            }
             Text { text: "Mode"; font-weight: 700; }
             connection-mode := ComboBox { model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
             Text { text: "Keep last N archives"; font-weight: 700; }
