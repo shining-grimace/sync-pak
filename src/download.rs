@@ -4,6 +4,7 @@ use std::path::Path;
 
 use crate::atomic_write::atomic_write;
 use crate::provider_capabilities::{ObjectReader, ProviderError};
+use crate::retry::{RetryPolicy, RetrySleeper};
 
 pub async fn download_to_path<T: ObjectReader>(
     provider: &T,
@@ -16,6 +17,32 @@ pub async fn download_to_path<T: ObjectReader>(
         .await
         .map_err(DownloadError::Provider)?;
     atomic_write(destination, &contents).map_err(DownloadError::Local)
+}
+
+pub async fn download_to_path_with_retry<T: ObjectReader, S: RetrySleeper>(
+    provider: &T,
+    bucket: &str,
+    key: &str,
+    destination: &Path,
+    policy: &RetryPolicy,
+    sleeper: &S,
+    jitter_seed: u64,
+) -> Result<(), DownloadError> {
+    let mut completed_attempts = 0;
+    loop {
+        completed_attempts += 1;
+        match provider.read(bucket, key).await {
+            Ok(contents) => {
+                return atomic_write(destination, &contents).map_err(DownloadError::Local);
+            }
+            Err(error) => {
+                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
+                    Some(retry) => sleeper.sleep(retry.delay).await,
+                    None => return Err(DownloadError::Provider(error)),
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug)]

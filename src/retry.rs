@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{future::Future, time::Duration};
 
 use crate::provider_capabilities::ProviderError;
 
@@ -53,6 +53,10 @@ impl RetryPolicy {
 pub struct RetryDelay {
     pub next_attempt: u8,
     pub delay: Duration,
+}
+
+pub trait RetrySleeper {
+    fn sleep(&self, delay: Duration) -> impl Future<Output = ()> + Send;
 }
 
 #[cfg(test)]
