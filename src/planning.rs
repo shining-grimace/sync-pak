@@ -4,6 +4,9 @@ use std::fmt;
 use crate::comparison::{ComparedEntry, EntryStatus};
 use crate::configuration::SyncMode;
 use crate::inventory::RelativePath;
+use crate::plan_summary::summarize;
+
+pub use crate::plan_summary::PlanSummary;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Direction {
@@ -72,6 +75,7 @@ pub struct TransferPlan {
     mode: SyncMode,
     direction: Direction,
     actions: Vec<PlannedAction>,
+    summary: PlanSummary,
 }
 
 impl TransferPlan {
@@ -85,6 +89,10 @@ impl TransferPlan {
 
     pub fn actions(&self) -> &[PlannedAction] {
         &self.actions
+    }
+
+    pub fn summary(&self) -> &PlanSummary {
+        &self.summary
     }
 
     pub fn requires_confirmation(&self) -> bool {
@@ -111,6 +119,7 @@ pub fn plan(
     Ok(TransferPlan {
         mode,
         direction,
+        summary: summarize(&actions, comparison),
         actions,
     })
 }

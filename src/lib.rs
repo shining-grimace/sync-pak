@@ -22,6 +22,7 @@ pub mod inventory;
 pub mod local_inventory;
 pub mod notifications;
 mod onboarding;
+pub mod plan_summary;
 pub mod planning;
 pub mod platform;
 pub mod preflight;

@@ -41,6 +41,9 @@ fn add_only_copies_only_missing_source_paths_and_skips_changed_paths() {
         ]
     );
     assert!(!plan.requires_confirmation());
+    assert_eq!(plan.summary().additions(), 1);
+    assert_eq!(plan.summary().skipped(), 1);
+    assert_eq!(plan.summary().copy_byte_size(), 1);
 }
 
 #[test]
@@ -65,6 +68,10 @@ fn mirror_plans_overwrites_and_deletes_for_confirmation() {
     }));
     assert!(plan.actions().iter().any(PlannedAction::is_destructive));
     assert!(plan.requires_confirmation());
+    assert_eq!(plan.summary().overwrites(), 1);
+    assert_eq!(plan.summary().deletions(), 1);
+    assert_eq!(plan.summary().overwrite_byte_size(), 2);
+    assert_eq!(plan.summary().delete_byte_size(), 1);
 }
 
 #[test]
@@ -77,6 +84,7 @@ fn archive_has_a_non_mutating_creation_preview_and_rejects_both_ways() {
             to: Endpoint::Destination,
         }]
     );
+    assert_eq!(archive.summary().archives(), 1);
     assert_eq!(
         plan(SyncMode::Mirror, Direction::BothWays, &comparison()),
         Err(PlanError::BothWaysRequiresAddOnly)
