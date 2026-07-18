@@ -84,7 +84,16 @@ fn save_provider(
         window.set_status_message("Choose a provider type.".into());
         return;
     };
-    if let Err(error) = form_validation::provider(&name, &access_key_id, &secret_access_key) {
+    let account_id = window.get_provider_form_account_id();
+    let region = window.get_provider_form_region();
+    if let Err(error) = form_validation::provider(
+        &name,
+        &access_key_id,
+        &secret_access_key,
+        kind,
+        &account_id,
+        &region,
+    ) {
         window.set_status_message(error.into());
         return;
     }
@@ -96,7 +105,7 @@ fn save_provider(
     let draft = ProviderDraft {
         name: name.to_string(),
         kind,
-        options: provider_options(kind),
+        options: provider_options(&account_id, &region),
     };
     let edit_id = window.get_provider_form_id();
     let result = (|| {
@@ -158,6 +167,8 @@ fn show_add_provider(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_id(SharedString::default());
         window.set_provider_form_name(SharedString::default());
         window.set_provider_form_kind(0);
+        window.set_provider_form_account_id(SharedString::default());
+        window.set_provider_form_region(SharedString::default());
         window.set_page(2);
     }
 }
@@ -182,6 +193,10 @@ fn request_provider_edit(
             window.set_provider_form_id(provider.id.as_str().into());
             window.set_provider_form_name(provider.name.into());
             window.set_provider_form_kind(provider_kind_index(provider.kind));
+            window.set_provider_form_account_id(
+                provider.options.account_id.unwrap_or_default().into(),
+            );
+            window.set_provider_form_region(provider.options.region.unwrap_or_default().into());
             window.set_status_message(SharedString::default());
             window.set_page(2);
         }

@@ -1,11 +1,20 @@
+use crate::configuration::ProviderKind;
+
 pub(crate) fn provider(
     name: &str,
     access_key_id: &str,
     secret_access_key: &str,
+    kind: ProviderKind,
+    account_id: &str,
+    region: &str,
 ) -> Result<(), String> {
     required(name, "Provider name")?;
     required(access_key_id, "Access key ID")?;
-    required(secret_access_key, "Secret access key")
+    required(secret_access_key, "Secret access key")?;
+    match kind {
+        ProviderKind::CloudflareR2 => required(account_id, "Account ID"),
+        ProviderKind::BackblazeB2 | ProviderKind::AwsS3 => required(region, "Region"),
+    }
 }
 
 pub(crate) fn connection(
@@ -45,16 +54,43 @@ fn required(value: &str, label: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{connection, provider};
+    use crate::configuration::ProviderKind;
 
     #[test]
     fn provider_credentials_are_required() {
         assert_eq!(
-            provider("Provider", "", "secret"),
+            provider("Provider", "", "secret", ProviderKind::AwsS3, "", "region"),
             Err("Access key ID is required.".to_owned())
         );
         assert_eq!(
-            provider("Provider", "access", "  "),
+            provider(
+                "Provider",
+                "access",
+                "  ",
+                ProviderKind::AwsS3,
+                "",
+                "region"
+            ),
             Err("Secret access key is required.".to_owned())
+        );
+    }
+
+    #[test]
+    fn provider_specific_metadata_is_required() {
+        assert_eq!(
+            provider(
+                "Provider",
+                "access",
+                "secret",
+                ProviderKind::CloudflareR2,
+                "",
+                ""
+            ),
+            Err("Account ID is required.".to_owned())
+        );
+        assert_eq!(
+            provider("Provider", "access", "secret", ProviderKind::AwsS3, "", ""),
+            Err("Region is required.".to_owned())
         );
     }
 

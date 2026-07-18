@@ -95,6 +95,8 @@ pub enum ProviderKind {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ProviderOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub account_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub region: Option<String>,

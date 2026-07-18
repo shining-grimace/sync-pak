@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use super::{AppConfig, CURRENT_SCHEMA_VERSION, SyncMode};
+use super::{AppConfig, CURRENT_SCHEMA_VERSION, ProviderKind, SyncMode};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ValidationErrors(Vec<String>);
@@ -28,6 +28,7 @@ pub(super) fn validate(config: &AppConfig) -> Result<(), ValidationErrors> {
     unique_connection_ids(config, &mut errors);
     for provider in &config.providers {
         required(&provider.name, "Provider name", &mut errors);
+        validate_provider_options(provider, &mut errors);
         if provider.id != provider.credential_reference.provider_id {
             errors.push("A provider credential reference must use its provider ID.".to_owned());
         }
@@ -64,6 +65,21 @@ pub(super) fn validate(config: &AppConfig) -> Result<(), ValidationErrors> {
 fn required(value: &str, label: &str, errors: &mut Vec<String>) {
     if value.trim().is_empty() {
         errors.push(format!("{label} is required."));
+    }
+}
+
+fn validate_provider_options(provider: &super::ProviderConfig, errors: &mut Vec<String>) {
+    match provider.kind {
+        ProviderKind::CloudflareR2 => required(
+            provider.options.account_id.as_deref().unwrap_or_default(),
+            "Cloudflare R2 account ID",
+            errors,
+        ),
+        ProviderKind::BackblazeB2 | ProviderKind::AwsS3 => required(
+            provider.options.region.as_deref().unwrap_or_default(),
+            "Provider region",
+            errors,
+        ),
     }
 }
 

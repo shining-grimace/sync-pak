@@ -17,15 +17,16 @@ pub(crate) fn provider_kind_index(kind: ProviderKind) -> i32 {
     }
 }
 
-pub(crate) fn provider_options(kind: ProviderKind) -> ProviderOptions {
-    let region = match kind {
-        ProviderKind::CloudflareR2 => Some("auto".to_owned()),
-        ProviderKind::BackblazeB2 | ProviderKind::AwsS3 => None,
-    };
+pub(crate) fn provider_options(account_id: &str, region: &str) -> ProviderOptions {
     ProviderOptions {
+        account_id: optional(account_id),
         endpoint: None,
-        region,
+        region: optional(region),
     }
+}
+
+fn optional(value: &str) -> Option<String> {
+    (!value.trim().is_empty()).then(|| value.to_owned())
 }
 
 pub(crate) fn provider_id(configuration: &ConfigStore, id: &str) -> Result<ProviderId, String> {

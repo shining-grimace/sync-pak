@@ -139,6 +139,7 @@ fn provider_draft() -> ProviderDraft {
         name: "Test provider".to_owned(),
         kind: ProviderKind::AwsS3,
         options: ProviderOptions {
+            account_id: None,
             endpoint: None,
             region: Some("ap-southeast-2".to_owned()),
         },

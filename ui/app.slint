@@ -25,6 +25,8 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-id;
     in-out property <string> provider-form-name;
     in-out property <int> provider-form-kind;
+    in-out property <string> provider-form-account-id;
+    in-out property <string> provider-form-region;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
     in-out property <string> connection-form-id;
@@ -133,6 +135,16 @@ export component AppWindow inherits Window {
             provider-name := LineEdit { placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; }
             Text { text: "Provider type"; font-weight: 700; }
             provider-kind := ComboBox { model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; current-index <=> root.provider-form-kind; }
+            if root.provider-form-kind == 0 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Account ID"; font-weight: 700; }
+                LineEdit { placeholder-text: "Cloudflare account ID"; text <=> root.provider-form-account-id; }
+            }
+            if root.provider-form-kind != 0 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Region"; font-weight: 700; }
+                LineEdit { placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; }
+            }
             Text { text: "Access key ID"; font-weight: 700; }
             access-key := LineEdit { placeholder-text: "Access key ID"; }
             Text { text: "Secret access key"; font-weight: 700; }
