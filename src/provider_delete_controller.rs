@@ -16,8 +16,9 @@ pub(crate) fn configure(
 ) {
     let weak = window.as_weak();
     let request_config = Rc::clone(configuration);
+    let request_diagnostics = Rc::clone(&diagnostics);
     window.on_request_provider_delete(move |id| {
-        request_delete(&weak, &request_config, id);
+        request_delete(&weak, &request_config, &request_diagnostics, id);
     });
 
     let weak = window.as_weak();
@@ -29,12 +30,22 @@ pub(crate) fn configure(
 
     let weak = window.as_weak();
     let cancel_config = Rc::clone(configuration);
+    let cancel_diagnostics = Rc::clone(&diagnostics);
     window.on_cancel_provider_delete(move || {
-        crate::app_controller::show_providers(&weak, Rc::clone(&cancel_config));
+        crate::app_controller::show_providers(
+            &weak,
+            Rc::clone(&cancel_config),
+            Rc::clone(&cancel_diagnostics),
+        );
     });
 }
 
-fn request_delete(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id: SharedString) {
+fn request_delete(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+    id: SharedString,
+) {
     let Some(window) = weak.upgrade() else { return };
     match provider_and_dependents(configuration, id.as_str()) {
         Ok((provider, connection_count)) => {
@@ -44,7 +55,13 @@ fn request_delete(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id
             window.set_status_message(SharedString::default());
             window.set_page(6);
         }
-        Err(error) => window.set_status_message(error.into()),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Provider could not be prepared for deletion",
+            "provider deletion lookup failed",
+            "SyncPak could not prepare this provider for deletion. It may have been removed.",
+        ),
     }
 }
 
@@ -65,7 +82,11 @@ fn delete_provider(
                 })
         });
     match result {
-        Ok(_) => crate::app_controller::show_providers(weak, Rc::clone(configuration)),
+        Ok(_) => crate::app_controller::show_providers(
+            weak,
+            Rc::clone(configuration),
+            Rc::clone(diagnostics),
+        ),
         Err(_) => diagnostics_controller::present(
             &window,
             diagnostics,

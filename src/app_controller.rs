@@ -33,14 +33,16 @@ pub(crate) fn initialize(window: &AppWindow) {
             return;
         }
     };
-    configure_navigation(window, &configuration);
+    configure_navigation(window, &configuration, Rc::clone(&diagnostics));
     configure_save_provider(window, &configuration, Rc::clone(&diagnostics));
     crate::provider_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::folder_picker_controller::configure(window, diagnostics.clone());
     match configuration.load() {
-        Ok(config) if config.welcome_completed => show_providers(&window.as_weak(), configuration),
+        Ok(config) if config.welcome_completed => {
+            show_providers(&window.as_weak(), configuration, diagnostics)
+        }
         Ok(_) => {}
         Err(error) => {
             record_configuration_load_error(&diagnostics);
@@ -62,17 +64,31 @@ fn record_configuration_load_error(diagnostics: &SharedDiagnosticLog) {
     );
 }
 
-fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {
+fn configure_navigation(
+    window: &AppWindow,
+    configuration: &Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let weak = window.as_weak();
     let providers_config = Rc::clone(configuration);
-    window.on_show_providers(move || show_providers(&weak, Rc::clone(&providers_config)));
+    let providers_diagnostics = Rc::clone(&diagnostics);
+    window.on_show_providers(move || {
+        show_providers(
+            &weak,
+            Rc::clone(&providers_config),
+            Rc::clone(&providers_diagnostics),
+        )
+    });
 
     let weak = window.as_weak();
     window.on_show_add_provider(move || show_add_provider(&weak));
 
     let weak = window.as_weak();
     let edit_config = Rc::clone(configuration);
-    window.on_request_provider_edit(move |id| request_provider_edit(&weak, &edit_config, id));
+    let edit_diagnostics = Rc::clone(&diagnostics);
+    window.on_request_provider_edit(move |id| {
+        request_provider_edit(&weak, &edit_config, &edit_diagnostics, id)
+    });
 
     let weak = window.as_weak();
     window.on_show_welcome(move || set_page(&weak, 0));
@@ -157,9 +173,13 @@ fn save_provider(
     })();
     match result {
         Ok(_) => match complete_welcome(&configuration) {
-            Ok(()) => show_providers(weak, configuration),
-            Err(error) => window.set_status_message(
-                format!("Provider saved, but welcome state could not be updated: {error}").into(),
+            Ok(()) => show_providers(weak, configuration, Rc::clone(diagnostics)),
+            Err(_) => diagnostics_controller::present(
+                &window,
+                diagnostics,
+                "Provider was saved but welcome state could not be updated",
+                "welcome state save failed",
+                "The provider was saved, but SyncPak could not update its welcome state.",
             ),
         },
         Err(_) => diagnostics_controller::present(
@@ -172,17 +192,25 @@ fn save_provider(
     }
 }
 
-pub(crate) fn show_providers(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
+pub(crate) fn show_providers(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     window.set_page(1);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
-        refresh_providers(&weak, &configuration)
+        refresh_providers(&weak, &configuration, &diagnostics)
     });
 }
 
-fn refresh_providers(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore) {
+fn refresh_providers(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => {
@@ -194,9 +222,13 @@ fn refresh_providers(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore)
             window.set_providers(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
             window.set_status_message(SharedString::default());
         }
-        Err(error) => {
-            window.set_status_message(format!("SyncPak could not load providers: {error}").into())
-        }
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Providers could not be loaded",
+            "provider configuration load failed",
+            "SyncPak could not load providers. Check configuration storage and try again.",
+        ),
     }
 }
 
@@ -216,6 +248,7 @@ fn show_add_provider(weak: &slint::Weak<AppWindow>) {
 fn request_provider_edit(
     weak: &slint::Weak<AppWindow>,
     configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
@@ -243,7 +276,13 @@ fn request_provider_edit(
             window.set_status_message(SharedString::default());
             window.set_page(2);
         }
-        Err(error) => window.set_status_message(error.into()),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Provider could not be opened",
+            "provider edit load failed",
+            "SyncPak could not open this provider. It may have been removed.",
+        ),
     }
 }
 

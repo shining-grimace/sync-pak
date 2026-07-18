@@ -15,7 +15,10 @@ pub(crate) fn configure(
 ) {
     let weak = window.as_weak();
     let request_config = Rc::clone(configuration);
-    window.on_request_connection_delete(move |id| request_delete(&weak, &request_config, id));
+    let request_diagnostics = Rc::clone(&diagnostics);
+    window.on_request_connection_delete(move |id| {
+        request_delete(&weak, &request_config, &request_diagnostics, id)
+    });
 
     let weak = window.as_weak();
     let confirm_config = Rc::clone(configuration);
@@ -36,7 +39,12 @@ pub(crate) fn configure(
     });
 }
 
-fn request_delete(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id: SharedString) {
+fn request_delete(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+    id: SharedString,
+) {
     let Some(window) = weak.upgrade() else { return };
     match connection(configuration, id.as_str()) {
         Ok(connection) => {
@@ -45,7 +53,13 @@ fn request_delete(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id
             window.set_status_message(SharedString::default());
             window.set_page(7);
         }
-        Err(error) => window.set_status_message(error.into()),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Connection could not be prepared for deletion",
+            "connection deletion lookup failed",
+            "SyncPak could not prepare this connection for deletion. It may have been removed.",
+        ),
     }
 }
 
