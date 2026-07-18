@@ -24,6 +24,7 @@ pub mod inventory;
 pub mod inventory_endpoint;
 pub mod inventory_fingerprint;
 pub mod local_inventory;
+pub mod multipart_upload;
 pub mod notifications;
 mod onboarding;
 pub mod plan_summary;
