@@ -86,3 +86,21 @@ fn archive_preflight_preserves_case_sensitive_zip_entries() {
 
     assert_eq!(result.comparison().len(), 2);
 }
+
+#[test]
+fn becomes_stale_when_either_inventory_metadata_changes() {
+    let source = inventory(&["source"]);
+    let destination = inventory(&[]);
+    let result = preflight(
+        SyncMode::Mirror,
+        Direction::Upload,
+        &source,
+        CaseSensitivity::Sensitive,
+        &destination,
+        CaseSensitivity::Sensitive,
+    )
+    .unwrap();
+
+    assert!(result.is_current(&source, &destination));
+    assert!(!result.is_current(&inventory(&["source", "new"]), &destination));
+}

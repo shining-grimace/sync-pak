@@ -20,6 +20,7 @@ mod folder_picker_controller;
 mod form_validation;
 pub mod inventory;
 pub mod inventory_endpoint;
+pub mod inventory_fingerprint;
 pub mod local_inventory;
 pub mod notifications;
 mod onboarding;

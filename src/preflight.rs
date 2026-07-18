@@ -4,6 +4,7 @@ use std::fmt;
 use crate::comparison::{ComparedEntry, compare};
 use crate::configuration::SyncMode;
 use crate::inventory::{Inventory, RelativePath};
+use crate::inventory_fingerprint::{InventoryFingerprint, fingerprint};
 use crate::planning::{Direction, Endpoint, PlanError, TransferPlan, plan};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -17,6 +18,8 @@ pub enum CaseSensitivity {
 pub struct Preflight {
     comparison: Vec<ComparedEntry>,
     plan: TransferPlan,
+    source_fingerprint: InventoryFingerprint,
+    destination_fingerprint: InventoryFingerprint,
 }
 
 impl Preflight {
@@ -26,6 +29,11 @@ impl Preflight {
 
     pub fn plan(&self) -> &TransferPlan {
         &self.plan
+    }
+
+    pub fn is_current(&self, source: &Inventory, destination: &Inventory) -> bool {
+        self.source_fingerprint == fingerprint(source)
+            && self.destination_fingerprint == fingerprint(destination)
     }
 }
 
@@ -55,7 +63,12 @@ pub fn preflight(
     }
     let comparison = compare(source, destination);
     let plan = plan(mode, direction, &comparison).map_err(PreflightError::Plan)?;
-    Ok(Preflight { comparison, plan })
+    Ok(Preflight {
+        comparison,
+        plan,
+        source_fingerprint: fingerprint(source),
+        destination_fingerprint: fingerprint(destination),
+    })
 }
 
 fn validate_case_collisions(
