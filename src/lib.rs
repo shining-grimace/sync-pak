@@ -56,6 +56,7 @@ pub mod s3_transport;
 #[cfg(feature = "provider-s3")]
 mod s3_writer;
 pub mod upload;
+pub mod upload_strategy;
 
 pub use capabilities::CapabilityError;
 
