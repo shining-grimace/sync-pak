@@ -115,5 +115,8 @@ impl Error for PreflightError {
 }
 
 #[cfg(test)]
+#[path = "preflight_golden_tests.rs"]
+mod golden_tests;
+#[cfg(test)]
 #[path = "preflight_tests.rs"]
 mod tests;

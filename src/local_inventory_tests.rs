@@ -47,3 +47,19 @@ fn reports_a_missing_root_with_the_filesystem_error() {
     let error = NativeLocalInventory.inventory(missing).unwrap_err();
     assert!(error.to_string().contains("read directory"));
 }
+
+#[cfg(unix)]
+#[test]
+fn rejects_non_utf8_filesystem_names_without_lossy_conversion() {
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+
+    let root = temporary_directory();
+    let name = OsString::from_vec(b"not-utf8-\xff".to_vec());
+    fs::write(root.join(name), "contents").unwrap();
+
+    let error = NativeLocalInventory.inventory(&root).unwrap_err();
+    fs::remove_dir_all(&root).unwrap();
+
+    assert!(matches!(error, super::LocalInventoryError::NonUtf8Path(_)));
+}
