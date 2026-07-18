@@ -7,6 +7,7 @@ use crate::{
     configuration::{
         ConfigStore, ProviderCredentials, ProviderDraft, ProviderKind, ProviderRepository,
     },
+    form_validation,
     platform::PlatformCredentialStore,
     provider_form::{provider_id, provider_kind, provider_kind_index, provider_options},
 };
@@ -76,6 +77,10 @@ fn save_provider(
         window.set_status_message("Choose a provider type.".into());
         return;
     };
+    if let Err(error) = form_validation::provider(&name, &access_key_id, &secret_access_key) {
+        window.set_status_message(error.into());
+        return;
+    }
     let credentials = ProviderCredentials {
         access_key_id: access_key_id.to_string(),
         secret_access_key: secret_access_key.to_string(),

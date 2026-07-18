@@ -10,6 +10,7 @@ mod connection_delete_controller;
 #[cfg(test)]
 mod feasibility;
 mod folder_picker_controller;
+mod form_validation;
 pub mod notifications;
 pub mod platform;
 mod provider_delete_controller;
