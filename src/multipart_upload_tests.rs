@@ -9,7 +9,7 @@ use std::{
 
 use uuid::Uuid;
 
-use super::{MultipartUploadError, upload_parts};
+use super::{MultipartUploadError, upload_parts, upload_parts_with_cancellation};
 use crate::provider_capabilities::{
     MultipartUpload, MultipartUploadRequest, MultipartUploader, ProviderError, ProviderResult,
     UploadedPart,
@@ -165,5 +165,26 @@ fn cancellation_aborts_a_started_upload_before_the_next_part() {
     std::fs::remove_file(&source).unwrap();
 
     assert_eq!(provider.parts.lock().unwrap().as_slice(), [b"abc".to_vec()]);
+    assert_eq!(provider.aborts.load(Ordering::Relaxed), 1);
+}
+
+#[test]
+fn cancellation_aborts_in_memory_upload_before_the_next_part() {
+    let cancellation = CancellationToken::default();
+    let provider = Provider {
+        cancel_after_first_part: Some(cancellation.clone()),
+        ..Default::default()
+    };
+
+    assert_eq!(
+        block_on(upload_parts_with_cancellation(
+            &provider,
+            &request(),
+            &[b"one", b"two"],
+            &cancellation,
+        )),
+        Err(MultipartUploadError::Cancelled { abort_error: None })
+    );
+    assert_eq!(provider.parts.lock().unwrap().as_slice(), [b"one".to_vec()]);
     assert_eq!(provider.aborts.load(Ordering::Relaxed), 1);
 }

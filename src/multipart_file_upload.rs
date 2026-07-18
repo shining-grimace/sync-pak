@@ -128,6 +128,9 @@ async fn abort<T: MultipartUploader>(
         MultipartFileUploadError::Cancelled { .. } => {
             MultipartFileUploadError::Cancelled { abort_error }
         }
+        MultipartFileUploadError::Provider(MultipartUploadError::Cancelled { .. }) => {
+            MultipartFileUploadError::Cancelled { abort_error }
+        }
         MultipartFileUploadError::Provider(MultipartUploadError::Provider { error, .. }) => {
             provider_error_with_abort(error, abort_error)
         }
