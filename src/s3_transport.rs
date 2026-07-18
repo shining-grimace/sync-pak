@@ -7,15 +7,16 @@ use aws_sdk_s3::{
 };
 
 use crate::{
-    configuration::{ProviderConfig, ProviderCredentials, ProviderKind},
+    configuration::{ProviderConfig, ProviderCredentials},
     provider_capabilities::{
         BucketLister, ObjectDeleter, ObjectLister, ObjectMetadata, ObjectMetadataReader,
         ObjectReader, ObjectWriter, ProviderError, ProviderResult, RemoteObject,
     },
+    s3_settings::S3Settings,
 };
 
 pub struct S3Transport {
-    client: Client,
+    pub(crate) client: Client,
 }
 
 impl S3Transport {
@@ -158,48 +159,6 @@ impl ObjectDeleter for S3Transport {
     }
 }
 
-struct S3Settings {
-    endpoint: Option<String>,
-    force_path_style: bool,
-    region: String,
-}
-
-impl S3Settings {
-    fn from_provider(provider: &ProviderConfig) -> ProviderResult<Self> {
-        let endpoint = match provider.kind {
-            ProviderKind::AwsS3 => provider.options.endpoint.clone(),
-            ProviderKind::CloudflareR2 => Some(format!(
-                "https://{}.r2.cloudflarestorage.com",
-                provider
-                    .options
-                    .account_id
-                    .as_deref()
-                    .ok_or(ProviderError::InvalidRequest)?
-            )),
-            ProviderKind::BackblazeB2 => Some(
-                provider
-                    .options
-                    .endpoint
-                    .clone()
-                    .ok_or(ProviderError::InvalidRequest)?,
-            ),
-        };
-        let region = match provider.kind {
-            ProviderKind::CloudflareR2 => "auto".to_owned(),
-            ProviderKind::AwsS3 | ProviderKind::BackblazeB2 => provider
-                .options
-                .region
-                .clone()
-                .ok_or(ProviderError::InvalidRequest)?,
-        };
-        Ok(Self {
-            endpoint,
-            force_path_style: !matches!(provider.kind, ProviderKind::AwsS3),
-            region,
-        })
-    }
-}
-
 fn remote_object(object: &aws_sdk_s3::types::Object) -> ProviderResult<RemoteObject> {
     Ok(RemoteObject {
         key: object
@@ -229,76 +188,13 @@ fn object_metadata(
         entity_tag: entity_tag.map(ToOwned::to_owned),
     })
 }
-
-fn provider_error<E: ProvideErrorMetadata>(error: SdkError<E>) -> ProviderError {
+pub(crate) fn provider_error<E: ProvideErrorMetadata>(error: SdkError<E>) -> ProviderError {
     match error.as_service_error().and_then(|value| value.code()) {
         Some("AccessDenied") => ProviderError::PermissionDenied,
         Some("InvalidAccessKeyId" | "InvalidToken" | "SignatureDoesNotMatch") => {
             ProviderError::Authentication
         }
-        Some("NoSuchBucket" | "NoSuchKey" | "NotFound") => ProviderError::NotFound,
+        Some("NoSuchBucket" | "NoSuchKey" | "NoSuchUpload" | "NotFound") => ProviderError::NotFound,
         _ => ProviderError::Unavailable,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::S3Settings;
-    use crate::configuration::{
-        CredentialReference, ProviderConfig, ProviderId, ProviderKind, ProviderOptions,
-    };
-
-    #[test]
-    fn r2_uses_its_account_endpoint_and_auto_region() {
-        let settings = S3Settings::from_provider(&provider(
-            ProviderKind::CloudflareR2,
-            Some("account"),
-            None,
-            None,
-        ))
-        .unwrap();
-
-        assert_eq!(
-            settings.endpoint.as_deref(),
-            Some("https://account.r2.cloudflarestorage.com")
-        );
-        assert_eq!(settings.region, "auto");
-        assert!(settings.force_path_style);
-    }
-
-    #[test]
-    fn b2_requires_an_explicit_regional_endpoint() {
-        assert!(
-            S3Settings::from_provider(&provider(
-                ProviderKind::BackblazeB2,
-                None,
-                None,
-                Some("us-west-001")
-            ))
-            .is_err()
-        );
-    }
-
-    fn provider(
-        kind: ProviderKind,
-        account_id: Option<&str>,
-        endpoint: Option<&str>,
-        region: Option<&str>,
-    ) -> ProviderConfig {
-        let id = ProviderId::new();
-        ProviderConfig {
-            credential_reference: CredentialReference {
-                provider_id: id.clone(),
-            },
-            id,
-            name: "Test".to_owned(),
-            kind,
-            options: ProviderOptions {
-                account_id: account_id.map(ToOwned::to_owned),
-                default_bucket: None,
-                endpoint: endpoint.map(ToOwned::to_owned),
-                region: region.map(ToOwned::to_owned),
-            },
-        }
     }
 }
