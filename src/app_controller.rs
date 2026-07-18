@@ -6,7 +6,9 @@ use crate::{
     AppWindow, ProviderRow,
     configuration::{
         ConfigStore, ProviderCredentials, ProviderDraft, ProviderKind, ProviderRepository,
+        StructuredError,
     },
+    diagnostics_controller::{self, SharedDiagnosticLog},
     form_validation,
     onboarding::complete_welcome,
     platform::PlatformCredentialStore,
@@ -14,12 +16,20 @@ use crate::{
 };
 
 pub(crate) fn initialize(window: &AppWindow) {
+    let diagnostics = Rc::new(std::cell::RefCell::new(Default::default()));
+    diagnostics_controller::configure(window, Rc::clone(&diagnostics));
     let configuration = match ConfigStore::for_current_platform() {
         Ok(configuration) => Rc::new(configuration),
         Err(error) => {
-            window.set_status_message(
-                format!("SyncPak could not access configuration: {error}").into(),
+            diagnostics_controller::record(
+                &diagnostics,
+                StructuredError::new(
+                    "Configuration could not be opened",
+                    "configuration directory unavailable",
+                ),
             );
+            let _ = error;
+            window.set_status_message("SyncPak could not access its configuration. Check its storage location and try again.".into());
             return;
         }
     };
@@ -32,9 +42,24 @@ pub(crate) fn initialize(window: &AppWindow) {
     match configuration.load() {
         Ok(config) if config.welcome_completed => show_providers(&window.as_weak(), configuration),
         Ok(_) => {}
-        Err(error) => window
-            .set_status_message(format!("SyncPak could not load configuration: {error}").into()),
+        Err(error) => {
+            record_configuration_load_error(&diagnostics);
+            let _ = error;
+            window.set_status_message(
+                "SyncPak could not load its configuration. Check the file and try again.".into(),
+            );
+        }
     }
+}
+
+fn record_configuration_load_error(diagnostics: &SharedDiagnosticLog) {
+    diagnostics_controller::record(
+        diagnostics,
+        StructuredError::new(
+            "Configuration could not be loaded",
+            "configuration load failed",
+        ),
+    );
 }
 
 fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {

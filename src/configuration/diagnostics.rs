@@ -2,16 +2,16 @@ use std::path::Path;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StructuredError {
-    summary: String,
+    summary: &'static str,
     technical_details: &'static str,
     affected_path: Option<String>,
 }
 
 impl StructuredError {
-    /// Technical details are static diagnostic labels, so credentials cannot be interpolated.
-    pub fn new(summary: impl Into<String>, technical_details: &'static str) -> Self {
+    /// Both labels are static so provider credentials cannot enter diagnostics by interpolation.
+    pub fn new(summary: &'static str, technical_details: &'static str) -> Self {
         Self {
-            summary: summary.into(),
+            summary,
             technical_details,
             affected_path: None,
         }
@@ -20,6 +20,25 @@ impl StructuredError {
     pub fn at_path(mut self, path: &Path) -> Self {
         self.affected_path = path.to_str().map(ToOwned::to_owned);
         self
+    }
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct DiagnosticLog {
+    errors: Vec<StructuredError>,
+}
+
+impl DiagnosticLog {
+    pub fn record(&mut self, error: StructuredError) {
+        self.errors.push(error);
+    }
+
+    pub fn report(&self) -> DiagnosticReport {
+        DiagnosticReport {
+            application_version: env!("CARGO_PKG_VERSION").to_owned(),
+            operating_system: std::env::consts::OS.to_owned(),
+            errors: self.errors.clone(),
+        }
     }
 }
 
@@ -36,6 +55,9 @@ impl DiagnosticReport {
             "SyncPak {}\nOperating system: {}",
             self.application_version, self.operating_system
         );
+        if self.errors.is_empty() {
+            report.push_str("\nNo errors have been recorded in this session.");
+        }
         for error in &self.errors {
             report.push_str(&format!(
                 "\nError: {}\nTechnical details: {}",
@@ -51,7 +73,7 @@ impl DiagnosticReport {
 
 #[cfg(test)]
 mod tests {
-    use super::{DiagnosticReport, StructuredError};
+    use super::{DiagnosticLog, DiagnosticReport, StructuredError};
     use std::path::Path;
 
     #[test]
@@ -66,5 +88,15 @@ mod tests {
         };
         assert!(!report.redacted_text(false).contains("/private/file"));
         assert!(report.redacted_text(true).contains("/private/file"));
+    }
+
+    #[test]
+    fn empty_log_reports_a_session_without_errors() {
+        assert!(
+            DiagnosticLog::default()
+                .report()
+                .redacted_text(false)
+                .contains("No errors have been recorded")
+        );
     }
 }

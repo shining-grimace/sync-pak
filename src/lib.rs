@@ -7,6 +7,7 @@ pub mod capabilities;
 pub mod configuration;
 mod connection_controller;
 mod connection_delete_controller;
+mod diagnostics_controller;
 #[cfg(test)]
 mod feasibility;
 mod folder_picker_controller;
