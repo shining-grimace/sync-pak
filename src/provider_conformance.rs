@@ -1,11 +1,12 @@
 //! Reusable provider behavior checks for isolated test buckets and prefixes.
 
 use crate::provider_capabilities::{
-    BucketLister, ObjectDeleter, ObjectLister, ObjectMetadataReader, ObjectReader, ObjectWriter,
-    ProviderError,
+    BucketLister, ObjectDeleter, ObjectLister, ObjectMetadataReader, ObjectReader,
+    ObjectWriteMetadata, ObjectWriter, ProviderError,
 };
 
 const CONTENTS: &[u8] = b"SyncPak provider conformance check\n";
+const SOURCE_MODIFIED_UNIX_SECONDS: i64 = 1_700_000_000;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ConformancePhase {
@@ -102,7 +103,14 @@ where
     T: ObjectDeleter + ObjectLister + ObjectMetadataReader + ObjectReader + ObjectWriter,
 {
     provider
-        .write(bucket, key, CONTENTS)
+        .write_with_metadata(
+            bucket,
+            key,
+            CONTENTS,
+            &ObjectWriteMetadata {
+                source_modified_unix_seconds: Some(SOURCE_MODIFIED_UNIX_SECONDS),
+            },
+        )
         .await
         .map_err(|error| ConformanceError::new(ConformancePhase::ObjectWrite, error))?;
     let verification = verify_written_object(provider, bucket, prefix, key).await;
@@ -147,17 +155,17 @@ where
             ConformancePhase::ObjectContent,
             ProviderError::Unexpected,
         ))?;
-    (provider
+    let metadata = provider
         .metadata(bucket, key)
         .await
-        .map_err(|error| ConformanceError::new(ConformancePhase::ObjectMetadata, error))?
-        .byte_size
-        == CONTENTS.len() as u64)
-        .then_some(())
-        .ok_or(ConformanceError::new(
-            ConformancePhase::ObjectMetadata,
-            ProviderError::Unexpected,
-        ))
+        .map_err(|error| ConformanceError::new(ConformancePhase::ObjectMetadata, error))?;
+    (metadata.byte_size == CONTENTS.len() as u64
+        && metadata.source_modified_unix_seconds == Some(SOURCE_MODIFIED_UNIX_SECONDS))
+    .then_some(())
+    .ok_or(ConformanceError::new(
+        ConformancePhase::ObjectMetadata,
+        ProviderError::Unexpected,
+    ))
 }
 
 async fn verify_deleted_object<T>(

@@ -75,6 +75,7 @@ struct InMemoryProvider {
     delete_count: AtomicU32,
     fail_reads: AtomicBool,
     objects: Mutex<BTreeMap<String, Vec<u8>>>,
+    source_modified_times: Mutex<BTreeMap<String, Option<i64>>>,
 }
 
 impl BucketLister for InMemoryProvider {
@@ -93,7 +94,7 @@ impl ObjectLister for InMemoryProvider {
             .filter(|(key, _)| key.starts_with(prefix))
             .map(|(key, contents)| RemoteObject {
                 key: key.clone(),
-                metadata: metadata(contents),
+                metadata: metadata(contents, None),
             })
             .collect())
     }
@@ -119,6 +120,10 @@ impl ObjectWriter for InMemoryProvider {
             .lock()
             .unwrap()
             .insert(key.to_owned(), contents.to_vec());
+        self.source_modified_times
+            .lock()
+            .unwrap()
+            .insert(key.to_owned(), None);
         Ok(())
     }
 
@@ -127,20 +132,38 @@ impl ObjectWriter for InMemoryProvider {
         bucket: &str,
         key: &str,
         contents: &[u8],
-        _: &ObjectWriteMetadata,
+        metadata: &ObjectWriteMetadata,
     ) -> ProviderResult<()> {
-        self.write(bucket, key, contents).await
+        self.objects
+            .lock()
+            .unwrap()
+            .insert(key.to_owned(), contents.to_vec());
+        self.source_modified_times
+            .lock()
+            .unwrap()
+            .insert(key.to_owned(), metadata.source_modified_unix_seconds);
+        let _ = bucket;
+        Ok(())
     }
 }
 
 impl ObjectMetadataReader for InMemoryProvider {
     async fn metadata(&self, _: &str, key: &str) -> ProviderResult<ObjectMetadata> {
-        self.objects
+        let contents = self
+            .objects
             .lock()
             .unwrap()
             .get(key)
-            .map(|contents| metadata(contents))
-            .ok_or(ProviderError::NotFound)
+            .cloned()
+            .ok_or(ProviderError::NotFound)?;
+        let source_modified_unix_seconds = self
+            .source_modified_times
+            .lock()
+            .unwrap()
+            .get(key)
+            .copied()
+            .flatten();
+        Ok(metadata(&contents, source_modified_unix_seconds))
     }
 }
 
@@ -148,15 +171,16 @@ impl ObjectDeleter for InMemoryProvider {
     async fn delete(&self, _: &str, key: &str) -> ProviderResult<()> {
         self.delete_count.fetch_add(1, Ordering::Relaxed);
         self.objects.lock().unwrap().remove(key);
+        self.source_modified_times.lock().unwrap().remove(key);
         Ok(())
     }
 }
 
-fn metadata(contents: &[u8]) -> ObjectMetadata {
+fn metadata(contents: &[u8], source_modified_unix_seconds: Option<i64>) -> ObjectMetadata {
     ObjectMetadata {
         byte_size: contents.len() as u64,
         modified_unix_seconds: None,
-        source_modified_unix_seconds: None,
+        source_modified_unix_seconds,
         content_type: None,
         entity_tag: None,
     }
