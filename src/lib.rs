@@ -22,6 +22,7 @@ mod onboarding;
 pub mod planning;
 pub mod platform;
 pub mod provider_capabilities;
+pub mod provider_conformance;
 mod provider_delete_controller;
 mod provider_form;
 mod provider_form_controller;
