@@ -35,7 +35,7 @@ pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
     );
 }
 
-fn show_connections(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
+pub(crate) fn show_connections(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     window.set_page(4);
@@ -57,6 +57,7 @@ fn refresh_connections(weak: &slint::Weak<AppWindow>, configuration: &ConfigStor
                     .map(|provider| provider.name.as_str())
                     .unwrap_or("Unavailable provider");
                 ConnectionRow {
+                    id: connection.id.as_str().into(),
                     name: connection.name.clone().into(),
                     detail: format!(
                         "On this device → In {provider} · {}",

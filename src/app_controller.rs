@@ -25,6 +25,7 @@ pub(crate) fn initialize(window: &AppWindow) {
     configure_save_provider(window, &configuration);
     crate::provider_delete_controller::configure(window, &configuration);
     crate::connection_controller::configure(window, &configuration);
+    crate::connection_delete_controller::configure(window, &configuration);
 }
 
 fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {

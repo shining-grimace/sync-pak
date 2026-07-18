@@ -8,6 +8,7 @@ export struct ProviderRow {
 }
 
 export struct ConnectionRow {
+    id: string,
     name: string,
     detail: string,
 }
@@ -24,6 +25,8 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-id;
     in-out property <string> provider-form-name;
     in-out property <int> provider-form-kind;
+    in-out property <string> pending-connection-id;
+    in-out property <string> pending-connection-name;
     callback show-providers();
     callback show-connections();
     callback show-add-provider();
@@ -34,6 +37,9 @@ export component AppWindow inherits Window {
     callback request-provider-edit(string);
     callback confirm-provider-delete();
     callback cancel-provider-delete();
+    callback request-connection-delete(string);
+    callback confirm-connection-delete();
+    callback cancel-connection-delete();
     callback save-provider(string, int, string, string);
     callback save-connection(string, int, string, string, string, int, string);
 
@@ -139,10 +145,13 @@ export component AppWindow inherits Window {
                 Text { text: "Add a cloud provider, then create a connection to choose what to copy."; wrap: word-wrap; }
             }
             for connection in root.connections : Rectangle {
-                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; height: 64px;
-                VerticalBox { padding: 10px; spacing: 2px;
-                    Text { text: connection.name; font-weight: 700; }
-                    Text { text: connection.detail; color: #454039; }
+                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; height: 70px;
+                HorizontalBox { padding: 10px; spacing: 8px;
+                    VerticalBox { spacing: 2px; horizontal-stretch: 1;
+                        Text { text: connection.name; font-weight: 700; }
+                        Text { text: connection.detail; color: #454039; }
+                    }
+                    Button { text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
                 }
             }
         }
@@ -188,6 +197,16 @@ export component AppWindow inherits Window {
             HorizontalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
                 Button { text: "Delete provider and " + root.pending-connection-count + " connections"; primary: true; clicked => { root.confirm-provider-delete(); } }
+            }
+        }
+
+        if root.page == 7 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Delete " + root.pending-connection-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
+            Text { text: "This removes the connection from SyncPak. It does not delete local or cloud files."; wrap: word-wrap; }
+            HorizontalBox {
+                Button { text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
+                Button { text: "Delete connection"; primary: true; clicked => { root.confirm-connection-delete(); } }
             }
         }
         Rectangle { vertical-stretch: 1; }
