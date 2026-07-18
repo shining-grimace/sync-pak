@@ -8,6 +8,7 @@ use crate::{
         ConfigStore, ProviderCredentials, ProviderDraft, ProviderKind, ProviderRepository,
     },
     form_validation,
+    onboarding::complete_welcome,
     platform::PlatformCredentialStore,
     provider_form::{provider_id, provider_kind, provider_kind_index, provider_options},
 };
@@ -28,6 +29,12 @@ pub(crate) fn initialize(window: &AppWindow) {
     crate::connection_controller::configure(window, &configuration);
     crate::connection_delete_controller::configure(window, &configuration);
     crate::folder_picker_controller::configure(window);
+    match configuration.load() {
+        Ok(config) if config.welcome_completed => show_providers(&window.as_weak(), configuration),
+        Ok(_) => {}
+        Err(error) => window
+            .set_status_message(format!("SyncPak could not load configuration: {error}").into()),
+    }
 }
 
 fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {
@@ -107,7 +114,12 @@ fn save_provider(
         }
     })();
     match result {
-        Ok(_) => show_providers(weak, configuration),
+        Ok(_) => match complete_welcome(&configuration) {
+            Ok(()) => show_providers(weak, configuration),
+            Err(error) => window.set_status_message(
+                format!("Provider saved, but welcome state could not be updated: {error}").into(),
+            ),
+        },
         Err(error) => window.set_status_message(error.into()),
     }
 }

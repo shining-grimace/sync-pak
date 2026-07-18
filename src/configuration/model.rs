@@ -9,6 +9,8 @@ pub const CURRENT_SCHEMA_VERSION: u32 = 1;
 pub struct AppConfig {
     pub schema_version: u32,
     #[serde(default)]
+    pub welcome_completed: bool,
+    #[serde(default)]
     pub providers: Vec<ProviderConfig>,
     #[serde(default)]
     pub connections: Vec<ConnectionConfig>,
@@ -18,6 +20,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             schema_version: CURRENT_SCHEMA_VERSION,
+            welcome_completed: false,
             providers: Vec::new(),
             connections: Vec::new(),
         }
