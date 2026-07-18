@@ -60,6 +60,7 @@ mod s3_settings;
 pub mod s3_transport;
 #[cfg(feature = "provider-s3")]
 mod s3_writer;
+pub mod transfer_execution;
 pub mod upload;
 pub mod upload_strategy;
 
