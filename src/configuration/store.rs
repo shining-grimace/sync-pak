@@ -1,9 +1,9 @@
 use std::{
     env, fs, io,
-    io::Write,
     path::{Path, PathBuf},
 };
-use uuid::Uuid;
+
+use crate::atomic_write::atomic_write;
 
 use super::{AppConfig, ValidationErrors};
 
@@ -92,36 +92,6 @@ fn config_directory() -> Option<PathBuf> {
             .map(PathBuf::from)
             .or_else(|| env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
     }
-}
-
-fn atomic_write(path: &Path, contents: &[u8]) -> io::Result<()> {
-    let directory = path.parent().ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "configuration path has no parent directory",
-        )
-    })?;
-    fs::create_dir_all(directory)?;
-    let temporary = directory.join(format!(
-        ".{}.{}.tmp",
-        path.file_name().unwrap_or_default().to_string_lossy(),
-        Uuid::new_v4()
-    ));
-    let write_result = (|| {
-        let mut temporary_file = fs::File::options()
-            .create_new(true)
-            .write(true)
-            .open(&temporary)?;
-        temporary_file.write_all(contents)?;
-        temporary_file.sync_all()
-    })();
-    if let Err(error) = write_result {
-        let _ = fs::remove_file(&temporary);
-        return Err(error);
-    }
-    fs::rename(&temporary, path).inspect_err(|_| {
-        let _ = fs::remove_file(&temporary);
-    })
 }
 
 #[cfg(test)]
