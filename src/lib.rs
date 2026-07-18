@@ -2,6 +2,7 @@
 mod android_folder_picker;
 #[cfg(target_os = "android")]
 mod android_foreground_execution;
+mod app_controller;
 pub mod capabilities;
 pub mod configuration;
 #[cfg(test)]
@@ -19,7 +20,9 @@ slint::include_modules!();
 
 /// Opens the SyncPak application window and runs its event loop.
 pub fn run() -> Result<(), slint::PlatformError> {
-    AppWindow::new()?.run()
+    let window = AppWindow::new()?;
+    app_controller::initialize(&window);
+    window.run()
 }
 
 #[cfg(target_os = "android")]
