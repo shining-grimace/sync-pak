@@ -27,6 +27,14 @@ export component AppWindow inherits Window {
     in-out property <int> provider-form-kind;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
+    in-out property <string> connection-form-id;
+    in-out property <string> connection-form-name;
+    in-out property <int> connection-form-provider;
+    in-out property <string> connection-form-bucket;
+    in-out property <string> connection-form-remote;
+    in-out property <string> connection-form-local;
+    in-out property <int> connection-form-mode;
+    in-out property <string> connection-form-retention: "1";
     callback show-providers();
     callback show-connections();
     callback show-add-provider();
@@ -40,6 +48,7 @@ export component AppWindow inherits Window {
     callback request-connection-delete(string);
     callback confirm-connection-delete();
     callback cancel-connection-delete();
+    callback request-connection-edit(string);
     callback save-provider(string, int, string, string);
     callback save-connection(string, int, string, string, string, int, string);
 
@@ -151,6 +160,7 @@ export component AppWindow inherits Window {
                         Text { text: connection.name; font-weight: 700; }
                         Text { text: connection.detail; color: #454039; }
                     }
+                    Button { text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
                     Button { text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
                 }
             }
@@ -158,23 +168,23 @@ export component AppWindow inherits Window {
 
         if root.page == 5 : VerticalBox {
             spacing: 10px;
-            Text { text: "New connection"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: root.connection-form-id == "" ? "New connection" : "Edit connection"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
             if root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
             Text { text: "Connection name"; font-weight: 700; }
-            connection-name := LineEdit { placeholder-text: "For example, Photos backup"; }
+            connection-name := LineEdit { placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
             Text { text: "Provider"; font-weight: 700; }
-            connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; }
+            connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; }
             Text { text: "Bucket"; font-weight: 700; }
-            connection-bucket := LineEdit { placeholder-text: "Bucket name"; }
+            connection-bucket := LineEdit { placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; }
             Text { text: "Remote folder"; font-weight: 700; }
-            connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; }
+            connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Local folder"; font-weight: 700; }
-            connection-local := LineEdit { placeholder-text: "Full local folder path"; }
+            connection-local := LineEdit { placeholder-text: "Full local folder path"; text <=> root.connection-form-local; }
             Text { text: "Mode"; font-weight: 700; }
-            connection-mode := ComboBox { model: ["Add-only", "Mirror", "Archive"]; }
+            connection-mode := ComboBox { model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
             Text { text: "Keep last N archives"; font-weight: 700; }
-            connection-retention := LineEdit { text: "1"; enabled: connection-mode.current-index == 2; }
+            connection-retention := LineEdit { text <=> root.connection-form-retention; enabled: connection-mode.current-index == 2; }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.show-connections(); } }
                 Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, connection-retention.text); } }

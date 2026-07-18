@@ -33,6 +33,10 @@ pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
             );
         },
     );
+
+    let weak = window.as_weak();
+    let edit_config = Rc::clone(configuration);
+    window.on_request_connection_edit(move |id| request_edit(&weak, &edit_config, id));
 }
 
 pub(crate) fn show_connections(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
@@ -78,6 +82,7 @@ fn refresh_connections(weak: &slint::Weak<AppWindow>, configuration: &ConfigStor
 fn show_add_connection(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
+    reset_form(&window);
     window.set_page(5);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
@@ -113,6 +118,7 @@ fn save_connection(
     retention: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    let edit_id = window.get_connection_form_id();
     let result = draft_from_input(
         &configuration,
         name,
@@ -124,14 +130,79 @@ fn save_connection(
         retention,
     )
     .and_then(|draft| {
-        ConnectionRepository::new(&configuration)
-            .create(draft)
-            .map_err(|error| error.to_string())
+        let repository = ConnectionRepository::new(&configuration);
+        if edit_id.is_empty() {
+            repository.create(draft).map_err(|error| error.to_string())
+        } else {
+            connection_id(&configuration, edit_id.as_str()).and_then(|id| {
+                repository
+                    .update(&id, draft)
+                    .map_err(|error| error.to_string())
+            })
+        }
     });
     match result {
         Ok(_) => show_connections(weak, configuration),
         Err(error) => window.set_status_message(error.into()),
     }
+}
+
+fn request_edit(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id: SharedString) {
+    let Some(window) = weak.upgrade() else { return };
+    let result = configuration
+        .load()
+        .map_err(|error| error.to_string())
+        .and_then(|config| {
+            let connection = config
+                .connections
+                .iter()
+                .find(|connection| id == connection.id.as_str())
+                .cloned()
+                .ok_or_else(|| "The connection no longer exists.".to_owned())?;
+            let provider_index = config
+                .providers
+                .iter()
+                .position(|provider| provider.id == connection.provider_id)
+                .ok_or_else(|| "The connection's provider no longer exists.".to_owned())?;
+            Ok((config.providers, connection, provider_index))
+        });
+    match result {
+        Ok((providers, connection, provider_index)) => {
+            window.set_provider_names(ModelRc::new(Rc::new(VecModel::from_iter(
+                providers
+                    .into_iter()
+                    .map(|provider| SharedString::from(provider.name)),
+            ))));
+            window.set_connection_form_id(connection.id.as_str().into());
+            window.set_connection_form_name(connection.name.into());
+            window.set_connection_form_provider(provider_index as i32);
+            window.set_connection_form_bucket(connection.bucket.into());
+            window.set_connection_form_remote(connection.remote_path.into());
+            window.set_connection_form_local(connection.local_path.into());
+            window.set_connection_form_mode(mode_index(connection.mode));
+            window.set_connection_form_retention(
+                connection
+                    .keep_last_archives
+                    .unwrap_or(1)
+                    .to_string()
+                    .into(),
+            );
+            window.set_status_message(SharedString::default());
+            window.set_page(5);
+        }
+        Err(error) => window.set_status_message(error.into()),
+    }
+}
+
+fn reset_form(window: &AppWindow) {
+    window.set_connection_form_id(SharedString::default());
+    window.set_connection_form_name(SharedString::default());
+    window.set_connection_form_provider(0);
+    window.set_connection_form_bucket(SharedString::default());
+    window.set_connection_form_remote(SharedString::default());
+    window.set_connection_form_local(SharedString::default());
+    window.set_connection_form_mode(0);
+    window.set_connection_form_retention("1".into());
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -178,6 +249,28 @@ fn sync_mode(index: i32) -> Result<SyncMode, String> {
         2 => Ok(SyncMode::Archive),
         _ => Err("Choose a mode.".to_owned()),
     }
+}
+
+fn mode_index(mode: SyncMode) -> i32 {
+    match mode {
+        SyncMode::AddOnly => 0,
+        SyncMode::Mirror => 1,
+        SyncMode::Archive => 2,
+    }
+}
+
+fn connection_id(
+    configuration: &ConfigStore,
+    id: &str,
+) -> Result<crate::configuration::ConnectionId, String> {
+    configuration
+        .load()
+        .map_err(|error| error.to_string())?
+        .connections
+        .into_iter()
+        .find(|connection| connection.id.as_str() == id)
+        .map(|connection| connection.id)
+        .ok_or_else(|| "The connection no longer exists.".to_owned())
 }
 
 fn archive_retention(mode: SyncMode, input: &str) -> Result<Option<u32>, String> {
