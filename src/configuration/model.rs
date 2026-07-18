@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use super::validation::ValidationErrors;
 
-pub const CURRENT_SCHEMA_VERSION: u32 = 2;
+pub const CURRENT_SCHEMA_VERSION: u32 = 3;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -96,6 +96,8 @@ pub enum ProviderKind {
 pub struct ProviderOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_bucket: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

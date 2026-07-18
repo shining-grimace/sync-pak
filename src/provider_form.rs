@@ -17,9 +17,14 @@ pub(crate) fn provider_kind_index(kind: ProviderKind) -> i32 {
     }
 }
 
-pub(crate) fn provider_options(account_id: &str, region: &str) -> ProviderOptions {
+pub(crate) fn provider_options(
+    account_id: &str,
+    region: &str,
+    default_bucket: &str,
+) -> ProviderOptions {
     ProviderOptions {
         account_id: optional(account_id),
+        default_bucket: optional(default_bucket),
         endpoint: None,
         region: optional(region),
     }

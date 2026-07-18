@@ -7,6 +7,7 @@ pub(crate) fn provider(
     kind: ProviderKind,
     account_id: &str,
     region: &str,
+    default_bucket: &str,
 ) -> Result<(), String> {
     required(name, "Provider name")?;
     required(access_key_id, "Access key ID")?;
@@ -14,7 +15,15 @@ pub(crate) fn provider(
     match kind {
         ProviderKind::CloudflareR2 => required(account_id, "Account ID"),
         ProviderKind::BackblazeB2 | ProviderKind::AwsS3 => required(region, "Region"),
+    }?;
+    validate_optional_bucket(default_bucket)
+}
+
+fn validate_optional_bucket(bucket: &str) -> Result<(), String> {
+    if !bucket.trim().is_empty() && bucket != bucket.trim() {
+        return Err("Bucket name cannot begin or end with whitespace.".to_owned());
     }
+    Ok(())
 }
 
 pub(crate) fn connection(
@@ -59,7 +68,15 @@ mod tests {
     #[test]
     fn provider_credentials_are_required() {
         assert_eq!(
-            provider("Provider", "", "secret", ProviderKind::AwsS3, "", "region"),
+            provider(
+                "Provider",
+                "",
+                "secret",
+                ProviderKind::AwsS3,
+                "",
+                "region",
+                ""
+            ),
             Err("Access key ID is required.".to_owned())
         );
         assert_eq!(
@@ -69,7 +86,8 @@ mod tests {
                 "  ",
                 ProviderKind::AwsS3,
                 "",
-                "region"
+                "region",
+                ""
             ),
             Err("Secret access key is required.".to_owned())
         );
@@ -84,13 +102,38 @@ mod tests {
                 "secret",
                 ProviderKind::CloudflareR2,
                 "",
+                "",
                 ""
             ),
             Err("Account ID is required.".to_owned())
         );
         assert_eq!(
-            provider("Provider", "access", "secret", ProviderKind::AwsS3, "", ""),
+            provider(
+                "Provider",
+                "access",
+                "secret",
+                ProviderKind::AwsS3,
+                "",
+                "",
+                ""
+            ),
             Err("Region is required.".to_owned())
+        );
+    }
+
+    #[test]
+    fn optional_bucket_cannot_have_outer_whitespace() {
+        assert_eq!(
+            provider(
+                "Provider",
+                "access",
+                "secret",
+                ProviderKind::AwsS3,
+                "",
+                "region",
+                " bucket"
+            ),
+            Err("Bucket name cannot begin or end with whitespace.".to_owned())
         );
     }
 

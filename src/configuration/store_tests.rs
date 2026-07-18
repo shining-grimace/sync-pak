@@ -34,7 +34,7 @@ fn rejects_an_older_schema() {
     .unwrap();
 
     assert!(ConfigStore::at(path).load().is_err());
-    assert_eq!(CURRENT_SCHEMA_VERSION, 2);
+    assert_eq!(CURRENT_SCHEMA_VERSION, 3);
 }
 
 #[test]

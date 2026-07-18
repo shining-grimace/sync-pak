@@ -86,6 +86,7 @@ fn save_provider(
     };
     let account_id = window.get_provider_form_account_id();
     let region = window.get_provider_form_region();
+    let default_bucket = window.get_provider_form_bucket();
     if let Err(error) = form_validation::provider(
         &name,
         &access_key_id,
@@ -93,6 +94,7 @@ fn save_provider(
         kind,
         &account_id,
         &region,
+        &default_bucket,
     ) {
         window.set_status_message(error.into());
         return;
@@ -105,7 +107,7 @@ fn save_provider(
     let draft = ProviderDraft {
         name: name.to_string(),
         kind,
-        options: provider_options(&account_id, &region),
+        options: provider_options(&account_id, &region, &default_bucket),
     };
     let edit_id = window.get_provider_form_id();
     let result = (|| {
@@ -169,6 +171,7 @@ fn show_add_provider(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_kind(0);
         window.set_provider_form_account_id(SharedString::default());
         window.set_provider_form_region(SharedString::default());
+        window.set_provider_form_bucket(SharedString::default());
         window.set_page(2);
     }
 }
@@ -197,6 +200,9 @@ fn request_provider_edit(
                 provider.options.account_id.unwrap_or_default().into(),
             );
             window.set_provider_form_region(provider.options.region.unwrap_or_default().into());
+            window.set_provider_form_bucket(
+                provider.options.default_bucket.unwrap_or_default().into(),
+            );
             window.set_status_message(SharedString::default());
             window.set_page(2);
         }

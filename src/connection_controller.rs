@@ -38,6 +38,12 @@ pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
     let weak = window.as_weak();
     let edit_config = Rc::clone(configuration);
     window.on_request_connection_edit(move |id| request_edit(&weak, &edit_config, id));
+
+    let weak = window.as_weak();
+    let bucket_config = Rc::clone(configuration);
+    window.on_select_connection_provider(move |index| {
+        select_provider_bucket(&weak, &bucket_config, index);
+    });
 }
 
 pub(crate) fn show_connections(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
@@ -94,12 +100,14 @@ fn show_add_connection(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigSt
 fn load_provider_names(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
-        Ok(config) => window.set_provider_names(ModelRc::new(Rc::new(VecModel::from_iter(
-            config
-                .providers
-                .into_iter()
-                .map(|provider| SharedString::from(provider.name)),
-        )))),
+        Ok(config) => {
+            set_provider_models(&window, &config.providers);
+            set_provider_bucket(
+                &window,
+                &config.providers,
+                window.get_connection_form_provider(),
+            );
+        }
         Err(error) => {
             window.set_status_message(format!("SyncPak could not load providers: {error}").into())
         }
@@ -180,11 +188,7 @@ fn request_edit(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id: 
         });
     match result {
         Ok((providers, connection, provider_index)) => {
-            window.set_provider_names(ModelRc::new(Rc::new(VecModel::from_iter(
-                providers
-                    .into_iter()
-                    .map(|provider| SharedString::from(provider.name)),
-            ))));
+            set_provider_models(&window, &providers);
             window.set_connection_form_id(connection.id.as_str().into());
             window.set_connection_form_name(connection.name.into());
             window.set_connection_form_provider(provider_index as i32);
@@ -199,10 +203,60 @@ fn request_edit(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id: 
                     .to_string()
                     .into(),
             );
+            set_provider_bucket(&window, &providers, provider_index as i32);
             window.set_status_message(SharedString::default());
             window.set_page(5);
         }
         Err(error) => window.set_status_message(error.into()),
+    }
+}
+
+fn select_provider_bucket(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, index: i32) {
+    let Some(window) = weak.upgrade() else { return };
+    match configuration.load() {
+        Ok(config) => set_provider_bucket(&window, &config.providers, index),
+        Err(error) => {
+            window.set_status_message(format!("SyncPak could not load providers: {error}").into())
+        }
+    }
+}
+
+fn set_provider_models(window: &AppWindow, providers: &[crate::configuration::ProviderConfig]) {
+    window.set_provider_names(ModelRc::new(Rc::new(VecModel::from_iter(
+        providers
+            .iter()
+            .map(|provider| SharedString::from(&provider.name)),
+    ))));
+    window.set_provider_buckets(ModelRc::new(Rc::new(VecModel::from_iter(
+        providers.iter().map(|provider| {
+            SharedString::from(
+                provider
+                    .options
+                    .default_bucket
+                    .as_deref()
+                    .unwrap_or_default(),
+            )
+        }),
+    ))));
+}
+
+fn set_provider_bucket(
+    window: &AppWindow,
+    providers: &[crate::configuration::ProviderConfig],
+    index: i32,
+) {
+    if let Some(provider) = usize::try_from(index)
+        .ok()
+        .and_then(|index| providers.get(index))
+    {
+        window.set_connection_form_bucket(
+            provider
+                .options
+                .default_bucket
+                .as_deref()
+                .unwrap_or_default()
+                .into(),
+        );
     }
 }
 

@@ -69,6 +69,11 @@ fn required(value: &str, label: &str, errors: &mut Vec<String>) {
 }
 
 fn validate_provider_options(provider: &super::ProviderConfig, errors: &mut Vec<String>) {
+    if let Some(bucket) = &provider.options.default_bucket
+        && (bucket.trim().is_empty() || bucket != bucket.trim())
+    {
+        errors.push("Provider default bucket cannot be empty or have outer whitespace.".to_owned());
+    }
     match provider.kind {
         ProviderKind::CloudflareR2 => required(
             provider.options.account_id.as_deref().unwrap_or_default(),

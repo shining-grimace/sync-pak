@@ -18,6 +18,7 @@ export component AppWindow inherits Window {
     in-out property <[ProviderRow]> providers;
     in-out property <[ConnectionRow]> connections;
     in-out property <[string]> provider-names;
+    in-out property <[string]> provider-buckets;
     in-out property <string> status-message;
     in-out property <string> pending-provider-id;
     in-out property <string> pending-provider-name;
@@ -27,6 +28,7 @@ export component AppWindow inherits Window {
     in-out property <int> provider-form-kind;
     in-out property <string> provider-form-account-id;
     in-out property <string> provider-form-region;
+    in-out property <string> provider-form-bucket;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
     in-out property <string> connection-form-id;
@@ -52,6 +54,7 @@ export component AppWindow inherits Window {
     callback cancel-connection-delete();
     callback request-connection-edit(string);
     callback select-local-folder();
+    callback select-connection-provider(int);
     callback save-provider(string, int, string, string);
     callback save-connection(string, int, string, string, string, int, string);
 
@@ -145,6 +148,9 @@ export component AppWindow inherits Window {
                 Text { text: "Region"; font-weight: 700; }
                 LineEdit { placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; }
             }
+            Text { text: "Default bucket (optional)"; font-weight: 700; }
+            LineEdit { placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; }
+            Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
             Text { text: "Access key ID"; font-weight: 700; }
             access-key := LineEdit { placeholder-text: "Access key ID"; }
             Text { text: "Secret access key"; font-weight: 700; }
@@ -187,9 +193,9 @@ export component AppWindow inherits Window {
             Text { text: "Connection name"; font-weight: 700; }
             connection-name := LineEdit { placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
             Text { text: "Provider"; font-weight: 700; }
-            connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; }
+            connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
             Text { text: "Bucket"; font-weight: 700; }
-            connection-bucket := LineEdit { placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; }
+            connection-bucket := LineEdit { placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: root.provider-buckets[connection-provider.current-index] == ""; }
             Text { text: "Remote folder"; font-weight: 700; }
             connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Local folder"; font-weight: 700; }

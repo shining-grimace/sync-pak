@@ -140,6 +140,7 @@ fn provider_draft() -> ProviderDraft {
         kind: ProviderKind::AwsS3,
         options: ProviderOptions {
             account_id: None,
+            default_bucket: None,
             endpoint: None,
             region: Some("ap-southeast-2".to_owned()),
         },
