@@ -25,6 +25,12 @@ impl MultipartUploader for S3Transport {
         if let Some(content_type) = request.content_type.as_deref() {
             upload = upload.content_type(content_type);
         }
+        if let Some(modified) = request.source_modified_unix_seconds {
+            upload = upload.metadata(
+                crate::provider_capabilities::SOURCE_MODIFIED_TIME_METADATA_KEY,
+                modified.to_string(),
+            );
+        }
         let response = upload.send().await.map_err(provider_error)?;
         Ok(MultipartUpload {
             id: response

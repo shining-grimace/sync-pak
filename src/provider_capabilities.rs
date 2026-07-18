@@ -43,6 +43,7 @@ pub struct MultipartUploadRequest {
     pub bucket: String,
     pub key: String,
     pub content_type: Option<String>,
+    pub source_modified_unix_seconds: Option<i64>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

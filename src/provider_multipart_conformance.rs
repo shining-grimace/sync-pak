@@ -124,5 +124,6 @@ fn request(bucket: &str, key: &str) -> MultipartUploadRequest {
         bucket: bucket.to_owned(),
         key: key.to_owned(),
         content_type: Some("application/octet-stream".to_owned()),
+        source_modified_unix_seconds: None,
     }
 }

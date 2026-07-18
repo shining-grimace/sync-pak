@@ -7,7 +7,10 @@ use std::{
     task::{Context, Poll, Waker},
 };
 
+use uuid::Uuid;
+
 use super::{MultipartUploadError, upload_parts};
+use crate::multipart_file_upload::upload_file;
 use crate::provider_capabilities::{
     MultipartUpload, MultipartUploadRequest, MultipartUploader, ProviderError, ProviderResult,
     UploadedPart,
@@ -72,6 +75,7 @@ fn request() -> MultipartUploadRequest {
         bucket: "bucket".into(),
         key: "key".into(),
         content_type: None,
+        source_modified_unix_seconds: None,
     }
 }
 
@@ -112,4 +116,19 @@ fn aborts_when_a_part_fails() {
         })
     );
     assert_eq!(provider.aborts.load(Ordering::Relaxed), 1);
+}
+
+#[test]
+fn streams_a_file_in_bounded_parts() {
+    let source = std::env::temp_dir().join(format!("sync-pak-multipart-file-{}", Uuid::new_v4()));
+    std::fs::write(&source, b"abcdefg").unwrap();
+    let provider = Provider::default();
+
+    block_on(upload_file(&provider, &request(), &source, 3)).unwrap();
+    std::fs::remove_file(&source).unwrap();
+
+    assert_eq!(
+        provider.parts.lock().unwrap().as_slice(),
+        [b"abc".to_vec(), b"def".to_vec(), b"g".to_vec()]
+    );
 }
