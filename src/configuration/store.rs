@@ -3,6 +3,7 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
 };
+use uuid::Uuid;
 
 use super::{AppConfig, ValidationErrors};
 
@@ -102,13 +103,22 @@ fn atomic_write(path: &Path, contents: &[u8]) -> io::Result<()> {
     })?;
     fs::create_dir_all(directory)?;
     let temporary = directory.join(format!(
-        ".{}.tmp",
-        path.file_name().unwrap_or_default().to_string_lossy()
+        ".{}.{}.tmp",
+        path.file_name().unwrap_or_default().to_string_lossy(),
+        Uuid::new_v4()
     ));
-    let mut temporary_file = fs::File::create(&temporary)?;
-    temporary_file.write_all(contents)?;
-    temporary_file.sync_all()?;
-    drop(temporary_file);
+    let write_result = (|| {
+        let mut temporary_file = fs::File::options()
+            .create_new(true)
+            .write(true)
+            .open(&temporary)?;
+        temporary_file.write_all(contents)?;
+        temporary_file.sync_all()
+    })();
+    if let Err(error) = write_result {
+        let _ = fs::remove_file(&temporary);
+        return Err(error);
+    }
     fs::rename(&temporary, path).inspect_err(|_| {
         let _ = fs::remove_file(&temporary);
     })

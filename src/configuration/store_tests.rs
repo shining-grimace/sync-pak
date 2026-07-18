@@ -37,6 +37,18 @@ fn rejects_an_older_schema() {
     assert_eq!(CURRENT_SCHEMA_VERSION, 2);
 }
 
+#[test]
+fn save_does_not_overwrite_a_stale_temporary_file() {
+    let path = test_path("stale-temporary");
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let stale = path.parent().unwrap().join(".config.json.tmp");
+    fs::write(&stale, "stale").unwrap();
+
+    ConfigStore::at(path).save(&AppConfig::default()).unwrap();
+
+    assert_eq!(fs::read_to_string(stale).unwrap(), "stale");
+}
+
 fn test_path(label: &str) -> std::path::PathBuf {
     std::env::temp_dir()
         .join(format!(
