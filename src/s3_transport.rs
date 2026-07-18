@@ -2,14 +2,13 @@ use aws_config::BehaviorVersion;
 use aws_sdk_s3::{
     Client,
     config::{Credentials, Region, RequestChecksumCalculation},
-    primitives::ByteStream,
 };
 
 use crate::{
     configuration::{ProviderConfig, ProviderCredentials},
     provider_capabilities::{
         BucketLister, ObjectDeleter, ObjectLister, ObjectMetadata, ObjectMetadataReader,
-        ObjectReader, ObjectWriter, ProviderError, ProviderResult, RemoteObject,
+        ObjectReader, ProviderError, ProviderResult, RemoteObject,
     },
     s3_error::provider_error,
     s3_settings::S3Settings,
@@ -115,20 +114,6 @@ impl ObjectReader for S3Transport {
     }
 }
 
-impl ObjectWriter for S3Transport {
-    async fn write(&self, bucket: &str, key: &str, contents: &[u8]) -> ProviderResult<()> {
-        self.client
-            .put_object()
-            .bucket(bucket)
-            .key(key)
-            .body(ByteStream::from(contents.to_vec()))
-            .send()
-            .await
-            .map(|_| ())
-            .map_err(provider_error)
-    }
-}
-
 impl ObjectMetadataReader for S3Transport {
     async fn metadata(&self, bucket: &str, key: &str) -> ProviderResult<ObjectMetadata> {
         let object = self
@@ -199,6 +184,8 @@ fn source_modified_time(
     metadata: Option<&std::collections::HashMap<String, String>>,
 ) -> Option<i64> {
     metadata
-        .and_then(|metadata| metadata.get("syncpak-source-modified-unix-seconds"))
+        .and_then(|metadata| {
+            metadata.get(crate::provider_capabilities::SOURCE_MODIFIED_TIME_METADATA_KEY)
+        })
         .and_then(|value| value.parse().ok())
 }

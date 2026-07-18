@@ -50,6 +50,8 @@ mod s3_multipart;
 mod s3_settings;
 #[cfg(feature = "provider-s3")]
 pub mod s3_transport;
+#[cfg(feature = "provider-s3")]
+mod s3_writer;
 
 pub use capabilities::CapabilityError;
 

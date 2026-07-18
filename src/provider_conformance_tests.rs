@@ -11,7 +11,8 @@ use std::{
 use crate::{
     provider_capabilities::{
         BucketLister, ObjectDeleter, ObjectLister, ObjectMetadata, ObjectMetadataReader,
-        ObjectReader, ObjectWriter, ProviderError, ProviderResult, RemoteObject,
+        ObjectReader, ObjectWriteMetadata, ObjectWriter, ProviderError, ProviderResult,
+        RemoteObject,
     },
     provider_conformance::{
         ConformanceError, ConformancePhase, verify_bucket_listing, verify_object_lifecycle,
@@ -119,6 +120,16 @@ impl ObjectWriter for InMemoryProvider {
             .unwrap()
             .insert(key.to_owned(), contents.to_vec());
         Ok(())
+    }
+
+    async fn write_with_metadata(
+        &self,
+        bucket: &str,
+        key: &str,
+        contents: &[u8],
+        _: &ObjectWriteMetadata,
+    ) -> ProviderResult<()> {
+        self.write(bucket, key, contents).await
     }
 }
 

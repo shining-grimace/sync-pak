@@ -14,6 +14,13 @@ pub struct ObjectMetadata {
     pub entity_tag: Option<String>,
 }
 
+pub const SOURCE_MODIFIED_TIME_METADATA_KEY: &str = "syncpak-source-modified-unix-seconds";
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct ObjectWriteMetadata {
+    pub source_modified_unix_seconds: Option<i64>,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RemoteObject {
     pub key: String,
@@ -94,6 +101,14 @@ pub trait ObjectWriter {
         bucket: &str,
         key: &str,
         contents: &[u8],
+    ) -> impl Future<Output = ProviderResult<()>> + Send;
+
+    fn write_with_metadata(
+        &self,
+        bucket: &str,
+        key: &str,
+        contents: &[u8],
+        metadata: &ObjectWriteMetadata,
     ) -> impl Future<Output = ProviderResult<()>> + Send;
 }
 
