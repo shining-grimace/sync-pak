@@ -27,8 +27,24 @@ pub struct ExecutionResult {
 impl ExecutionResult {
     /// Creates the result for an operation cancelled before any action began.
     pub fn cancelled_before_start() -> Self {
+        Self::before_start(ExecutionState::Cancelled)
+    }
+
+    /// Creates the result for an operation that failed before any action began.
+    pub fn failed_before_start() -> Self {
+        Self::before_start(ExecutionState::Failed)
+    }
+
+    pub fn is_terminal(&self) -> bool {
+        matches!(
+            self.state,
+            ExecutionState::Completed | ExecutionState::Failed | ExecutionState::Cancelled
+        )
+    }
+
+    fn before_start(state: ExecutionState) -> Self {
         Self {
-            state: ExecutionState::Cancelled,
+            state,
             completed: Vec::new(),
             incomplete: Vec::new(),
             not_started: Vec::new(),
@@ -156,5 +172,20 @@ mod tests {
         assert!(result.completed.is_empty());
         assert!(result.incomplete.is_empty());
         assert!(result.not_started.is_empty());
+    }
+
+    #[test]
+    fn only_completed_failed_and_cancelled_results_are_terminal() {
+        assert!(super::ExecutionResult::failed_before_start().is_terminal());
+        assert!(super::ExecutionResult::cancelled_before_start().is_terminal());
+        assert!(
+            !super::ExecutionResult {
+                state: ExecutionState::Copying,
+                completed: Vec::new(),
+                incomplete: Vec::new(),
+                not_started: Vec::new(),
+            }
+            .is_terminal()
+        );
     }
 }
