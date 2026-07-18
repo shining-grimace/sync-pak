@@ -17,6 +17,8 @@ mod feasibility;
 pub mod filesystem;
 mod folder_picker_controller;
 mod form_validation;
+pub mod inventory;
+pub mod local_inventory;
 pub mod notifications;
 mod onboarding;
 pub mod planning;
