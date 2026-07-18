@@ -112,6 +112,28 @@ fn failed_metadata_commit_removes_a_newly_saved_credential() {
     assert!(store.load().unwrap().providers.is_empty());
 }
 
+#[test]
+fn failed_edit_restores_the_prior_credential_and_metadata() {
+    let store = ConfigStore::at(test_path());
+    let secrets = MemoryCredentials::default();
+    let providers = ProviderRepository::new(&store, &secrets);
+    let provider = providers.create(provider_draft(), &secret()).unwrap();
+    let original_credential = secrets.load(provider.id.as_str()).unwrap();
+    let invalid_draft = ProviderDraft {
+        name: String::new(),
+        ..provider_draft()
+    };
+
+    assert!(
+        providers
+            .update(&provider.id, invalid_draft, &replacement_secret())
+            .is_err()
+    );
+
+    assert_eq!(secrets.load(provider.id.as_str()), Ok(original_credential));
+    assert_eq!(store.load().unwrap().providers, vec![provider]);
+}
+
 fn provider_draft() -> ProviderDraft {
     ProviderDraft {
         name: "Test provider".to_owned(),
@@ -127,6 +149,14 @@ fn secret() -> ProviderCredentials {
     ProviderCredentials {
         access_key_id: "access-value".to_owned(),
         secret_access_key: "secret-value".to_owned(),
+        session_token: None,
+    }
+}
+
+fn replacement_secret() -> ProviderCredentials {
+    ProviderCredentials {
+        access_key_id: "replacement-access".to_owned(),
+        secret_access_key: "replacement-secret".to_owned(),
         session_token: None,
     }
 }
