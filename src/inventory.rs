@@ -79,7 +79,10 @@ impl Inventory {
         self.entries.values()
     }
 
-    /// Reports every pair or group that cannot safely be written to a case-insensitive target.
+    pub fn get(&self, path: &RelativePath) -> Option<&InventoryEntry> {
+        self.entries.get(path)
+    }
+
     pub fn case_collisions(&self) -> Vec<Vec<RelativePath>> {
         let mut groups = BTreeMap::<String, BTreeSet<RelativePath>>::new();
         for path in self.entries.keys() {

@@ -4,6 +4,7 @@ mod android_folder_picker;
 mod android_foreground_execution;
 mod app_controller;
 pub mod capabilities;
+pub mod comparison;
 pub mod configuration;
 mod connection_delete_controller;
 mod connection_form_controller;
