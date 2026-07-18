@@ -23,6 +23,7 @@ pub(crate) fn initialize(window: &AppWindow) {
     };
     configure_navigation(window, &configuration);
     configure_save_provider(window, &configuration);
+    crate::provider_delete_controller::configure(window, &configuration);
     crate::connection_controller::configure(window, &configuration);
 }
 
@@ -91,7 +92,7 @@ fn save_provider(
     }
 }
 
-fn show_providers(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
+pub(crate) fn show_providers(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     window.set_page(1);
@@ -106,6 +107,7 @@ fn refresh_providers(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore)
     match configuration.load() {
         Ok(config) => {
             let rows = config.providers.into_iter().map(|provider| ProviderRow {
+                id: provider.id.as_str().into(),
                 name: provider.name.into(),
                 kind: provider_kind_name(provider.kind).into(),
             });
