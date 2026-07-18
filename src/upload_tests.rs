@@ -9,7 +9,11 @@ use std::{
 
 use uuid::Uuid;
 
-use super::{upload_from_path, upload_from_path_with_retry};
+use super::{
+    UploadError, upload_from_path, upload_from_path_with_retry,
+    upload_from_path_with_retry_and_cancellation,
+};
+use crate::cancellation::CancellationToken;
 use crate::provider_capabilities::{
     ObjectWriteMetadata, ObjectWriter, ProviderError, ProviderResult,
 };
@@ -71,6 +75,14 @@ impl RetrySleeper for RecordingSleeper {
     }
 }
 
+struct CancellingSleeper(CancellationToken);
+
+impl RetrySleeper for CancellingSleeper {
+    async fn sleep(&self, _: std::time::Duration) {
+        self.0.cancel();
+    }
+}
+
 fn block_on<F: Future>(future: F) -> F::Output {
     let waker = Waker::noop();
     let mut context = Context::from_waker(waker);
@@ -114,4 +126,29 @@ fn retries_a_transient_upload_failure_without_re_reading_the_source() {
     std::fs::remove_file(&source).unwrap();
 
     assert_eq!(sleeper.0.lock().unwrap().len(), 1);
+}
+
+#[test]
+fn cancellation_after_a_retry_delay_prevents_another_upload_request() {
+    let source = std::env::temp_dir().join(format!("sync-pak-upload-{}", Uuid::new_v4()));
+    std::fs::write(&source, "contents").unwrap();
+    let cancellation = CancellationToken::default();
+    let writer = FlakyWriter(AtomicU8::new(0));
+
+    assert!(matches!(
+        block_on(upload_from_path_with_retry_and_cancellation(
+            &writer,
+            "bucket",
+            "key",
+            &source,
+            &RetryPolicy::default(),
+            &CancellingSleeper(cancellation.clone()),
+            1,
+            &cancellation,
+        )),
+        Err(UploadError::Cancelled)
+    ));
+    std::fs::remove_file(&source).unwrap();
+
+    assert_eq!(writer.0.load(Ordering::Relaxed), 1);
 }
