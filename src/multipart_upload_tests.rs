@@ -10,16 +10,20 @@ use std::{
 use uuid::Uuid;
 
 use super::{MultipartUploadError, upload_parts};
-use crate::multipart_file_upload::upload_file;
 use crate::provider_capabilities::{
     MultipartUpload, MultipartUploadRequest, MultipartUploader, ProviderError, ProviderResult,
     UploadedPart,
+};
+use crate::{
+    cancellation::CancellationToken,
+    multipart_file_upload::{MultipartFileUploadError, upload_file, upload_file_with_cancellation},
 };
 
 #[derive(Default)]
 struct Provider {
     aborts: AtomicU32,
     fail_second_part: AtomicBool,
+    cancel_after_first_part: Option<CancellationToken>,
     parts: Mutex<Vec<Vec<u8>>>,
 }
 
@@ -43,6 +47,11 @@ impl MultipartUploader for Provider {
             return Err(ProviderError::Unavailable);
         }
         self.parts.lock().unwrap().push(contents.to_vec());
+        if part_number == 1 {
+            if let Some(token) = &self.cancel_after_first_part {
+                token.cancel();
+            }
+        }
         Ok(UploadedPart {
             part_number,
             entity_tag: format!("{part_number}"),
@@ -131,4 +140,30 @@ fn streams_a_file_in_bounded_parts() {
         provider.parts.lock().unwrap().as_slice(),
         [b"abc".to_vec(), b"def".to_vec(), b"g".to_vec()]
     );
+}
+
+#[test]
+fn cancellation_aborts_a_started_upload_before_the_next_part() {
+    let source = std::env::temp_dir().join(format!("sync-pak-multipart-file-{}", Uuid::new_v4()));
+    std::fs::write(&source, b"abcdefg").unwrap();
+    let cancellation = CancellationToken::default();
+    let provider = Provider {
+        cancel_after_first_part: Some(cancellation.clone()),
+        ..Default::default()
+    };
+
+    assert!(matches!(
+        block_on(upload_file_with_cancellation(
+            &provider,
+            &request(),
+            &source,
+            3,
+            &cancellation,
+        )),
+        Err(MultipartFileUploadError::Cancelled { abort_error: None })
+    ));
+    std::fs::remove_file(&source).unwrap();
+
+    assert_eq!(provider.parts.lock().unwrap().as_slice(), [b"abc".to_vec()]);
+    assert_eq!(provider.aborts.load(Ordering::Relaxed), 1);
 }

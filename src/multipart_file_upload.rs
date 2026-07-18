@@ -1,6 +1,7 @@
 use std::{error::Error, fmt, io::Read, path::Path};
 
 use crate::{
+    cancellation::{CancellationToken, Cancelled},
     multipart_upload::MultipartUploadError,
     provider_capabilities::{
         MultipartUpload, MultipartUploadRequest, MultipartUploader, ProviderError,
@@ -13,6 +14,24 @@ pub async fn upload_file<T: MultipartUploader>(
     source: &Path,
     part_size: usize,
 ) -> Result<(), MultipartFileUploadError> {
+    upload_file_with_cancellation(
+        provider,
+        request,
+        source,
+        part_size,
+        &CancellationToken::default(),
+    )
+    .await
+}
+
+/// Uploads a local file in parts until cancellation is requested at a part boundary.
+pub async fn upload_file_with_cancellation<T: MultipartUploader>(
+    provider: &T,
+    request: &MultipartUploadRequest,
+    source: &Path,
+    part_size: usize,
+    cancellation: &CancellationToken,
+) -> Result<(), MultipartFileUploadError> {
     if part_size == 0 {
         return Err(local_error(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
@@ -20,12 +39,18 @@ pub async fn upload_file<T: MultipartUploader>(
         )));
     }
     let mut file = std::fs::File::open(source).map_err(local_error)?;
+    cancellation
+        .check()
+        .map_err(MultipartFileUploadError::from)?;
     let upload = provider
         .begin_multipart_upload(request)
         .await
         .map_err(provider_error)?;
     let mut uploaded = Vec::new();
     loop {
+        if let Err(cancelled) = cancellation.check() {
+            return Err(abort(provider, request, &upload, cancelled.into()).await);
+        }
         let mut buffer = vec![0; part_size];
         let read = match file.read(&mut buffer) {
             Ok(read) => read,
@@ -100,6 +125,9 @@ async fn abort<T: MultipartUploader>(
         .await
         .err();
     match error {
+        MultipartFileUploadError::Cancelled { .. } => {
+            MultipartFileUploadError::Cancelled { abort_error }
+        }
         MultipartFileUploadError::Provider(MultipartUploadError::Provider { error, .. }) => {
             provider_error_with_abort(error, abort_error)
         }
@@ -118,6 +146,9 @@ fn provider_error_with_abort(
 
 #[derive(Debug)]
 pub enum MultipartFileUploadError {
+    Cancelled {
+        abort_error: Option<ProviderError>,
+    },
     Provider(MultipartUploadError),
     Local {
         error: std::io::Error,
@@ -128,6 +159,13 @@ pub enum MultipartFileUploadError {
 impl fmt::Display for MultipartFileUploadError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Cancelled { abort_error } => match abort_error {
+                Some(abort_error) => write!(
+                    formatter,
+                    "multipart upload was cancelled; cleanup also failed: {abort_error}"
+                ),
+                None => formatter.write_str("multipart upload was cancelled"),
+            },
             Self::Provider(error) => error.fmt(formatter),
             Self::Local { error, abort_error } => match abort_error {
                 Some(abort_error) => write!(
@@ -141,3 +179,9 @@ impl fmt::Display for MultipartFileUploadError {
 }
 
 impl Error for MultipartFileUploadError {}
+
+impl From<Cancelled> for MultipartFileUploadError {
+    fn from(_: Cancelled) -> Self {
+        Self::Cancelled { abort_error: None }
+    }
+}
