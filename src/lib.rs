@@ -1,3 +1,4 @@
+pub mod activity_snapshot;
 #[cfg(target_os = "android")]
 mod android_folder_picker;
 #[cfg(target_os = "android")]

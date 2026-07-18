@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use uuid::Uuid;
 
 use crate::{
+    activity_snapshot::ActivitySnapshot,
     execution::{ExecutionResult, ExecutionState},
     planning::OperationPlan,
 };
@@ -20,6 +21,7 @@ pub enum QueueState {
 pub struct QueueEntry {
     pub operation_id: Uuid,
     pub plan: OperationPlan,
+    pub snapshot: ActivitySnapshot,
     pub state: QueueState,
     pub result: Option<ExecutionResult>,
 }
@@ -30,11 +32,12 @@ pub struct OperationQueue {
 }
 
 impl OperationQueue {
-    pub fn push(&mut self, plan: OperationPlan) -> Uuid {
+    pub fn push(&mut self, plan: OperationPlan, snapshot: ActivitySnapshot) -> Uuid {
         let operation_id = Uuid::new_v4();
         self.entries.push_back(QueueEntry {
             operation_id,
             plan,
+            snapshot,
             state: QueueState::Queued,
             result: None,
         });
@@ -124,24 +127,40 @@ fn terminal_queue_state(state: ExecutionState) -> Option<QueueState> {
 mod tests {
     use super::{OperationQueue, QueueState};
     use crate::{
-        configuration::SyncMode,
+        activity_snapshot::ActivitySnapshot,
+        configuration::{ConnectionConfig, ConnectionId, ProviderId, SyncMode},
         execution::{ExecutionProgress, ExecutionState},
         planning::{Direction, OperationPlan},
     };
 
+    fn snapshot(name: &str) -> ActivitySnapshot {
+        ActivitySnapshot::from_connection(
+            &ConnectionConfig {
+                id: ConnectionId::new(),
+                name: name.into(),
+                provider_id: ProviderId::new(),
+                bucket: "bucket".into(),
+                remote_path: "path".into(),
+                local_path: "/local".into(),
+                mode: SyncMode::AddOnly,
+                keep_last_archives: None,
+            },
+            "provider",
+            Direction::Upload,
+        )
+    }
+
     #[test]
     fn queue_preserves_submission_order() {
         let mut queue = OperationQueue::default();
-        queue.push(OperationPlan::new(
-            "first",
-            SyncMode::AddOnly,
-            Direction::Upload,
-        ));
-        queue.push(OperationPlan::new(
-            "second",
-            SyncMode::Mirror,
-            Direction::Download,
-        ));
+        queue.push(
+            OperationPlan::new("first", SyncMode::AddOnly, Direction::Upload),
+            snapshot("First"),
+        );
+        queue.push(
+            OperationPlan::new("second", SyncMode::Mirror, Direction::Download),
+            snapshot("Second"),
+        );
 
         let first = queue.take_next().unwrap();
         assert_eq!(first.plan.connection_id, "first");
@@ -155,11 +174,10 @@ mod tests {
     #[test]
     fn terminal_results_remain_in_the_activity_list() {
         let mut queue = OperationQueue::default();
-        queue.push(OperationPlan::new(
-            "connection",
-            SyncMode::AddOnly,
-            Direction::Upload,
-        ));
+        queue.push(
+            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Connection"),
+        );
         let entry = queue.take_next().unwrap();
         let result = ExecutionProgress::new([]).cancel();
 
@@ -177,11 +195,10 @@ mod tests {
     #[test]
     fn queued_operation_can_be_cancelled_without_starting() {
         let mut queue = OperationQueue::default();
-        let operation_id = queue.push(OperationPlan::new(
-            "connection",
-            SyncMode::AddOnly,
-            Direction::Upload,
-        ));
+        let operation_id = queue.push(
+            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Connection"),
+        );
 
         assert!(queue.cancel_queued(operation_id));
 
@@ -197,16 +214,14 @@ mod tests {
     #[test]
     fn deleting_a_connection_removes_only_its_queued_work() {
         let mut queue = OperationQueue::default();
-        queue.push(OperationPlan::new(
-            "remove",
-            SyncMode::AddOnly,
-            Direction::Upload,
-        ));
-        queue.push(OperationPlan::new(
-            "keep",
-            SyncMode::AddOnly,
-            Direction::Upload,
-        ));
+        queue.push(
+            OperationPlan::new("remove", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Remove"),
+        );
+        queue.push(
+            OperationPlan::new("keep", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Keep"),
+        );
 
         assert_eq!(queue.remove_queued_for_connection("remove"), 1);
 
