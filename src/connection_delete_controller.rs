@@ -5,16 +5,24 @@ use slint::{ComponentHandle, SharedString};
 use crate::{
     AppWindow,
     configuration::{ConfigStore, ConnectionRepository},
+    diagnostics_controller::{self, SharedDiagnosticLog},
 };
 
-pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
+pub(crate) fn configure(
+    window: &AppWindow,
+    configuration: &Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let weak = window.as_weak();
     let request_config = Rc::clone(configuration);
     window.on_request_connection_delete(move |id| request_delete(&weak, &request_config, id));
 
     let weak = window.as_weak();
     let confirm_config = Rc::clone(configuration);
-    window.on_confirm_connection_delete(move || delete_connection(&weak, &confirm_config));
+    let confirm_diagnostics = Rc::clone(&diagnostics);
+    window.on_confirm_connection_delete(move || {
+        delete_connection(&weak, &confirm_config, &confirm_diagnostics)
+    });
 
     let weak = window.as_weak();
     let cancel_config = Rc::clone(configuration);
@@ -36,7 +44,11 @@ fn request_delete(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id
     }
 }
 
-fn delete_connection(weak: &slint::Weak<AppWindow>, configuration: &Rc<ConfigStore>) {
+fn delete_connection(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &Rc<ConfigStore>,
+    diagnostics: &SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     let result = connection(configuration, window.get_pending_connection_id().as_str()).and_then(
         |connection| {
@@ -47,7 +59,13 @@ fn delete_connection(weak: &slint::Weak<AppWindow>, configuration: &Rc<ConfigSto
     );
     match result {
         Ok(_) => crate::connection_controller::show_connections(weak, Rc::clone(configuration)),
-        Err(error) => window.set_status_message(error.into()),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Connection could not be deleted",
+            "connection deletion failed",
+            "SyncPak could not delete this connection. Check configuration storage and try again.",
+        ),
     }
 }
 

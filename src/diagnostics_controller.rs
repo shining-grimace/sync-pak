@@ -25,6 +25,17 @@ pub(crate) fn record(log: &SharedDiagnosticLog, error: StructuredError) {
     log.borrow_mut().record(error);
 }
 
+pub(crate) fn present(
+    window: &AppWindow,
+    log: &SharedDiagnosticLog,
+    summary: &'static str,
+    technical_details: &'static str,
+    message: &'static str,
+) {
+    record(log, StructuredError::new(summary, technical_details));
+    window.set_status_message(message.into());
+}
+
 fn show(weak: &slint::Weak<AppWindow>, log: &SharedDiagnosticLog) {
     refresh(weak, log, false);
     if let Some(window) = weak.upgrade() {

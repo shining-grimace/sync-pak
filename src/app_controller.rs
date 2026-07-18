@@ -34,11 +34,11 @@ pub(crate) fn initialize(window: &AppWindow) {
         }
     };
     configure_navigation(window, &configuration);
-    configure_save_provider(window, &configuration);
-    crate::provider_delete_controller::configure(window, &configuration);
+    configure_save_provider(window, &configuration, Rc::clone(&diagnostics));
+    crate::provider_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_controller::configure(window, &configuration);
-    crate::connection_delete_controller::configure(window, &configuration);
-    crate::folder_picker_controller::configure(window);
+    crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
+    crate::folder_picker_controller::configure(window, diagnostics.clone());
     match configuration.load() {
         Ok(config) if config.welcome_completed => show_providers(&window.as_weak(), configuration),
         Ok(_) => {}
@@ -81,7 +81,11 @@ fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {
     window.on_show_privacy(move || set_page(&weak, 3));
 }
 
-fn configure_save_provider(window: &AppWindow, configuration: &Rc<ConfigStore>) {
+fn configure_save_provider(
+    window: &AppWindow,
+    configuration: &Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let weak = window.as_weak();
     let configuration = Rc::clone(configuration);
     window.on_save_provider(move |name, kind, access_key_id, secret_access_key| {
@@ -92,6 +96,7 @@ fn configure_save_provider(window: &AppWindow, configuration: &Rc<ConfigStore>) 
             kind,
             access_key_id,
             secret_access_key,
+            &diagnostics,
         );
     });
 }
@@ -103,6 +108,7 @@ fn save_provider(
     kind: i32,
     access_key_id: SharedString,
     secret_access_key: SharedString,
+    diagnostics: &SharedDiagnosticLog,
 ) {
     let Some(window) = weak.upgrade() else { return };
     let Some(kind) = provider_kind(kind) else {
@@ -156,7 +162,13 @@ fn save_provider(
                 format!("Provider saved, but welcome state could not be updated: {error}").into(),
             ),
         },
-        Err(error) => window.set_status_message(error.into()),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Provider settings could not be saved",
+            "provider save failed",
+            "SyncPak could not save this provider. Check its settings and protected storage, then try again.",
+        ),
     }
 }
 

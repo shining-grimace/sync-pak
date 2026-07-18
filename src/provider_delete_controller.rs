@@ -5,10 +5,15 @@ use slint::{ComponentHandle, SharedString};
 use crate::{
     AppWindow,
     configuration::{ConfigStore, ProviderId, ProviderRepository},
+    diagnostics_controller::{self, SharedDiagnosticLog},
     platform::PlatformCredentialStore,
 };
 
-pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
+pub(crate) fn configure(
+    window: &AppWindow,
+    configuration: &Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let weak = window.as_weak();
     let request_config = Rc::clone(configuration);
     window.on_request_provider_delete(move |id| {
@@ -17,8 +22,9 @@ pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
 
     let weak = window.as_weak();
     let confirm_config = Rc::clone(configuration);
+    let confirm_diagnostics = Rc::clone(&diagnostics);
     window.on_confirm_provider_delete(move || {
-        delete_provider(&weak, &confirm_config);
+        delete_provider(&weak, &confirm_config, &confirm_diagnostics);
     });
 
     let weak = window.as_weak();
@@ -42,7 +48,11 @@ fn request_delete(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id
     }
 }
 
-fn delete_provider(weak: &slint::Weak<AppWindow>, configuration: &Rc<ConfigStore>) {
+fn delete_provider(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &Rc<ConfigStore>,
+    diagnostics: &SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     let result =
         provider_id(configuration, window.get_pending_provider_id().as_str()).and_then(|id| {
@@ -56,7 +66,13 @@ fn delete_provider(weak: &slint::Weak<AppWindow>, configuration: &Rc<ConfigStore
         });
     match result {
         Ok(_) => crate::app_controller::show_providers(weak, Rc::clone(configuration)),
-        Err(error) => window.set_status_message(error.into()),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Provider could not be deleted",
+            "provider deletion failed",
+            "SyncPak could not delete this provider. Check protected storage and try again.",
+        ),
     }
 }
 
