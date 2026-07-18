@@ -13,6 +13,7 @@ mod connection_form_data;
 mod connection_form_state;
 mod connection_list_controller;
 mod diagnostics_controller;
+pub mod download;
 pub mod execution;
 #[cfg(test)]
 mod feasibility;
