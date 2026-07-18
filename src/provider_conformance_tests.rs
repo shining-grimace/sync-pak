@@ -13,7 +13,9 @@ use crate::{
         BucketLister, ObjectDeleter, ObjectLister, ObjectMetadata, ObjectMetadataReader,
         ObjectReader, ObjectWriter, ProviderError, ProviderResult, RemoteObject,
     },
-    provider_conformance::{verify_bucket_listing, verify_object_lifecycle},
+    provider_conformance::{
+        ConformanceError, ConformancePhase, verify_bucket_listing, verify_object_lifecycle,
+    },
 };
 
 #[test]
@@ -47,7 +49,10 @@ fn lifecycle_cleans_up_after_an_injected_read_failure() {
             "syncpak-tests/",
             "syncpak-tests/object.txt"
         )),
-        Err(ProviderError::Unavailable)
+        Err(ConformanceError {
+            phase: ConformancePhase::ObjectRead,
+            provider_error: ProviderError::Unavailable,
+        })
     );
     assert_eq!(provider.delete_count.load(Ordering::Relaxed), 1);
     assert!(provider.objects.lock().unwrap().is_empty());

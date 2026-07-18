@@ -1,8 +1,7 @@
 use aws_config::BehaviorVersion;
 use aws_sdk_s3::{
     Client,
-    config::{Credentials, Region},
-    error::{ProvideErrorMetadata, SdkError},
+    config::{Credentials, Region, RequestChecksumCalculation},
     primitives::ByteStream,
 };
 
@@ -12,6 +11,7 @@ use crate::{
         BucketLister, ObjectDeleter, ObjectLister, ObjectMetadata, ObjectMetadataReader,
         ObjectReader, ObjectWriter, ProviderError, ProviderResult, RemoteObject,
     },
+    s3_error::provider_error,
     s3_settings::S3Settings,
 };
 
@@ -39,11 +39,13 @@ impl S3Transport {
             loader = loader.endpoint_url(endpoint);
         }
         let shared = loader.load().await;
-        let config = aws_sdk_s3::config::Builder::from(&shared)
-            .force_path_style(settings.force_path_style)
-            .build();
+        let mut config =
+            aws_sdk_s3::config::Builder::from(&shared).force_path_style(settings.force_path_style);
+        if settings.request_checksums_when_required {
+            config = config.request_checksum_calculation(RequestChecksumCalculation::WhenRequired);
+        }
         Ok(Self {
-            client: Client::from_conf(config),
+            client: Client::from_conf(config.build()),
         })
     }
 }
@@ -187,14 +189,4 @@ fn object_metadata(
         content_type: content_type.map(ToOwned::to_owned),
         entity_tag: entity_tag.map(ToOwned::to_owned),
     })
-}
-pub(crate) fn provider_error<E: ProvideErrorMetadata>(error: SdkError<E>) -> ProviderError {
-    match error.as_service_error().and_then(|value| value.code()) {
-        Some("AccessDenied") => ProviderError::PermissionDenied,
-        Some("InvalidAccessKeyId" | "InvalidToken" | "SignatureDoesNotMatch") => {
-            ProviderError::Authentication
-        }
-        Some("NoSuchBucket" | "NoSuchKey" | "NoSuchUpload" | "NotFound") => ProviderError::NotFound,
-        _ => ProviderError::Unavailable,
-    }
 }

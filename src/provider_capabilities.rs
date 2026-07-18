@@ -40,6 +40,7 @@ pub struct MultipartUploadRequest {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ProviderError {
     Authentication,
+    ClockSkew,
     InvalidRequest,
     NotFound,
     PermissionDenied,
@@ -52,6 +53,9 @@ impl std::fmt::Display for ProviderError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(match self {
             Self::Authentication => "The provider rejected the saved credentials.",
+            Self::ClockSkew => {
+                "This device's clock differs too much from the provider. Enable automatic date and time, then retry."
+            }
             Self::InvalidRequest => "The provider request is not valid.",
             Self::NotFound => "The requested provider resource was not found.",
             Self::PermissionDenied => "The provider did not allow this operation.",
@@ -160,6 +164,14 @@ mod tests {
         assert_eq!(
             ProviderError::Authentication.to_string(),
             "The provider rejected the saved credentials."
+        );
+    }
+
+    #[test]
+    fn clock_skew_tells_the_user_how_to_recover() {
+        assert_eq!(
+            ProviderError::ClockSkew.to_string(),
+            "This device's clock differs too much from the provider. Enable automatic date and time, then retry."
         );
     }
 }

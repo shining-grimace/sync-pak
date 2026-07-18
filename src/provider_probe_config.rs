@@ -1,6 +1,12 @@
 use std::env;
 
-use crate::provider_probe::ProbeError;
+use crate::{
+    configuration::{
+        CredentialReference, ProviderConfig, ProviderCredentials, ProviderId,
+        ProviderKind as ConfigProviderKind, ProviderOptions,
+    },
+    provider_probe::ProbeError,
+};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum ProviderKind {
@@ -13,10 +19,12 @@ pub(crate) struct ProbeConfig {
     pub(crate) kind: ProviderKind,
     pub(crate) access_key_id: String,
     pub(crate) bucket: String,
+    pub(crate) check_bucket_listing: bool,
     pub(crate) endpoint: Option<String>,
     pub(crate) prefix: String,
     pub(crate) region: String,
     pub(crate) secret_access_key: String,
+    pub(crate) session_token: Option<String>,
 }
 
 impl ProbeConfig {
@@ -48,11 +56,44 @@ impl ProbeConfig {
             kind,
             access_key_id: required(&read, "SYNCPAK_PROBE_ACCESS_KEY_ID")?,
             bucket: required(&read, "SYNCPAK_PROBE_BUCKET")?,
+            check_bucket_listing: optional_boolean(&read, "SYNCPAK_PROBE_CHECK_BUCKET_LISTING")?,
             endpoint,
             prefix,
             region: region(&read, kind)?,
             secret_access_key: required(&read, "SYNCPAK_PROBE_SECRET_ACCESS_KEY")?,
+            session_token: read("SYNCPAK_PROBE_SESSION_TOKEN")
+                .filter(|value| !value.trim().is_empty()),
         })
+    }
+
+    pub(crate) fn provider(&self) -> ProviderConfig {
+        let id = ProviderId::new();
+        ProviderConfig {
+            credential_reference: CredentialReference {
+                provider_id: id.clone(),
+            },
+            id,
+            name: "Provider conformance probe".to_owned(),
+            kind: match self.kind {
+                ProviderKind::AwsS3 => ConfigProviderKind::AwsS3,
+                ProviderKind::BackblazeB2 => ConfigProviderKind::BackblazeB2,
+                ProviderKind::CloudflareR2 => ConfigProviderKind::CloudflareR2,
+            },
+            options: ProviderOptions {
+                account_id: None,
+                default_bucket: Some(self.bucket.clone()),
+                endpoint: self.endpoint.clone(),
+                region: Some(self.region.clone()),
+            },
+        }
+    }
+
+    pub(crate) fn credentials(&self) -> ProviderCredentials {
+        ProviderCredentials {
+            access_key_id: self.access_key_id.clone(),
+            secret_access_key: self.secret_access_key.clone(),
+            session_token: self.session_token.clone(),
+        }
     }
 }
 
@@ -74,6 +115,17 @@ fn required(
     read(name)
         .filter(|value| !value.trim().is_empty())
         .ok_or(ProbeError::MissingSetting(name))
+}
+
+fn optional_boolean(
+    read: &impl Fn(&str) -> Option<String>,
+    name: &'static str,
+) -> Result<bool, ProbeError> {
+    match read(name).as_deref().map(str::trim) {
+        None | Some("") | Some("false") => Ok(false),
+        Some("true") => Ok(true),
+        Some(_) => Err(ProbeError::InvalidSetting(name)),
+    }
 }
 
 fn region(

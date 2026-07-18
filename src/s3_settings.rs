@@ -7,20 +7,20 @@ pub(crate) struct S3Settings {
     pub(crate) endpoint: Option<String>,
     pub(crate) force_path_style: bool,
     pub(crate) region: String,
+    pub(crate) request_checksums_when_required: bool,
 }
 
 impl S3Settings {
     pub(crate) fn from_provider(provider: &ProviderConfig) -> ProviderResult<Self> {
         let endpoint = match provider.kind {
             ProviderKind::AwsS3 => provider.options.endpoint.clone(),
-            ProviderKind::CloudflareR2 => Some(format!(
-                "https://{}.r2.cloudflarestorage.com",
+            ProviderKind::CloudflareR2 => provider.options.endpoint.clone().or_else(|| {
                 provider
                     .options
                     .account_id
                     .as_deref()
-                    .ok_or(ProviderError::InvalidRequest)?
-            )),
+                    .map(|account_id| format!("https://{account_id}.r2.cloudflarestorage.com"))
+            }),
             ProviderKind::BackblazeB2 => Some(
                 provider
                     .options
@@ -37,10 +37,14 @@ impl S3Settings {
                 .clone()
                 .ok_or(ProviderError::InvalidRequest)?,
         };
+        if matches!(provider.kind, ProviderKind::CloudflareR2) && endpoint.is_none() {
+            return Err(ProviderError::InvalidRequest);
+        }
         Ok(Self {
             endpoint,
             force_path_style: !matches!(provider.kind, ProviderKind::AwsS3),
             region,
+            request_checksums_when_required: matches!(provider.kind, ProviderKind::CloudflareR2),
         })
     }
 }
@@ -68,6 +72,7 @@ mod tests {
         );
         assert_eq!(settings.region, "auto");
         assert!(settings.force_path_style);
+        assert!(settings.request_checksums_when_required);
     }
 
     #[test]

@@ -551,6 +551,7 @@ plain-language message.
 - Permission denied: `SyncPak does not have permission to access {path}.`
 - Local space: `There is not enough free space to complete this operation.`
 - Offline: `The provider could not be reached. Check your connection and try again.`
+- Clock skew: `This device's clock differs too much from the provider. Enable automatic date and time, then retry.`
 - Authentication: `{provider} rejected the saved credentials. Edit or replace them, then verify again.`
 - Provider permission: `{provider} did not allow {operation} in {bucket}. Check the key's permissions.`
 - Changed skip: `{path} exists on both sides with different contents and was not changed.`
@@ -621,6 +622,10 @@ Exit criterion: configurations survive restart and migration without exposing cr
 - Build conformance tests using isolated buckets/prefixes and failure injection.
 
 Exit criterion: all providers pass the same supported-capability behavior suite.
+
+Status: Complete on 2026-07-19. Cloudflare R2, Backblaze B2, and AWS S3 passed the
+isolated-prefix shared suite for bucket/object capabilities and multipart lifecycle behavior.
+See `docs/provider-conformance.md`.
 
 ## 4. Inventory, Comparison, and Planning
 

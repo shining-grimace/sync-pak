@@ -8,7 +8,8 @@ use crate::{
         MultipartUpload, MultipartUploadRequest, MultipartUploader, ProviderError, ProviderResult,
         UploadedPart,
     },
-    s3_transport::{S3Transport, provider_error},
+    s3_error::provider_error,
+    s3_transport::S3Transport,
 };
 
 impl MultipartUploader for S3Transport {
