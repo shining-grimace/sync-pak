@@ -5,6 +5,7 @@ use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use crate::{
     AppWindow, ConnectionRow,
     configuration::{ConfigStore, ConnectionDraft, ConnectionRepository, ProviderId, SyncMode},
+    form_validation,
 };
 
 pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
@@ -118,6 +119,17 @@ fn save_connection(
     retention: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if let Err(error) = form_validation::connection(
+        &name,
+        provider_index,
+        &bucket,
+        &local_path,
+        mode_index,
+        &retention,
+    ) {
+        window.set_status_message(error.into());
+        return;
+    }
     let edit_id = window.get_connection_form_id();
     let result = draft_from_input(
         &configuration,
