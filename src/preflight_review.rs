@@ -1,5 +1,5 @@
 use crate::comparison::{ComparedEntry, EntryStatus};
-use crate::inventory::RelativePath;
+use crate::inventory::{InventoryEntry, InventoryEntryKind, RelativePath};
 use crate::planning::PlannedAction;
 use crate::preflight::Preflight;
 
@@ -17,6 +17,25 @@ pub enum ReviewStatus {
 pub struct ReviewItem {
     pub path: RelativePath,
     pub status: ReviewStatus,
+    pub source: Option<ReviewEntryDetails>,
+    pub destination: Option<ReviewEntryDetails>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ReviewEntryDetails {
+    pub kind: InventoryEntryKind,
+    pub byte_size: u64,
+    pub modified_unix_seconds: Option<i64>,
+}
+
+impl From<&InventoryEntry> for ReviewEntryDetails {
+    fn from(entry: &InventoryEntry) -> Self {
+        Self {
+            kind: entry.kind.clone(),
+            byte_size: entry.byte_size,
+            modified_unix_seconds: entry.modified_unix_seconds,
+        }
+    }
 }
 
 pub fn review_items(preflight: &Preflight) -> Vec<ReviewItem> {
@@ -27,6 +46,8 @@ pub fn review_items(preflight: &Preflight) -> Vec<ReviewItem> {
             status_for(entry, preflight.plan().actions()).map(|status| ReviewItem {
                 path: entry.path.clone(),
                 status,
+                source: entry.source.as_ref().map(ReviewEntryDetails::from),
+                destination: entry.destination.as_ref().map(ReviewEntryDetails::from),
             })
         })
         .collect()

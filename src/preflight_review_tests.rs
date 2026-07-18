@@ -27,19 +27,14 @@ fn review_uses_user_facing_action_terms_and_hides_add_only_destination_only_file
     )
     .unwrap();
 
-    assert_eq!(
-        review_items(&preflight),
-        [
-            super::ReviewItem {
-                path: RelativePath::new("changed").unwrap(),
-                status: ReviewStatus::Warning,
-            },
-            super::ReviewItem {
-                path: RelativePath::new("source-only").unwrap(),
-                status: ReviewStatus::New,
-            },
-        ]
-    );
+    let items = review_items(&preflight);
+    assert_eq!(items.len(), 2);
+    assert_eq!(items[0].path, RelativePath::new("changed").unwrap());
+    assert_eq!(items[0].status, ReviewStatus::Warning);
+    assert_eq!(items[1].path, RelativePath::new("source-only").unwrap());
+    assert_eq!(items[1].status, ReviewStatus::New);
+    assert!(items[1].destination.is_none());
+    assert_eq!(items[1].source.as_ref().unwrap().byte_size, 1);
 }
 
 #[test]
