@@ -26,8 +26,13 @@ pub(crate) fn configure(
 
     let weak = window.as_weak();
     let cancel_config = Rc::clone(configuration);
+    let cancel_diagnostics = Rc::clone(&diagnostics);
     window.on_cancel_connection_delete(move || {
-        crate::connection_controller::show_connections(&weak, Rc::clone(&cancel_config));
+        crate::connection_controller::show_connections(
+            &weak,
+            Rc::clone(&cancel_config),
+            Rc::clone(&cancel_diagnostics),
+        );
     });
 }
 
@@ -58,7 +63,11 @@ fn delete_connection(
         },
     );
     match result {
-        Ok(_) => crate::connection_controller::show_connections(weak, Rc::clone(configuration)),
+        Ok(_) => crate::connection_controller::show_connections(
+            weak,
+            Rc::clone(configuration),
+            Rc::clone(diagnostics),
+        ),
         Err(_) => diagnostics_controller::present(
             &window,
             diagnostics,

@@ -5,25 +5,42 @@ use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use crate::{
     AppWindow, ConnectionRow,
     configuration::{ConfigStore, ConnectionDraft, ConnectionRepository, ProviderId, SyncMode},
+    diagnostics_controller::{self, SharedDiagnosticLog},
     form_validation,
 };
 
-pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
+pub(crate) fn configure(
+    window: &AppWindow,
+    configuration: &Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let weak = window.as_weak();
     let connections_config = Rc::clone(configuration);
-    window.on_show_connections(move || show_connections(&weak, Rc::clone(&connections_config)));
+    let connections_diagnostics = Rc::clone(&diagnostics);
+    window.on_show_connections(move || {
+        show_connections(
+            &weak,
+            Rc::clone(&connections_config),
+            Rc::clone(&connections_diagnostics),
+        )
+    });
 
     let weak = window.as_weak();
     let form_config = Rc::clone(configuration);
-    window.on_show_add_connection(move || show_add_connection(&weak, Rc::clone(&form_config)));
+    let form_diagnostics = Rc::clone(&diagnostics);
+    window.on_show_add_connection(move || {
+        show_add_connection(&weak, Rc::clone(&form_config), Rc::clone(&form_diagnostics))
+    });
 
     let weak = window.as_weak();
     let save_config = Rc::clone(configuration);
+    let save_diagnostics = Rc::clone(&diagnostics);
     window.on_save_connection(
         move |name, provider, bucket, remote, local, mode, retention| {
             save_connection(
                 &weak,
                 Rc::clone(&save_config),
+                Rc::clone(&save_diagnostics),
                 name,
                 provider,
                 bucket,
@@ -37,26 +54,38 @@ pub(crate) fn configure(window: &AppWindow, configuration: &Rc<ConfigStore>) {
 
     let weak = window.as_weak();
     let edit_config = Rc::clone(configuration);
-    window.on_request_connection_edit(move |id| request_edit(&weak, &edit_config, id));
+    let edit_diagnostics = Rc::clone(&diagnostics);
+    window.on_request_connection_edit(move |id| {
+        request_edit(&weak, &edit_config, &edit_diagnostics, id)
+    });
 
     let weak = window.as_weak();
     let bucket_config = Rc::clone(configuration);
+    let bucket_diagnostics = Rc::clone(&diagnostics);
     window.on_select_connection_provider(move |index| {
-        select_provider_bucket(&weak, &bucket_config, index);
+        select_provider_bucket(&weak, &bucket_config, &bucket_diagnostics, index);
     });
 }
 
-pub(crate) fn show_connections(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
+pub(crate) fn show_connections(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     window.set_page(4);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
-        refresh_connections(&weak, &configuration)
+        refresh_connections(&weak, &configuration, &diagnostics)
     });
 }
 
-fn refresh_connections(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore) {
+fn refresh_connections(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => {
@@ -80,24 +109,36 @@ fn refresh_connections(weak: &slint::Weak<AppWindow>, configuration: &ConfigStor
             window.set_connections(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
             window.set_status_message(SharedString::default());
         }
-        Err(error) => {
-            window.set_status_message(format!("SyncPak could not load connections: {error}").into())
-        }
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Connections could not be loaded",
+            "connection configuration load failed",
+            "SyncPak could not load connections. Check configuration storage and try again.",
+        ),
     }
 }
 
-fn show_add_connection(weak: &slint::Weak<AppWindow>, configuration: Rc<ConfigStore>) {
+fn show_add_connection(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     reset_form(&window);
     window.set_page(5);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
-        load_provider_names(&weak, &configuration)
+        load_provider_names(&weak, &configuration, &diagnostics)
     });
 }
 
-fn load_provider_names(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore) {
+fn load_provider_names(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => {
@@ -108,9 +149,13 @@ fn load_provider_names(weak: &slint::Weak<AppWindow>, configuration: &ConfigStor
                 window.get_connection_form_provider(),
             );
         }
-        Err(error) => {
-            window.set_status_message(format!("SyncPak could not load providers: {error}").into())
-        }
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Providers could not be loaded for a connection",
+            "provider configuration load failed",
+            "SyncPak could not load providers. Check configuration storage and try again.",
+        ),
     }
 }
 
@@ -118,6 +163,7 @@ fn load_provider_names(weak: &slint::Weak<AppWindow>, configuration: &ConfigStor
 fn save_connection(
     weak: &slint::Weak<AppWindow>,
     configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
     name: SharedString,
     provider_index: i32,
     bucket: SharedString,
@@ -162,12 +208,23 @@ fn save_connection(
         }
     });
     match result {
-        Ok(_) => show_connections(weak, configuration),
-        Err(error) => window.set_status_message(error.into()),
+        Ok(_) => show_connections(weak, configuration, diagnostics),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            &diagnostics,
+            "Connection could not be saved",
+            "connection save failed",
+            "SyncPak could not save this connection. Check configuration storage and try again.",
+        ),
     }
 }
 
-fn request_edit(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id: SharedString) {
+fn request_edit(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+    id: SharedString,
+) {
     let Some(window) = weak.upgrade() else { return };
     let result = configuration
         .load()
@@ -207,17 +264,32 @@ fn request_edit(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, id: 
             window.set_status_message(SharedString::default());
             window.set_page(5);
         }
-        Err(error) => window.set_status_message(error.into()),
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Connection could not be opened",
+            "connection edit load failed",
+            "SyncPak could not open this connection. It may have been removed.",
+        ),
     }
 }
 
-fn select_provider_bucket(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore, index: i32) {
+fn select_provider_bucket(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+    index: i32,
+) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => set_provider_bucket(&window, &config.providers, index),
-        Err(error) => {
-            window.set_status_message(format!("SyncPak could not load providers: {error}").into())
-        }
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "Providers could not be loaded for a connection",
+            "provider configuration load failed",
+            "SyncPak could not load providers. Check configuration storage and try again.",
+        ),
     }
 }
 
