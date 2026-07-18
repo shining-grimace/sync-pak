@@ -3,16 +3,13 @@ use uuid::Uuid;
 
 use super::validation::ValidationErrors;
 
-pub const CURRENT_SCHEMA_VERSION: u32 = 1;
+pub const CURRENT_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AppConfig {
     pub schema_version: u32,
-    #[serde(default)]
     pub welcome_completed: bool,
-    #[serde(default)]
     pub providers: Vec<ProviderConfig>,
-    #[serde(default)]
     pub connections: Vec<ConnectionConfig>,
 }
 

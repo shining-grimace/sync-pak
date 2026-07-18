@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::{AppConfig, CURRENT_SCHEMA_VERSION, ValidationErrors};
+use super::{AppConfig, ValidationErrors};
 
 const CONFIG_FILE: &str = "config.json";
 
@@ -13,7 +13,6 @@ pub enum ConfigurationError {
     Invalid(ValidationErrors),
     Io(io::Error),
     Parse(serde_json::Error),
-    UnsupportedSchema(u32),
 }
 
 impl std::fmt::Display for ConfigurationError {
@@ -25,10 +24,6 @@ impl std::fmt::Display for ConfigurationError {
                 "The configuration could not be accessed: {error}"
             ),
             Self::Parse(_) => formatter.write_str("The configuration file is not valid JSON."),
-            Self::UnsupportedSchema(version) => write!(
-                formatter,
-                "Configuration schema version {version} is unsupported."
-            ),
         }
     }
 }
@@ -73,10 +68,8 @@ impl ConfigStore {
     }
 
     fn decode(&self, contents: &[u8]) -> Result<AppConfig, ConfigurationError> {
-        let mut value: serde_json::Value =
+        let config: AppConfig =
             serde_json::from_slice(contents).map_err(ConfigurationError::Parse)?;
-        migrate(&mut value)?;
-        let config: AppConfig = serde_json::from_value(value).map_err(ConfigurationError::Parse)?;
         config.validate().map_err(ConfigurationError::Invalid)?;
         Ok(config)
     }
@@ -97,30 +90,6 @@ fn config_directory() -> Option<PathBuf> {
         env::var_os("XDG_CONFIG_HOME")
             .map(PathBuf::from)
             .or_else(|| env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
-    }
-}
-
-fn migrate(value: &mut serde_json::Value) -> Result<(), ConfigurationError> {
-    let version = value
-        .get("schema_version")
-        .and_then(serde_json::Value::as_u64)
-        .unwrap_or(0) as u32;
-    match version {
-        CURRENT_SCHEMA_VERSION => Ok(()),
-        0 => {
-            let object = value
-                .as_object_mut()
-                .ok_or(ConfigurationError::UnsupportedSchema(0))?;
-            object.insert("schema_version".to_owned(), CURRENT_SCHEMA_VERSION.into());
-            object
-                .entry("providers")
-                .or_insert_with(|| serde_json::json!([]));
-            object
-                .entry("connections")
-                .or_insert_with(|| serde_json::json!([]));
-            Ok(())
-        }
-        other => Err(ConfigurationError::UnsupportedSchema(other)),
     }
 }
 
@@ -146,45 +115,5 @@ fn atomic_write(path: &Path, contents: &[u8]) -> io::Result<()> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::ConfigStore;
-    use crate::configuration::AppConfig;
-    use std::{
-        fs,
-        time::{SystemTime, UNIX_EPOCH},
-    };
-
-    #[test]
-    fn saves_and_loads_a_versioned_configuration() {
-        let path = std::env::temp_dir()
-            .join(format!(
-                "sync-pak-config-{}",
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos()
-            ))
-            .join("config.json");
-        let store = ConfigStore::at(path.clone());
-        store.save(&AppConfig::default()).unwrap();
-        assert_eq!(store.load().unwrap(), AppConfig::default());
-        assert!(fs::read_to_string(path).unwrap().contains("schema_version"));
-    }
-
-    #[test]
-    fn migrates_an_unversioned_empty_configuration() {
-        let path = std::env::temp_dir()
-            .join(format!(
-                "sync-pak-migration-{}",
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos()
-            ))
-            .join("config.json");
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(&path, "{}").unwrap();
-
-        assert_eq!(ConfigStore::at(path).load().unwrap(), AppConfig::default());
-    }
-}
+#[path = "store_tests.rs"]
+mod tests;
