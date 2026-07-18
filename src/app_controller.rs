@@ -5,10 +5,10 @@ use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use crate::{
     AppWindow, ProviderRow,
     configuration::{
-        ConfigStore, ProviderCredentials, ProviderDraft, ProviderKind, ProviderOptions,
-        ProviderRepository,
+        ConfigStore, ProviderCredentials, ProviderDraft, ProviderKind, ProviderRepository,
     },
     platform::PlatformCredentialStore,
+    provider_form::{provider_id, provider_kind, provider_kind_index, provider_options},
 };
 
 pub(crate) fn initialize(window: &AppWindow) {
@@ -29,11 +29,15 @@ pub(crate) fn initialize(window: &AppWindow) {
 
 fn configure_navigation(window: &AppWindow, configuration: &Rc<ConfigStore>) {
     let weak = window.as_weak();
-    let configuration = Rc::clone(configuration);
-    window.on_show_providers(move || show_providers(&weak, Rc::clone(&configuration)));
+    let providers_config = Rc::clone(configuration);
+    window.on_show_providers(move || show_providers(&weak, Rc::clone(&providers_config)));
 
     let weak = window.as_weak();
     window.on_show_add_provider(move || show_add_provider(&weak));
+
+    let weak = window.as_weak();
+    let edit_config = Rc::clone(configuration);
+    window.on_request_provider_edit(move |id| request_provider_edit(&weak, &edit_config, id));
 
     let weak = window.as_weak();
     window.on_show_welcome(move || set_page(&weak, 0));
@@ -80,13 +84,22 @@ fn save_provider(
         kind,
         options: provider_options(kind),
     };
-    match PlatformCredentialStore::new()
-        .map_err(|error| error.to_string())
-        .and_then(|store| {
-            ProviderRepository::new(&configuration, &store)
+    let edit_id = window.get_provider_form_id();
+    let result = (|| {
+        let store = PlatformCredentialStore::new().map_err(|error| error.to_string())?;
+        let repository = ProviderRepository::new(&configuration, &store);
+        if edit_id.is_empty() {
+            repository
                 .create(draft, &credentials)
                 .map_err(|error| error.to_string())
-        }) {
+        } else {
+            let id = provider_id(&configuration, edit_id.as_str())?;
+            repository
+                .update(&id, draft, &credentials)
+                .map_err(|error| error.to_string())
+        }
+    })();
+    match result {
         Ok(_) => show_providers(weak, configuration),
         Err(error) => window.set_status_message(error.into()),
     }
@@ -123,7 +136,37 @@ fn refresh_providers(weak: &slint::Weak<AppWindow>, configuration: &ConfigStore)
 fn show_add_provider(weak: &slint::Weak<AppWindow>) {
     if let Some(window) = weak.upgrade() {
         window.set_status_message(SharedString::default());
+        window.set_provider_form_id(SharedString::default());
+        window.set_provider_form_name(SharedString::default());
+        window.set_provider_form_kind(0);
         window.set_page(2);
+    }
+}
+
+fn request_provider_edit(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    id: SharedString,
+) {
+    let Some(window) = weak.upgrade() else { return };
+    match configuration
+        .load()
+        .map_err(|error| error.to_string())
+        .and_then(|config| {
+            config
+                .providers
+                .into_iter()
+                .find(|provider| id == provider.id.as_str())
+                .ok_or_else(|| "The provider no longer exists.".to_owned())
+        }) {
+        Ok(provider) => {
+            window.set_provider_form_id(provider.id.as_str().into());
+            window.set_provider_form_name(provider.name.into());
+            window.set_provider_form_kind(provider_kind_index(provider.kind));
+            window.set_status_message(SharedString::default());
+            window.set_page(2);
+        }
+        Err(error) => window.set_status_message(error.into()),
     }
 }
 
@@ -131,26 +174,6 @@ fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
     if let Some(window) = weak.upgrade() {
         window.set_status_message(SharedString::default());
         window.set_page(page);
-    }
-}
-
-fn provider_kind(index: i32) -> Option<ProviderKind> {
-    match index {
-        0 => Some(ProviderKind::CloudflareR2),
-        1 => Some(ProviderKind::BackblazeB2),
-        2 => Some(ProviderKind::AwsS3),
-        _ => None,
-    }
-}
-
-fn provider_options(kind: ProviderKind) -> ProviderOptions {
-    let region = match kind {
-        ProviderKind::CloudflareR2 => Some("auto".to_owned()),
-        ProviderKind::BackblazeB2 | ProviderKind::AwsS3 => None,
-    };
-    ProviderOptions {
-        endpoint: None,
-        region,
     }
 }
 

@@ -11,6 +11,7 @@ mod feasibility;
 pub mod notifications;
 pub mod platform;
 mod provider_delete_controller;
+mod provider_form;
 #[cfg(feature = "provider-probes")]
 pub mod provider_probe;
 #[cfg(feature = "provider-probes")]

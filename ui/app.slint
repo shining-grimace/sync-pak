@@ -21,6 +21,9 @@ export component AppWindow inherits Window {
     in-out property <string> pending-provider-id;
     in-out property <string> pending-provider-name;
     in-out property <int> pending-connection-count;
+    in-out property <string> provider-form-id;
+    in-out property <string> provider-form-name;
+    in-out property <int> provider-form-kind;
     callback show-providers();
     callback show-connections();
     callback show-add-provider();
@@ -28,6 +31,7 @@ export component AppWindow inherits Window {
     callback show-welcome();
     callback show-privacy();
     callback request-provider-delete(string);
+    callback request-provider-edit(string);
     callback confirm-provider-delete();
     callback cancel-provider-delete();
     callback save-provider(string, int, string, string);
@@ -99,6 +103,7 @@ export component AppWindow inherits Window {
                         Text { text: provider.name; font-weight: 700; }
                         Text { text: provider.kind + " · Not verified"; color: #454039; }
                     }
+                    Button { text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
                     Button { text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
                 }
             }
@@ -106,17 +111,17 @@ export component AppWindow inherits Window {
 
         if root.page == 2 : VerticalBox {
             spacing: 10px;
-            Text { text: "Add provider"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: root.provider-form-id == "" ? "Add provider" : "Edit provider"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Credentials are saved in protected storage before this provider is added."; wrap: word-wrap; }
             Text { text: "Provider name"; font-weight: 700; }
-            provider-name := LineEdit { placeholder-text: "For example, Personal S3"; }
+            provider-name := LineEdit { placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; }
             Text { text: "Provider type"; font-weight: 700; }
-            provider-kind := ComboBox { model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; }
+            provider-kind := ComboBox { model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; current-index <=> root.provider-form-kind; }
             Text { text: "Access key ID"; font-weight: 700; }
             access-key := LineEdit { placeholder-text: "Access key ID"; }
             Text { text: "Secret access key"; font-weight: 700; }
             secret-key := LineEdit { placeholder-text: "Secret access key"; input-type: password; }
-            Text { text: "Verification is not available yet. Save only if you understand this provider has not been checked."; color: #454039; wrap: word-wrap; }
+            Text { text: root.provider-form-id == "" ? "Verification is not available yet. Save only if you understand this provider has not been checked." : "Enter credentials again to update this provider. Verification is not available yet."; color: #454039; wrap: word-wrap; }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.show-providers(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.save-provider(provider-name.text, provider-kind.current-index, access-key.text, secret-key.text); } }
