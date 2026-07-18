@@ -43,6 +43,7 @@ pub mod provider_probe;
 mod provider_probe_config;
 pub mod queue;
 pub mod remote_inventory;
+pub mod retry;
 #[cfg(feature = "provider-s3")]
 mod s3_error;
 #[cfg(feature = "provider-s3")]
