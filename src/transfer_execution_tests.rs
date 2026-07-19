@@ -66,6 +66,27 @@ fn completes_all_copies_before_a_delete() {
 }
 
 #[test]
+fn deletes_children_before_their_parent_directory() {
+    let recorder = Recorder {
+        actions: Mutex::new(Vec::new()),
+        cancellation: None,
+        failure: None,
+    };
+
+    execute_plan(
+        &[action("folder", true), action("folder/child", true)],
+        &recorder,
+        &CancellationToken::default(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        recorder.actions.lock().unwrap().as_slice(),
+        [action("folder/child", true), action("folder", true)]
+    );
+}
+
+#[test]
 fn cancellation_stops_before_the_next_action() {
     let cancellation = CancellationToken::default();
     let recorder = Recorder {

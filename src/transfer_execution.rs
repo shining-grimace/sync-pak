@@ -90,16 +90,31 @@ fn snapshot(
     }
 }
 
-fn copy_before_delete(actions: &[PlannedAction]) -> impl Iterator<Item = PlannedAction> + '_ {
-    actions
+fn copy_before_delete(actions: &[PlannedAction]) -> impl Iterator<Item = PlannedAction> {
+    let copies = actions
         .iter()
         .filter(|action| !matches!(action, PlannedAction::Delete { .. }))
-        .chain(
-            actions
-                .iter()
-                .filter(|action| matches!(action, PlannedAction::Delete { .. })),
-        )
         .cloned()
+        .collect::<Vec<_>>();
+    let mut deletes = actions
+        .iter()
+        .filter_map(|action| match action {
+            PlannedAction::Delete { path, .. } => Some((
+                path.as_str().matches('/').count(),
+                path.as_str().to_owned(),
+                action.clone(),
+            )),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    deletes.sort_by(|(left_depth, left_path, _), (right_depth, right_path, _)| {
+        right_depth
+            .cmp(left_depth)
+            .then_with(|| left_path.cmp(right_path))
+    });
+    copies
+        .into_iter()
+        .chain(deletes.into_iter().map(|(_, _, action)| action))
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
