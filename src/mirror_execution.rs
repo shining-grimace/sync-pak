@@ -6,7 +6,7 @@ use crate::{
     destructive_confirmation::{ConfirmationError, DestructiveConfirmation},
     execution::{ExecutionProgress, ExecutionResult, ExecutionState},
     inventory::RelativePath,
-    planning::{Endpoint, PlannedAction, TransferPlan},
+    planning::{Direction, Endpoint, PlannedAction, TransferPlan},
     transfer_progress::{TransferProgress, TransferProgressObserver},
 };
 
@@ -16,6 +16,7 @@ pub trait MirrorTransfer {
 
     fn copy(
         &self,
+        direction: Direction,
         path: &RelativePath,
         overwrite: bool,
         cancellation: &CancellationToken,
@@ -24,6 +25,7 @@ pub trait MirrorTransfer {
 
     fn delete(
         &self,
+        direction: Direction,
         path: &RelativePath,
         cancellation: &CancellationToken,
     ) -> impl Future<Output = Result<(), Self::Error>>;
@@ -79,6 +81,7 @@ pub async fn execute_confirmed_mirror<T: MirrorTransfer, O: TransferProgressObse
             Some(action.clone()),
         ));
         if let Err(error) = apply_action(
+            plan.direction(),
             &action,
             transfer,
             cancellation,
@@ -103,6 +106,7 @@ pub async fn execute_confirmed_mirror<T: MirrorTransfer, O: TransferProgressObse
 }
 
 async fn apply_action<T: MirrorTransfer>(
+    direction: Direction,
     action: &PlannedAction,
     transfer: &T,
     cancellation: &CancellationToken,
@@ -114,7 +118,7 @@ async fn apply_action<T: MirrorTransfer>(
             from: Endpoint::Source,
             to: Endpoint::Destination,
         } => transfer
-            .copy(path, false, cancellation, jitter_seed)
+            .copy(direction, path, false, cancellation, jitter_seed)
             .await
             .map_err(MirrorActionError::Transfer),
         PlannedAction::Overwrite {
@@ -122,14 +126,14 @@ async fn apply_action<T: MirrorTransfer>(
             from: Endpoint::Source,
             to: Endpoint::Destination,
         } => transfer
-            .copy(path, true, cancellation, jitter_seed)
+            .copy(direction, path, true, cancellation, jitter_seed)
             .await
             .map_err(MirrorActionError::Transfer),
         PlannedAction::Delete {
             path,
             from: Endpoint::Destination,
         } => transfer
-            .delete(path, cancellation)
+            .delete(direction, path, cancellation)
             .await
             .map_err(MirrorActionError::Transfer),
         _ => Err(MirrorActionError::Unsupported(action.clone())),

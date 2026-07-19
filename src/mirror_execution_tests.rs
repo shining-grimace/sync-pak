@@ -25,6 +25,7 @@ impl MirrorTransfer for Transfer {
 
     fn copy(
         &self,
+        _: Direction,
         path: &RelativePath,
         _: bool,
         _: &CancellationToken,
@@ -41,6 +42,7 @@ impl MirrorTransfer for Transfer {
 
     fn delete(
         &self,
+        _: Direction,
         path: &RelativePath,
         _: &CancellationToken,
     ) -> impl Future<Output = Result<(), Self::Error>> {
