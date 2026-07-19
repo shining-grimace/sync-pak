@@ -1,13 +1,17 @@
-use std::{error::Error, fmt};
+use std::{error::Error, fmt, time::UNIX_EPOCH};
 
 use crate::{
     cancellation::CancellationToken,
     download::{DownloadError, download_to_path_with_retry_and_cancellation},
     inventory::RelativePath,
-    provider_capabilities::{ObjectReader, ObjectWriter},
+    multipart_file_upload::{MultipartFileUploadError, upload_file_with_cancellation},
+    provider_capabilities::{
+        MultipartUploadRequest, MultipartUploader, ObjectReader, ObjectWriter,
+    },
     retry::{RetryPolicy, RetrySleeper},
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
     upload::{UploadError, upload_from_path_with_retry_and_cancellation},
+    upload_strategy::{UploadStrategy, select_upload_strategy},
 };
 
 /// Transfers individual validated inventory paths between one local root and provider prefix.
@@ -62,6 +66,40 @@ impl<P: ObjectWriter, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
     }
 }
 
+impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
+    /// Uploads a file with the bounded-memory multipart strategy when it is large enough.
+    pub async fn upload_auto(
+        &self,
+        relative: &RelativePath,
+        cancellation: &CancellationToken,
+        jitter_seed: u64,
+    ) -> Result<(), LocalRemoteTransferError> {
+        let source = self.local_root.resolve(relative);
+        let metadata = std::fs::metadata(&source).map_err(LocalRemoteTransferError::Local)?;
+        match select_upload_strategy(metadata.len()) {
+            UploadStrategy::SinglePart => self.upload(relative, cancellation, jitter_seed).await,
+            UploadStrategy::Multipart { part_size } => upload_file_with_cancellation(
+                self.provider,
+                &MultipartUploadRequest {
+                    bucket: self.bucket.into(),
+                    key: self.remote_prefix.resolve(relative),
+                    content_type: None,
+                    source_modified_unix_seconds: metadata
+                        .modified()
+                        .ok()
+                        .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
+                        .and_then(|duration| duration.as_secs().try_into().ok()),
+                },
+                &source,
+                part_size,
+                cancellation,
+            )
+            .await
+            .map_err(LocalRemoteTransferError::Multipart),
+        }
+    }
+}
+
 impl<P: ObjectReader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
     pub async fn download(
         &self,
@@ -86,14 +124,18 @@ impl<P: ObjectReader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
 
 #[derive(Debug)]
 pub enum LocalRemoteTransferError {
+    Local(std::io::Error),
     Upload(UploadError),
+    Multipart(MultipartFileUploadError),
     Download(DownloadError),
 }
 
 impl fmt::Display for LocalRemoteTransferError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Local(error) => write!(formatter, "could not inspect the upload source: {error}"),
             Self::Upload(error) => error.fmt(formatter),
+            Self::Multipart(error) => error.fmt(formatter),
             Self::Download(error) => error.fmt(formatter),
         }
     }
@@ -102,7 +144,9 @@ impl fmt::Display for LocalRemoteTransferError {
 impl Error for LocalRemoteTransferError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
+            Self::Local(error) => Some(error),
             Self::Upload(error) => Some(error),
+            Self::Multipart(error) => Some(error),
             Self::Download(error) => Some(error),
         }
     }
