@@ -5,6 +5,7 @@ mod android_folder_picker;
 #[cfg(target_os = "android")]
 mod android_foreground_execution;
 mod app_controller;
+pub mod archive_create;
 pub mod archive_naming;
 pub mod archive_retention;
 pub mod atomic_write;

@@ -22,6 +22,7 @@ slint = { version = "=1.17.1", default-features = false, features = ["accessibil
 tokio = { version = "=1.52.4", features = ["macros", "rt-multi-thread"], optional = true }
 uuid = { version = "=1.21.0", features = ["v4"] }
 unicode-normalization = "=0.1.24"
+zip = { version = "=2.4.2", default-features = false }
 
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
 notify-rust = "=4.18.0"
