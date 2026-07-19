@@ -15,6 +15,7 @@ mod connection_form_controller;
 mod connection_form_data;
 mod connection_form_state;
 mod connection_list_controller;
+pub mod destructive_confirmation;
 mod diagnostics_controller;
 pub mod download;
 pub mod execution;
