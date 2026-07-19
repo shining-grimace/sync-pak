@@ -36,6 +36,7 @@ pub mod plan_summary;
 pub mod planning;
 pub mod platform;
 pub mod preflight;
+pub mod preflight_execution;
 pub mod preflight_review;
 pub mod provider_capabilities;
 pub mod provider_conformance;
