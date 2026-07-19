@@ -26,6 +26,7 @@ pub mod inventory;
 pub mod inventory_endpoint;
 pub mod inventory_fingerprint;
 pub mod local_inventory;
+pub mod local_remote_transfer;
 pub mod multipart_file_upload;
 pub mod multipart_upload;
 pub mod notifications;
