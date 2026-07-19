@@ -1,4 +1,5 @@
 pub mod activity_snapshot;
+pub mod add_only_execution;
 #[cfg(target_os = "android")]
 mod android_folder_picker;
 #[cfg(target_os = "android")]

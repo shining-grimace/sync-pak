@@ -1,6 +1,7 @@
-use std::{error::Error, fmt, time::UNIX_EPOCH};
+use std::{error::Error, fmt, future::Future, time::UNIX_EPOCH};
 
 use crate::{
+    add_only_execution::AddOnlyTransfer,
     cancellation::CancellationToken,
     download::{DownloadError, download_to_path_with_retry_and_cancellation},
     inventory::RelativePath,
@@ -119,6 +120,30 @@ impl<P: ObjectReader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
         )
         .await
         .map_err(LocalRemoteTransferError::Download)
+    }
+}
+
+impl<P: ObjectReader + ObjectWriter + MultipartUploader, S: RetrySleeper> AddOnlyTransfer
+    for LocalRemoteTransfer<'_, P, S>
+{
+    type Error = LocalRemoteTransferError;
+
+    fn upload(
+        &self,
+        path: &RelativePath,
+        cancellation: &CancellationToken,
+        jitter_seed: u64,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
+        async move { self.upload_auto(path, cancellation, jitter_seed).await }
+    }
+
+    fn download(
+        &self,
+        path: &RelativePath,
+        cancellation: &CancellationToken,
+        jitter_seed: u64,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
+        async move { LocalRemoteTransfer::download(self, path, cancellation, jitter_seed).await }
     }
 }
 
