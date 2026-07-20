@@ -45,11 +45,15 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
     ) -> Self {
         let queue = Arc::new((Mutex::new(OperationQueue::default()), Condvar::new()));
         let stopping = Arc::new(AtomicBool::new(false));
+        let active_connection = Arc::new(Mutex::new(None));
+        #[cfg(target_os = "android")]
+        install_android_cancellation(Arc::clone(&executor), Arc::clone(&active_connection));
         let worker = Some(crate::background_worker::start(
             background.clone(),
             Arc::clone(&executor),
             Arc::clone(&queue),
             Arc::clone(&stopping),
+            active_connection,
         ));
         Self {
             executor,
@@ -150,7 +154,26 @@ impl<E> Drop for BackgroundQueue<E> {
         if let Some(worker) = self.worker.take() {
             let _ = worker.join();
         }
+        #[cfg(target_os = "android")]
+        let _ = crate::android_foreground_execution::clear_cancel_handler();
     }
+}
+
+#[cfg(target_os = "android")]
+fn install_android_cancellation<E: OperationExecutor + Send + Sync + 'static>(
+    executor: Arc<E>,
+    active_connection: Arc<Mutex<Option<String>>>,
+) {
+    let handler = Arc::new(move || {
+        let connection_id = active_connection
+            .lock()
+            .ok()
+            .and_then(|connection| connection.clone());
+        if let Some(connection_id) = connection_id {
+            let _ = executor.cancel(&connection_id);
+        }
+    });
+    let _ = crate::android_foreground_execution::set_cancel_handler(handler);
 }
 
 #[cfg(test)]

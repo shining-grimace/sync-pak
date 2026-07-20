@@ -17,17 +17,25 @@ pub(crate) fn start<E: OperationExecutor + Send + Sync + 'static>(
     executor: Arc<E>,
     shared: Arc<(Mutex<OperationQueue>, Condvar)>,
     stopping: Arc<AtomicBool>,
+    active_connection: Arc<Mutex<Option<String>>>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         loop {
             let Some(entry) = next_entry(&shared, &stopping) else {
                 return;
             };
+            *active_connection
+                .lock()
+                .expect("active connection mutex poisoned") =
+                Some(entry.plan.connection_id.clone());
             let (queue, _) = &*shared;
             let _ = queue.lock().expect("queue mutex poisoned").finish(
                 entry.operation_id,
                 execute(&*executor, background.as_deref(), &entry),
             );
+            *active_connection
+                .lock()
+                .expect("active connection mutex poisoned") = None;
         }
     })
 }
