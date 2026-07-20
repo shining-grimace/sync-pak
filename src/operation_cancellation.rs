@@ -1,6 +1,9 @@
 use crate::{
-    capabilities::CapabilityError,
-    configuration::{ConfigStore, ConnectionError, ConnectionId, ConnectionRepository},
+    capabilities::{CapabilityError, ProtectedCredentialStore},
+    configuration::{
+        ConfigStore, ConnectionError, ConnectionId, ConnectionRepository, CredentialError,
+        DeletedProvider, ProviderId, ProviderRepository,
+    },
 };
 
 /// Cancels an active operation and removes waiting operations for one connection.
@@ -57,6 +60,49 @@ impl std::fmt::Display for ConnectionDeletionError {
 }
 
 impl std::error::Error for ConnectionDeletionError {}
+
+/// Cancels every operation using a provider before deleting its credentials and connections.
+pub fn delete_provider<C: ConnectionOperationCanceller, S: ProtectedCredentialStore>(
+    configuration: &ConfigStore,
+    credentials: &S,
+    canceller: &C,
+    provider_id: &ProviderId,
+) -> Result<DeletedProvider, ProviderDeletionError> {
+    let connection_ids = configuration
+        .load()
+        .map_err(ProviderDeletionError::Configuration)?
+        .connections
+        .into_iter()
+        .filter(|connection| connection.provider_id == *provider_id)
+        .map(|connection| connection.id)
+        .collect::<Vec<_>>();
+    cancel_for_connections(canceller, connection_ids.iter().map(ConnectionId::as_str))
+        .map_err(ProviderDeletionError::Cancellation)?;
+    ProviderRepository::new(configuration, credentials)
+        .delete(provider_id)
+        .map_err(ProviderDeletionError::Provider)
+}
+
+#[derive(Debug)]
+pub enum ProviderDeletionError {
+    Cancellation(CapabilityError),
+    Configuration(crate::configuration::ConfigurationError),
+    Provider(CredentialError),
+}
+
+impl std::fmt::Display for ProviderDeletionError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Cancellation(error) => {
+                write!(formatter, "could not cancel provider work: {error}")
+            }
+            Self::Configuration(error) => error.fmt(formatter),
+            Self::Provider(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for ProviderDeletionError {}
 
 #[cfg(test)]
 mod tests {
