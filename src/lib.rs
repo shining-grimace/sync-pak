@@ -35,6 +35,7 @@ mod form_validation;
 pub mod inventory;
 pub mod inventory_endpoint;
 pub mod inventory_fingerprint;
+pub mod local_archive_remover;
 pub mod local_inventory;
 pub mod local_remote_transfer;
 mod local_remote_transfer_capabilities;
