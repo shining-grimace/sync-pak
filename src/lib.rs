@@ -7,6 +7,7 @@ mod android_foreground_execution;
 mod app_controller;
 pub mod archive_create;
 pub mod archive_download;
+pub mod archive_download_store;
 pub mod archive_execution;
 pub mod archive_naming;
 pub mod archive_prune;
