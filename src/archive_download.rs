@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    archive_create::{ArchiveCreateError, create_archive},
+    archive_create::{ArchiveCreateError, create_archive_with_cancellation},
     cancellation::CancellationToken,
     inventory::{Inventory, InventoryEntryKind, RelativePath},
     transfer_paths::LocalTransferRoot,
@@ -53,7 +53,8 @@ pub async fn download_and_create_archive<D: ArchiveDownloader>(
             }
         }
     }
-    create_archive(&staging.root, inventory, destination).map_err(ArchiveDownloadError::Create)
+    create_archive_with_cancellation(&staging.root, inventory, destination, cancellation)
+        .map_err(ArchiveDownloadError::Create)
 }
 
 struct StagingTree {

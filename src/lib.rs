@@ -6,6 +6,7 @@ mod android_folder_picker;
 mod android_foreground_execution;
 mod app_controller;
 pub mod archive_create;
+mod archive_create_writer;
 pub mod archive_download;
 pub mod archive_download_store;
 pub mod archive_execution;

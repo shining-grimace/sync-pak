@@ -1,7 +1,7 @@
 use std::{error::Error, fmt, path::Path};
 
 use crate::{
-    archive_create::{ArchiveCreateError, stage_archive},
+    archive_create::{ArchiveCreateError, stage_archive_with_cancellation},
     archive_naming::{ArchiveNameError, archive_filename},
     archive_upload::{ArchiveUploadError, ArchiveUploader, upload_staged_archive},
     cancellation::CancellationToken,
@@ -26,8 +26,14 @@ pub async fn create_and_upload_archive<U: ArchiveUploader>(
     let filename =
         archive_filename(timestamp, connection_name).map_err(ArchiveExecutionError::Name)?;
     let destination = RelativePath::new(filename.clone()).map_err(ArchiveExecutionError::Path)?;
-    let staged = stage_archive(source_root, inventory, staging_directory, filename.as_ref())
-        .map_err(ArchiveExecutionError::Create)?;
+    let staged = stage_archive_with_cancellation(
+        source_root,
+        inventory,
+        staging_directory,
+        filename.as_ref(),
+        cancellation,
+    )
+    .map_err(ArchiveExecutionError::Create)?;
     upload_staged_archive(uploader, staged, &destination, cancellation, jitter_seed)
         .await
         .map_err(ArchiveExecutionError::Upload)?;

@@ -1,22 +1,35 @@
 use std::{
     error::Error,
     fmt, fs,
-    io::Write,
     path::{Path, PathBuf},
 };
 
-use zip::{CompressionMethod, ZipWriter, write::SimpleFileOptions};
-
 use crate::{
-    inventory::{Inventory, InventoryEntryKind},
-    transfer_paths::LocalTransferRoot,
+    cancellation::CancellationToken, inventory::Inventory, transfer_paths::LocalTransferRoot,
 };
+
+use crate::archive_create_writer::write_archive;
 
 /// Writes an inventory as a ZIP, then publishes it without replacing an existing archive.
 pub fn create_archive(
     source_root: &LocalTransferRoot,
     inventory: &Inventory,
     destination: &Path,
+) -> Result<(), ArchiveCreateError> {
+    create_archive_with_cancellation(
+        source_root,
+        inventory,
+        destination,
+        &CancellationToken::default(),
+    )
+}
+
+/// Publishes an archive only if ZIP creation completes without cancellation.
+pub fn create_archive_with_cancellation(
+    source_root: &LocalTransferRoot,
+    inventory: &Inventory,
+    destination: &Path,
+    cancellation: &CancellationToken,
 ) -> Result<(), ArchiveCreateError> {
     if destination.exists() {
         return Err(ArchiveCreateError::Collision);
@@ -27,7 +40,8 @@ pub fn create_archive(
     let filename = destination
         .file_name()
         .ok_or(ArchiveCreateError::InvalidDestination)?;
-    let staged = stage_archive(source_root, inventory, directory, filename)?;
+    let staged =
+        stage_archive_with_cancellation(source_root, inventory, directory, filename, cancellation)?;
     let result = fs::hard_link(staged.path(), destination).map_err(ArchiveCreateError::Local);
     let _ = staged.discard();
     result
@@ -43,13 +57,30 @@ pub fn stage_archive(
     staging_directory: &Path,
     filename: &std::ffi::OsStr,
 ) -> Result<StagedArchive, ArchiveCreateError> {
+    stage_archive_with_cancellation(
+        source_root,
+        inventory,
+        staging_directory,
+        filename,
+        &CancellationToken::default(),
+    )
+}
+
+/// Creates a ZIP in a temporary file while checking cancellation between file chunks.
+pub fn stage_archive_with_cancellation(
+    source_root: &LocalTransferRoot,
+    inventory: &Inventory,
+    staging_directory: &Path,
+    filename: &std::ffi::OsStr,
+    cancellation: &CancellationToken,
+) -> Result<StagedArchive, ArchiveCreateError> {
     fs::create_dir_all(staging_directory).map_err(ArchiveCreateError::Local)?;
     let path = staging_directory.join(format!(
         ".{}-{}.tmp",
         filename.to_string_lossy(),
         uuid::Uuid::new_v4()
     ));
-    if let Err(error) = write_archive(source_root, inventory, &path) {
+    if let Err(error) = write_archive(source_root, inventory, &path, cancellation) {
         let _ = fs::remove_file(&path);
         return Err(error);
     }
@@ -73,56 +104,9 @@ impl StagedArchive {
     }
 }
 
-fn write_archive(
-    source_root: &LocalTransferRoot,
-    inventory: &Inventory,
-    temporary: &Path,
-) -> Result<(), ArchiveCreateError> {
-    let file = fs::File::options()
-        .create_new(true)
-        .write(true)
-        .open(temporary)
-        .map_err(ArchiveCreateError::Local)?;
-    let mut archive = ZipWriter::new(file);
-    for entry in inventory.entries() {
-        let name = entry.path.as_str();
-        match &entry.kind {
-            InventoryEntryKind::Directory => archive
-                .add_directory(format!("{name}/"), options(0o40755))
-                .map_err(ArchiveCreateError::Zip)?,
-            InventoryEntryKind::File => {
-                archive
-                    .start_file(name, options(0o100644))
-                    .map_err(ArchiveCreateError::Zip)?;
-                let mut source = fs::File::open(source_root.resolve(&entry.path))
-                    .map_err(ArchiveCreateError::Local)?;
-                std::io::copy(&mut source, &mut archive).map_err(ArchiveCreateError::Local)?;
-            }
-            InventoryEntryKind::Symlink { target } => {
-                archive
-                    .start_file(name, options(0o120777))
-                    .map_err(ArchiveCreateError::Zip)?;
-                archive
-                    .write_all(target.as_bytes())
-                    .map_err(ArchiveCreateError::Local)?;
-            }
-        }
-    }
-    archive
-        .finish()
-        .map_err(ArchiveCreateError::Zip)?
-        .sync_all()
-        .map_err(ArchiveCreateError::Local)
-}
-
-fn options(permissions: u32) -> SimpleFileOptions {
-    SimpleFileOptions::default()
-        .compression_method(CompressionMethod::Stored)
-        .unix_permissions(permissions)
-}
-
 #[derive(Debug)]
 pub enum ArchiveCreateError {
+    Cancelled,
     Collision,
     InvalidDestination,
     Local(std::io::Error),
@@ -132,6 +116,7 @@ pub enum ArchiveCreateError {
 impl fmt::Display for ArchiveCreateError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Cancelled => formatter.write_str("archive creation was cancelled"),
             Self::Collision => formatter.write_str("an archive already exists at this filename"),
             Self::InvalidDestination => {
                 formatter.write_str("archive destination must include a filename")
