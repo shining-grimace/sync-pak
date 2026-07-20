@@ -9,7 +9,11 @@ use crate::{
 pub trait ArchiveRemover {
     type Error;
 
-    fn remove(&self, archive: &ArchiveRecord) -> impl Future<Output = Result<(), Self::Error>>;
+    fn remove(
+        &self,
+        archive: &ArchiveRecord,
+        cancellation: &CancellationToken,
+    ) -> impl Future<Output = Result<(), Self::Error>>;
 }
 
 /// Prunes only records authorized by a successful new archive and its retention policy.
@@ -27,7 +31,7 @@ pub async fn prune_archives<R: ArchiveRemover>(
         if cancellation.is_cancelled() {
             return Err(ArchivePruneError::Cancelled { removed });
         }
-        if let Err(error) = remover.remove(&archive).await {
+        if let Err(error) = remover.remove(&archive, cancellation).await {
             return Err(ArchivePruneError::Remove { error, removed });
         }
         removed.push(archive);
@@ -91,7 +95,11 @@ mod tests {
     impl ArchiveRemover for Remover {
         type Error = Infallible;
 
-        fn remove(&self, archive: &ArchiveRecord) -> impl Future<Output = Result<(), Self::Error>> {
+        fn remove(
+            &self,
+            archive: &ArchiveRecord,
+            _: &CancellationToken,
+        ) -> impl Future<Output = Result<(), Self::Error>> {
             async move {
                 self.0.lock().unwrap().push(archive.location.clone());
                 Ok(())

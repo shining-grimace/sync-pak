@@ -4,7 +4,8 @@ use std::{
 };
 
 use crate::{
-    archive_prune::ArchiveRemover, archive_retention::ArchiveRecord, configuration::ConnectionId,
+    archive_prune::ArchiveRemover, archive_retention::ArchiveRecord,
+    cancellation::CancellationToken, configuration::ConnectionId,
     transfer_paths::LocalTransferRoot,
 };
 
@@ -18,7 +19,7 @@ fn removes_only_a_zip_beneath_the_configured_local_root() {
     std::fs::write(&archive_path, "archive").unwrap();
     let remover = LocalArchiveRemover::new(LocalTransferRoot::new(&root));
 
-    block_on(remover.remove(&record("archives/old.zip"))).unwrap();
+    block_on(remover.remove(&record("archives/old.zip"), &CancellationToken::default())).unwrap();
 
     assert!(!archive_path.exists());
     std::fs::remove_dir_all(root).unwrap();
@@ -30,11 +31,11 @@ fn refuses_non_archive_or_non_normalized_record_locations() {
     let remover = LocalArchiveRemover::new(LocalTransferRoot::new(&root));
 
     assert!(matches!(
-        block_on(remover.remove(&record("notes.txt"))),
+        block_on(remover.remove(&record("notes.txt"), &CancellationToken::default())),
         Err(LocalArchiveRemoveError::NotArchive(_))
     ));
     assert!(matches!(
-        block_on(remover.remove(&record("../outside.zip"))),
+        block_on(remover.remove(&record("../outside.zip"), &CancellationToken::default())),
         Err(LocalArchiveRemoveError::Location(_))
     ));
 

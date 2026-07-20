@@ -46,7 +46,11 @@ impl ArchiveDownloader for Downloader {
 impl ArchiveRemover for Remover {
     type Error = &'static str;
 
-    fn remove(&self, archive: &ArchiveRecord) -> impl Future<Output = Result<(), Self::Error>> {
+    fn remove(
+        &self,
+        archive: &ArchiveRecord,
+        _: &CancellationToken,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
         self.0
             .lock()
             .unwrap()

@@ -23,15 +23,18 @@ impl LocalArchiveRemover {
 impl ArchiveRemover for LocalArchiveRemover {
     type Error = LocalArchiveRemoveError;
 
-    fn remove(&self, archive: &ArchiveRecord) -> impl Future<Output = Result<(), Self::Error>> {
+    fn remove(
+        &self,
+        archive: &ArchiveRecord,
+        cancellation: &CancellationToken,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
         async move {
             let path =
                 RelativePath::new(&archive.location).map_err(LocalArchiveRemoveError::Location)?;
             if !path.as_str().ends_with(".zip") {
                 return Err(LocalArchiveRemoveError::NotArchive(path));
             }
-            delete_local(&self.root, &path, &CancellationToken::default())
-                .map_err(LocalArchiveRemoveError::Delete)
+            delete_local(&self.root, &path, cancellation).map_err(LocalArchiveRemoveError::Delete)
         }
     }
 }

@@ -21,7 +21,7 @@ use crate::{
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
 };
 
-use super::LocalRemoteTransfer;
+use super::{LocalRemoteTransfer, LocalRemoteTransferError};
 #[derive(Default)]
 struct Provider {
     writes: Mutex<Vec<(String, Vec<u8>)>>,
@@ -268,6 +268,7 @@ fn removes_a_validated_prefixed_archive_record() {
     block_on(ArchiveRemover::remove(
         &transfer(&provider, &root, &policy),
         &archive,
+        &CancellationToken::default(),
     ))
     .unwrap();
 
@@ -275,5 +276,34 @@ fn removes_a_validated_prefixed_archive_record() {
         provider.deletes.lock().unwrap().as_slice(),
         ["sync/archives/old.zip"]
     );
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn cancelled_archive_retention_does_not_start_a_remote_delete() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+    let cancellation = CancellationToken::default();
+    cancellation.cancel();
+    let archive = ArchiveRecord {
+        connection_id: ConnectionId::new(),
+        location: "archives/old.zip".into(),
+        created_at_utc: "20260721-120000Z".into(),
+    };
+
+    assert!(matches!(
+        block_on(ArchiveRemover::remove(
+            &transfer(&provider, &root, &policy),
+            &archive,
+            &cancellation,
+        )),
+        Err(LocalRemoteTransferError::Delete(
+            crate::transfer_delete::TransferDeleteError::Cancelled
+        ))
+    ));
+
+    assert!(provider.deletes.lock().unwrap().is_empty());
     std::fs::remove_dir_all(&root).unwrap();
 }

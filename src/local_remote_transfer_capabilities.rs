@@ -18,7 +18,11 @@ use crate::{
 impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'_, P, S> {
     type Error = LocalRemoteTransferError;
 
-    fn remove(&self, archive: &ArchiveRecord) -> impl Future<Output = Result<(), Self::Error>> {
+    fn remove(
+        &self,
+        archive: &ArchiveRecord,
+        cancellation: &CancellationToken,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
         async move {
             let path = crate::inventory::RelativePath::new(&archive.location)
                 .map_err(LocalRemoteTransferError::ArchiveLocation)?;
@@ -30,7 +34,7 @@ impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'
                 self.retry_policy,
                 self.sleeper,
                 0,
-                &CancellationToken::default(),
+                cancellation,
             )
             .await
             .map_err(LocalRemoteTransferError::Delete)
