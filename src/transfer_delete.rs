@@ -4,6 +4,7 @@ use crate::{
     cancellation::CancellationToken,
     inventory::RelativePath,
     provider_capabilities::{ObjectDeleter, ProviderError},
+    retry::{RetryPolicy, RetrySleeper},
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
 };
 
@@ -47,6 +48,40 @@ pub async fn delete_remote<T: ObjectDeleter>(
         .map_err(TransferDeleteError::Provider)
 }
 
+/// Removes a provider object with bounded retry while respecting cancellation.
+pub async fn delete_remote_with_retry_and_cancellation<T: ObjectDeleter, S: RetrySleeper>(
+    provider: &T,
+    bucket: &str,
+    prefix: &RemoteTransferPrefix,
+    relative: &RelativePath,
+    policy: &RetryPolicy,
+    sleeper: &S,
+    jitter_seed: u64,
+    cancellation: &CancellationToken,
+) -> Result<(), TransferDeleteError> {
+    let mut completed_attempts = 0;
+    loop {
+        cancellation
+            .check()
+            .map_err(|_| TransferDeleteError::Cancelled)?;
+        completed_attempts += 1;
+        match provider.delete(bucket, &prefix.resolve(relative)).await {
+            Ok(()) => return Ok(()),
+            Err(error) => {
+                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
+                    Some(retry) => {
+                        sleeper.sleep(retry.delay).await;
+                        cancellation
+                            .check()
+                            .map_err(|_| TransferDeleteError::Cancelled)?;
+                    }
+                    None => return Err(TransferDeleteError::Provider(error)),
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum TransferDeleteError {
     Cancelled,
@@ -77,81 +112,5 @@ impl Error for TransferDeleteError {
 }
 
 #[cfg(test)]
-mod tests {
-    use std::{
-        future::Future,
-        sync::Mutex,
-        task::{Context, Poll, Waker},
-    };
-
-    use crate::{
-        cancellation::CancellationToken,
-        inventory::RelativePath,
-        provider_capabilities::{ObjectDeleter, ProviderResult},
-        transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
-    };
-
-    use super::{delete_local, delete_remote};
-
-    #[derive(Default)]
-    struct Provider(Mutex<Vec<String>>);
-
-    impl ObjectDeleter for Provider {
-        async fn delete(&self, _: &str, key: &str) -> ProviderResult<()> {
-            self.0.lock().unwrap().push(key.into());
-            Ok(())
-        }
-    }
-
-    fn block_on<F: Future>(future: F) -> F::Output {
-        let waker = Waker::noop();
-        let mut context = Context::from_waker(waker);
-        let mut future = std::pin::pin!(future);
-        match future.as_mut().poll(&mut context) {
-            Poll::Ready(output) => output,
-            Poll::Pending => panic!("test provider must not suspend"),
-        }
-    }
-
-    #[test]
-    fn removes_local_files_and_empty_directories() {
-        let root = std::env::temp_dir().join(format!("sync-pak-delete-{}", uuid::Uuid::new_v4()));
-        std::fs::create_dir(&root).unwrap();
-        std::fs::write(root.join("file"), "contents").unwrap();
-        std::fs::create_dir(root.join("empty")).unwrap();
-        let root = LocalTransferRoot::new(&root);
-
-        delete_local(
-            &root,
-            &RelativePath::new("file").unwrap(),
-            &CancellationToken::default(),
-        )
-        .unwrap();
-        delete_local(
-            &root,
-            &RelativePath::new("empty").unwrap(),
-            &CancellationToken::default(),
-        )
-        .unwrap();
-
-        assert!(!root.resolve(&RelativePath::new("file").unwrap()).exists());
-        assert!(!root.resolve(&RelativePath::new("empty").unwrap()).exists());
-        std::fs::remove_dir(root.as_path()).unwrap();
-    }
-
-    #[test]
-    fn removes_prefixed_remote_objects() {
-        let provider = Provider::default();
-
-        block_on(delete_remote(
-            &provider,
-            "bucket",
-            &RemoteTransferPrefix::new("sync").unwrap(),
-            &RelativePath::new("file").unwrap(),
-            &CancellationToken::default(),
-        ))
-        .unwrap();
-
-        assert_eq!(provider.0.lock().unwrap().as_slice(), ["sync/file"]);
-    }
-}
+#[path = "transfer_delete_tests.rs"]
+mod tests;

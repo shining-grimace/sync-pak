@@ -12,7 +12,7 @@ use crate::{
     planning::Direction,
     provider_capabilities::{MultipartUploader, ObjectDeleter, ObjectReader, ObjectWriter},
     retry::RetrySleeper,
-    transfer_delete::{delete_local, delete_remote},
+    transfer_delete::{delete_local, delete_remote_with_retry_and_cancellation},
 };
 
 impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'_, P, S> {
@@ -22,11 +22,14 @@ impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'
         async move {
             let path = crate::inventory::RelativePath::new(&archive.location)
                 .map_err(LocalRemoteTransferError::ArchiveLocation)?;
-            delete_remote(
+            delete_remote_with_retry_and_cancellation(
                 self.provider,
                 self.bucket,
                 &self.remote_prefix,
                 &path,
+                self.retry_policy,
+                self.sleeper,
+                0,
                 &CancellationToken::default(),
             )
             .await
@@ -127,11 +130,14 @@ impl<P: ObjectDeleter + ObjectReader + ObjectWriter + MultipartUploader, S: Retr
     ) -> impl Future<Output = Result<(), Self::Error>> {
         async move {
             match direction {
-                Direction::Upload => delete_remote(
+                Direction::Upload => delete_remote_with_retry_and_cancellation(
                     self.provider,
                     self.bucket,
                     &self.remote_prefix,
                     path,
+                    self.retry_policy,
+                    self.sleeper,
+                    0,
                     cancellation,
                 )
                 .await
