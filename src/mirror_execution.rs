@@ -3,12 +3,14 @@ use std::future::Future;
 use crate::{
     cancellation::CancellationToken,
     configuration::SyncMode,
-    destructive_confirmation::{ConfirmationError, DestructiveConfirmation},
+    destructive_confirmation::DestructiveConfirmation,
     execution::{ExecutionProgress, ExecutionResult, ExecutionState},
     inventory::RelativePath,
     planning::{Direction, Endpoint, PlannedAction, TransferPlan},
     transfer_progress::{TransferProgress, TransferProgressObserver},
 };
+
+pub use crate::mirror_execution_error::{MirrorActionError, MirrorExecutionError};
 
 /// Applies one already-confirmed mirror action to its destination.
 pub trait MirrorTransfer {
@@ -172,23 +174,6 @@ fn event(
         total_actions: total,
         current_action: action,
     }
-}
-
-#[derive(Debug)]
-pub enum MirrorExecutionError<E> {
-    NotMirrorPlan,
-    ConfirmationRequired,
-    Confirmation(ConfirmationError),
-    Action {
-        error: MirrorActionError<E>,
-        result: ExecutionResult,
-    },
-}
-
-#[derive(Debug)]
-pub enum MirrorActionError<E> {
-    Transfer(E),
-    Unsupported(PlannedAction),
 }
 
 #[cfg(test)]
