@@ -3,6 +3,8 @@ use std::future::Future;
 use crate::{
     add_only_execution::AddOnlyTransfer,
     archive_download::ArchiveDownloader,
+    archive_prune::ArchiveRemover,
+    archive_retention::ArchiveRecord,
     archive_upload::ArchiveUploader,
     cancellation::CancellationToken,
     local_remote_transfer::{LocalRemoteTransfer, LocalRemoteTransferError},
@@ -12,6 +14,26 @@ use crate::{
     retry::RetrySleeper,
     transfer_delete::{delete_local, delete_remote},
 };
+
+impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'_, P, S> {
+    type Error = LocalRemoteTransferError;
+
+    fn remove(&self, archive: &ArchiveRecord) -> impl Future<Output = Result<(), Self::Error>> {
+        async move {
+            let path = crate::inventory::RelativePath::new(&archive.location)
+                .map_err(LocalRemoteTransferError::ArchiveLocation)?;
+            delete_remote(
+                self.provider,
+                self.bucket,
+                &self.remote_prefix,
+                &path,
+                &CancellationToken::default(),
+            )
+            .await
+            .map_err(LocalRemoteTransferError::Delete)
+        }
+    }
+}
 
 impl<P: ObjectReader, S: RetrySleeper> ArchiveDownloader for LocalRemoteTransfer<'_, P, S> {
     type Error = LocalRemoteTransferError;

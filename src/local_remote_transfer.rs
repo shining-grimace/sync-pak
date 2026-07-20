@@ -3,7 +3,7 @@ use std::{error::Error, fmt, path::Path, time::UNIX_EPOCH};
 use crate::{
     cancellation::CancellationToken,
     download::DownloadError,
-    inventory::RelativePath,
+    inventory::{InventoryError, RelativePath},
     multipart_file_upload::{MultipartFileUploadError, upload_file_with_cancellation},
     provider_capabilities::{MultipartUploadRequest, MultipartUploader, ObjectWriter},
     retry::{RetryPolicy, RetrySleeper},
@@ -129,6 +129,7 @@ pub enum LocalRemoteTransferError {
     Multipart(MultipartFileUploadError),
     Download(DownloadError),
     Delete(crate::transfer_delete::TransferDeleteError),
+    ArchiveLocation(InventoryError),
 }
 
 impl fmt::Display for LocalRemoteTransferError {
@@ -142,6 +143,9 @@ impl fmt::Display for LocalRemoteTransferError {
             Self::Multipart(error) => error.fmt(formatter),
             Self::Download(error) => error.fmt(formatter),
             Self::Delete(error) => error.fmt(formatter),
+            Self::ArchiveLocation(error) => {
+                write!(formatter, "invalid archive record location: {error}")
+            }
         }
     }
 }
@@ -155,6 +159,7 @@ impl Error for LocalRemoteTransferError {
             Self::Multipart(error) => Some(error),
             Self::Download(error) => Some(error),
             Self::Delete(error) => Some(error),
+            Self::ArchiveLocation(error) => Some(error),
         }
     }
 }

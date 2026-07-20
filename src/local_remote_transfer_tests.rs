@@ -7,11 +7,14 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
+    archive_prune::ArchiveRemover,
+    archive_retention::ArchiveRecord,
     archive_upload::ArchiveUploader,
     cancellation::CancellationToken,
+    configuration::ConnectionId,
     inventory::RelativePath,
     provider_capabilities::{
-        MultipartUpload, MultipartUploadRequest, MultipartUploader, ObjectReader,
+        MultipartUpload, MultipartUploadRequest, MultipartUploader, ObjectDeleter, ObjectReader,
         ObjectWriteMetadata, ObjectWriter, ProviderResult, UploadedPart,
     },
     retry::{RetryPolicy, RetrySleeper},
@@ -23,6 +26,7 @@ use super::LocalRemoteTransfer;
 struct Provider {
     writes: Mutex<Vec<(String, Vec<u8>)>>,
     multipart_keys: Mutex<Vec<String>>,
+    deletes: Mutex<Vec<String>>,
 }
 
 impl ObjectWriter for Provider {
@@ -48,6 +52,13 @@ impl ObjectWriter for Provider {
 impl ObjectReader for Provider {
     async fn read(&self, _: &str, _: &str) -> ProviderResult<Vec<u8>> {
         Ok(b"remote".to_vec())
+    }
+}
+
+impl ObjectDeleter for Provider {
+    async fn delete(&self, _: &str, key: &str) -> ProviderResult<()> {
+        self.deletes.lock().unwrap().push(key.into());
+        Ok(())
     }
 }
 
@@ -238,6 +249,31 @@ fn uploads_an_archive_staging_file_to_its_prefixed_destination() {
     assert_eq!(
         provider.writes.lock().unwrap().as_slice(),
         [("sync/archives/backup.zip".into(), b"zip".to_vec())]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn removes_a_validated_prefixed_archive_record() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+    let archive = ArchiveRecord {
+        connection_id: ConnectionId::new(),
+        location: "archives/old.zip".into(),
+        created_at_utc: "20260721-120000Z".into(),
+    };
+
+    block_on(ArchiveRemover::remove(
+        &transfer(&provider, &root, &policy),
+        &archive,
+    ))
+    .unwrap();
+
+    assert_eq!(
+        provider.deletes.lock().unwrap().as_slice(),
+        ["sync/archives/old.zip"]
     );
     std::fs::remove_dir_all(&root).unwrap();
 }
