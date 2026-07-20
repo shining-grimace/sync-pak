@@ -135,6 +135,14 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
     }
 }
 
+impl<E: OperationExecutor + Send + Sync + 'static>
+    crate::operation_cancellation::ConnectionOperationCanceller for BackgroundQueue<E>
+{
+    fn cancel_for_connection(&self, connection_id: &str) -> Result<usize, CapabilityError> {
+        Self::cancel_for_connection(self, connection_id)
+    }
+}
+
 impl<E> Drop for BackgroundQueue<E> {
     fn drop(&mut self) {
         self.stopping.store(true, Ordering::Release);
