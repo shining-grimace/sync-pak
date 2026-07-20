@@ -2,6 +2,7 @@ use std::future::Future;
 
 use crate::{
     add_only_execution::AddOnlyTransfer,
+    archive_download::ArchiveDownloader,
     archive_upload::ArchiveUploader,
     cancellation::CancellationToken,
     local_remote_transfer::{LocalRemoteTransfer, LocalRemoteTransferError},
@@ -11,6 +12,23 @@ use crate::{
     retry::RetrySleeper,
     transfer_delete::{delete_local, delete_remote},
 };
+
+impl<P: ObjectReader, S: RetrySleeper> ArchiveDownloader for LocalRemoteTransfer<'_, P, S> {
+    type Error = LocalRemoteTransferError;
+
+    fn download(
+        &self,
+        source: &crate::inventory::RelativePath,
+        destination: &std::path::Path,
+        cancellation: &CancellationToken,
+        jitter_seed: u64,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
+        async move {
+            self.download_path(source, destination, cancellation, jitter_seed)
+                .await
+        }
+    }
+}
 
 impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> ArchiveUploader
     for LocalRemoteTransfer<'_, P, S>
