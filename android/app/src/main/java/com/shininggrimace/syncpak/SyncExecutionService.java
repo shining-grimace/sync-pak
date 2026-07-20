@@ -26,6 +26,7 @@ public final class SyncExecutionService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_CANCEL.equals(intent.getAction())) {
+            nativeSyncExecutionCancelled();
             stopExecution();
             return START_NOT_STICKY;
         }
@@ -47,6 +48,7 @@ public final class SyncExecutionService extends Service {
 
     @Override
     public void onTimeout(int startId, int foregroundServiceType) {
+        nativeSyncExecutionCancelled();
         stopExecution();
     }
 
@@ -101,4 +103,6 @@ public final class SyncExecutionService extends Service {
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
     }
+
+    private static native void nativeSyncExecutionCancelled();
 }

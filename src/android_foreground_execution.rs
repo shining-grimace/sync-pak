@@ -1,14 +1,15 @@
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use jni::{
-    JavaVM, jni_sig, jni_str,
-    objects::{Global, JObject},
+    EnvUnowned, JavaVM, jni_sig, jni_str,
+    objects::{Global, JClass, JObject},
 };
 use slint::android::AndroidApp;
 
 use crate::capabilities::CapabilityError;
 
 static ANDROID_APP: Mutex<Option<AndroidApp>> = Mutex::new(None);
+static CANCEL_HANDLER: Mutex<Option<Arc<dyn Fn() + Send + Sync>>> = Mutex::new(None);
 
 pub fn initialize(app: AndroidApp) -> Result<(), CapabilityError> {
     *ANDROID_APP
@@ -53,6 +54,21 @@ pub fn stop() -> Result<(), CapabilityError> {
     })
 }
 
+/// Installs the active queue's cancellation callback for the notification action.
+pub fn set_cancel_handler(handler: Arc<dyn Fn() + Send + Sync>) -> Result<(), CapabilityError> {
+    *CANCEL_HANDLER
+        .lock()
+        .map_err(|_| CapabilityError::Unexpected)? = Some(handler);
+    Ok(())
+}
+
+pub fn clear_cancel_handler() -> Result<(), CapabilityError> {
+    *CANCEL_HANDLER
+        .lock()
+        .map_err(|_| CapabilityError::Unexpected)? = None;
+    Ok(())
+}
+
 fn with_activity(
     action: impl FnOnce(&mut jni::Env<'_>, &JObject<'_>) -> jni::errors::Result<()>,
 ) -> Result<(), CapabilityError> {
@@ -70,4 +86,25 @@ fn with_activity(
         action(env, &activity)
     })
     .map_err(|_| CapabilityError::Unavailable)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_shininggrimace_syncpak_SyncExecutionService_nativeSyncExecutionCancelled<
+    'local,
+>(
+    mut unowned_env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+) {
+    unowned_env
+        .with_env(|_| {
+            let handler = CANCEL_HANDLER
+                .lock()
+                .ok()
+                .and_then(|handler| handler.clone());
+            if let Some(handler) = handler {
+                handler();
+            }
+            Ok::<(), jni::errors::Error>(())
+        })
+        .resolve::<jni::errors::LogErrorAndDefault>();
 }
