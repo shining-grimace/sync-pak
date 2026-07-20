@@ -49,7 +49,10 @@ pub fn stage_archive(
         filename.to_string_lossy(),
         uuid::Uuid::new_v4()
     ));
-    write_archive(source_root, inventory, &path)?;
+    if let Err(error) = write_archive(source_root, inventory, &path) {
+        let _ = fs::remove_file(&path);
+        return Err(error);
+    }
     Ok(StagedArchive { path })
 }
 
