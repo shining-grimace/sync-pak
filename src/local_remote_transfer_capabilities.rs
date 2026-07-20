@@ -2,6 +2,7 @@ use std::future::Future;
 
 use crate::{
     add_only_execution::AddOnlyTransfer,
+    archive_upload::ArchiveUploader,
     cancellation::CancellationToken,
     local_remote_transfer::{LocalRemoteTransfer, LocalRemoteTransferError},
     mirror_execution::MirrorTransfer,
@@ -10,6 +11,25 @@ use crate::{
     retry::RetrySleeper,
     transfer_delete::{delete_local, delete_remote},
 };
+
+impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> ArchiveUploader
+    for LocalRemoteTransfer<'_, P, S>
+{
+    type Error = LocalRemoteTransferError;
+
+    fn upload(
+        &self,
+        source: &std::path::Path,
+        destination: &crate::inventory::RelativePath,
+        cancellation: &CancellationToken,
+        jitter_seed: u64,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
+        async move {
+            self.upload_path_auto(source, destination, cancellation, jitter_seed)
+                .await
+        }
+    }
+}
 
 impl<P: ObjectReader + ObjectWriter + MultipartUploader, S: RetrySleeper> AddOnlyTransfer
     for LocalRemoteTransfer<'_, P, S>

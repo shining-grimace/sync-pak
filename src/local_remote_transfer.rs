@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, time::UNIX_EPOCH};
+use std::{error::Error, fmt, path::Path, time::UNIX_EPOCH};
 
 use crate::{
     cancellation::CancellationToken,
@@ -75,9 +75,32 @@ impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'
         jitter_seed: u64,
     ) -> Result<(), LocalRemoteTransferError> {
         let source = self.local_root.resolve(relative);
+        self.upload_path_auto(&source, relative, cancellation, jitter_seed)
+            .await
+    }
+
+    /// Uploads a local file to a validated key using the normal size strategy.
+    pub(crate) async fn upload_path_auto(
+        &self,
+        source: &Path,
+        relative: &RelativePath,
+        cancellation: &CancellationToken,
+        jitter_seed: u64,
+    ) -> Result<(), LocalRemoteTransferError> {
         let metadata = std::fs::metadata(&source).map_err(LocalRemoteTransferError::Local)?;
         match select_upload_strategy(metadata.len()) {
-            UploadStrategy::SinglePart => self.upload(relative, cancellation, jitter_seed).await,
+            UploadStrategy::SinglePart => upload_from_path_with_retry_and_cancellation(
+                self.provider,
+                self.bucket,
+                &self.remote_prefix.resolve(relative),
+                source,
+                self.retry_policy,
+                self.sleeper,
+                jitter_seed,
+                cancellation,
+            )
+            .await
+            .map_err(LocalRemoteTransferError::Upload),
             UploadStrategy::Multipart { part_size } => upload_file_with_cancellation(
                 self.provider,
                 &MultipartUploadRequest {
@@ -90,7 +113,7 @@ impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'
                         .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
                         .and_then(|duration| duration.as_secs().try_into().ok()),
                 },
-                &source,
+                source,
                 part_size,
                 cancellation,
             )

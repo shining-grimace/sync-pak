@@ -25,11 +25,15 @@ impl ArchiveUploader for Uploader {
     fn upload(
         &self,
         source: &Path,
-        destination: &str,
+        destination: &RelativePath,
         _: &CancellationToken,
+        _: u64,
     ) -> impl Future<Output = Result<(), Self::Error>> {
         let source_exists = source.exists();
-        self.destinations.lock().unwrap().push(destination.into());
+        self.destinations
+            .lock()
+            .unwrap()
+            .push(destination.as_str().into());
         async move {
             if self.fail || !source_exists {
                 Err("provider failed")
@@ -71,8 +75,9 @@ fn confirmed_upload_removes_the_staged_archive() {
     block_on(upload_staged_archive(
         &uploader,
         archive,
-        "archives/archive.zip",
+        &RelativePath::new("archives/archive.zip").unwrap(),
         &CancellationToken::default(),
+        1,
     ))
     .unwrap();
 
@@ -97,8 +102,9 @@ fn failed_upload_keeps_the_staged_archive_for_recovery() {
     let error = block_on(upload_staged_archive(
         &uploader,
         archive,
-        "archives/archive.zip",
+        &RelativePath::new("archives/archive.zip").unwrap(),
         &CancellationToken::default(),
+        1,
     ))
     .unwrap_err();
 

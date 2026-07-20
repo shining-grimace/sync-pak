@@ -7,6 +7,7 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
+    archive_upload::ArchiveUploader,
     cancellation::CancellationToken,
     inventory::RelativePath,
     provider_capabilities::{
@@ -193,5 +194,30 @@ fn uploads_a_threshold_sized_file_with_multipart() {
         ["sync/large.bin"]
     );
     assert!(provider.writes.lock().unwrap().is_empty());
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn uploads_an_archive_staging_file_to_its_prefixed_destination() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let archive = root.join("archive.tmp");
+    std::fs::write(&archive, b"zip").unwrap();
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+
+    block_on(ArchiveUploader::upload(
+        &transfer(&provider, &root, &policy),
+        &archive,
+        &RelativePath::new("archives/backup.zip").unwrap(),
+        &CancellationToken::default(),
+        3,
+    ))
+    .unwrap();
+
+    assert_eq!(
+        provider.writes.lock().unwrap().as_slice(),
+        [("sync/archives/backup.zip".into(), b"zip".to_vec())]
+    );
     std::fs::remove_dir_all(&root).unwrap();
 }

@@ -1,6 +1,8 @@
 use std::{error::Error, fmt, future::Future, path::Path};
 
-use crate::{archive_create::StagedArchive, cancellation::CancellationToken};
+use crate::{
+    archive_create::StagedArchive, cancellation::CancellationToken, inventory::RelativePath,
+};
 
 /// Stores a complete, staged archive at its destination.
 pub trait ArchiveUploader {
@@ -9,8 +11,9 @@ pub trait ArchiveUploader {
     fn upload(
         &self,
         source: &Path,
-        destination: &str,
+        destination: &RelativePath,
         cancellation: &CancellationToken,
+        jitter_seed: u64,
     ) -> impl Future<Output = Result<(), Self::Error>>;
 }
 
@@ -18,14 +21,15 @@ pub trait ArchiveUploader {
 pub async fn upload_staged_archive<U: ArchiveUploader>(
     uploader: &U,
     staged: StagedArchive,
-    destination: &str,
+    destination: &RelativePath,
     cancellation: &CancellationToken,
+    jitter_seed: u64,
 ) -> Result<(), ArchiveUploadError<U::Error>> {
     if cancellation.check().is_err() {
         return Err(ArchiveUploadError::Cancelled { staged });
     }
     if let Err(error) = uploader
-        .upload(staged.path(), destination, cancellation)
+        .upload(staged.path(), destination, cancellation, jitter_seed)
         .await
     {
         return Err(ArchiveUploadError::Upload { staged, error });
