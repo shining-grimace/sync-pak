@@ -76,7 +76,7 @@ pub fn stage_archive_with_cancellation(
 ) -> Result<StagedArchive, ArchiveCreateError> {
     fs::create_dir_all(staging_directory).map_err(ArchiveCreateError::Local)?;
     let path = staging_directory.join(format!(
-        ".{}-{}.tmp",
+        ".{}.sync-pak-{}.tmp",
         filename.to_string_lossy(),
         uuid::Uuid::new_v4()
     ));

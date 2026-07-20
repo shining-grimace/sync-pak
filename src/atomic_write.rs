@@ -43,7 +43,7 @@ pub fn atomic_write(path: &Path, contents: &[u8]) -> io::Result<()> {
 fn temporary_name(file_name: &std::ffi::OsStr) -> OsString {
     let mut name = OsString::from(".");
     name.push(file_name);
-    name.push(format!(".{}.tmp", Uuid::new_v4()));
+    name.push(format!(".sync-pak-{}.tmp", Uuid::new_v4()));
     name
 }
 

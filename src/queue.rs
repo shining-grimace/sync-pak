@@ -105,6 +105,29 @@ impl OperationQueue {
         self.entries.iter()
     }
 
+    /// Returns activity entries newest first, without exposing mutable queue state.
+    pub fn activity(&self) -> impl Iterator<Item = &QueueEntry> {
+        self.entries.iter().rev()
+    }
+
+    /// Removes only terminal activity entries, retaining active and queued work.
+    pub fn clear_completed(&mut self) -> usize {
+        let before = self.entries.len();
+        self.entries.retain(|entry| {
+            !matches!(
+                entry.state,
+                QueueState::Completed | QueueState::Failed | QueueState::Cancelled
+            )
+        });
+        before - self.entries.len()
+    }
+
+    pub fn running(&self) -> Option<&QueueEntry> {
+        self.entries
+            .iter()
+            .find(|entry| entry.state == QueueState::Running)
+    }
+
     /// Returns whether there are no operations waiting to begin.
     pub fn is_empty(&self) -> bool {
         !self
@@ -227,5 +250,32 @@ mod tests {
 
         assert_eq!(queue.entries().count(), 1);
         assert_eq!(queue.take_next().unwrap().plan.connection_id, "keep");
+    }
+
+    #[test]
+    fn activity_is_newest_first_and_can_clear_only_terminal_entries() {
+        let mut queue = OperationQueue::default();
+        let completed = queue.push(
+            OperationPlan::new("old", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Old"),
+        );
+        let entry = queue.take_next().unwrap();
+        assert_eq!(entry.operation_id, completed);
+        assert!(queue.finish(entry.operation_id, ExecutionProgress::new([]).finish()));
+        queue.push(
+            OperationPlan::new("new", SyncMode::AddOnly, Direction::Upload),
+            snapshot("New"),
+        );
+
+        assert_eq!(
+            queue
+                .activity()
+                .map(|entry| entry.snapshot.connection_name.as_str())
+                .collect::<Vec<_>>(),
+            ["New", "Old"]
+        );
+        assert_eq!(queue.clear_completed(), 1);
+        assert_eq!(queue.entries().count(), 1);
+        assert_eq!(queue.running(), None);
     }
 }

@@ -2,7 +2,11 @@ use std::rc::Rc;
 
 use slint::ComponentHandle;
 
-use crate::{AppWindow, configuration::ConfigStore, diagnostics_controller};
+use crate::{
+    AppWindow,
+    configuration::{ConfigStore, StructuredError},
+    diagnostics_controller,
+};
 
 pub(crate) fn initialize(window: &AppWindow) {
     let diagnostics = Rc::new(std::cell::RefCell::new(Default::default()));
@@ -29,10 +33,26 @@ pub(crate) fn initialize(window: &AppWindow) {
     crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::folder_picker_controller::configure(window, Rc::clone(&diagnostics));
     match configuration.load() {
-        Ok(config) if config.welcome_completed => {
-            crate::provider_list_controller::show(&window.as_weak(), configuration, diagnostics)
+        Ok(config) => {
+            let report = crate::temporary_cleanup::remove_stale_files(
+                config
+                    .connections
+                    .iter()
+                    .map(|connection| &connection.local_path),
+            );
+            if !report.failures.is_empty() {
+                diagnostics_controller::record(
+                    &diagnostics,
+                    StructuredError::new(
+                        "Could not remove temporary data from an earlier operation",
+                        "startup temporary-file cleanup failed",
+                    ),
+                );
+            }
+            if config.welcome_completed {
+                crate::provider_list_controller::show(&window.as_weak(), configuration, diagnostics)
+            }
         }
-        Ok(_) => {}
         Err(_) => diagnostics_controller::present(
             window,
             &diagnostics,

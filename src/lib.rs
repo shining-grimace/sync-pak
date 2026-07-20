@@ -16,6 +16,7 @@ pub mod archive_retention;
 pub mod archive_store;
 pub mod archive_upload;
 pub mod atomic_write;
+pub mod background_queue;
 pub mod cancellation;
 pub mod capabilities;
 pub mod comparison;
@@ -80,6 +81,7 @@ mod s3_settings;
 pub mod s3_transport;
 #[cfg(feature = "provider-s3")]
 mod s3_writer;
+pub mod temporary_cleanup;
 pub mod transfer_delete;
 pub mod transfer_execution;
 pub mod transfer_paths;
