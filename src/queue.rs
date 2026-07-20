@@ -92,6 +92,17 @@ impl OperationQueue {
         true
     }
 
+    /// Removes queued work entirely, as requested from the Activity list.
+    pub fn remove_queued(&mut self, operation_id: Uuid) -> bool {
+        let Some(index) = self.entries.iter().position(|entry| {
+            entry.operation_id == operation_id && entry.state == QueueState::Queued
+        }) else {
+            return false;
+        };
+        self.entries.remove(index);
+        true
+    }
+
     /// Removes queued work for a connection before its configuration is deleted.
     pub fn remove_queued_for_connection(&mut self, connection_id: &str) -> usize {
         let before = self.entries.len();
@@ -277,5 +288,18 @@ mod tests {
         assert_eq!(queue.clear_completed(), 1);
         assert_eq!(queue.entries().count(), 1);
         assert_eq!(queue.running(), None);
+    }
+
+    #[test]
+    fn queued_work_can_be_removed_without_creating_activity_history() {
+        let mut queue = OperationQueue::default();
+        let operation_id = queue.push(
+            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Connection"),
+        );
+
+        assert!(queue.remove_queued(operation_id));
+        assert!(queue.entries().next().is_none());
+        assert!(!queue.remove_queued(operation_id));
     }
 }

@@ -3,7 +3,7 @@ use std::{
         Arc, Condvar, Mutex,
         atomic::{AtomicBool, Ordering},
     },
-    thread::{self, JoinHandle},
+    thread::JoinHandle,
 };
 
 use uuid::Uuid;
@@ -11,7 +11,7 @@ use uuid::Uuid;
 use crate::{
     activity_snapshot::ActivitySnapshot,
     capabilities::{BackgroundExecution, CapabilityError},
-    execution::{ExecutionResult, OperationExecutor},
+    execution::OperationExecutor,
     planning::OperationPlan,
     queue::{OperationQueue, QueueEntry},
 };
@@ -45,7 +45,7 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
     ) -> Self {
         let queue = Arc::new((Mutex::new(OperationQueue::default()), Condvar::new()));
         let stopping = Arc::new(AtomicBool::new(false));
-        let worker = Some(start_worker(
+        let worker = Some(crate::background_worker::start(
             background.clone(),
             Arc::clone(&executor),
             Arc::clone(&queue),
@@ -86,6 +86,15 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             Some(connection_id) => self.executor.cancel(&connection_id).map(|()| true),
             None => Ok(false),
         }
+    }
+
+    /// Removes waiting work without recording a cancelled result.
+    pub fn remove_queued(&self, operation_id: Uuid) -> bool {
+        let (queue, _) = &*self.queue;
+        queue
+            .lock()
+            .expect("queue mutex poisoned")
+            .remove_queued(operation_id)
     }
 
     /// Cancels active work and removes queued work before its connection is deleted.
@@ -133,70 +142,6 @@ impl<E> Drop for BackgroundQueue<E> {
         if let Some(worker) = self.worker.take() {
             let _ = worker.join();
         }
-    }
-}
-
-fn start_worker<E: OperationExecutor + Send + Sync + 'static>(
-    background: Option<Arc<dyn BackgroundExecution + Send + Sync>>,
-    executor: Arc<E>,
-    shared: Arc<(Mutex<OperationQueue>, Condvar)>,
-    stopping: Arc<AtomicBool>,
-) -> JoinHandle<()> {
-    thread::spawn(move || {
-        loop {
-            let entry = next_entry(&shared, &stopping);
-            let Some(entry) = entry else { return };
-            let result = execute(&*executor, background.as_deref(), &entry);
-            let result = if result.is_terminal() {
-                result
-            } else {
-                ExecutionResult::failed_before_start()
-            };
-            let (queue, _) = &*shared;
-            let _ = queue
-                .lock()
-                .expect("queue mutex poisoned")
-                .finish(entry.operation_id, result);
-        }
-    })
-}
-
-fn execute<E: OperationExecutor>(
-    executor: &E,
-    background: Option<&(dyn BackgroundExecution + Send + Sync)>,
-    entry: &QueueEntry,
-) -> ExecutionResult {
-    let foreground = background.map_or(Ok(()), |background| {
-        background.start(&entry.snapshot.connection_name)
-    });
-    let result = match foreground {
-        Ok(()) => executor
-            .execute(&entry.plan)
-            .unwrap_or_else(|_| ExecutionResult::failed_before_start()),
-        Err(_) => ExecutionResult::failed_before_start(),
-    };
-    if foreground.is_ok()
-        && let Some(background) = background
-    {
-        let _ = background.stop();
-    }
-    result
-}
-
-fn next_entry(
-    shared: &(Mutex<OperationQueue>, Condvar),
-    stopping: &AtomicBool,
-) -> Option<QueueEntry> {
-    let (queue, wake) = shared;
-    let mut queue = queue.lock().expect("queue mutex poisoned");
-    loop {
-        if stopping.load(Ordering::Acquire) {
-            return None;
-        }
-        if let Some(entry) = queue.take_next() {
-            return Some(entry);
-        }
-        queue = wake.wait(queue).expect("queue mutex poisoned");
     }
 }
 

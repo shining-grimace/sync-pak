@@ -1,3 +1,4 @@
+pub mod activity_presentation;
 pub mod activity_snapshot;
 pub mod add_only_execution;
 #[cfg(target_os = "android")]
@@ -17,6 +18,7 @@ pub mod archive_store;
 pub mod archive_upload;
 pub mod atomic_write;
 pub mod background_queue;
+mod background_worker;
 pub mod cancellation;
 pub mod capabilities;
 pub mod comparison;
