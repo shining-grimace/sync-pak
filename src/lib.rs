@@ -9,6 +9,7 @@ pub mod archive_create;
 pub mod archive_naming;
 pub mod archive_prune;
 pub mod archive_retention;
+pub mod archive_upload;
 pub mod atomic_write;
 pub mod cancellation;
 pub mod capabilities;

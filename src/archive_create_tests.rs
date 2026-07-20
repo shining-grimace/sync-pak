@@ -5,7 +5,7 @@ use crate::{
     transfer_paths::LocalTransferRoot,
 };
 
-use super::{ArchiveCreateError, create_archive};
+use super::{ArchiveCreateError, create_archive, stage_archive};
 
 fn entry(path: &str, kind: InventoryEntryKind) -> InventoryEntry {
     InventoryEntry::new(RelativePath::new(path).unwrap(), kind, 0, None)
@@ -39,5 +39,26 @@ fn creates_a_zip_with_files_and_empty_directories_without_replacing_existing_arc
         create_archive(&LocalTransferRoot::new(&root), &inventory, &destination),
         Err(ArchiveCreateError::Collision)
     ));
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn staging_keeps_a_complete_archive_local_until_the_caller_discards_it() {
+    let root = std::env::temp_dir().join(format!("sync-pak-archive-{}", uuid::Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    std::fs::write(root.join("file.txt"), "contents").unwrap();
+    let inventory = Inventory::new([entry("file.txt", InventoryEntryKind::File)]).unwrap();
+
+    let staged = stage_archive(
+        &LocalTransferRoot::new(&root),
+        &inventory,
+        &root,
+        "archive.zip".as_ref(),
+    )
+    .unwrap();
+
+    assert!(staged.path().exists());
+    assert!(!root.join("archive.zip").exists());
+    staged.discard().unwrap();
     std::fs::remove_dir_all(&root).unwrap();
 }

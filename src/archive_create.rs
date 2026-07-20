@@ -1,4 +1,9 @@
-use std::{error::Error, fmt, fs, io::Write, path::Path};
+use std::{
+    error::Error,
+    fmt, fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use zip::{CompressionMethod, ZipWriter, write::SimpleFileOptions};
 
@@ -22,16 +27,47 @@ pub fn create_archive(
     let filename = destination
         .file_name()
         .ok_or(ArchiveCreateError::InvalidDestination)?;
-    fs::create_dir_all(directory).map_err(ArchiveCreateError::Local)?;
-    let temporary = directory.join(format!(
+    let staged = stage_archive(source_root, inventory, directory, filename)?;
+    let result = fs::hard_link(staged.path(), destination).map_err(ArchiveCreateError::Local);
+    let _ = staged.discard();
+    result
+}
+
+/// Creates a ZIP in an unobservable local temporary file for later storage or publication.
+///
+/// A failed remote upload deliberately leaves this file in place, so callers must discard it
+/// only after the provider has confirmed successful storage.
+pub fn stage_archive(
+    source_root: &LocalTransferRoot,
+    inventory: &Inventory,
+    staging_directory: &Path,
+    filename: &std::ffi::OsStr,
+) -> Result<StagedArchive, ArchiveCreateError> {
+    fs::create_dir_all(staging_directory).map_err(ArchiveCreateError::Local)?;
+    let path = staging_directory.join(format!(
         ".{}-{}.tmp",
         filename.to_string_lossy(),
         uuid::Uuid::new_v4()
     ));
-    let result = write_archive(source_root, inventory, &temporary)
-        .and_then(|()| fs::hard_link(&temporary, destination).map_err(ArchiveCreateError::Local));
-    let _ = fs::remove_file(&temporary);
-    result
+    write_archive(source_root, inventory, &path)?;
+    Ok(StagedArchive { path })
+}
+
+/// A complete ZIP that is still local and has not yet been published or uploaded.
+#[derive(Debug)]
+pub struct StagedArchive {
+    path: PathBuf,
+}
+
+impl StagedArchive {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    /// Removes this temporary archive after confirmed storage at its destination.
+    pub fn discard(&self) -> std::io::Result<()> {
+        fs::remove_file(&self.path)
+    }
 }
 
 fn write_archive(
