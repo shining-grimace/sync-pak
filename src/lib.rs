@@ -11,6 +11,7 @@ pub mod archive_execution;
 pub mod archive_naming;
 pub mod archive_prune;
 pub mod archive_retention;
+pub mod archive_store;
 pub mod archive_upload;
 pub mod atomic_write;
 pub mod cancellation;

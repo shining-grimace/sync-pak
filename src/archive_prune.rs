@@ -1,4 +1,4 @@
-use std::future::Future;
+use std::{error::Error, fmt, future::Future};
 
 use crate::{
     archive_retention::{ArchiveRecord, ArchiveRetentionError, prune_after_success},
@@ -45,6 +45,28 @@ pub enum ArchivePruneError<E> {
         error: E,
         removed: Vec<ArchiveRecord>,
     },
+}
+
+impl<E: fmt::Display> fmt::Display for ArchivePruneError<E> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Retention(error) => error.fmt(formatter),
+            Self::Cancelled { .. } => formatter.write_str("archive pruning was cancelled"),
+            Self::Remove { error, .. } => {
+                write!(formatter, "could not remove an older archive: {error}")
+            }
+        }
+    }
+}
+
+impl<E: Error + 'static> Error for ArchivePruneError<E> {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Retention(error) => Some(error),
+            Self::Remove { error, .. } => Some(error),
+            Self::Cancelled { .. } => None,
+        }
+    }
 }
 
 #[cfg(test)]
