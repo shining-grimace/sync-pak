@@ -36,6 +36,7 @@ pub mod inventory_fingerprint;
 pub mod local_inventory;
 pub mod local_remote_transfer;
 mod local_remote_transfer_capabilities;
+mod local_remote_transfer_download;
 pub mod mirror_execution;
 pub mod multipart_file_upload;
 pub mod multipart_upload;

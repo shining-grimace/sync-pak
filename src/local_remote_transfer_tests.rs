@@ -171,6 +171,26 @@ fn downloads_a_relative_key_to_its_local_root() {
 }
 
 #[test]
+fn downloads_a_remote_file_to_an_archive_staging_path() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let staging = root.join("staging/file.txt");
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+
+    block_on(transfer(&provider, &root, &policy).download_path(
+        &RelativePath::new("file.txt").unwrap(),
+        &staging,
+        &CancellationToken::default(),
+        2,
+    ))
+    .unwrap();
+
+    assert_eq!(std::fs::read(&staging).unwrap(), b"remote");
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
 fn uploads_a_threshold_sized_file_with_multipart() {
     let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
     std::fs::create_dir(&root).unwrap();

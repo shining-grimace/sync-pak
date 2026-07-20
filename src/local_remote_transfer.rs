@@ -2,12 +2,10 @@ use std::{error::Error, fmt, path::Path, time::UNIX_EPOCH};
 
 use crate::{
     cancellation::CancellationToken,
-    download::{DownloadError, download_to_path_with_retry_and_cancellation},
+    download::DownloadError,
     inventory::RelativePath,
     multipart_file_upload::{MultipartFileUploadError, upload_file_with_cancellation},
-    provider_capabilities::{
-        MultipartUploadRequest, MultipartUploader, ObjectReader, ObjectWriter,
-    },
+    provider_capabilities::{MultipartUploadRequest, MultipartUploader, ObjectWriter},
     retry::{RetryPolicy, RetrySleeper},
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
     upload::{UploadError, upload_from_path_with_retry_and_cancellation},
@@ -20,8 +18,8 @@ pub struct LocalRemoteTransfer<'a, P, S> {
     pub(crate) bucket: &'a str,
     pub(crate) local_root: LocalTransferRoot,
     pub(crate) remote_prefix: RemoteTransferPrefix,
-    retry_policy: &'a RetryPolicy,
-    sleeper: &'a S,
+    pub(crate) retry_policy: &'a RetryPolicy,
+    pub(crate) sleeper: &'a S,
 }
 
 impl<'a, P, S> LocalRemoteTransfer<'a, P, S> {
@@ -120,28 +118,6 @@ impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'
             .await
             .map_err(LocalRemoteTransferError::Multipart),
         }
-    }
-}
-
-impl<P: ObjectReader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
-    pub async fn download(
-        &self,
-        relative: &RelativePath,
-        cancellation: &CancellationToken,
-        jitter_seed: u64,
-    ) -> Result<(), LocalRemoteTransferError> {
-        download_to_path_with_retry_and_cancellation(
-            self.provider,
-            self.bucket,
-            &self.remote_prefix.resolve(relative),
-            &self.local_root.resolve(relative),
-            self.retry_policy,
-            self.sleeper,
-            jitter_seed,
-            cancellation,
-        )
-        .await
-        .map_err(LocalRemoteTransferError::Download)
     }
 }
 
