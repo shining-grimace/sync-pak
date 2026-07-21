@@ -20,6 +20,10 @@ impl Default for RetryPolicy {
 }
 
 impl RetryPolicy {
+    pub fn max_attempts(&self) -> u8 {
+        self.max_attempts
+    }
+
     pub fn delay_after_failure(
         &self,
         completed_attempts: u8,

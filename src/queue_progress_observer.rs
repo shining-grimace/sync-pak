@@ -36,6 +36,7 @@ pub fn from_transfer(progress: &TransferProgress) -> OperationProgress {
         transferred_bytes: 0,
         total_bytes: 0,
         current_path: progress.current_action.as_ref().map(action_path),
+        retry: None,
     }
 }
 

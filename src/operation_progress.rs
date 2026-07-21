@@ -31,6 +31,23 @@ pub struct OperationProgress {
     pub transferred_bytes: u64,
     pub total_bytes: u64,
     pub current_path: Option<String>,
+    pub retry: Option<RetryStatus>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RetryStatus {
+    pub next_attempt: u8,
+    pub max_attempts: u8,
+    pub delay_millis: u64,
+}
+
+impl RetryStatus {
+    pub fn summary(self) -> String {
+        format!(
+            "Trying again in {} ms (attempt {} of {})",
+            self.delay_millis, self.next_attempt, self.max_attempts
+        )
+    }
 }
 
 impl Default for OperationProgress {
@@ -42,12 +59,16 @@ impl Default for OperationProgress {
             transferred_bytes: 0,
             total_bytes: 0,
             current_path: None,
+            retry: None,
         }
     }
 }
 
 impl OperationProgress {
     pub fn summary(&self) -> String {
+        if let Some(retry) = self.retry {
+            return retry.summary();
+        }
         if self.total_items == 0 {
             return self.phase.label().into();
         }
@@ -64,7 +85,7 @@ impl OperationProgress {
 
 #[cfg(test)]
 mod tests {
-    use super::{OperationPhase, OperationProgress};
+    use super::{OperationPhase, OperationProgress, RetryStatus};
 
     #[test]
     fn progress_has_a_useful_initial_and_transfer_summary() {
@@ -77,9 +98,22 @@ mod tests {
                 transferred_bytes: 20,
                 total_bytes: 100,
                 current_path: Some("photo.jpg".into()),
+                retry: None,
             }
             .summary(),
             "Copying · 2 of 5 items · 20 of 100 bytes"
+        );
+        assert_eq!(
+            OperationProgress {
+                retry: Some(RetryStatus {
+                    next_attempt: 2,
+                    max_attempts: 4,
+                    delay_millis: 250
+                }),
+                ..Default::default()
+            }
+            .summary(),
+            "Trying again in 250 ms (attempt 2 of 4)"
         );
     }
 }
