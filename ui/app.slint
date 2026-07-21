@@ -69,6 +69,8 @@ export component AppWindow inherits Window {
     in-out property <string> run-archive-details;
     in-out property <bool> run-allows-both-ways;
     in-out property <int> run-direction: 0;
+    in-out property <string> pending-cancel-activity-id;
+    in-out property <string> pending-cancel-activity-name;
     callback show-providers();
     callback show-connections();
     callback show-add-provider();
@@ -91,6 +93,9 @@ export component AppWindow inherits Window {
     callback save-provider(string, int, string, string);
     callback save-connection(string, int, string, string, string, int, string);
     callback cancel-activity(string);
+    callback request-cancel-activity(string, string);
+    callback confirm-cancel-activity();
+    callback dismiss-cancel-activity();
     callback remove-queued-activity(string);
     callback clear-completed-activity();
     callback request-run-connection(string);
@@ -133,7 +138,7 @@ export component AppWindow inherits Window {
                     Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; }
                     Text { text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
-                Button { text: "Cancel"; clicked => { root.cancel-activity(root.active-activity-id); } }
+                Button { text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
             }
         }
 
@@ -347,7 +352,7 @@ export component AppWindow inherits Window {
                         if activity.progress != "" : Text { text: activity.progress; color: #454039; wrap: word-wrap; }
                         if activity.result != "" : Text { text: activity.result; color: #454039; wrap: word-wrap; }
                     }
-                    if activity.can-cancel : Button { text: "Cancel"; clicked => { root.cancel-activity(activity.id); } }
+                    if activity.can-cancel : Button { text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
                     if activity.can-remove : Button { text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
                 }
             }
@@ -371,6 +376,15 @@ export component AppWindow inherits Window {
             HorizontalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
                 Button { text: "Delete connection"; primary: true; clicked => { root.confirm-connection-delete(); } }
+            }
+        }
+        if root.page == 12 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Cancel " + root.pending-cancel-activity-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
+            Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
+            HorizontalBox {
+                Button { text: "Keep running"; clicked => { root.dismiss-cancel-activity(); } }
+                Button { text: "Cancel operation"; primary: true; clicked => { root.confirm-cancel-activity(); } }
             }
         }
         if root.page == 10 : VerticalBox {

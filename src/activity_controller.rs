@@ -28,6 +28,40 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
     });
 
     let weak = window.as_weak();
+    window.on_request_cancel_activity(move |operation_id, name| {
+        if let Some(window) = weak.upgrade() {
+            window.set_pending_cancel_activity_id(operation_id);
+            window.set_pending_cancel_activity_name(name);
+            window.set_page(12);
+        }
+    });
+
+    let weak = window.as_weak();
+    let confirm_queue = Arc::clone(&queue);
+    window.on_confirm_cancel_activity(move || {
+        let Some(window) = weak.upgrade() else { return };
+        let operation_id = window.get_pending_cancel_activity_id();
+        if let Ok(operation_id) = Uuid::parse_str(operation_id.as_str()) {
+            let _ = confirm_queue.cancel(operation_id);
+        }
+        window.set_pending_cancel_activity_id(SharedString::default());
+        window.set_pending_cancel_activity_name(SharedString::default());
+        window.set_page(9);
+        refresh(&weak, &confirm_queue);
+    });
+
+    let weak = window.as_weak();
+    let dismiss_queue = Arc::clone(&queue);
+    window.on_dismiss_cancel_activity(move || {
+        if let Some(window) = weak.upgrade() {
+            window.set_pending_cancel_activity_id(SharedString::default());
+            window.set_pending_cancel_activity_name(SharedString::default());
+            window.set_page(9);
+        }
+        refresh(&weak, &dismiss_queue);
+    });
+
+    let weak = window.as_weak();
     let remove_queue = Arc::clone(&queue);
     window.on_remove_queued_activity(move |operation_id| {
         if let Ok(operation_id) = Uuid::parse_str(operation_id.as_str()) {
