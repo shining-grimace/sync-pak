@@ -47,6 +47,7 @@ export component AppWindow inherits Window {
     callback show-add-connection();
     callback show-welcome();
     callback show-privacy();
+    callback show-activity();
     callback show-diagnostics();
     callback set-diagnostic-include-paths(bool);
     callback request-provider-delete(string);
@@ -80,6 +81,7 @@ export component AppWindow inherits Window {
             Rectangle { horizontal-stretch: 1; }
             Button { text: "Connections"; clicked => { root.show-connections(); } }
             Button { text: "Providers"; clicked => { root.show-providers(); } }
+            Button { text: "Activity"; clicked => { root.show-activity(); } }
         }
 
         if root.status-message != "" : Text {
@@ -237,6 +239,19 @@ export component AppWindow inherits Window {
                 Text { text: root.diagnostic-text; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
             }
             Button { text: "Back"; clicked => { root.show-privacy(); } }
+        }
+
+        if root.page == 9 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Activity"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: "Queued and completed operations appear here until SyncPak exits."; color: #454039; wrap: word-wrap; }
+            Rectangle {
+                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 130px;
+                VerticalBox { padding: 20px; spacing: 8px; alignment: center;
+                    Text { text: "No activity this time"; font-size: 22px; font-weight: 700; horizontal-alignment: center; }
+                    Text { text: "Queued and completed operations will appear here until SyncPak exits."; color: #454039; wrap: word-wrap; horizontal-alignment: center; }
+                }
+            }
         }
 
         if root.page == 6 : VerticalBox {

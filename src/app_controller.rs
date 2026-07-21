@@ -68,6 +68,8 @@ fn configure_navigation(window: &AppWindow) {
     window.on_show_welcome(move || set_page(&weak, 0));
     let weak = window.as_weak();
     window.on_show_privacy(move || set_page(&weak, 3));
+    let weak = window.as_weak();
+    window.on_show_activity(move || set_page(&weak, 9));
 }
 
 fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
