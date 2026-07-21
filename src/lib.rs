@@ -72,6 +72,7 @@ pub mod provider_probe;
 #[cfg(feature = "provider-probes")]
 mod provider_probe_config;
 pub mod queue;
+pub mod queue_progress_observer;
 pub mod queue_runner;
 pub mod remote_inventory;
 pub mod retry;
