@@ -20,9 +20,10 @@ use crate::{
 /// Owns one background worker for this launch's in-memory operation queue.
 ///
 /// The worker takes plans in submission order and never invokes the executor concurrently.
-pub struct BackgroundQueue<E> {
+pub struct BackgroundQueue<E: OperationExecutor> {
     executor: Arc<E>,
     queue: Arc<(Mutex<OperationQueue>, Condvar)>,
+    active_connection: Arc<Mutex<Option<String>>>,
     stopping: Arc<AtomicBool>,
     worker: Option<JoinHandle<()>>,
 }
@@ -54,11 +55,12 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             Arc::clone(&executor),
             Arc::clone(&queue),
             Arc::clone(&stopping),
-            active_connection,
+            Arc::clone(&active_connection),
         ));
         Self {
             executor,
             queue,
+            active_connection,
             stopping,
             worker,
         }
@@ -166,8 +168,16 @@ impl<E: OperationExecutor + Send + Sync + 'static>
     }
 }
 
-impl<E> Drop for BackgroundQueue<E> {
+impl<E: OperationExecutor> Drop for BackgroundQueue<E> {
     fn drop(&mut self) {
+        if let Some(connection_id) = self
+            .active_connection
+            .lock()
+            .ok()
+            .and_then(|connection| connection.clone())
+        {
+            let _ = self.executor.cancel(&connection_id);
+        }
         self.stopping.store(true, Ordering::Release);
         self.queue.1.notify_one();
         if let Some(worker) = self.worker.take() {

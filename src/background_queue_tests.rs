@@ -197,3 +197,27 @@ fn deleting_a_connection_cancels_active_work_and_removes_its_pending_work() {
     assert_eq!(queue.activity().len(), 1);
     assert_eq!(queue.activity()[0].state, QueueState::Cancelled);
 }
+
+#[test]
+fn dropping_the_queue_cancels_active_work_before_waiting_for_the_worker() {
+    let executor = std::sync::Arc::new(BlockingExecutor {
+        cancelled: Mutex::new(Vec::new()),
+        started: AtomicBool::new(false),
+    });
+    {
+        let queue = BackgroundQueue::new(std::sync::Arc::clone(&executor));
+        queue.enqueue(
+            OperationPlan::new("active", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Active"),
+        );
+        for _ in 0..50 {
+            if executor.started.load(Ordering::Acquire) {
+                break;
+            }
+            thread::sleep(Duration::from_millis(2));
+        }
+        assert!(executor.started.load(Ordering::Acquire));
+    }
+
+    assert_eq!(executor.cancelled.lock().unwrap().as_slice(), ["active"]);
+}
