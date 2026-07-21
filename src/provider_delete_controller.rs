@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use slint::{ComponentHandle, SharedString};
+use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::{
     AppWindow,
@@ -48,10 +48,13 @@ fn request_delete(
 ) {
     let Some(window) = weak.upgrade() else { return };
     match provider_and_dependents(configuration, id.as_str()) {
-        Ok((provider, connection_count)) => {
+        Ok((provider, connections)) => {
             window.set_pending_provider_id(provider.id.as_str().into());
             window.set_pending_provider_name(provider.name.into());
-            window.set_pending_connection_count(connection_count as i32);
+            window.set_pending_connection_count(connections.len() as i32);
+            window.set_pending_provider_connections(ModelRc::new(Rc::new(VecModel::from_iter(
+                connections.into_iter().map(SharedString::from),
+            ))));
             window.set_status_message(SharedString::default());
             window.set_page(6);
         }
@@ -100,7 +103,7 @@ fn delete_provider(
 fn provider_and_dependents(
     configuration: &ConfigStore,
     id: &str,
-) -> Result<(crate::configuration::ProviderConfig, usize), String> {
+) -> Result<(crate::configuration::ProviderConfig, Vec<String>), String> {
     let config = configuration.load().map_err(|error| error.to_string())?;
     let provider = config
         .providers
@@ -108,12 +111,13 @@ fn provider_and_dependents(
         .find(|provider| provider.id.as_str() == id)
         .cloned()
         .ok_or_else(|| "The provider no longer exists.".to_owned())?;
-    let count = config
+    let connections = config
         .connections
         .iter()
         .filter(|connection| connection.provider_id == provider.id)
-        .count();
-    Ok((provider, count))
+        .map(|connection| connection.name.clone())
+        .collect();
+    Ok((provider, connections))
 }
 
 fn provider_id(configuration: &ConfigStore, id: &str) -> Result<ProviderId, String> {

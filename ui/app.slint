@@ -47,6 +47,7 @@ export component AppWindow inherits Window {
     in-out property <string> pending-provider-id;
     in-out property <string> pending-provider-name;
     in-out property <int> pending-connection-count;
+    in-out property <[string]> pending-provider-connections;
     in-out property <string> provider-form-id;
     in-out property <string> provider-form-name;
     in-out property <int> provider-form-kind;
@@ -362,7 +363,11 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Delete " + root.pending-provider-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "This deletes its protected credentials and " + root.pending-connection-count + " connection(s). No cloud files will be deleted."; wrap: word-wrap; }
-            Text { text: "Queued or running operations will be cancelled when activity handling is added."; color: #454039; wrap: word-wrap; }
+            if root.pending-provider-connections.length > 0 : VerticalBox {
+                spacing: 3px;
+                Text { text: "Connections that will be deleted"; font-weight: 700; }
+                for connection-name in root.pending-provider-connections : Text { text: "• " + connection-name; color: #454039; wrap: word-wrap; }
+            }
             HorizontalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
                 Button { text: "Delete provider and " + root.pending-connection-count + " connections"; primary: true; clicked => { root.confirm-provider-delete(); } }
