@@ -29,6 +29,9 @@ export component AppWindow inherits Window {
     in-out property <[ProviderRow]> providers;
     in-out property <[ConnectionRow]> connections;
     in-out property <[ActivityRow]> activity-rows;
+    in-out property <string> active-activity-id;
+    in-out property <string> active-activity-title;
+    in-out property <string> active-activity-progress;
     in-out property <[string]> provider-names;
     in-out property <[string]> provider-buckets;
     in-out property <string> status-message;
@@ -103,6 +106,17 @@ export component AppWindow inherits Window {
             text: root.status-message;
             color: #7b241c;
             wrap: word-wrap;
+        }
+
+        if root.active-activity-id != "" : Rectangle {
+            background: #2c2925; border-radius: 8px; min-height: 62px;
+            HorizontalBox { padding: 12px; spacing: 10px;
+                VerticalBox { horizontal-stretch: 1; spacing: 2px;
+                    Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; }
+                    Text { text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
+                }
+                Button { text: "Cancel"; clicked => { root.cancel-activity(root.active-activity-id); } }
+            }
         }
 
         if root.page == 0 : VerticalBox {

@@ -16,6 +16,7 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
     let weak = window.as_weak();
     let show_queue = Arc::clone(&queue);
     window.on_show_activity(move || show(&weak, Arc::clone(&show_queue)));
+    schedule_refresh(window.as_weak(), Arc::clone(&queue));
 
     let weak = window.as_weak();
     let cancel_queue = Arc::clone(&queue);
@@ -50,7 +51,6 @@ fn show<E: OperationExecutor + Send + Sync + 'static>(
     window.set_status_message(SharedString::default());
     window.set_page(9);
     refresh(weak, &queue);
-    schedule_refresh(weak.clone(), queue);
 }
 
 fn schedule_refresh<E: OperationExecutor + Send + Sync + 'static>(
@@ -58,8 +58,7 @@ fn schedule_refresh<E: OperationExecutor + Send + Sync + 'static>(
     queue: Arc<BackgroundQueue<E>>,
 ) {
     slint::Timer::single_shot(Duration::from_millis(250), move || {
-        let Some(window) = weak.upgrade() else { return };
-        if window.get_page() != 9 {
+        if weak.upgrade().is_none() {
             return;
         }
         refresh(&weak, &queue);
@@ -72,7 +71,22 @@ fn refresh<E: OperationExecutor + Send + Sync + 'static>(
     queue: &BackgroundQueue<E>,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    let rows = queue.activity().into_iter().map(|entry| {
+    let activity = queue.activity();
+    let active = activity
+        .iter()
+        .find(|entry| entry.state == crate::queue::QueueState::Running);
+    window.set_active_activity_id(active.map_or_else(Default::default, |entry| {
+        entry.operation_id.to_string().into()
+    }));
+    window.set_active_activity_title(active.map_or_else(Default::default, |entry| {
+        entry.snapshot.connection_name.clone().into()
+    }));
+    window.set_active_activity_progress(
+        active
+            .and_then(|entry| entry.progress.as_ref())
+            .map_or_else(Default::default, |progress| progress.summary().into()),
+    );
+    let rows = activity.into_iter().map(|entry| {
         let activity = ActivityPresentation::from_entry(&entry);
         ActivityRow {
             id: activity.operation_id.into(),
