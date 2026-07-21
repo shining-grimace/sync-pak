@@ -13,10 +13,22 @@ export struct ConnectionRow {
     detail: string,
 }
 
+export struct ActivityRow {
+    id: string,
+    title: string,
+    detail: string,
+    status: string,
+    progress: string,
+    result: string,
+    can-cancel: bool,
+    can-remove: bool,
+}
+
 export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <[ProviderRow]> providers;
     in-out property <[ConnectionRow]> connections;
+    in-out property <[ActivityRow]> activity-rows;
     in-out property <[string]> provider-names;
     in-out property <[string]> provider-buckets;
     in-out property <string> status-message;
@@ -62,6 +74,8 @@ export component AppWindow inherits Window {
     callback select-connection-provider(int);
     callback save-provider(string, int, string, string);
     callback save-connection(string, int, string, string, string, int, string);
+    callback cancel-activity(string);
+    callback remove-queued-activity(string);
 
     init => { Palette.color-scheme = ColorScheme.light; }
     title: "SyncPak";
@@ -245,11 +259,24 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Activity"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Queued and completed operations appear here until SyncPak exits."; color: #454039; wrap: word-wrap; }
-            Rectangle {
+            if root.activity-rows.length == 0 : Rectangle {
                 background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 130px;
                 VerticalBox { padding: 20px; spacing: 8px; alignment: center;
                     Text { text: "No activity this time"; font-size: 22px; font-weight: 700; horizontal-alignment: center; }
                     Text { text: "Queued and completed operations will appear here until SyncPak exits."; color: #454039; wrap: word-wrap; horizontal-alignment: center; }
+                }
+            }
+            for activity in root.activity-rows : Rectangle {
+                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 86px;
+                HorizontalBox { padding: 12px; spacing: 8px;
+                    VerticalBox { spacing: 2px; horizontal-stretch: 1;
+                        Text { text: activity.title + " · " + activity.status; font-weight: 700; }
+                        Text { text: activity.detail; color: #454039; wrap: word-wrap; }
+                        if activity.progress != "" : Text { text: activity.progress; color: #454039; wrap: word-wrap; }
+                        if activity.result != "" : Text { text: activity.result; color: #454039; wrap: word-wrap; }
+                    }
+                    if activity.can-cancel : Button { text: "Cancel"; clicked => { root.cancel-activity(activity.id); } }
+                    if activity.can-remove : Button { text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
                 }
             }
         }
