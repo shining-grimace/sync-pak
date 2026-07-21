@@ -11,6 +11,10 @@ export struct ConnectionRow {
     id: string,
     name: string,
     detail: string,
+    mode: int,
+    local-path: string,
+    provider-name: string,
+    archive-retention: string,
 }
 
 export struct ActivityRow {
@@ -28,6 +32,8 @@ export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <[ProviderRow]> providers;
     in-out property <[ConnectionRow]> connections;
+    in-out property <int> connections-total;
+    in-out property <int> connection-filter: 0;
     in-out property <[ActivityRow]> activity-rows;
     in-out property <string> active-activity-id;
     in-out property <string> active-activity-title;
@@ -89,6 +95,7 @@ export component AppWindow inherits Window {
     callback choose-run-direction(int);
     callback begin-preflight();
     callback cancel-run-direction();
+    callback set-connection-filter(int);
 
     init => { Palette.color-scheme = ColorScheme.light; }
     title: "SyncPak";
@@ -211,17 +218,25 @@ export component AppWindow inherits Window {
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
             Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
+            HorizontalBox { spacing: 6px;
+                Button { text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
+                Button { text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
+                Button { text: "Mirror"; primary: root.connection-filter == 2; clicked => { root.set-connection-filter(2); } }
+                Button { text: "Archive"; primary: root.connection-filter == 3; clicked => { root.set-connection-filter(3); } }
+            }
             if root.connections.length == 0 : VerticalBox {
                 spacing: 8px;
-                Text { text: "No connections yet"; font-size: 22px; font-weight: 700; }
-                Text { text: "Add a cloud provider, then create a connection to choose what to copy."; wrap: word-wrap; }
+                Text { text: root.connections-total == 0 ? "No connections yet" : "No matching connections"; font-size: 22px; font-weight: 700; }
+                Text { text: root.connections-total == 0 ? "Add a cloud provider, then create a connection to choose what to copy." : "Choose another filter or create a new connection."; wrap: word-wrap; }
             }
             for connection in root.connections : Rectangle {
-                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; height: 70px;
+                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 98px;
                 HorizontalBox { padding: 10px; spacing: 8px;
-                    VerticalBox { spacing: 2px; horizontal-stretch: 1;
+                    VerticalBox { spacing: 3px; horizontal-stretch: 1;
                         Text { text: connection.name; font-weight: 700; }
                         Text { text: connection.detail; color: #454039; }
+                        Text { text: "On this device: " + connection.local-path; color: #454039; wrap: word-wrap; }
+                        if connection.mode == 2 : Text { text: "Keeps the last " + connection.archive-retention + " archives"; color: #454039; }
                     }
                     Button { text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
                     Button { text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
