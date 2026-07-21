@@ -152,6 +152,13 @@ export component AppWindow inherits Window {
                         background: #fffaf0; border-color: #2c2925; border-width: 2px; border-radius: 12px; max-width: Dimensions.welcome-content-max-width; min-height: 92px;
                         Text { text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider."; color: #2c2925; font-size: 16px; horizontal-alignment: center; vertical-alignment: center; wrap: word-wrap; x: 24px; width: parent.width - 48px; height: parent.height; }
                     }
+                    Rectangle {
+                        background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 12px; max-width: Dimensions.welcome-content-max-width; min-height: 106px;
+                        VerticalBox { padding: 14px; spacing: 3px;
+                            Text { text: "Choose how folders are copied"; font-weight: 700; horizontal-alignment: center; }
+                            Text { text: "Add-only copies new files. Mirror can overwrite or delete only after review. Archive stores timestamped ZIP files."; color: #454039; horizontal-alignment: center; wrap: word-wrap; }
+                        }
+                    }
                     Rectangle { height: 16px; background: transparent; }
                     HorizontalBox { alignment: center; Button { text: "Add your first provider"; primary: true; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-add-provider(); } } }
                     HorizontalBox { alignment: center; Button { text: "Read how SyncPak protects your privacy"; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-privacy(); } } }
