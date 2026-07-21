@@ -59,10 +59,12 @@ fn show(
     });
     match connection {
         Some(connection) => {
+            let archive_details = archive_details(&connection);
             window.set_status_message(SharedString::default());
             window.set_run_connection_id(connection.id.as_str().into());
             window.set_run_connection_name(connection.name.into());
             window.set_run_connection_mode(mode_label(connection.mode).into());
+            window.set_run_archive_details(archive_details.into());
             window.set_run_allows_both_ways(connection.mode == SyncMode::AddOnly);
             window.set_run_direction(0);
             window.set_page(10);
@@ -75,6 +77,21 @@ fn show(
             "SyncPak could not open this connection. It may have been removed.",
         ),
     }
+}
+
+fn archive_details(connection: &crate::configuration::ConnectionConfig) -> String {
+    if connection.mode != SyncMode::Archive {
+        return String::new();
+    }
+    let destination = if connection.remote_path.is_empty() {
+        format!("the root of {}", connection.bucket)
+    } else {
+        format!("{}/{}", connection.bucket, connection.remote_path)
+    };
+    format!(
+        "The new ZIP will be stored in {destination}. SyncPak will keep the newest {} archives.",
+        connection.keep_last_archives.unwrap_or_default()
+    )
 }
 
 fn mode_label(mode: SyncMode) -> &'static str {

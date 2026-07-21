@@ -66,6 +66,7 @@ export component AppWindow inherits Window {
     in-out property <string> run-connection-id;
     in-out property <string> run-connection-name;
     in-out property <string> run-connection-mode;
+    in-out property <string> run-archive-details;
     in-out property <bool> run-allows-both-ways;
     in-out property <int> run-direction: 0;
     callback show-providers();
@@ -376,6 +377,10 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Run " + root.run-connection-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: root.run-connection-mode + " connection"; color: #454039; }
+            if root.run-archive-details != "" : Rectangle {
+                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 66px;
+                Text { text: root.run-archive-details; color: #454039; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
+            }
             Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Upload"; font-weight: 700; }
