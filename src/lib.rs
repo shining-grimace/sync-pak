@@ -1,3 +1,5 @@
+#[allow(dead_code)]
+mod activity_controller;
 pub mod activity_presentation;
 pub mod activity_snapshot;
 pub mod add_only_execution;
