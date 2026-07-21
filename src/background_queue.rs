@@ -12,6 +12,7 @@ use crate::{
     activity_snapshot::ActivitySnapshot,
     capabilities::{BackgroundExecution, CapabilityError},
     execution::OperationExecutor,
+    operation_progress::OperationProgress,
     planning::OperationPlan,
     queue::{OperationQueue, QueueEntry},
 };
@@ -99,6 +100,15 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             .lock()
             .expect("queue mutex poisoned")
             .remove_queued(operation_id)
+    }
+
+    /// Publishes the active operation's non-secret progress for UI consumers.
+    pub fn update_progress(&self, operation_id: Uuid, progress: OperationProgress) -> bool {
+        let (queue, _) = &*self.queue;
+        queue
+            .lock()
+            .expect("queue mutex poisoned")
+            .update_progress(operation_id, progress)
     }
 
     /// Cancels active work and removes queued work before its connection is deleted.

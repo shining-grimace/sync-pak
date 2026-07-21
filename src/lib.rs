@@ -52,6 +52,7 @@ pub mod multipart_upload;
 pub mod notifications;
 mod onboarding;
 pub mod operation_cancellation;
+pub mod operation_progress;
 pub mod plan_summary;
 pub mod planning;
 pub mod platform;

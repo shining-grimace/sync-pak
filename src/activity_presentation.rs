@@ -10,6 +10,7 @@ pub struct ActivityPresentation {
     pub title: String,
     pub detail: String,
     pub status: &'static str,
+    pub progress_summary: String,
     pub result_summary: String,
     pub can_cancel: bool,
     pub can_remove: bool,
@@ -26,6 +27,10 @@ impl ActivityPresentation {
                 entry.snapshot.local_endpoint, entry.snapshot.remote_endpoint
             ),
             status: status(entry.state),
+            progress_summary: entry.progress.as_ref().map_or_else(
+                String::new,
+                crate::operation_progress::OperationProgress::summary,
+            ),
             result_summary,
             can_cancel: entry.state == QueueState::Running,
             can_remove: entry.state == QueueState::Queued,

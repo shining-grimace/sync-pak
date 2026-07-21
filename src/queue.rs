@@ -5,6 +5,7 @@ use uuid::Uuid;
 use crate::{
     activity_snapshot::ActivitySnapshot,
     execution::{ExecutionResult, ExecutionState},
+    operation_progress::OperationProgress,
     planning::OperationPlan,
 };
 
@@ -23,6 +24,7 @@ pub struct QueueEntry {
     pub plan: OperationPlan,
     pub snapshot: ActivitySnapshot,
     pub state: QueueState,
+    pub progress: Option<OperationProgress>,
     pub result: Option<ExecutionResult>,
 }
 
@@ -39,6 +41,7 @@ impl OperationQueue {
             plan,
             snapshot,
             state: QueueState::Queued,
+            progress: None,
             result: None,
         });
         operation_id
@@ -58,7 +61,21 @@ impl OperationQueue {
             .iter_mut()
             .find(|entry| entry.state == QueueState::Queued)?;
         entry.state = QueueState::Running;
+        entry.progress = Some(OperationProgress::default());
         Some(entry.clone())
+    }
+
+    /// Replaces the active operation's non-secret progress snapshot.
+    pub fn update_progress(&mut self, operation_id: Uuid, progress: OperationProgress) -> bool {
+        let Some(entry) = self
+            .entries
+            .iter_mut()
+            .find(|entry| entry.operation_id == operation_id && entry.state == QueueState::Running)
+        else {
+            return false;
+        };
+        entry.progress = Some(progress);
+        true
     }
 
     /// Stores an immutable terminal result on its activity entry.
@@ -301,5 +318,23 @@ mod tests {
         assert!(queue.remove_queued(operation_id));
         assert!(queue.entries().next().is_none());
         assert!(!queue.remove_queued(operation_id));
+    }
+
+    #[test]
+    fn running_work_retains_its_last_progress_snapshot_for_activity() {
+        let mut queue = OperationQueue::default();
+        queue.push(
+            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Connection"),
+        );
+        let entry = queue.take_next().unwrap();
+        let progress = crate::operation_progress::OperationProgress {
+            completed_items: 1,
+            total_items: 2,
+            ..Default::default()
+        };
+
+        assert!(queue.update_progress(entry.operation_id, progress.clone()));
+        assert_eq!(queue.entries().next().unwrap().progress, Some(progress));
     }
 }

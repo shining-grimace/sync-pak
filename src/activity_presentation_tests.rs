@@ -39,6 +39,7 @@ fn presents_terminal_results_from_the_immutable_activity_snapshot() {
     assert_eq!(presentation.title, "Photos");
     assert_eq!(presentation.detail, "/pictures → R2 / backups / phone");
     assert_eq!(presentation.status, "Completed");
+    assert_eq!(presentation.progress_summary, "Preparing");
     assert_eq!(presentation.result_summary, "0 items completed");
     assert!(!presentation.can_cancel);
     assert!(!presentation.can_remove);
