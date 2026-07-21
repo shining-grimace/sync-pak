@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     activity_snapshot::ActivitySnapshot,
     execution::{ExecutionResult, ExecutionState},
-    operation_progress::OperationProgress,
+    operation_progress::{OperationProgress, RetryStatus},
     planning::OperationPlan,
 };
 
@@ -75,6 +75,19 @@ impl OperationQueue {
             return false;
         };
         entry.progress = Some(progress);
+        true
+    }
+
+    /// Adds retry status while retaining the latest phase, counts, and current path.
+    pub fn update_retry(&mut self, operation_id: Uuid, retry: RetryStatus) -> bool {
+        let Some(entry) = self
+            .entries
+            .iter_mut()
+            .find(|entry| entry.operation_id == operation_id && entry.state == QueueState::Running)
+        else {
+            return false;
+        };
+        entry.progress.get_or_insert_default().retry = Some(retry);
         true
     }
 
@@ -336,5 +349,33 @@ mod tests {
 
         assert!(queue.update_progress(entry.operation_id, progress.clone()));
         assert_eq!(queue.entries().next().unwrap().progress, Some(progress));
+    }
+
+    #[test]
+    fn retry_status_preserves_the_existing_progress_snapshot() {
+        let mut queue = OperationQueue::default();
+        queue.push(
+            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+            snapshot("Connection"),
+        );
+        let entry = queue.take_next().unwrap();
+        let retry = crate::operation_progress::RetryStatus {
+            next_attempt: 2,
+            max_attempts: 4,
+            delay_millis: 250,
+        };
+
+        assert!(queue.update_retry(entry.operation_id, retry));
+        assert_eq!(
+            queue
+                .entries()
+                .next()
+                .unwrap()
+                .progress
+                .as_ref()
+                .unwrap()
+                .retry,
+            Some(retry)
+        );
     }
 }

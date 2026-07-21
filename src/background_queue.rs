@@ -12,7 +12,7 @@ use crate::{
     activity_snapshot::ActivitySnapshot,
     capabilities::{BackgroundExecution, CapabilityError},
     execution::OperationExecutor,
-    operation_progress::OperationProgress,
+    operation_progress::{OperationProgress, RetryStatus},
     planning::OperationPlan,
     queue::{OperationQueue, QueueEntry},
 };
@@ -109,6 +109,15 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             .lock()
             .expect("queue mutex poisoned")
             .update_progress(operation_id, progress)
+    }
+
+    /// Publishes a retry delay without discarding the active progress snapshot.
+    pub fn update_retry(&self, operation_id: Uuid, retry: RetryStatus) -> bool {
+        let (queue, _) = &*self.queue;
+        queue
+            .lock()
+            .expect("queue mutex poisoned")
+            .update_retry(operation_id, retry)
     }
 
     /// Cancels active work and removes queued work before its connection is deleted.
