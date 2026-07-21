@@ -291,9 +291,14 @@ export component AppWindow inherits Window {
         if root.page == 3 : VerticalBox {
             spacing: 12px;
             Text { text: "Privacy & About"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: "Direct transfers"; font-size: 20px; font-weight: 700; }
             Text { text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them."; wrap: word-wrap; }
+            Text { text: "Protected credentials"; font-size: 20px; font-weight: 700; }
             Text { text: "Provider credentials are stored using this device's protected facilities and are retrieved only when SyncPak connects to that provider."; wrap: word-wrap; }
-            Text { text: "Connection settings stay on this device. Activity and diagnostics are kept only while SyncPak is running."; wrap: word-wrap; }
+            Text { text: "Data on this device"; font-size: 20px; font-weight: 700; }
+            Text { text: "Connection settings are stored locally. Activity is kept in memory and cleared when SyncPak exits."; wrap: word-wrap; }
+            Text { text: "File encryption"; font-size: 20px; font-weight: 700; }
+            Text { text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption."; wrap: word-wrap; }
             Button { text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
             Button { text: "Back"; clicked => { root.show-welcome(); } }
         }
@@ -303,7 +308,7 @@ export component AppWindow inherits Window {
             Text { text: "Diagnostics"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "This report excludes provider credentials. Paths are hidden unless you choose to include them."; wrap: word-wrap; }
             include-paths := CheckBox { text: "Include file and folder paths"; checked <=> root.diagnostic-include-paths; toggled => { root.set-diagnostic-include-paths(self.checked); } }
-            Text { text: "Paths can contain personal information. Include them only when you trust the person receiving the report."; color: #454039; wrap: word-wrap; }
+            if root.diagnostic-include-paths : Text { text: "Paths can contain personal information. Include them only when you trust the person receiving the report."; color: #7b241c; wrap: word-wrap; }
             Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 140px;
                 Text { text: root.diagnostic-text; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
             }
