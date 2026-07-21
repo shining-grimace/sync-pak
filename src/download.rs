@@ -6,7 +6,7 @@ use crate::{
     atomic_write::atomic_write,
     cancellation::CancellationToken,
     provider_capabilities::{ObjectReader, ProviderError},
-    retry::{RetryPolicy, RetrySleeper},
+    retry::{NoopRetryObserver, RetryObserver, RetryPolicy, RetrySleeper},
 };
 
 pub async fn download_to_path<T: ObjectReader>(
@@ -20,6 +20,45 @@ pub async fn download_to_path<T: ObjectReader>(
         .await
         .map_err(DownloadError::Provider)?;
     atomic_write(destination, &contents).map_err(DownloadError::Local)
+}
+
+/// Downloads with bounded retry and reports each scheduled retry delay.
+pub async fn download_to_path_with_retry_and_cancellation_and_observer<
+    T: ObjectReader,
+    S: RetrySleeper,
+    O: RetryObserver,
+>(
+    provider: &T,
+    bucket: &str,
+    key: &str,
+    destination: &Path,
+    policy: &RetryPolicy,
+    sleeper: &S,
+    jitter_seed: u64,
+    cancellation: &CancellationToken,
+    observer: &O,
+) -> Result<(), DownloadError> {
+    let mut completed_attempts = 0;
+    loop {
+        cancellation.check().map_err(|_| DownloadError::Cancelled)?;
+        completed_attempts += 1;
+        match provider.read(bucket, key).await {
+            Ok(contents) => {
+                cancellation.check().map_err(|_| DownloadError::Cancelled)?;
+                return atomic_write(destination, &contents).map_err(DownloadError::Local);
+            }
+            Err(error) => {
+                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
+                    Some(retry) => {
+                        observer.on_retry(retry);
+                        sleeper.sleep(retry.delay).await;
+                        cancellation.check().map_err(|_| DownloadError::Cancelled)?;
+                    }
+                    None => return Err(DownloadError::Provider(error)),
+                }
+            }
+        }
+    }
 }
 
 pub async fn download_to_path_with_retry<T: ObjectReader, S: RetrySleeper>(
@@ -55,26 +94,18 @@ pub async fn download_to_path_with_retry_and_cancellation<T: ObjectReader, S: Re
     jitter_seed: u64,
     cancellation: &CancellationToken,
 ) -> Result<(), DownloadError> {
-    let mut completed_attempts = 0;
-    loop {
-        cancellation.check().map_err(|_| DownloadError::Cancelled)?;
-        completed_attempts += 1;
-        match provider.read(bucket, key).await {
-            Ok(contents) => {
-                cancellation.check().map_err(|_| DownloadError::Cancelled)?;
-                return atomic_write(destination, &contents).map_err(DownloadError::Local);
-            }
-            Err(error) => {
-                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
-                    Some(retry) => {
-                        sleeper.sleep(retry.delay).await;
-                        cancellation.check().map_err(|_| DownloadError::Cancelled)?;
-                    }
-                    None => return Err(DownloadError::Provider(error)),
-                }
-            }
-        }
-    }
+    download_to_path_with_retry_and_cancellation_and_observer(
+        provider,
+        bucket,
+        key,
+        destination,
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+        &NoopRetryObserver,
+    )
+    .await
 }
 
 #[derive(Debug)]

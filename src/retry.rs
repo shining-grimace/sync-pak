@@ -55,6 +55,17 @@ pub struct RetryDelay {
     pub delay: Duration,
 }
 
+/// Receives retry delays for UI progress without coupling transport to a UI toolkit.
+pub trait RetryObserver {
+    fn on_retry(&self, retry: RetryDelay);
+}
+
+pub struct NoopRetryObserver;
+
+impl RetryObserver for NoopRetryObserver {
+    fn on_retry(&self, _: RetryDelay) {}
+}
+
 pub trait RetrySleeper {
     fn sleep(&self, delay: Duration) -> impl Future<Output = ()> + Send;
 }

@@ -6,7 +6,7 @@ use std::time::UNIX_EPOCH;
 use crate::{
     cancellation::CancellationToken,
     provider_capabilities::{ObjectWriteMetadata, ObjectWriter, ProviderError},
-    retry::{RetryPolicy, RetrySleeper},
+    retry::{NoopRetryObserver, RetryObserver, RetryPolicy, RetrySleeper},
 };
 
 pub async fn upload_from_path<T: ObjectWriter>(
@@ -20,6 +20,46 @@ pub async fn upload_from_path<T: ObjectWriter>(
         .write_with_metadata(bucket, key, &contents, &write_metadata)
         .await
         .map_err(UploadError::Provider)
+}
+
+/// Uploads with bounded retry and reports each scheduled retry delay.
+pub async fn upload_from_path_with_retry_and_cancellation_and_observer<
+    T: ObjectWriter,
+    S: RetrySleeper,
+    O: RetryObserver,
+>(
+    provider: &T,
+    bucket: &str,
+    key: &str,
+    source: &Path,
+    policy: &RetryPolicy,
+    sleeper: &S,
+    jitter_seed: u64,
+    cancellation: &CancellationToken,
+    observer: &O,
+) -> Result<(), UploadError> {
+    let (contents, write_metadata) = read_upload_source(source)?;
+    let mut completed_attempts = 0;
+    loop {
+        cancellation.check().map_err(|_| UploadError::Cancelled)?;
+        completed_attempts += 1;
+        match provider
+            .write_with_metadata(bucket, key, &contents, &write_metadata)
+            .await
+        {
+            Ok(()) => return Ok(()),
+            Err(error) => {
+                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
+                    Some(retry) => {
+                        observer.on_retry(retry);
+                        sleeper.sleep(retry.delay).await;
+                        cancellation.check().map_err(|_| UploadError::Cancelled)?;
+                    }
+                    None => return Err(UploadError::Provider(error)),
+                }
+            }
+        }
+    }
 }
 
 pub async fn upload_from_path_with_retry<T: ObjectWriter, S: RetrySleeper>(
@@ -55,27 +95,18 @@ pub async fn upload_from_path_with_retry_and_cancellation<T: ObjectWriter, S: Re
     jitter_seed: u64,
     cancellation: &CancellationToken,
 ) -> Result<(), UploadError> {
-    let (contents, write_metadata) = read_upload_source(source)?;
-    let mut completed_attempts = 0;
-    loop {
-        cancellation.check().map_err(|_| UploadError::Cancelled)?;
-        completed_attempts += 1;
-        match provider
-            .write_with_metadata(bucket, key, &contents, &write_metadata)
-            .await
-        {
-            Ok(()) => return Ok(()),
-            Err(error) => {
-                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
-                    Some(retry) => {
-                        sleeper.sleep(retry.delay).await;
-                        cancellation.check().map_err(|_| UploadError::Cancelled)?;
-                    }
-                    None => return Err(UploadError::Provider(error)),
-                }
-            }
-        }
-    }
+    upload_from_path_with_retry_and_cancellation_and_observer(
+        provider,
+        bucket,
+        key,
+        source,
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+        &NoopRetryObserver,
+    )
+    .await
 }
 
 fn read_upload_source(source: &Path) -> Result<(Vec<u8>, ObjectWriteMetadata), UploadError> {
