@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use uuid::Uuid;
@@ -15,7 +15,7 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
 ) {
     let weak = window.as_weak();
     let show_queue = Arc::clone(&queue);
-    window.on_show_activity(move || show(&weak, &show_queue));
+    window.on_show_activity(move || show(&weak, Arc::clone(&show_queue)));
 
     let weak = window.as_weak();
     let cancel_queue = Arc::clone(&queue);
@@ -37,12 +37,27 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
 
 fn show<E: OperationExecutor + Send + Sync + 'static>(
     weak: &slint::Weak<AppWindow>,
-    queue: &BackgroundQueue<E>,
+    queue: Arc<BackgroundQueue<E>>,
 ) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     window.set_page(9);
-    refresh(weak, queue);
+    refresh(weak, &queue);
+    schedule_refresh(weak.clone(), queue);
+}
+
+fn schedule_refresh<E: OperationExecutor + Send + Sync + 'static>(
+    weak: slint::Weak<AppWindow>,
+    queue: Arc<BackgroundQueue<E>>,
+) {
+    slint::Timer::single_shot(Duration::from_millis(250), move || {
+        let Some(window) = weak.upgrade() else { return };
+        if window.get_page() != 9 {
+            return;
+        }
+        refresh(&weak, &queue);
+        schedule_refresh(weak, queue);
+    });
 }
 
 fn refresh<E: OperationExecutor + Send + Sync + 'static>(
