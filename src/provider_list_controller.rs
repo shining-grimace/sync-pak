@@ -41,10 +41,18 @@ fn refresh(
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => {
-            let rows = config.providers.into_iter().map(|provider| ProviderRow {
-                id: provider.id.as_str().into(),
-                name: provider.name.into(),
-                kind: kind_name(provider.kind).into(),
+            let rows = config.providers.into_iter().map(|provider| {
+                let connection_count = config
+                    .connections
+                    .iter()
+                    .filter(|connection| connection.provider_id == provider.id)
+                    .count();
+                ProviderRow {
+                    id: provider.id.as_str().into(),
+                    name: provider.name.into(),
+                    kind: kind_name(provider.kind).into(),
+                    connection_count: connection_count as i32,
+                }
             });
             window.set_providers(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
             window.set_status_message(SharedString::default());

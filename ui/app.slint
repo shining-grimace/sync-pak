@@ -5,6 +5,7 @@ export struct ProviderRow {
     id: string,
     name: string,
     kind: string,
+    connection-count: int,
 }
 
 export struct ConnectionRow {
@@ -169,11 +170,12 @@ export component AppWindow inherits Window {
                 Text { text: "Add credentials for Cloudflare R2, Backblaze B2, or AWS S3."; wrap: word-wrap; }
             }
             for provider in root.providers : Rectangle {
-                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; height: 70px;
+                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                 HorizontalBox { padding: 10px; spacing: 8px;
                     VerticalBox { spacing: 2px; horizontal-stretch: 1;
                         Text { text: provider.name; font-weight: 700; }
                         Text { text: provider.kind + " · Not verified"; color: #454039; }
+                        Text { text: provider.connection-count + " connections"; color: #454039; }
                     }
                     Button { text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
                     Button { text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
@@ -202,10 +204,11 @@ export component AppWindow inherits Window {
             Text { text: "Default bucket (optional)"; font-weight: 700; }
             LineEdit { placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; }
             Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
-            Text { text: "Access key ID"; font-weight: 700; }
-            access-key := LineEdit { placeholder-text: "Access key ID"; }
-            Text { text: "Secret access key"; font-weight: 700; }
-            secret-key := LineEdit { placeholder-text: "Secret access key"; input-type: password; }
+            if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key."; color: #454039; wrap: word-wrap; }
+            Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
+            access-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; }
+            Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
+            secret-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; input-type: password; }
             Text { text: root.provider-form-id == "" ? "Verification is not available yet. Save only if you understand this provider has not been checked." : "Enter credentials again to update this provider. Verification is not available yet."; color: #454039; wrap: word-wrap; }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.show-providers(); } }
