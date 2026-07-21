@@ -252,12 +252,14 @@ export component AppWindow inherits Window {
             if root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
             Text { text: "Connection name"; font-weight: 700; }
             connection-name := LineEdit { placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
+            Text { text: "Used in the connection list and archive filenames."; color: #454039; wrap: word-wrap; }
             Text { text: "Provider"; font-weight: 700; }
             connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
             Text { text: "Bucket"; font-weight: 700; }
             connection-bucket := LineEdit { placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: root.provider-buckets[connection-provider.current-index] == ""; }
             Text { text: "Remote folder"; font-weight: 700; }
             connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
+            Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
             Text { text: "Local folder"; font-weight: 700; }
             HorizontalBox {
                 connection-local := LineEdit { placeholder-text: "Full local folder path"; text <=> root.connection-form-local; horizontal-stretch: 1; }
@@ -265,11 +267,24 @@ export component AppWindow inherits Window {
             }
             Text { text: "Mode"; font-weight: 700; }
             connection-mode := ComboBox { model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
-            Text { text: "Keep last N archives"; font-weight: 700; }
-            connection-retention := LineEdit { text <=> root.connection-form-retention; enabled: connection-mode.current-index == 2; }
+            if connection-mode.current-index == 0 : Text {
+                text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
+                color: #454039; wrap: word-wrap;
+            }
+            if connection-mode.current-index == 1 : Text {
+                text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts.";
+                color: #454039; wrap: word-wrap;
+            }
+            if connection-mode.current-index == 2 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting."; color: #454039; wrap: word-wrap; }
+                Text { text: "Keep last N archives"; font-weight: 700; }
+                connection-retention := LineEdit { text <=> root.connection-form-retention; }
+                Text { text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain."; color: #454039; wrap: word-wrap; }
+            }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.show-connections(); } }
-                Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, connection-retention.text); } }
+                Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
             }
         }
 
