@@ -31,6 +31,7 @@ pub(crate) fn initialize(window: &AppWindow) {
     crate::connection_list_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_form_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
+    crate::run_direction_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::folder_picker_controller::configure(window, Rc::clone(&diagnostics));
     match configuration.load() {
         Ok(config) => {

@@ -56,6 +56,11 @@ export component AppWindow inherits Window {
     in-out property <string> connection-form-local;
     in-out property <int> connection-form-mode;
     in-out property <string> connection-form-retention: "1";
+    in-out property <string> run-connection-id;
+    in-out property <string> run-connection-name;
+    in-out property <string> run-connection-mode;
+    in-out property <bool> run-allows-both-ways;
+    in-out property <int> run-direction: 0;
     callback show-providers();
     callback show-connections();
     callback show-add-provider();
@@ -80,6 +85,10 @@ export component AppWindow inherits Window {
     callback cancel-activity(string);
     callback remove-queued-activity(string);
     callback clear-completed-activity();
+    callback request-run-connection(string);
+    callback choose-run-direction(int);
+    callback begin-preflight();
+    callback cancel-run-direction();
 
     init => { Palette.color-scheme = ColorScheme.light; }
     title: "SyncPak";
@@ -214,6 +223,7 @@ export component AppWindow inherits Window {
                         Text { text: connection.name; font-weight: 700; }
                         Text { text: connection.detail; color: #454039; }
                     }
+                    Button { text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
                     Button { text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
                     Button { text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
                 }
@@ -316,6 +326,46 @@ export component AppWindow inherits Window {
                 Button { text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
                 Button { text: "Delete connection"; primary: true; clicked => { root.confirm-connection-delete(); } }
             }
+        }
+        if root.page == 10 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Run " + root.run-connection-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
+            Text { text: root.run-connection-mode + " connection"; color: #454039; }
+            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+                VerticalBox { padding: 12px; spacing: 4px;
+                    Text { text: "Upload"; font-weight: 700; }
+                    Text { text: "Use the local folder as the source and cloud storage as the destination."; wrap: word-wrap; }
+                    Button { text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
+                }
+            }
+            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+                VerticalBox { padding: 12px; spacing: 4px;
+                    Text { text: "Download"; font-weight: 700; }
+                    Text { text: "Use cloud storage as the source and the local folder as the destination."; wrap: word-wrap; }
+                    Button { text: "Choose download"; primary: root.run-direction == 1; clicked => { root.choose-run-direction(1); } }
+                }
+            }
+            if root.run-allows-both-ways : Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+                VerticalBox { padding: 12px; spacing: 4px;
+                    Text { text: "Both ways"; font-weight: 700; }
+                    Text { text: "Copy files found on only one side to the other. Changed files are skipped."; wrap: word-wrap; }
+                    Button { text: "Choose both ways"; primary: root.run-direction == 2; clicked => { root.choose-run-direction(2); } }
+                }
+            }
+            HorizontalBox {
+                Button { text: "Cancel"; clicked => { root.cancel-run-direction(); } }
+                Button { text: "Continue"; primary: true; clicked => { root.begin-preflight(); } }
+            }
+        }
+        if root.page == 11 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Checking before anything changes"; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
+            Text { text: "Listing files…"; font-weight: 700; }
+            Text { text: "No files are changed during this check."; color: #454039; wrap: word-wrap; }
+            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 110px;
+                Text { text: "Preflight will compare the local folder and cloud storage, then show additions, overwrites, deletions, and skipped files before anything starts."; wrap: word-wrap; x: 16px; y: 16px; width: parent.width - 32px; height: parent.height - 32px; }
+            }
+            Button { text: "Back"; clicked => { root.cancel-run-direction(); } }
         }
         Rectangle { vertical-stretch: 1; }
     }

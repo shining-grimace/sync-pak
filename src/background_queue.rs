@@ -170,12 +170,7 @@ impl<E: OperationExecutor + Send + Sync + 'static>
 
 impl<E: OperationExecutor> Drop for BackgroundQueue<E> {
     fn drop(&mut self) {
-        if let Some(connection_id) = self
-            .active_connection
-            .lock()
-            .ok()
-            .and_then(|connection| connection.clone())
-        {
+        if let Some(connection_id) = self.active_connection() {
             let _ = self.executor.cancel(&connection_id);
         }
         self.stopping.store(true, Ordering::Release);
@@ -185,6 +180,22 @@ impl<E: OperationExecutor> Drop for BackgroundQueue<E> {
         }
         #[cfg(target_os = "android")]
         let _ = crate::android_foreground_execution::clear_cancel_handler();
+    }
+}
+
+impl<E: OperationExecutor> BackgroundQueue<E> {
+    fn active_connection(&self) -> Option<String> {
+        self.active_connection
+            .lock()
+            .ok()
+            .and_then(|connection| connection.clone())
+            .or_else(|| {
+                self.queue.0.lock().ok().and_then(|queue| {
+                    queue
+                        .running()
+                        .map(|entry| entry.plan.connection_id.clone())
+                })
+            })
     }
 }
 
