@@ -76,6 +76,7 @@ export component AppWindow inherits Window {
     callback save-connection(string, int, string, string, string, int, string);
     callback cancel-activity(string);
     callback remove-queued-activity(string);
+    callback clear-completed-activity();
 
     init => { Palette.color-scheme = ColorScheme.light; }
     title: "SyncPak";
@@ -259,6 +260,7 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Activity"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Queued and completed operations appear here until SyncPak exits."; color: #454039; wrap: word-wrap; }
+            if root.activity-rows.length > 0 : Button { text: "Clear completed"; clicked => { root.clear-completed-activity(); } }
             if root.activity-rows.length == 0 : Rectangle {
                 background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 130px;
                 VerticalBox { padding: 20px; spacing: 8px; alignment: center;

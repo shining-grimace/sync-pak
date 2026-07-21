@@ -27,10 +27,17 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
     });
 
     let weak = window.as_weak();
+    let remove_queue = Arc::clone(&queue);
     window.on_remove_queued_activity(move |operation_id| {
         if let Ok(operation_id) = Uuid::parse_str(operation_id.as_str()) {
-            queue.remove_queued(operation_id);
+            remove_queue.remove_queued(operation_id);
         }
+        refresh(&weak, &remove_queue);
+    });
+
+    let weak = window.as_weak();
+    window.on_clear_completed_activity(move || {
+        queue.clear_completed();
         refresh(&weak, &queue);
     });
 }
