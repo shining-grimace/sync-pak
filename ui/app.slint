@@ -200,7 +200,7 @@ export component AppWindow inherits Window {
 
         if root.page == 2 : VerticalBox {
             spacing: 10px;
-            Text { text: root.provider-form-id == "" ? "Add provider" : "Edit provider"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Credentials are saved in protected storage before this provider is added."; wrap: word-wrap; }
             Text { text: "Provider name"; font-weight: 700; }
             provider-name := LineEdit { placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; }
@@ -268,7 +268,7 @@ export component AppWindow inherits Window {
 
         if root.page == 5 : VerticalBox {
             spacing: 10px;
-            Text { text: root.connection-form-id == "" ? "New connection" : "Edit connection"; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
             if root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
             Text { text: "Connection name"; font-weight: 700; }
