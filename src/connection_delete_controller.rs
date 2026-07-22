@@ -77,11 +77,14 @@ fn delete_connection(
         },
     );
     match result {
-        Ok(_) => crate::connection_list_controller::show(
-            weak,
-            Rc::clone(configuration),
-            Rc::clone(diagnostics),
-        ),
+        Ok(_) => {
+            crate::connection_list_controller::show(
+                weak,
+                Rc::clone(configuration),
+                Rc::clone(diagnostics),
+            );
+            window.set_notice_message("Connection deleted.".into());
+        }
         Err(_) => diagnostics_controller::present(
             &window,
             diagnostics,

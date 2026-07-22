@@ -85,11 +85,14 @@ fn delete_provider(
                 })
         });
     match result {
-        Ok(_) => crate::provider_list_controller::show(
-            weak,
-            Rc::clone(configuration),
-            Rc::clone(diagnostics),
-        ),
+        Ok(_) => {
+            crate::provider_list_controller::show(
+                weak,
+                Rc::clone(configuration),
+                Rc::clone(diagnostics),
+            );
+            window.set_notice_message("Provider deleted.".into());
+        }
         Err(_) => diagnostics_controller::present(
             &window,
             diagnostics,
