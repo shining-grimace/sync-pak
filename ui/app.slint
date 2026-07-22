@@ -193,7 +193,9 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 0 : VerticalBox {
+        if root.page == 0 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px;
             HorizontalBox {
                 alignment: center;
                 VerticalBox {
@@ -220,6 +222,7 @@ export component AppWindow inherits Window {
                     HorizontalBox { alignment: center; Button { text: "Add your first provider"; primary: true; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-add-provider(); } } }
                     HorizontalBox { alignment: center; Button { text: "Read how SyncPak protects your privacy"; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-privacy(); } } }
                 }
+            }
             }
         }
 
