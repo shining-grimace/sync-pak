@@ -270,9 +270,13 @@ export component AppWindow inherits Window {
             }
             Text { text: "Default bucket (optional)"; font-weight: 700; }
             LineEdit { placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; }
-            if root.provider-verified-buckets.length > 0 : ComboBox {
-                model: root.provider-verified-buckets;
-                selected => { root.provider-form-bucket = root.provider-verified-buckets[self.current-index]; }
+            if root.provider-verified-buckets.length > 0 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Verified available buckets"; color: #454039; }
+                ComboBox {
+                    model: root.provider-verified-buckets;
+                    selected => { root.provider-form-bucket = root.provider-verified-buckets[self.current-index]; }
+                }
             }
             Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
             if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced."; color: #454039; wrap: word-wrap; }
