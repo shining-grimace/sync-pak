@@ -7,6 +7,8 @@ use crate::{
     configuration::{ConfigStore, SyncMode},
     connection_list_controller,
     diagnostics_controller::{self, SharedDiagnosticLog},
+    planning::Direction,
+    run_request::RunRequest,
 };
 
 /// Presents direction choices for a saved connection before its preflight begins.
@@ -30,11 +32,10 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
+    let preflight_configuration = Rc::clone(configuration);
+    let preflight_diagnostics = Rc::clone(&diagnostics);
     window.on_begin_preflight(move || {
-        if let Some(window) = weak.upgrade() {
-            window.set_status_message(SharedString::default());
-            window.set_page(11);
-        }
+        begin_preflight(&weak, &preflight_configuration, &preflight_diagnostics);
     });
 
     let weak = window.as_weak();
@@ -42,6 +43,43 @@ pub(crate) fn configure(
     window.on_cancel_run_direction(move || {
         connection_list_controller::show(&weak, Rc::clone(&configuration), Rc::clone(&diagnostics));
     });
+}
+
+fn begin_preflight(
+    weak: &slint::Weak<AppWindow>,
+    configuration: &ConfigStore,
+    diagnostics: &SharedDiagnosticLog,
+) {
+    let Some(window) = weak.upgrade() else { return };
+    let result = configuration.load().and_then(|config| {
+        RunRequest::from_config(
+            &config,
+            window.get_run_connection_id().as_str(),
+            direction(window.get_run_direction()),
+        )
+        .map_err(|error| crate::configuration::ConfigurationError::Io(std::io::Error::other(error)))
+    });
+    match result {
+        Ok(_) => {
+            window.set_status_message(SharedString::default());
+            window.set_page(11);
+        }
+        Err(_) => diagnostics_controller::present(
+            &window,
+            diagnostics,
+            "This operation cannot start",
+            "run request validation failed",
+            "SyncPak could not prepare this connection. Check that it and its provider still exist.",
+        ),
+    }
+}
+
+fn direction(index: i32) -> Direction {
+    match index {
+        1 => Direction::Download,
+        2 => Direction::BothWays,
+        _ => Direction::Upload,
+    }
 }
 
 fn show(

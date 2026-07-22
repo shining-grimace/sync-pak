@@ -81,6 +81,7 @@ pub mod queue_runner;
 pub mod remote_inventory;
 pub mod retry;
 mod run_direction_controller;
+pub mod run_request;
 #[cfg(feature = "provider-s3")]
 mod s3_error;
 #[cfg(feature = "provider-s3")]
