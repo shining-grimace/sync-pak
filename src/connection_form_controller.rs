@@ -155,7 +155,10 @@ fn save(
         }
     });
     match result {
-        Ok(_) => connection_list_controller::show(weak, configuration, diagnostics),
+        Ok(_) => {
+            connection_list_controller::show(weak, configuration, diagnostics);
+            window.set_notice_message("Connection saved.".into());
+        }
         Err(_) => diagnostics_controller::present(
             &window,
             &diagnostics,

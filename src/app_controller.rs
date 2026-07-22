@@ -77,6 +77,7 @@ fn configure_navigation(window: &AppWindow) {
 fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
     if let Some(window) = weak.upgrade() {
         window.set_status_message(Default::default());
+        window.set_notice_message(Default::default());
         window.set_page(page);
     }
 }

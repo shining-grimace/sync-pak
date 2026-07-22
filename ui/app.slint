@@ -45,6 +45,7 @@ export component AppWindow inherits Window {
     in-out property <[string]> provider-names;
     in-out property <[string]> provider-buckets;
     in-out property <string> status-message;
+    in-out property <string> notice-message;
     in-out property <string> diagnostic-text;
     in-out property <bool> diagnostic-include-paths;
     in-out property <string> pending-provider-id;
@@ -145,6 +146,12 @@ export component AppWindow inherits Window {
         if root.status-message != "" : Text {
             text: root.status-message;
             color: #7b241c;
+            wrap: word-wrap;
+        }
+
+        if root.notice-message != "" : Text {
+            text: root.notice-message;
+            color: #23623a;
             wrap: word-wrap;
         }
 

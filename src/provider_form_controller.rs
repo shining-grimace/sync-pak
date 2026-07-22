@@ -177,7 +177,10 @@ fn save(
     })();
     match result {
         Ok(_) => match complete_welcome(&configuration) {
-            Ok(()) => provider_list_controller::show(weak, configuration, Rc::clone(diagnostics)),
+            Ok(()) => {
+                provider_list_controller::show(weak, configuration, Rc::clone(diagnostics));
+                window.set_notice_message("Provider saved securely.".into());
+            }
             Err(_) => diagnostics_controller::present(
                 &window,
                 diagnostics,

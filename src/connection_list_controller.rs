@@ -44,6 +44,7 @@ pub(crate) fn show(
 ) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
+    window.set_notice_message(SharedString::default());
     window.set_page(4);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
