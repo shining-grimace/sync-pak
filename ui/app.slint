@@ -1,4 +1,4 @@
-import { Button, CheckBox, ComboBox, HorizontalBox, LineEdit, Palette, VerticalBox } from "std-widgets.slint";
+import { Button, CheckBox, ComboBox, HorizontalBox, LineEdit, Palette, ScrollView, VerticalBox } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 
 export struct ProviderRow {
@@ -542,12 +542,19 @@ export component AppWindow inherits Window {
                     text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
                     color: #7b241c; wrap: word-wrap;
                 }
-                for item in root.preflight-items : HorizontalBox {
-                    spacing: 8px;
-                    Text { text: item.status; width: 110px; color: #454039; }
-                    VerticalBox { horizontal-stretch: 1; spacing: 2px;
-                        Text { text: item.path; wrap: word-wrap; }
-                        Text { text: item.detail; color: #454039; wrap: word-wrap; }
+                if root.preflight-items.length > 0 : ScrollView {
+                    height: 180px;
+                    vertical-scrollbar-policy: always-on;
+                    HorizontalBox { width: parent.width; }
+                    VerticalBox { spacing: 8px; width: parent.width - 12px;
+                        for item in root.preflight-items : HorizontalBox {
+                            spacing: 8px;
+                            Text { text: item.status; width: 110px; color: #454039; }
+                            VerticalBox { horizontal-stretch: 1; spacing: 2px;
+                                Text { text: item.path; wrap: word-wrap; }
+                                Text { text: item.detail; color: #454039; wrap: word-wrap; }
+                            }
+                        }
                     }
                 }
                 if root.preflight-requires-mirror-confirmation : CheckBox {
