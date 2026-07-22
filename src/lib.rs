@@ -83,6 +83,7 @@ pub mod queue_retry_observer;
 pub mod queue_runner;
 pub mod remote_inventory;
 pub mod retry;
+pub mod reviewed_operation;
 mod run_direction_controller;
 pub mod run_request;
 #[cfg(feature = "provider-s3")]
