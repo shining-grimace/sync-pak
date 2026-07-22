@@ -585,7 +585,10 @@ export component AppWindow inherits Window {
                 }
                 Text { text: root.preflight-start-action + " will be available when transfer execution is connected."; color: #454039; wrap: word-wrap; }
             }
-            Button { text: "Back"; clicked => { root.cancel-run-direction(); } }
+            HorizontalBox {
+                Button { text: "Back"; clicked => { root.cancel-run-direction(); } }
+                if root.preflight-failed : Button { text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
+            }
         }
         Rectangle { vertical-stretch: 1; }
     }
