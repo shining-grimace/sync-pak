@@ -8,6 +8,7 @@ build = "build.rs"
 crate-type = ["cdylib", "rlib"]
 
 [features]
+default = ["provider-s3"]
 feasibility-probes = []
 provider-probes = ["provider-s3", "dep:tokio"]
 provider-s3 = ["dep:aws-config", "dep:aws-sdk-s3", "dep:tokio"]
