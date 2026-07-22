@@ -76,14 +76,15 @@ fn refresh(
                     ConnectionRow {
                         id: connection.id.as_str().into(),
                         name: connection.name.clone().into(),
-                        detail: format!(
-                            "On this device → In {provider} · {}",
-                            mode_name(connection.mode)
-                        )
-                        .into(),
+                        detail: mode_name(connection.mode).into(),
                         mode: mode_index(connection.mode),
                         local_path: connection.local_path.clone().into(),
                         provider_name: provider.into(),
+                        remote_location: remote_location(
+                            &connection.bucket,
+                            &connection.remote_path,
+                        )
+                        .into(),
                         archive_retention: connection
                             .keep_last_archives
                             .map_or_else(String::new, |retention| retention.to_string())
@@ -100,6 +101,14 @@ fn refresh(
             "connection configuration load failed",
             "SyncPak could not load connections. Check configuration storage and try again.",
         ),
+    }
+}
+
+fn remote_location(bucket: &str, remote_path: &str) -> String {
+    if remote_path.is_empty() {
+        bucket.into()
+    } else {
+        format!("{bucket}/{remote_path}")
     }
 }
 

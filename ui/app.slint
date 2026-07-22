@@ -15,6 +15,7 @@ export struct ConnectionRow {
     mode: int,
     local-path: string,
     provider-name: string,
+    remote-location: string,
     archive-retention: string,
 }
 
@@ -263,6 +264,7 @@ export component AppWindow inherits Window {
                         Text { text: connection.name; font-weight: 700; }
                         Text { text: connection.detail; color: #454039; }
                         Text { text: "On this device: " + connection.local-path; color: #454039; wrap: word-wrap; }
+                        Text { text: "In " + connection.provider-name + ": " + connection.remote-location; color: #454039; wrap: word-wrap; }
                         if connection.mode == 2 : Text { text: "Keeps the last " + connection.archive-retention + " archives"; color: #454039; }
                     }
                     Button { text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
