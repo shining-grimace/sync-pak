@@ -343,11 +343,15 @@ export component AppWindow inherits Window {
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
             if root.providers-total == 0 : Button { text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
             if root.providers-total > 0 : Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
-            HorizontalBox { spacing: 6px;
-                Button { text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
-                Button { text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
-                Button { text: "Mirror"; primary: root.connection-filter == 2; clicked => { root.set-connection-filter(2); } }
-                Button { text: "Archive"; primary: root.connection-filter == 3; clicked => { root.set-connection-filter(3); } }
+            VerticalBox { spacing: 6px;
+                HorizontalBox { spacing: 6px;
+                    Button { text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
+                    Button { text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
+                }
+                HorizontalBox { spacing: 6px;
+                    Button { text: "Mirror"; primary: root.connection-filter == 2; clicked => { root.set-connection-filter(2); } }
+                    Button { text: "Archive"; primary: root.connection-filter == 3; clicked => { root.set-connection-filter(3); } }
+                }
             }
             if root.connections.length == 0 : VerticalBox {
                 spacing: 8px;
@@ -597,12 +601,15 @@ export component AppWindow inherits Window {
             if root.preflight-failed : Text { text: "Resolve the issues below, then run the connection again. No files were changed."; color: #7b241c; wrap: word-wrap; }
             if !root.preflight-loading && !root.preflight-failed : VerticalBox {
                 spacing: 8px;
-                HorizontalBox {
-                    spacing: 8px;
-                    Text { text: root.preflight-additions; font-weight: 700; }
-                    Text { text: root.preflight-overwrites; font-weight: 700; }
-                    Text { text: root.preflight-deletions; font-weight: 700; }
-                    Text { text: root.preflight-skipped; font-weight: 700; }
+                VerticalBox { spacing: 4px;
+                    HorizontalBox { spacing: 8px;
+                        Text { text: root.preflight-additions; font-weight: 700; }
+                        Text { text: root.preflight-overwrites; font-weight: 700; }
+                    }
+                    HorizontalBox { spacing: 8px;
+                        Text { text: root.preflight-deletions; font-weight: 700; }
+                        Text { text: root.preflight-skipped; font-weight: 700; }
+                    }
                 }
                 if root.preflight-requires-mirror-confirmation : Text {
                     text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
