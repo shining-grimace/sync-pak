@@ -59,6 +59,7 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-bucket;
     in-out property <string> provider-form-access-key;
     in-out property <string> provider-form-secret-key;
+    in-out property <string> provider-form-original;
     in-out property <bool> provider-secret-visible: false;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
@@ -101,6 +102,9 @@ export component AppWindow inherits Window {
     callback save-provider(string, int, string, string);
     callback request-save-provider();
     callback cancel-save-provider();
+    callback request-discard-provider();
+    callback confirm-discard-provider();
+    callback cancel-discard-provider();
     callback save-connection(string, int, string, string, string, int, string);
     callback request-discard-connection();
     callback confirm-discard-connection();
@@ -241,7 +245,7 @@ export component AppWindow inherits Window {
             if root.provider-secret-visible : Text { text: "Make sure nobody else can see your screen."; color: #7b241c; wrap: word-wrap; }
             Text { text: root.provider-form-id == "" ? "Verification is not available yet. Save only if you understand this provider has not been checked." : "Enter credentials again to update this provider. Verification is not available yet."; color: #454039; wrap: word-wrap; }
             HorizontalBox {
-                Button { text: "Back"; clicked => { root.show-providers(); } }
+                Button { text: "Back"; clicked => { root.request-discard-provider(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.request-save-provider(); } }
             }
         }
@@ -253,6 +257,16 @@ export component AppWindow inherits Window {
             HorizontalBox {
                 Button { text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
+            }
+        }
+
+        if root.page == 15 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
+            Text { text: "Your changes to this provider have not been saved."; wrap: word-wrap; }
+            HorizontalBox {
+                Button { text: "Continue editing"; clicked => { root.cancel-discard-provider(); } }
+                Button { text: "Discard changes"; primary: true; clicked => { root.confirm-discard-provider(); } }
             }
         }
 

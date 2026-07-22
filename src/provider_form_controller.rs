@@ -9,7 +9,9 @@ use crate::{
     form_validation,
     onboarding::complete_welcome,
     platform::PlatformCredentialStore,
-    provider_form::{provider_id, provider_kind, provider_kind_index, provider_options},
+    provider_form::{
+        is_dirty, mark_clean, provider_id, provider_kind, provider_kind_index, provider_options,
+    },
     provider_list_controller,
 };
 
@@ -52,6 +54,35 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
+    let discard_configuration = Rc::clone(configuration);
+    let discard_diagnostics = Rc::clone(&diagnostics);
+    window.on_request_discard_provider(move || {
+        request_discard(
+            &weak,
+            Rc::clone(&discard_configuration),
+            Rc::clone(&discard_diagnostics),
+        );
+    });
+
+    let weak = window.as_weak();
+    window.on_cancel_discard_provider(move || {
+        if let Some(window) = weak.upgrade() {
+            window.set_page(2);
+        }
+    });
+
+    let weak = window.as_weak();
+    let discard_configuration = Rc::clone(configuration);
+    let discard_diagnostics = Rc::clone(&diagnostics);
+    window.on_confirm_discard_provider(move || {
+        provider_list_controller::show(
+            &weak,
+            Rc::clone(&discard_configuration),
+            Rc::clone(&discard_diagnostics),
+        );
+    });
+
+    let weak = window.as_weak();
     let edit_configuration = Rc::clone(configuration);
     window.on_request_provider_edit(move |id| edit(&weak, &edit_configuration, &diagnostics, id));
 }
@@ -68,7 +99,21 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_access_key(SharedString::default());
         window.set_provider_form_secret_key(SharedString::default());
         window.set_provider_secret_visible(false);
+        mark_clean(&window);
         window.set_page(2);
+    }
+}
+
+fn request_discard(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
+    let Some(window) = weak.upgrade() else { return };
+    if is_dirty(&window) {
+        window.set_page(15);
+    } else {
+        provider_list_controller::show(weak, configuration, diagnostics);
     }
 }
 
@@ -185,6 +230,7 @@ fn edit(
             window.set_provider_form_bucket(
                 provider.options.default_bucket.unwrap_or_default().into(),
             );
+            mark_clean(&window);
             window.set_status_message(SharedString::default());
             window.set_page(2);
         }

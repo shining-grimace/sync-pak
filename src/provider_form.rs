@@ -1,4 +1,31 @@
-use crate::configuration::{ConfigStore, ProviderId, ProviderKind, ProviderOptions};
+use crate::{
+    AppWindow,
+    configuration::{ConfigStore, ProviderId, ProviderKind, ProviderOptions},
+};
+
+/// Stores a non-secret form fingerprint for unsaved-change detection.
+pub(crate) fn mark_clean(window: &AppWindow) {
+    window.set_provider_form_original(form_signature(window).into());
+}
+
+pub(crate) fn is_dirty(window: &AppWindow) -> bool {
+    window.get_provider_form_original() != form_signature(window).as_str()
+}
+
+fn form_signature(window: &AppWindow) -> String {
+    format!(
+        "{:?}",
+        (
+            window.get_provider_form_name(),
+            window.get_provider_form_kind(),
+            window.get_provider_form_account_id(),
+            window.get_provider_form_region(),
+            window.get_provider_form_bucket(),
+            !window.get_provider_form_access_key().is_empty(),
+            !window.get_provider_form_secret_key().is_empty(),
+        )
+    )
+}
 
 pub(crate) fn provider_kind(index: i32) -> Option<ProviderKind> {
     match index {
