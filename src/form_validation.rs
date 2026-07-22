@@ -8,13 +8,18 @@ pub(crate) fn provider(
     account_id: &str,
     region: &str,
     default_bucket: &str,
+    endpoint: &str,
 ) -> Result<(), String> {
     required(name, "Provider name")?;
     required(access_key_id, "Access key ID")?;
     required(secret_access_key, "Secret access key")?;
     match kind {
         ProviderKind::CloudflareR2 => required(account_id, "Account ID"),
-        ProviderKind::BackblazeB2 | ProviderKind::AwsS3 => required(region, "Region"),
+        ProviderKind::BackblazeB2 => {
+            required(region, "Region")?;
+            required(endpoint, "Custom endpoint")
+        }
+        ProviderKind::AwsS3 => required(region, "Region"),
     }?;
     validate_optional_bucket(default_bucket)
 }
@@ -75,6 +80,7 @@ mod tests {
                 ProviderKind::AwsS3,
                 "",
                 "region",
+                "",
                 ""
             ),
             Err("Access key ID is required.".to_owned())
@@ -87,6 +93,7 @@ mod tests {
                 ProviderKind::AwsS3,
                 "",
                 "region",
+                "",
                 ""
             ),
             Err("Secret access key is required.".to_owned())
@@ -103,6 +110,7 @@ mod tests {
                 ProviderKind::CloudflareR2,
                 "",
                 "",
+                "",
                 ""
             ),
             Err("Account ID is required.".to_owned())
@@ -115,9 +123,23 @@ mod tests {
                 ProviderKind::AwsS3,
                 "",
                 "",
+                "",
                 ""
             ),
             Err("Region is required.".to_owned())
+        );
+        assert_eq!(
+            provider(
+                "Provider",
+                "access",
+                "secret",
+                ProviderKind::BackblazeB2,
+                "",
+                "us-west-004",
+                "",
+                ""
+            ),
+            Err("Custom endpoint is required.".to_owned())
         );
     }
 
@@ -131,7 +153,8 @@ mod tests {
                 ProviderKind::AwsS3,
                 "",
                 "region",
-                " bucket"
+                " bucket",
+                ""
             ),
             Err("Bucket name cannot begin or end with whitespace.".to_owned())
         );

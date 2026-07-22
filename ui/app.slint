@@ -245,7 +245,7 @@ export component AppWindow inherits Window {
             Text { text: "Default bucket (optional)"; font-weight: 700; }
             LineEdit { placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; }
             Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
-            if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key."; color: #454039; wrap: word-wrap; }
+            if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced."; color: #454039; wrap: word-wrap; }
             Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
             access-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; }
             Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }

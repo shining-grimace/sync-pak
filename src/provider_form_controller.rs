@@ -147,6 +147,7 @@ fn save(
         &account_id,
         &region,
         &default_bucket,
+        &endpoint,
     ) {
         window.set_page(2);
         window.set_status_message(error.into());
