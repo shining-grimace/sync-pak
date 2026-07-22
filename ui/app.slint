@@ -410,7 +410,7 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this connection have not been saved."; wrap: word-wrap; }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Continue editing"; clicked => { root.cancel-discard-connection(); } }
                 Button { text: "Discard changes"; primary: true; clicked => { root.confirm-discard-connection(); } }
             }
@@ -488,7 +488,7 @@ export component AppWindow inherits Window {
                 Text { text: "Connections that will be deleted"; font-weight: 700; }
                 for connection-name in root.pending-provider-connections : Text { text: "• " + connection-name; color: #454039; wrap: word-wrap; }
             }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
                 Button { text: "Delete provider and " + root.pending-connection-count + " connections"; primary: true; clicked => { root.confirm-provider-delete(); } }
             }
@@ -498,7 +498,7 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Delete " + root.pending-connection-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "This removes the connection from SyncPak. It does not delete local or cloud files."; wrap: word-wrap; }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
                 Button { text: "Delete connection"; primary: true; clicked => { root.confirm-connection-delete(); } }
             }
@@ -507,7 +507,7 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Cancel " + root.pending-cancel-activity-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Keep running"; clicked => { root.dismiss-cancel-activity(); } }
                 Button { text: "Cancel operation"; primary: true; clicked => { root.confirm-cancel-activity(); } }
             }
