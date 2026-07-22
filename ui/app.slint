@@ -564,6 +564,10 @@ export component AppWindow inherits Window {
                     text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
                     color: #7b241c; wrap: word-wrap;
                 }
+                if root.preflight-items.length == 0 : Text {
+                    text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
+                    color: #23623a; wrap: word-wrap;
+                }
                 if root.preflight-items.length > 0 : ScrollView {
                     height: 180px;
                     vertical-scrollbar-policy: always-on;
