@@ -164,6 +164,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_session_token(SharedString::default());
         window.set_provider_secret_visible(false);
         window.set_provider_advanced_expanded(false);
+        window.set_provider_verifying(false);
         window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
         mark_clean(&window);
         window.set_page(2);
@@ -286,6 +287,7 @@ fn edit(
 ) {
     let Some(window) = weak.upgrade() else { return };
     window.set_provider_secret_visible(false);
+    window.set_provider_verifying(false);
     window.set_provider_form_access_key(SharedString::default());
     window.set_provider_form_secret_key(SharedString::default());
     window.set_provider_form_session_token(SharedString::default());

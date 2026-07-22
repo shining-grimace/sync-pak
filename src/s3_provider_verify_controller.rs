@@ -37,33 +37,33 @@ fn poll(
     diagnostics: SharedDiagnosticLog,
 ) {
     slint::Timer::single_shot(Duration::from_millis(50), move || {
+        let Some(window) = weak.upgrade() else { return };
+        if window.get_page() != 2 || !window.get_provider_verifying() {
+            return;
+        }
         match receiver.try_recv() {
             Ok(Some(verification)) => {
-                if let Some(window) = weak.upgrade() {
-                    window.set_provider_verifying(false);
-                    window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(
-                        VecModel::from_iter(verification.buckets.iter().cloned().map(Into::into)),
-                    )));
-                    window.set_status_message(
-                        format!(
-                            "Provider verified. {} buckets available.",
-                            verification.buckets.len()
-                        )
-                        .into(),
-                    );
-                }
+                window.set_provider_verifying(false);
+                window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(
+                    VecModel::from_iter(verification.buckets.iter().cloned().map(Into::into)),
+                )));
+                window.set_status_message(
+                    format!(
+                        "Provider verified. {} buckets available.",
+                        verification.buckets.len()
+                    )
+                    .into(),
+                );
             }
             Ok(None) | Err(mpsc::TryRecvError::Disconnected) => {
-                if let Some(window) = weak.upgrade() {
-                    window.set_provider_verifying(false);
-                    diagnostics_controller::present(
-                        &window,
-                        &diagnostics,
-                        "Provider could not be verified",
-                        "provider verification failed",
-                        "SyncPak could not verify these credentials. Check the settings and try again.",
-                    );
-                }
+                window.set_provider_verifying(false);
+                diagnostics_controller::present(
+                    &window,
+                    &diagnostics,
+                    "Provider could not be verified",
+                    "provider verification failed",
+                    "SyncPak could not verify these credentials. Check the settings and try again.",
+                );
             }
             Err(mpsc::TryRecvError::Empty) => poll(weak, receiver, diagnostics),
         }
