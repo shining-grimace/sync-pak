@@ -233,18 +233,24 @@ export component AppWindow inherits Window {
                 Text { text: "No providers yet"; font-size: 22px; font-weight: 700; }
                 Text { text: "Add credentials for Cloudflare R2, Backblaze B2, or AWS S3."; wrap: word-wrap; }
             }
-            for provider in root.providers : Rectangle {
-                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
-                VerticalBox { padding: 10px; spacing: 8px;
-                    VerticalBox { spacing: 2px;
-                        Text { text: provider.name; font-weight: 700; }
-                        Text { text: provider.kind + " · Not verified"; color: #454039; }
-                        Text { text: provider.connection-summary; color: #454039; }
-                    }
-                    HorizontalBox { spacing: 8px;
-                        Button { text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
-                        Button { text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
-                        Rectangle { horizontal-stretch: 1; }
+            if root.providers.length > 0 : ScrollView {
+                height: 260px;
+                vertical-scrollbar-policy: always-on;
+                VerticalBox { width: parent.width - 12px; spacing: 8px;
+                    for provider in root.providers : Rectangle {
+                        background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+                        VerticalBox { padding: 10px; spacing: 8px;
+                            VerticalBox { spacing: 2px;
+                                Text { text: provider.name; font-weight: 700; }
+                                Text { text: provider.kind + " · Not verified"; color: #454039; }
+                                Text { text: provider.connection-summary; color: #454039; }
+                            }
+                            HorizontalBox { spacing: 8px;
+                                Button { text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
+                                Button { text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
+                                Rectangle { horizontal-stretch: 1; }
+                            }
+                        }
                     }
                 }
             }
@@ -345,21 +351,27 @@ export component AppWindow inherits Window {
                 if root.connections-total == 0 && root.providers-total > 0 : Text { text: "Create a connection to link a local folder with cloud storage."; wrap: word-wrap; }
                 if root.connections-total > 0 : Text { text: "Choose another filter or create a new connection."; wrap: word-wrap; }
             }
-            for connection in root.connections : Rectangle {
-                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 98px;
-                VerticalBox { padding: 10px; spacing: 8px;
-                    VerticalBox { spacing: 3px;
-                        Text { text: connection.name; font-weight: 700; }
-                        Text { text: connection.detail; color: #454039; }
-                        Text { text: "On this device: " + connection.local-path; color: #454039; wrap: word-wrap; }
-                        Text { text: "In " + connection.provider-name + ": " + connection.remote-location; color: #454039; wrap: word-wrap; }
-                        if connection.mode == 2 : Text { text: "Keeps the last " + connection.archive-retention + " archives"; color: #454039; }
-                    }
-                    HorizontalBox { spacing: 8px;
-                        Button { text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
-                        Button { text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
-                        Button { text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
-                        Rectangle { horizontal-stretch: 1; }
+            if root.connections.length > 0 : ScrollView {
+                height: 280px;
+                vertical-scrollbar-policy: always-on;
+                VerticalBox { width: parent.width - 12px; spacing: 8px;
+                    for connection in root.connections : Rectangle {
+                        background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 98px;
+                        VerticalBox { padding: 10px; spacing: 8px;
+                            VerticalBox { spacing: 3px;
+                                Text { text: connection.name; font-weight: 700; }
+                                Text { text: connection.detail; color: #454039; }
+                                Text { text: "On this device: " + connection.local-path; color: #454039; wrap: word-wrap; }
+                                Text { text: "In " + connection.provider-name + ": " + connection.remote-location; color: #454039; wrap: word-wrap; }
+                                if connection.mode == 2 : Text { text: "Keeps the last " + connection.archive-retention + " archives"; color: #454039; }
+                            }
+                            HorizontalBox { spacing: 8px;
+                                Button { text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
+                                Button { text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
+                                Button { text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
+                                Rectangle { horizontal-stretch: 1; }
+                            }
+                        }
                     }
                 }
             }
