@@ -379,6 +379,10 @@ export component AppWindow inherits Window {
                 text: "This provider locks connections to its default bucket.";
                 color: #454039; wrap: word-wrap;
             }
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" : Text {
+                text: "Enter a bucket manually, or verify the provider first to see buckets available to its current credentials.";
+                color: #454039; wrap: word-wrap;
+            }
             Text { text: "Remote folder"; font-weight: 700; }
             connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
@@ -545,7 +549,7 @@ export component AppWindow inherits Window {
                     Button { text: "Choose both ways"; primary: root.run-direction == 2; clicked => { root.choose-run-direction(2); } }
                 }
             }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-run-direction(); } }
                 Button { text: "Continue"; primary: true; clicked => { root.begin-preflight(); } }
             }
@@ -596,7 +600,7 @@ export component AppWindow inherits Window {
                 }
                 Text { text: root.preflight-start-action + " will be available when transfer execution is connected."; color: #454039; wrap: word-wrap; }
             }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Back"; clicked => { root.cancel-run-direction(); } }
                 if root.preflight-failed : Button { text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
                 if !root.preflight-loading && !root.preflight-failed : Button { text: "Refresh review"; clicked => { root.begin-preflight(); } }
