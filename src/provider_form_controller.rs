@@ -132,6 +132,7 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
         session_token: (!window.get_provider_form_session_token().trim().is_empty())
             .then(|| window.get_provider_form_session_token().to_string()),
     };
+    window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
     window.set_provider_verifying(true);
     #[cfg(feature = "provider-s3")]
     crate::s3_provider_verify_controller::start(weak.clone(), provider, credentials, diagnostics);
