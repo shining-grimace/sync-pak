@@ -184,8 +184,8 @@ export component AppWindow inherits Window {
 
         if root.active-activity-id != "" : Rectangle {
             background: #2c2925; border-radius: 8px; min-height: 62px;
-            HorizontalBox { padding: 12px; spacing: 10px;
-                VerticalBox { horizontal-stretch: 1; spacing: 2px;
+            VerticalBox { padding: 12px; spacing: 8px;
+                VerticalBox { spacing: 2px;
                     Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; }
                     Text { text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
