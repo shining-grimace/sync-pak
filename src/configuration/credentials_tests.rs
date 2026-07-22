@@ -94,6 +94,20 @@ fn ordinary_configuration_never_contains_provider_credentials() {
 }
 
 #[test]
+fn loads_credentials_only_for_a_saved_provider() {
+    let store = ConfigStore::at(test_path());
+    let secrets = MemoryCredentials::default();
+    let providers = ProviderRepository::new(&store, &secrets);
+    let provider = providers.create(provider_draft(), &secret()).unwrap();
+
+    assert!(providers.load_credentials(&provider.id).unwrap() == secret());
+    assert!(matches!(
+        providers.load_credentials(&crate::configuration::ProviderId::new()),
+        Err(super::CredentialError::NotFound)
+    ));
+}
+
+#[test]
 fn provider_and_connection_configuration_survive_a_restart() {
     let path = test_path();
     let store = ConfigStore::at(path.clone());

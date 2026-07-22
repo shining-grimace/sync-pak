@@ -58,6 +58,25 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
         }
     }
 
+    /// Loads credentials only for a provider still present in configuration.
+    pub fn load_credentials(
+        &self,
+        id: &ProviderId,
+    ) -> Result<ProviderCredentials, CredentialError> {
+        let config = self
+            .configuration
+            .load()
+            .map_err(CredentialError::Configuration)?;
+        if !config.providers.iter().any(|provider| provider.id == *id) {
+            return Err(CredentialError::NotFound);
+        }
+        let serialized = self
+            .credentials
+            .load(id.as_str())
+            .map_err(CredentialError::ProtectedStore)?;
+        serde_json::from_slice(&serialized).map_err(CredentialError::Serialization)
+    }
+
     /// Saves the protected document before committing metadata, restoring it if that commit fails.
     pub fn create(
         &self,
