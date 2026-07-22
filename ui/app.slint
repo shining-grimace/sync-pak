@@ -575,7 +575,6 @@ export component AppWindow inherits Window {
                 if root.preflight-items.length > 0 : ScrollView {
                     height: 180px;
                     vertical-scrollbar-policy: always-on;
-                    HorizontalBox { width: parent.width; }
                     VerticalBox { spacing: 8px; width: parent.width - 12px;
                         for item in root.preflight-items : HorizontalBox {
                             spacing: 8px;
