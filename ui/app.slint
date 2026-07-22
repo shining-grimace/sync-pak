@@ -34,6 +34,7 @@ export component AppWindow inherits Window {
     in-out property <[ProviderRow]> providers;
     in-out property <[ConnectionRow]> connections;
     in-out property <int> connections-total;
+    in-out property <int> providers-total;
     in-out property <int> connection-filter: 0;
     in-out property <[ActivityRow]> activity-rows;
     in-out property <string> active-activity-id;
@@ -244,7 +245,9 @@ export component AppWindow inherits Window {
             if root.connections.length == 0 : VerticalBox {
                 spacing: 8px;
                 Text { text: root.connections-total == 0 ? "No connections yet" : "No matching connections"; font-size: 22px; font-weight: 700; }
-                Text { text: root.connections-total == 0 ? "Add a cloud provider, then create a connection to choose what to copy." : "Choose another filter or create a new connection."; wrap: word-wrap; }
+                if root.connections-total == 0 && root.providers-total == 0 : Text { text: "Add a cloud provider, then create a connection to choose what to copy."; wrap: word-wrap; }
+                if root.connections-total == 0 && root.providers-total > 0 : Text { text: "Create a connection to link a local folder with cloud storage."; wrap: word-wrap; }
+                if root.connections-total > 0 : Text { text: "Choose another filter or create a new connection."; wrap: word-wrap; }
             }
             for connection in root.connections : Rectangle {
                 background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 98px;

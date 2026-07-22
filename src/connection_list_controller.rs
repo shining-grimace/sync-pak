@@ -60,6 +60,7 @@ fn refresh(
     match configuration.load() {
         Ok(config) => {
             window.set_connections_total(config.connections.len() as i32);
+            window.set_providers_total(config.providers.len() as i32);
             let filter = window.get_connection_filter();
             let rows = config
                 .connections
