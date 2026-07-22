@@ -19,6 +19,7 @@ pub fn show_loading(window: &AppWindow) {
     window.set_preflight_skipped(SharedString::default());
     window.set_preflight_start_action(SharedString::default());
     window.set_preflight_requires_mirror_confirmation(false);
+    window.set_preflight_mirror_confirmed(false);
     window.set_page(11);
 }
 
@@ -33,6 +34,7 @@ pub fn show_review(window: &AppWindow, preflight: &Preflight) {
     window.set_preflight_skipped(presentation.skipped.into());
     window.set_preflight_start_action(presentation.start_action.into());
     window.set_preflight_requires_mirror_confirmation(presentation.requires_mirror_confirmation);
+    window.set_preflight_mirror_confirmed(false);
     window.set_preflight_items(rows(presentation.items));
     window.set_page(11);
 }
@@ -43,6 +45,7 @@ pub fn show_failed(window: &AppWindow) {
     window.set_preflight_failed(true);
     window.set_preflight_items(empty_rows());
     window.set_preflight_start_action(SharedString::default());
+    window.set_preflight_mirror_confirmed(false);
     window.set_page(11);
 }
 

@@ -95,6 +95,7 @@ export component AppWindow inherits Window {
     in-out property <string> preflight-skipped;
     in-out property <string> preflight-start-action;
     in-out property <bool> preflight-requires-mirror-confirmation: false;
+    in-out property <bool> preflight-mirror-confirmed: false;
     in-out property <[PreflightRow]> preflight-items;
     in-out property <string> pending-cancel-activity-id;
     in-out property <string> pending-cancel-activity-name;
@@ -544,6 +545,10 @@ export component AppWindow inherits Window {
                     spacing: 8px;
                     Text { text: item.status; width: 110px; color: #454039; }
                     Text { text: item.path; horizontal-stretch: 1; wrap: word-wrap; }
+                }
+                if root.preflight-requires-mirror-confirmation : CheckBox {
+                    text: "I understand that the listed destination files will be overwritten or deleted.";
+                    checked <=> root.preflight-mirror-confirmed;
                 }
                 Text { text: root.preflight-start-action + " will be available when transfer execution is connected."; color: #454039; wrap: word-wrap; }
             }
