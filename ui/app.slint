@@ -31,6 +31,7 @@ export struct ActivityRow {
 
 export component AppWindow inherits Window {
     in-out property <int> page: 0;
+    in-out property <string> app-version;
     in-out property <[ProviderRow]> providers;
     in-out property <[ConnectionRow]> connections;
     in-out property <int> connections-total;
@@ -325,6 +326,7 @@ export component AppWindow inherits Window {
             Text { text: "Connection settings are stored locally. Activity is kept in memory and cleared when SyncPak exits."; wrap: word-wrap; }
             Text { text: "File encryption"; font-size: 20px; font-weight: 700; }
             Text { text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption."; wrap: word-wrap; }
+            Text { text: "SyncPak " + root.app-version; color: #454039; }
             Button { text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
             Button { text: "Back"; clicked => { root.show-welcome(); } }
         }

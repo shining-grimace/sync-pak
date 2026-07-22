@@ -9,6 +9,7 @@ use crate::{
 };
 
 pub(crate) fn initialize(window: &AppWindow) {
+    window.set_app_version(env!("CARGO_PKG_VERSION").into());
     let diagnostics = Rc::new(std::cell::RefCell::new(Default::default()));
     diagnostics_controller::configure(window, Rc::clone(&diagnostics));
     let configuration = match ConfigStore::for_current_platform() {
