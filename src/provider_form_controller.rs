@@ -4,7 +4,10 @@ use slint::{ComponentHandle, SharedString};
 
 use crate::{
     AppWindow,
-    configuration::{ConfigStore, ProviderCredentials, ProviderDraft, ProviderRepository},
+    configuration::{
+        ConfigStore, CredentialReference, ProviderConfig, ProviderCredentials, ProviderDraft,
+        ProviderId, ProviderRepository,
+    },
     diagnostics_controller::{self, SharedDiagnosticLog},
     form_validation,
     onboarding::complete_welcome,
@@ -37,6 +40,10 @@ pub(crate) fn configure(
             secret_access_key,
         )
     });
+
+    let weak = window.as_weak();
+    let verify_diagnostics = Rc::clone(&diagnostics);
+    window.on_verify_provider(move || verify(&weak, Rc::clone(&verify_diagnostics)));
 
     let weak = window.as_weak();
     window.on_request_save_provider(move || {
@@ -85,6 +92,61 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let edit_configuration = Rc::clone(configuration);
     window.on_request_provider_edit(move |id| edit(&weak, &edit_configuration, &diagnostics, id));
+}
+
+fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
+    let Some(window) = weak.upgrade() else { return };
+    let Some(kind) = provider_kind(window.get_provider_form_kind()) else {
+        return;
+    };
+    let account = window.get_provider_form_account_id();
+    let region = window.get_provider_form_region();
+    let bucket = window.get_provider_form_bucket();
+    let endpoint = window.get_provider_form_endpoint();
+    let access = window.get_provider_form_access_key();
+    let secret = window.get_provider_form_secret_key();
+    if let Err(error) = form_validation::provider(
+        &window.get_provider_form_name(),
+        &access,
+        &secret,
+        kind,
+        &account,
+        &region,
+        &bucket,
+        &endpoint,
+    ) {
+        window.set_status_message(error.into());
+        return;
+    }
+    let id = ProviderId::new();
+    let provider = ProviderConfig {
+        id: id.clone(),
+        credential_reference: CredentialReference { provider_id: id },
+        name: window.get_provider_form_name().to_string(),
+        kind,
+        options: provider_options(&account, &region, &bucket, &endpoint),
+    };
+    let credentials = ProviderCredentials {
+        access_key_id: access.to_string(),
+        secret_access_key: secret.to_string(),
+        session_token: (!window.get_provider_form_session_token().trim().is_empty())
+            .then(|| window.get_provider_form_session_token().to_string()),
+    };
+    window.set_provider_verifying(true);
+    #[cfg(feature = "provider-s3")]
+    crate::s3_provider_verify_controller::start(weak.clone(), provider, credentials, diagnostics);
+    #[cfg(not(feature = "provider-s3"))]
+    {
+        let _ = (provider, credentials);
+        window.set_provider_verifying(false);
+        diagnostics_controller::present(
+            &window,
+            &diagnostics,
+            "Provider could not be verified",
+            "provider support unavailable",
+            "This build cannot verify cloud providers.",
+        );
+    }
 }
 
 fn show_add(weak: &slint::Weak<AppWindow>) {

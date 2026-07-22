@@ -71,6 +71,7 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-original;
     in-out property <bool> provider-secret-visible: false;
     in-out property <bool> provider-advanced-expanded: false;
+    in-out property <bool> provider-verifying: false;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
     in-out property <string> connection-form-id;
@@ -111,6 +112,7 @@ export component AppWindow inherits Window {
     callback set-diagnostic-include-paths(bool);
     callback request-provider-delete(string);
     callback request-provider-edit(string);
+    callback verify-provider();
     callback confirm-provider-delete();
     callback cancel-provider-delete();
     callback request-connection-delete(string);
@@ -285,9 +287,10 @@ export component AppWindow inherits Window {
                 Text { text: "Session token"; font-weight: 700; }
                 LineEdit { placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; }
             }
-            Text { text: root.provider-form-id == "" ? "Verification is not available yet. Save only if you understand this provider has not been checked." : "Enter credentials again to update this provider. Verification is not available yet."; color: #454039; wrap: word-wrap; }
+            Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: #454039; wrap: word-wrap; }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.request-discard-provider(); } }
+                Button { text: root.provider-verifying ? "Verifying…" : "Verify provider"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.request-save-provider(); } }
             }
         }
