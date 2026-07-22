@@ -176,19 +176,24 @@ fn save(
         }
     })();
     match result {
-        Ok(_) => match complete_welcome(&configuration) {
-            Ok(()) => {
-                provider_list_controller::show(weak, configuration, Rc::clone(diagnostics));
-                window.set_notice_message("Provider saved securely.".into());
+        Ok(_) => {
+            window.set_provider_form_access_key(SharedString::default());
+            window.set_provider_form_secret_key(SharedString::default());
+            window.set_provider_secret_visible(false);
+            match complete_welcome(&configuration) {
+                Ok(()) => {
+                    provider_list_controller::show(weak, configuration, Rc::clone(diagnostics));
+                    window.set_notice_message("Provider saved securely.".into());
+                }
+                Err(_) => diagnostics_controller::present(
+                    &window,
+                    diagnostics,
+                    "Provider was saved but welcome state could not be updated",
+                    "welcome state save failed",
+                    "The provider was saved, but SyncPak could not update its welcome state.",
+                ),
             }
-            Err(_) => diagnostics_controller::present(
-                &window,
-                diagnostics,
-                "Provider was saved but welcome state could not be updated",
-                "welcome state save failed",
-                "The provider was saved, but SyncPak could not update its welcome state.",
-            ),
-        },
+        }
         Err(_) => {
             window.set_page(2);
             diagnostics_controller::present(
