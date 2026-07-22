@@ -297,7 +297,7 @@ export component AppWindow inherits Window {
                 LineEdit { placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; }
             }
             Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: #454039; wrap: word-wrap; }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Back"; clicked => { root.request-discard-provider(); } }
                 Button { text: root.provider-verifying ? "Verifying…" : "Verify provider"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.request-save-provider(); } }
@@ -308,7 +308,7 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Save without verifying?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
             }
@@ -318,7 +318,7 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this provider have not been saved."; wrap: word-wrap; }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Continue editing"; clicked => { root.cancel-discard-provider(); } }
                 Button { text: "Discard changes"; primary: true; clicked => { root.confirm-discard-provider(); } }
             }
