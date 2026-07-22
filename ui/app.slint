@@ -375,6 +375,10 @@ export component AppWindow inherits Window {
             connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
             Text { text: "Bucket"; font-weight: 700; }
             connection-bucket := LineEdit { placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" : Text {
+                text: "This provider locks connections to its default bucket.";
+                color: #454039; wrap: word-wrap;
+            }
             Text { text: "Remote folder"; font-weight: 700; }
             connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
