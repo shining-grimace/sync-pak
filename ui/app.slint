@@ -5,7 +5,7 @@ export struct ProviderRow {
     id: string,
     name: string,
     kind: string,
-    connection-count: int,
+    connection-summary: string,
 }
 
 export struct ConnectionRow {
@@ -189,7 +189,7 @@ export component AppWindow inherits Window {
                     VerticalBox { spacing: 2px; horizontal-stretch: 1;
                         Text { text: provider.name; font-weight: 700; }
                         Text { text: provider.kind + " · Not verified"; color: #454039; }
-                        Text { text: provider.connection-count + " connections"; color: #454039; }
+                        Text { text: provider.connection-summary; color: #454039; }
                     }
                     Button { text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
                     Button { text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }

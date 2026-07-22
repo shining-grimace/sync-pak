@@ -51,7 +51,7 @@ fn refresh(
                     id: provider.id.as_str().into(),
                     name: provider.name.into(),
                     kind: kind_name(provider.kind).into(),
-                    connection_count: connection_count as i32,
+                    connection_summary: connection_summary(connection_count).into(),
                 }
             });
             window.set_providers(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
@@ -64,6 +64,13 @@ fn refresh(
             "provider configuration load failed",
             "SyncPak could not load providers. Check configuration storage and try again.",
         ),
+    }
+}
+
+fn connection_summary(count: usize) -> String {
+    match count {
+        1 => "1 connection".into(),
+        _ => format!("{count} connections"),
     }
 }
 
