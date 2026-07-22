@@ -400,7 +400,7 @@ export component AppWindow inherits Window {
                 connection-retention := LineEdit { text <=> root.connection-form-retention; }
                 Text { text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain."; color: #454039; wrap: word-wrap; }
             }
-            HorizontalBox {
+            VerticalBox {
                 Button { text: "Back"; clicked => { root.request-discard-connection(); } }
                 Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
             }
