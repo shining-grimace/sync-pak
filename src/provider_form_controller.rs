@@ -98,7 +98,10 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_bucket(SharedString::default());
         window.set_provider_form_access_key(SharedString::default());
         window.set_provider_form_secret_key(SharedString::default());
+        window.set_provider_form_endpoint(SharedString::default());
+        window.set_provider_form_session_token(SharedString::default());
         window.set_provider_secret_visible(false);
+        window.set_provider_advanced_expanded(false);
         mark_clean(&window);
         window.set_page(2);
     }
@@ -134,6 +137,8 @@ fn save(
     let account_id = window.get_provider_form_account_id();
     let region = window.get_provider_form_region();
     let default_bucket = window.get_provider_form_bucket();
+    let endpoint = window.get_provider_form_endpoint();
+    let session_token = window.get_provider_form_session_token();
     if let Err(error) = form_validation::provider(
         &name,
         &access_key_id,
@@ -150,12 +155,12 @@ fn save(
     let credentials = ProviderCredentials {
         access_key_id: access_key_id.to_string(),
         secret_access_key: secret_access_key.to_string(),
-        session_token: None,
+        session_token: (!session_token.trim().is_empty()).then(|| session_token.to_string()),
     };
     let draft = ProviderDraft {
         name: name.to_string(),
         kind,
-        options: provider_options(&account_id, &region, &default_bucket),
+        options: provider_options(&account_id, &region, &default_bucket, &endpoint),
     };
     let edit_id = window.get_provider_form_id();
     let result = (|| {
@@ -179,7 +184,9 @@ fn save(
         Ok(_) => {
             window.set_provider_form_access_key(SharedString::default());
             window.set_provider_form_secret_key(SharedString::default());
+            window.set_provider_form_session_token(SharedString::default());
             window.set_provider_secret_visible(false);
+            window.set_provider_advanced_expanded(false);
             match complete_welcome(&configuration) {
                 Ok(()) => {
                     provider_list_controller::show(weak, configuration, Rc::clone(diagnostics));
@@ -217,6 +224,8 @@ fn edit(
     window.set_provider_secret_visible(false);
     window.set_provider_form_access_key(SharedString::default());
     window.set_provider_form_secret_key(SharedString::default());
+    window.set_provider_form_session_token(SharedString::default());
+    window.set_provider_advanced_expanded(false);
     match configuration
         .load()
         .map_err(|error| error.to_string())
@@ -238,6 +247,7 @@ fn edit(
             window.set_provider_form_bucket(
                 provider.options.default_bucket.unwrap_or_default().into(),
             );
+            window.set_provider_form_endpoint(provider.options.endpoint.unwrap_or_default().into());
             mark_clean(&window);
             window.set_status_message(SharedString::default());
             window.set_page(2);

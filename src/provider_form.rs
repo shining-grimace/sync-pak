@@ -21,8 +21,10 @@ fn form_signature(window: &AppWindow) -> String {
             window.get_provider_form_account_id(),
             window.get_provider_form_region(),
             window.get_provider_form_bucket(),
+            window.get_provider_form_endpoint(),
             !window.get_provider_form_access_key().is_empty(),
             !window.get_provider_form_secret_key().is_empty(),
+            !window.get_provider_form_session_token().is_empty(),
         )
     )
 }
@@ -48,11 +50,12 @@ pub(crate) fn provider_options(
     account_id: &str,
     region: &str,
     default_bucket: &str,
+    endpoint: &str,
 ) -> ProviderOptions {
     ProviderOptions {
         account_id: optional(account_id),
         default_bucket: optional(default_bucket),
-        endpoint: None,
+        endpoint: optional(endpoint),
         region: optional(region),
     }
 }

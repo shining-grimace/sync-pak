@@ -60,8 +60,11 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-bucket;
     in-out property <string> provider-form-access-key;
     in-out property <string> provider-form-secret-key;
+    in-out property <string> provider-form-endpoint;
+    in-out property <string> provider-form-session-token;
     in-out property <string> provider-form-original;
     in-out property <bool> provider-secret-visible: false;
+    in-out property <bool> provider-advanced-expanded: false;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
     in-out property <string> connection-form-id;
@@ -251,6 +254,14 @@ export component AppWindow inherits Window {
                 Button { text: root.provider-secret-visible ? "Hide" : "Reveal"; clicked => { root.provider-secret-visible = !root.provider-secret-visible; } }
             }
             if root.provider-secret-visible : Text { text: "Make sure nobody else can see your screen."; color: #7b241c; wrap: word-wrap; }
+            Button { text: root.provider-advanced-expanded ? "Hide advanced" : "Advanced"; clicked => { root.provider-advanced-expanded = !root.provider-advanced-expanded; } }
+            if root.provider-advanced-expanded : VerticalBox {
+                spacing: 4px;
+                Text { text: "Custom endpoint"; font-weight: 700; }
+                LineEdit { placeholder-text: "Optional S3-compatible endpoint"; text <=> root.provider-form-endpoint; }
+                Text { text: "Session token"; font-weight: 700; }
+                LineEdit { placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; }
+            }
             Text { text: root.provider-form-id == "" ? "Verification is not available yet. Save only if you understand this provider has not been checked." : "Enter credentials again to update this provider. Verification is not available yet."; color: #454039; wrap: word-wrap; }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.request-discard-provider(); } }
