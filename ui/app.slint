@@ -57,6 +57,8 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-account-id;
     in-out property <string> provider-form-region;
     in-out property <string> provider-form-bucket;
+    in-out property <string> provider-form-access-key;
+    in-out property <string> provider-form-secret-key;
     in-out property <bool> provider-secret-visible: false;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
@@ -96,6 +98,8 @@ export component AppWindow inherits Window {
     callback select-local-folder();
     callback select-connection-provider(int);
     callback save-provider(string, int, string, string);
+    callback request-save-provider();
+    callback cancel-save-provider();
     callback save-connection(string, int, string, string, string, int, string);
     callback cancel-activity(string);
     callback request-cancel-activity(string, string);
@@ -224,17 +228,27 @@ export component AppWindow inherits Window {
             Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
             if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key."; color: #454039; wrap: word-wrap; }
             Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
-            access-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; }
+            access-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; }
             Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
             HorizontalBox {
-                secret-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; }
+                LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; }
                 Button { text: root.provider-secret-visible ? "Hide" : "Reveal"; clicked => { root.provider-secret-visible = !root.provider-secret-visible; } }
             }
             if root.provider-secret-visible : Text { text: "Make sure nobody else can see your screen."; color: #7b241c; wrap: word-wrap; }
             Text { text: root.provider-form-id == "" ? "Verification is not available yet. Save only if you understand this provider has not been checked." : "Enter credentials again to update this provider. Verification is not available yet."; color: #454039; wrap: word-wrap; }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.show-providers(); } }
-                Button { text: "Save without verifying"; primary: true; clicked => { root.save-provider(provider-name.text, provider-kind.current-index, access-key.text, secret-key.text); } }
+                Button { text: "Save without verifying"; primary: true; clicked => { root.request-save-provider(); } }
+            }
+        }
+
+        if root.page == 13 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Save without verifying?"; color: #171512; font-size: 28px; font-weight: 800; }
+            Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
+            HorizontalBox {
+                Button { text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
+                Button { text: "Save without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
             }
         }
 

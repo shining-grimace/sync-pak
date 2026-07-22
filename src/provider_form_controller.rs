@@ -37,6 +37,21 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
+    window.on_request_save_provider(move || {
+        if let Some(window) = weak.upgrade() {
+            window.set_status_message(SharedString::default());
+            window.set_page(13);
+        }
+    });
+
+    let weak = window.as_weak();
+    window.on_cancel_save_provider(move || {
+        if let Some(window) = weak.upgrade() {
+            window.set_page(2);
+        }
+    });
+
+    let weak = window.as_weak();
     let edit_configuration = Rc::clone(configuration);
     window.on_request_provider_edit(move |id| edit(&weak, &edit_configuration, &diagnostics, id));
 }
@@ -50,6 +65,8 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_account_id(SharedString::default());
         window.set_provider_form_region(SharedString::default());
         window.set_provider_form_bucket(SharedString::default());
+        window.set_provider_form_access_key(SharedString::default());
+        window.set_provider_form_secret_key(SharedString::default());
         window.set_provider_secret_visible(false);
         window.set_page(2);
     }
@@ -81,6 +98,7 @@ fn save(
         &region,
         &default_bucket,
     ) {
+        window.set_page(2);
         window.set_status_message(error.into());
         return;
     }
@@ -123,13 +141,16 @@ fn save(
                 "The provider was saved, but SyncPak could not update its welcome state.",
             ),
         },
-        Err(_) => diagnostics_controller::present(
-            &window,
-            diagnostics,
-            "Provider settings could not be saved",
-            "provider save failed",
-            "SyncPak could not save this provider. Check its settings and protected storage, then try again.",
-        ),
+        Err(_) => {
+            window.set_page(2);
+            diagnostics_controller::present(
+                &window,
+                diagnostics,
+                "Provider settings could not be saved",
+                "provider save failed",
+                "SyncPak could not save this provider. Check its settings and protected storage, then try again.",
+            );
+        }
     }
 }
 
@@ -141,6 +162,8 @@ fn edit(
 ) {
     let Some(window) = weak.upgrade() else { return };
     window.set_provider_secret_visible(false);
+    window.set_provider_form_access_key(SharedString::default());
+    window.set_provider_form_secret_key(SharedString::default());
     match configuration
         .load()
         .map_err(|error| error.to_string())
