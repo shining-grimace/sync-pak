@@ -60,9 +60,15 @@ fn begin_preflight(
         .map_err(|error| crate::configuration::ConfigurationError::Io(std::io::Error::other(error)))
     });
     match result {
-        Ok(_) => {
+        Ok(request) => {
             window.set_status_message(SharedString::default());
             crate::preflight_controller::show_loading(&window);
+            start_preflight(
+                weak.clone(),
+                request,
+                configuration.path().to_owned(),
+                Rc::clone(diagnostics),
+            );
         }
         Err(_) => {
             crate::preflight_controller::show_failed(&window);
@@ -75,6 +81,34 @@ fn begin_preflight(
             );
         }
     }
+}
+
+#[cfg(feature = "provider-s3")]
+fn start_preflight(
+    weak: slint::Weak<AppWindow>,
+    request: RunRequest,
+    configuration_path: std::path::PathBuf,
+    diagnostics: SharedDiagnosticLog,
+) {
+    crate::s3_preflight_controller::start(weak, request, configuration_path, diagnostics);
+}
+
+#[cfg(not(feature = "provider-s3"))]
+fn start_preflight(
+    weak: slint::Weak<AppWindow>,
+    _: RunRequest,
+    _: std::path::PathBuf,
+    diagnostics: SharedDiagnosticLog,
+) {
+    let Some(window) = weak.upgrade() else { return };
+    crate::preflight_controller::show_failed(&window);
+    diagnostics_controller::present(
+        &window,
+        &diagnostics,
+        "This operation cannot start",
+        "S3 provider support is not enabled",
+        "This SyncPak build cannot connect to cloud storage. Install a build with provider support and try again.",
+    );
 }
 
 fn direction(index: i32) -> Direction {
