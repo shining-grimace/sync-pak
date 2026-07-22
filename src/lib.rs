@@ -96,6 +96,8 @@ pub mod s3_preflight;
 #[cfg(feature = "provider-s3")]
 mod s3_preflight_controller;
 #[cfg(feature = "provider-s3")]
+pub mod s3_provider_verification;
+#[cfg(feature = "provider-s3")]
 mod s3_settings;
 #[cfg(feature = "provider-s3")]
 pub mod s3_transport;
