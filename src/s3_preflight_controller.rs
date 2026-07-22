@@ -21,11 +21,12 @@ pub(crate) fn start(
     configuration_path: PathBuf,
     diagnostics: SharedDiagnosticLog,
 ) {
+    let connection_id = request.connection.id.as_str().to_owned();
     let (sender, receiver) = mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let _ = sender.send(collect(request, configuration_path));
     });
-    await_result(weak, receiver, diagnostics);
+    await_result(weak, connection_id, receiver, diagnostics);
 }
 
 fn collect(
@@ -50,43 +51,50 @@ fn collect(
 
 fn await_result(
     weak: slint::Weak<AppWindow>,
+    connection_id: String,
     receiver: Receiver<Result<Preflight, PreflightFailure>>,
     diagnostics: SharedDiagnosticLog,
 ) {
     slint::Timer::single_shot(Duration::from_millis(50), move || {
+        let Some(window) = weak.upgrade() else { return };
+        if !is_active(&window, &connection_id) {
+            return;
+        }
         match receiver.try_recv() {
             Ok(Ok(preflight)) => {
-                if let Some(window) = weak.upgrade() {
-                    crate::preflight_controller::show_review(&window, &preflight);
-                }
+                crate::preflight_controller::show_review(&window, &preflight);
             }
             Ok(Err(failure)) => {
-                if let Some(window) = weak.upgrade() {
-                    crate::preflight_controller::show_failed(&window);
-                    diagnostics_controller::present(
-                        &window,
-                        &diagnostics,
-                        "This operation cannot start",
-                        failure.diagnostic(),
-                        failure.message(),
-                    );
-                }
+                crate::preflight_controller::show_failed(&window);
+                diagnostics_controller::present(
+                    &window,
+                    &diagnostics,
+                    "This operation cannot start",
+                    failure.diagnostic(),
+                    failure.message(),
+                );
             }
             Err(mpsc::TryRecvError::Disconnected) => {
-                if let Some(window) = weak.upgrade() {
-                    crate::preflight_controller::show_failed(&window);
-                    diagnostics_controller::present(
-                        &window,
-                        &diagnostics,
-                        "This operation cannot start",
-                        "preflight worker stopped",
-                        "SyncPak could not complete the preflight. Run the connection again.",
-                    );
-                }
+                crate::preflight_controller::show_failed(&window);
+                diagnostics_controller::present(
+                    &window,
+                    &diagnostics,
+                    "This operation cannot start",
+                    "preflight worker stopped",
+                    "SyncPak could not complete the preflight. Run the connection again.",
+                );
             }
-            Err(mpsc::TryRecvError::Empty) => await_result(weak, receiver, diagnostics),
+            Err(mpsc::TryRecvError::Empty) => {
+                await_result(weak, connection_id, receiver, diagnostics)
+            }
         }
     });
+}
+
+fn is_active(window: &AppWindow, connection_id: &str) -> bool {
+    window.get_page() == 11
+        && window.get_preflight_loading()
+        && window.get_run_connection_id().as_str() == connection_id
 }
 
 #[derive(Clone, Copy)]
