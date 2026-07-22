@@ -439,8 +439,9 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 3 : VerticalBox {
-            spacing: 12px;
+        if root.page == 3 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Privacy & About"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Direct transfers"; font-size: 20px; font-weight: 700; }
             Text { text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them."; wrap: word-wrap; }
@@ -453,6 +454,7 @@ export component AppWindow inherits Window {
             Text { text: "SyncPak " + root.app-version; color: #454039; }
             Button { text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
             Button { text: "Back"; clicked => { root.show-welcome(); } }
+            }
         }
 
         if root.page == 8 : VerticalBox {
@@ -543,8 +545,9 @@ export component AppWindow inherits Window {
                 Button { text: "Cancel operation"; primary: true; clicked => { root.confirm-cancel-activity(); } }
             }
         }
-        if root.page == 10 : VerticalBox {
-            spacing: 12px;
+        if root.page == 10 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Run " + root.run-connection-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: root.run-connection-mode + " connection"; color: #454039; }
             if root.run-archive-details != "" : Rectangle {
@@ -575,6 +578,7 @@ export component AppWindow inherits Window {
             VerticalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-run-direction(); } }
                 Button { text: "Continue"; primary: true; clicked => { root.begin-preflight(); } }
+            }
             }
         }
         if root.page == 11 : VerticalBox {
