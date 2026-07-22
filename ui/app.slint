@@ -235,7 +235,8 @@ export component AppWindow inherits Window {
             spacing: 12px;
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
-            Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
+            if root.providers-total == 0 : Button { text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
+            if root.providers-total > 0 : Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
             HorizontalBox { spacing: 6px;
                 Button { text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
                 Button { text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
