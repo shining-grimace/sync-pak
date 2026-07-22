@@ -462,15 +462,19 @@ export component AppWindow inherits Window {
             }
             for activity in root.activity-rows : Rectangle {
                 background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 86px;
-                HorizontalBox { padding: 12px; spacing: 8px;
-                    VerticalBox { spacing: 2px; horizontal-stretch: 1;
+                VerticalBox { padding: 12px; spacing: 8px;
+                    VerticalBox { spacing: 2px;
                         Text { text: activity.title + " · " + activity.status; font-weight: 700; }
                         Text { text: activity.detail; color: #454039; wrap: word-wrap; }
                         if activity.progress != "" : Text { text: activity.progress; color: #454039; wrap: word-wrap; }
                         if activity.result != "" : Text { text: activity.result; color: #454039; wrap: word-wrap; }
                     }
-                    if activity.can-cancel : Button { text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
-                    if activity.can-remove : Button { text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
+                    if activity.can-cancel || activity.can-remove : HorizontalBox {
+                        spacing: 8px;
+                        if activity.can-cancel : Button { text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
+                        if activity.can-remove : Button { text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
+                        Rectangle { horizontal-stretch: 1; }
+                    }
                 }
             }
         }
