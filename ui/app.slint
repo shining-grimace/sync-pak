@@ -379,8 +379,8 @@ export component AppWindow inherits Window {
             connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
             Text { text: "Local folder"; font-weight: 700; }
-            HorizontalBox {
-                connection-local := LineEdit { placeholder-text: "Full local folder path"; text <=> root.connection-form-local; horizontal-stretch: 1; }
+            VerticalBox { spacing: 6px;
+                connection-local := LineEdit { placeholder-text: "Full local folder path"; text <=> root.connection-form-local; }
                 Button { text: "Select folder"; clicked => { root.select-local-folder(); } }
             }
             Text { text: "Mode"; font-weight: 700; }
