@@ -70,6 +70,7 @@ export component AppWindow inherits Window {
     in-out property <string> connection-form-local;
     in-out property <int> connection-form-mode;
     in-out property <string> connection-form-retention: "1";
+    in-out property <string> connection-form-original;
     in-out property <string> run-connection-id;
     in-out property <string> run-connection-name;
     in-out property <string> run-connection-mode;
@@ -101,6 +102,9 @@ export component AppWindow inherits Window {
     callback request-save-provider();
     callback cancel-save-provider();
     callback save-connection(string, int, string, string, string, int, string);
+    callback request-discard-connection();
+    callback confirm-discard-connection();
+    callback cancel-discard-connection();
     callback cancel-activity(string);
     callback request-cancel-activity(string, string);
     callback confirm-cancel-activity();
@@ -326,8 +330,18 @@ export component AppWindow inherits Window {
                 Text { text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain."; color: #454039; wrap: word-wrap; }
             }
             HorizontalBox {
-                Button { text: "Back"; clicked => { root.show-connections(); } }
+                Button { text: "Back"; clicked => { root.request-discard-connection(); } }
                 Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
+            }
+        }
+
+        if root.page == 14 : VerticalBox {
+            spacing: 12px;
+            Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
+            Text { text: "Your changes to this connection have not been saved."; wrap: word-wrap; }
+            HorizontalBox {
+                Button { text: "Continue editing"; clicked => { root.cancel-discard-connection(); } }
+                Button { text: "Discard changes"; primary: true; clicked => { root.confirm-discard-connection(); } }
             }
         }
 

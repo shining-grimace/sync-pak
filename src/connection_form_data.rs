@@ -18,6 +18,7 @@ pub(crate) fn reset(window: &AppWindow) {
     window.set_connection_form_local(SharedString::default());
     window.set_connection_form_mode(0);
     window.set_connection_form_retention("1".into());
+    mark_clean(window);
 }
 
 pub(crate) fn populate(
@@ -42,8 +43,32 @@ pub(crate) fn populate(
             .into(),
     );
     set_provider_bucket(window, providers, provider_index as i32);
+    mark_clean(window);
     window.set_status_message(SharedString::default());
     window.set_page(5);
+}
+
+pub(crate) fn mark_clean(window: &AppWindow) {
+    window.set_connection_form_original(form_signature(window).into());
+}
+
+pub(crate) fn is_dirty(window: &AppWindow) -> bool {
+    window.get_connection_form_original() != form_signature(window).as_str()
+}
+
+fn form_signature(window: &AppWindow) -> String {
+    format!(
+        "{:?}",
+        (
+            window.get_connection_form_name(),
+            window.get_connection_form_provider(),
+            window.get_connection_form_bucket(),
+            window.get_connection_form_remote(),
+            window.get_connection_form_local(),
+            window.get_connection_form_mode(),
+            window.get_connection_form_retention(),
+        )
+    )
 }
 
 pub(crate) fn set_provider_models(window: &AppWindow, providers: &[ProviderConfig]) {

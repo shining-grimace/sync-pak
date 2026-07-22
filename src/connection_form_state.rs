@@ -5,7 +5,7 @@ use slint::SharedString;
 use crate::{
     AppWindow,
     configuration::ConfigStore,
-    connection_form_data::{reset, set_provider_bucket, set_provider_models},
+    connection_form_data::{mark_clean, reset, set_provider_bucket, set_provider_models},
     diagnostics_controller::{self, SharedDiagnosticLog},
 };
 
@@ -51,6 +51,7 @@ fn load_providers(
                 &config.providers,
                 window.get_connection_form_provider(),
             );
+            mark_clean(&window);
         }
         Err(_) => provider_load_error(&window, diagnostics),
     }
