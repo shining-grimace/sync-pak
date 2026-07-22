@@ -50,6 +50,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_account_id(SharedString::default());
         window.set_provider_form_region(SharedString::default());
         window.set_provider_form_bucket(SharedString::default());
+        window.set_provider_secret_visible(false);
         window.set_page(2);
     }
 }
@@ -139,6 +140,7 @@ fn edit(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    window.set_provider_secret_visible(false);
     match configuration
         .load()
         .map_err(|error| error.to_string())

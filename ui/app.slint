@@ -55,6 +55,7 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-account-id;
     in-out property <string> provider-form-region;
     in-out property <string> provider-form-bucket;
+    in-out property <bool> provider-secret-visible: false;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
     in-out property <string> connection-form-id;
@@ -223,7 +224,11 @@ export component AppWindow inherits Window {
             Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
             access-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; }
             Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
-            secret-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; input-type: password; }
+            HorizontalBox {
+                secret-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; }
+                Button { text: root.provider-secret-visible ? "Hide" : "Reveal"; clicked => { root.provider-secret-visible = !root.provider-secret-visible; } }
+            }
+            if root.provider-secret-visible : Text { text: "Make sure nobody else can see your screen."; color: #7b241c; wrap: word-wrap; }
             Text { text: root.provider-form-id == "" ? "Verification is not available yet. Save only if you understand this provider has not been checked." : "Enter credentials again to update this provider. Verification is not available yet."; color: #454039; wrap: word-wrap; }
             HorizontalBox {
                 Button { text: "Back"; clicked => { root.show-providers(); } }
