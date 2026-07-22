@@ -60,6 +60,7 @@ pub mod plan_summary;
 pub mod planning;
 pub mod platform;
 pub mod preflight;
+pub mod preflight_controller;
 pub mod preflight_execution;
 pub mod preflight_mirror_execution;
 pub mod preflight_presentation;

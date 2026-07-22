@@ -30,6 +30,11 @@ export struct ActivityRow {
     can-remove: bool,
 }
 
+export struct PreflightRow {
+    path: string,
+    status: string,
+}
+
 export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <string> app-version;
@@ -82,6 +87,15 @@ export component AppWindow inherits Window {
     in-out property <string> run-archive-details;
     in-out property <bool> run-allows-both-ways;
     in-out property <int> run-direction: 0;
+    in-out property <bool> preflight-loading: false;
+    in-out property <bool> preflight-failed: false;
+    in-out property <string> preflight-additions;
+    in-out property <string> preflight-overwrites;
+    in-out property <string> preflight-deletions;
+    in-out property <string> preflight-skipped;
+    in-out property <string> preflight-start-action;
+    in-out property <bool> preflight-requires-mirror-confirmation: false;
+    in-out property <[PreflightRow]> preflight-items;
     in-out property <string> pending-cancel-activity-id;
     in-out property <string> pending-cancel-activity-name;
     callback show-providers();
@@ -506,11 +520,32 @@ export component AppWindow inherits Window {
         }
         if root.page == 11 : VerticalBox {
             spacing: 12px;
-            Text { text: "Checking before anything changes"; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "Listing files…"; font-weight: 700; }
+            Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : "Ready to start"); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
+            if root.preflight-loading : Text { text: "Listing files…"; font-weight: 700; }
             Text { text: "No files are changed during this check."; color: #454039; wrap: word-wrap; }
-            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 110px;
+            if root.preflight-loading : Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 110px;
                 Text { text: "Preflight will compare the local folder and cloud storage, then show additions, overwrites, deletions, and skipped files before anything starts."; wrap: word-wrap; x: 16px; y: 16px; width: parent.width - 32px; height: parent.height - 32px; }
+            }
+            if root.preflight-failed : Text { text: "Resolve the issues below, then run the connection again. No files were changed."; color: #7b241c; wrap: word-wrap; }
+            if !root.preflight-loading && !root.preflight-failed : VerticalBox {
+                spacing: 8px;
+                HorizontalBox {
+                    spacing: 8px;
+                    Text { text: root.preflight-additions; font-weight: 700; }
+                    Text { text: root.preflight-overwrites; font-weight: 700; }
+                    Text { text: root.preflight-deletions; font-weight: 700; }
+                    Text { text: root.preflight-skipped; font-weight: 700; }
+                }
+                if root.preflight-requires-mirror-confirmation : Text {
+                    text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
+                    color: #7b241c; wrap: word-wrap;
+                }
+                for item in root.preflight-items : HorizontalBox {
+                    spacing: 8px;
+                    Text { text: item.status; width: 110px; color: #454039; }
+                    Text { text: item.path; horizontal-stretch: 1; wrap: word-wrap; }
+                }
+                Text { text: root.preflight-start-action + " will be available when transfer execution is connected."; color: #454039; wrap: word-wrap; }
             }
             Button { text: "Back"; clicked => { root.cancel-run-direction(); } }
         }

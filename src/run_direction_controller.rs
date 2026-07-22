@@ -62,15 +62,18 @@ fn begin_preflight(
     match result {
         Ok(_) => {
             window.set_status_message(SharedString::default());
-            window.set_page(11);
+            crate::preflight_controller::show_loading(&window);
         }
-        Err(_) => diagnostics_controller::present(
-            &window,
-            diagnostics,
-            "This operation cannot start",
-            "run request validation failed",
-            "SyncPak could not prepare this connection. Check that it and its provider still exist.",
-        ),
+        Err(_) => {
+            crate::preflight_controller::show_failed(&window);
+            diagnostics_controller::present(
+                &window,
+                diagnostics,
+                "This operation cannot start",
+                "run request validation failed",
+                "SyncPak could not prepare this connection. Check that it and its provider still exist.",
+            );
+        }
     }
 }
 
