@@ -250,8 +250,9 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 2 : VerticalBox {
-            spacing: 10px;
+        if root.page == 2 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 10px;
             Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Credentials are saved in protected storage before this provider is added."; wrap: word-wrap; }
             Text { text: "Provider name"; font-weight: 700; }
@@ -301,6 +302,7 @@ export component AppWindow inherits Window {
                 Button { text: "Back"; clicked => { root.request-discard-provider(); } }
                 Button { text: root.provider-verifying ? "Verifying…" : "Verify provider"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.request-save-provider(); } }
+            }
             }
         }
 
@@ -363,11 +365,11 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 5 : VerticalBox {
-            spacing: 10px;
+        if root.page == 5 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 10px;
             Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
-            if root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
             Text { text: "Connection name"; font-weight: 700; }
             connection-name := LineEdit { placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
             Text { text: "Used in the connection list and archive filenames."; color: #454039; wrap: word-wrap; }
@@ -411,6 +413,7 @@ export component AppWindow inherits Window {
             VerticalBox {
                 Button { text: "Back"; clicked => { root.request-discard-connection(); } }
                 Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
+            }
             }
         }
 
