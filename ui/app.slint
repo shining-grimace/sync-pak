@@ -446,8 +446,10 @@ export component AppWindow inherits Window {
             Text { text: "This report excludes provider credentials. Paths are hidden unless you choose to include them."; wrap: word-wrap; }
             include-paths := CheckBox { text: "Include file and folder paths"; checked <=> root.diagnostic-include-paths; toggled => { root.set-diagnostic-include-paths(self.checked); } }
             if root.diagnostic-include-paths : Text { text: "Paths can contain personal information. Include them only when you trust the person receiving the report."; color: #7b241c; wrap: word-wrap; }
-            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 140px;
-                Text { text: root.diagnostic-text; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
+            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 180px;
+                ScrollView { x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; vertical-scrollbar-policy: always-on;
+                    Text { text: root.diagnostic-text; wrap: word-wrap; width: parent.width - 12px; }
+                }
             }
             Button { text: "Back"; clicked => { root.show-privacy(); } }
         }
@@ -468,20 +470,26 @@ export component AppWindow inherits Window {
                     Text { text: "Queued and completed operations will appear here until SyncPak exits."; color: #454039; wrap: word-wrap; horizontal-alignment: center; }
                 }
             }
-            for activity in root.activity-rows : Rectangle {
-                background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 86px;
-                VerticalBox { padding: 12px; spacing: 8px;
-                    VerticalBox { spacing: 2px;
-                        Text { text: activity.title + " · " + activity.status; font-weight: 700; }
-                        Text { text: activity.detail; color: #454039; wrap: word-wrap; }
-                        if activity.progress != "" : Text { text: activity.progress; color: #454039; wrap: word-wrap; }
-                        if activity.result != "" : Text { text: activity.result; color: #454039; wrap: word-wrap; }
-                    }
-                    if activity.can-cancel || activity.can-remove : HorizontalBox {
-                        spacing: 8px;
-                        if activity.can-cancel : Button { text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
-                        if activity.can-remove : Button { text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
-                        Rectangle { horizontal-stretch: 1; }
+            if root.activity-rows.length > 0 : ScrollView {
+                height: 240px;
+                vertical-scrollbar-policy: always-on;
+                VerticalBox { width: parent.width - 12px; spacing: 8px;
+                    for activity in root.activity-rows : Rectangle {
+                        background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 86px;
+                        VerticalBox { padding: 12px; spacing: 8px;
+                            VerticalBox { spacing: 2px;
+                                Text { text: activity.title + " · " + activity.status; font-weight: 700; }
+                                Text { text: activity.detail; color: #454039; wrap: word-wrap; }
+                                if activity.progress != "" : Text { text: activity.progress; color: #454039; wrap: word-wrap; }
+                                if activity.result != "" : Text { text: activity.result; color: #454039; wrap: word-wrap; }
+                            }
+                            if activity.can-cancel || activity.can-remove : HorizontalBox {
+                                spacing: 8px;
+                                if activity.can-cancel : Button { text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
+                                if activity.can-remove : Button { text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
+                                Rectangle { horizontal-stretch: 1; }
+                            }
+                        }
                     }
                 }
             }
