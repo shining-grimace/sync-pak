@@ -54,6 +54,7 @@ fn rows(items: Vec<PreflightItemPresentation>) -> ModelRc<PreflightRow> {
         |item| PreflightRow {
             path: item.path.into(),
             status: item.status.into(),
+            detail: item.detail.into(),
         },
     ))))
 }

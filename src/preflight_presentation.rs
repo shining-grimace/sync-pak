@@ -1,5 +1,6 @@
 use crate::{
     configuration::SyncMode,
+    inventory::InventoryEntryKind,
     planning::{Direction, TransferPlan},
     preflight::Preflight,
     preflight_review::{ReviewItem, ReviewStatus, review_items},
@@ -21,6 +22,7 @@ pub struct PreflightPresentation {
 pub struct PreflightItemPresentation {
     pub path: String,
     pub status: &'static str,
+    pub detail: String,
 }
 
 impl From<&Preflight> for PreflightPresentation {
@@ -47,7 +49,45 @@ impl From<ReviewItem> for PreflightItemPresentation {
         Self {
             path: item.path.as_str().into(),
             status: status_label(item.status),
+            detail: details(&item),
         }
+    }
+}
+
+fn details(item: &ReviewItem) -> String {
+    [
+        item.source.as_ref().map(|entry| describe("Source", entry)),
+        item.destination
+            .as_ref()
+            .map(|entry| describe("Destination", entry)),
+    ]
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>()
+    .join(" · ")
+}
+
+fn describe(label: &str, entry: &crate::preflight_review::ReviewEntryDetails) -> String {
+    format!(
+        "{label}: {} · {}",
+        kind_label(&entry.kind),
+        bytes(entry.byte_size)
+    )
+}
+
+fn kind_label(kind: &InventoryEntryKind) -> &'static str {
+    match kind {
+        InventoryEntryKind::File => "file",
+        InventoryEntryKind::Directory => "folder",
+        InventoryEntryKind::Symlink { .. } => "link",
+    }
+}
+
+fn bytes(size: u64) -> String {
+    if size == 1 {
+        "1 byte".into()
+    } else {
+        format!("{size} bytes")
     }
 }
 

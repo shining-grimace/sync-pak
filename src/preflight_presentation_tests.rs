@@ -50,6 +50,15 @@ fn presents_mirror_counts_destructive_confirmation_and_item_labels() {
         presentation
             .items
             .iter()
+            .find(|item| item.path == "changed")
+            .unwrap()
+            .detail,
+        "Source: file · 2 bytes · Destination: file · 1 byte"
+    );
+    assert_eq!(
+        presentation
+            .items
+            .iter()
             .find(|item| item.path == "deleted")
             .unwrap()
             .status,
