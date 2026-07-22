@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use slint::{ComponentHandle, SharedString};
+use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::{
     AppWindow,
@@ -164,6 +164,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_session_token(SharedString::default());
         window.set_provider_secret_visible(false);
         window.set_provider_advanced_expanded(false);
+        window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
         mark_clean(&window);
         window.set_page(2);
     }
@@ -289,6 +290,7 @@ fn edit(
     window.set_provider_form_secret_key(SharedString::default());
     window.set_provider_form_session_token(SharedString::default());
     window.set_provider_advanced_expanded(false);
+    window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
     match configuration
         .load()
         .map_err(|error| error.to_string())

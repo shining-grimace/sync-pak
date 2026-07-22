@@ -1,5 +1,7 @@
 use std::{sync::mpsc, time::Duration};
 
+use slint::{ModelRc, VecModel};
+
 use crate::{
     AppWindow,
     configuration::{ProviderConfig, ProviderCredentials},
@@ -39,6 +41,9 @@ fn poll(
             Ok(Some(verification)) => {
                 if let Some(window) = weak.upgrade() {
                     window.set_provider_verifying(false);
+                    window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(
+                        VecModel::from_iter(verification.buckets.iter().cloned().map(Into::into)),
+                    )));
                     window.set_status_message(
                         format!(
                             "Provider verified. {} buckets available.",
