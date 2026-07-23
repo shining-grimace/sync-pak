@@ -87,6 +87,7 @@ fn poll(
 enum VerificationFailure {
     Authentication,
     BucketNotVisible,
+    ClockSkew,
     PermissionDenied,
     Unavailable,
     Unexpected,
@@ -97,6 +98,7 @@ impl From<ProviderError> for VerificationFailure {
         match error {
             ProviderError::Authentication => Self::Authentication,
             ProviderError::NotFound => Self::BucketNotVisible,
+            ProviderError::ClockSkew => Self::ClockSkew,
             ProviderError::PermissionDenied => Self::PermissionDenied,
             ProviderError::Unavailable => Self::Unavailable,
             _ => Self::Unexpected,
@@ -129,7 +131,7 @@ mod tests {
         );
         assert_eq!(
             VerificationFailure::from(ProviderError::ClockSkew),
-            VerificationFailure::Unexpected
+            VerificationFailure::ClockSkew
         );
     }
 
@@ -137,10 +139,12 @@ mod tests {
     fn recovery_messages_remain_specific_without_exposing_credentials() {
         let authentication = VerificationFailure::Authentication.message();
         let inaccessible_bucket = VerificationFailure::BucketNotVisible.message();
+        let clock_skew = VerificationFailure::ClockSkew.message();
         let denied = VerificationFailure::PermissionDenied.message();
 
         assert!(authentication.contains("access key, secret, and session token"));
         assert!(inaccessible_bucket.contains("not visible"));
+        assert!(clock_skew.contains("automatic date and time"));
         assert!(denied.contains("cannot list buckets"));
         assert!(!authentication.contains("AKIA"));
         assert!(!inaccessible_bucket.contains("AKIA"));
@@ -153,6 +157,7 @@ impl VerificationFailure {
         match self {
             Self::Authentication => "provider rejected credentials",
             Self::BucketNotVisible => "configured bucket is not visible",
+            Self::ClockSkew => "device clock differs from provider",
             Self::PermissionDenied => "provider denied bucket listing",
             Self::Unavailable => "provider could not be reached",
             Self::Unexpected => "provider verification failed",
@@ -166,6 +171,9 @@ impl VerificationFailure {
             }
             Self::BucketNotVisible => {
                 "The configured default bucket is not visible to these credentials. Choose another bucket or update its access."
+            }
+            Self::ClockSkew => {
+                "Your device clock differs too much from this provider. Enable automatic date and time, then try again."
             }
             Self::PermissionDenied => {
                 "These credentials cannot list buckets. Enter a default bucket manually if the provider grants access only to that bucket."
