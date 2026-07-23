@@ -120,6 +120,18 @@ fn refresh<E: OperationExecutor + Send + Sync + 'static>(
             .and_then(|entry| entry.progress.as_ref())
             .map_or_else(Default::default, |progress| progress.summary().into()),
     );
+    let clearable_count = activity
+        .iter()
+        .filter(|entry| {
+            matches!(
+                entry.state,
+                crate::queue::QueueState::Completed
+                    | crate::queue::QueueState::Failed
+                    | crate::queue::QueueState::Cancelled
+            )
+        })
+        .count();
+    window.set_activity_clearable_count(clearable_count as i32);
     let rows = activity.into_iter().map(|entry| {
         let activity = ActivityPresentation::from_entry(&entry);
         ActivityRow {
