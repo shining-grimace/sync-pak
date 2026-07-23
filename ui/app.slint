@@ -657,7 +657,10 @@ export component AppWindow inherits Window {
             if root.preflight-failed : Text { text: "Resolve the issues below, then run the connection again. No files were changed."; color: #7b241c; wrap: word-wrap; }
             if !root.preflight-loading && !root.preflight-failed : VerticalBox {
                 spacing: 8px;
-                VerticalBox { spacing: 4px;
+                VerticalBox {
+                    accessible-role: region;
+                    accessible-label: "Plan summary: " + root.preflight-additions + ", " + root.preflight-overwrites + ", " + root.preflight-deletions + ", " + root.preflight-skipped;
+                    spacing: 4px;
                     HorizontalBox { spacing: 8px;
                         Text { text: root.preflight-additions; font-weight: 700; }
                         Text { text: root.preflight-overwrites; font-weight: 700; }
@@ -668,6 +671,7 @@ export component AppWindow inherits Window {
                     }
                 }
                 if root.preflight-requires-mirror-confirmation : Text {
+                    accessible-live-region: assertive;
                     text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
                     color: #7b241c; wrap: word-wrap;
                 }
@@ -675,10 +679,17 @@ export component AppWindow inherits Window {
                     text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
                     color: #23623a; wrap: word-wrap;
                 }
+                if root.preflight-items.length > 0 : Text {
+                    text: "Reviewing " + root.preflight-items.length + " planned file changes.";
+                    color: #454039; wrap: word-wrap;
+                }
                 if root.preflight-items.length > 0 : ListView {
+                    accessible-label: "Planned file changes";
                     height: 180px;
                     vertical-scrollbar-policy: always-on;
                     for item in root.preflight-items : HorizontalBox {
+                        accessible-role: list-item;
+                        accessible-label: item.status + ": " + item.path + ". " + item.detail;
                         spacing: 8px;
                         Text { text: item.status; width: 110px; color: #454039; }
                         VerticalBox { horizontal-stretch: 1; spacing: 2px;

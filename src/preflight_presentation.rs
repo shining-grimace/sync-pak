@@ -29,10 +29,10 @@ impl From<&Preflight> for PreflightPresentation {
     fn from(preflight: &Preflight) -> Self {
         let summary = preflight.plan().summary();
         Self {
-            additions: count(summary.additions(), "new"),
-            overwrites: count(summary.overwrites(), "overwrites"),
-            deletions: count(summary.deletions(), "deletions"),
-            skipped: count(summary.skipped(), "skipped"),
+            additions: count(summary.additions(), "new", "new"),
+            overwrites: count(summary.overwrites(), "overwrite", "overwrites"),
+            deletions: count(summary.deletions(), "deletion", "deletions"),
+            skipped: count(summary.skipped(), "skipped", "skipped"),
             start_action: start_action(preflight.plan()),
             requires_mirror_confirmation: preflight.plan().mode() == SyncMode::Mirror
                 && preflight.plan().requires_confirmation(),
@@ -91,7 +91,8 @@ fn bytes(size: u64) -> String {
     }
 }
 
-fn count(count: usize, label: &str) -> String {
+fn count(count: usize, singular: &str, plural: &str) -> String {
+    let label = if count == 1 { singular } else { plural };
     format!("{count} {label}")
 }
 

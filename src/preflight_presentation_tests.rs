@@ -32,8 +32,8 @@ fn presents_mirror_counts_destructive_confirmation_and_item_labels() {
     let presentation = PreflightPresentation::from(&preflight);
 
     assert_eq!(presentation.additions, "1 new");
-    assert_eq!(presentation.overwrites, "1 overwrites");
-    assert_eq!(presentation.deletions, "1 deletions");
+    assert_eq!(presentation.overwrites, "1 overwrite");
+    assert_eq!(presentation.deletions, "1 deletion");
     assert_eq!(presentation.skipped, "0 skipped");
     assert_eq!(presentation.start_action, "Start mirror");
     assert!(presentation.requires_mirror_confirmation);
