@@ -643,9 +643,10 @@ export component AppWindow inherits Window {
                     Button { accessible-label: root.run-direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction"; text: "Choose both ways"; primary: root.run-direction == 2; clicked => { root.choose-run-direction(2); } }
                 }
             }
+            Text { text: "Continue performs a read-only inventory and shows the complete plan before any files can change."; color: #454039; wrap: word-wrap; }
             VerticalBox {
                 Button { accessible-label: "Cancel run for " + root.run-connection-name; text: "Cancel"; clicked => { root.cancel-run-direction(); } }
-                Button { text: "Continue"; primary: true; clicked => { root.begin-preflight(); } }
+                Button { accessible-label: "Continue to preflight for " + root.run-connection-name; text: "Continue to preflight"; primary: true; clicked => { root.begin-preflight(); } }
             }
             }
         }
@@ -653,6 +654,7 @@ export component AppWindow inherits Window {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : "Ready to start"); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
+            Text { text: "Reviewing " + root.run-connection-name + " · " + root.run-connection-mode + " · " + (root.run-direction == 0 ? "Upload" : (root.run-direction == 1 ? "Download" : "Both ways")); color: #454039; wrap: word-wrap; }
             if root.preflight-loading : Text { accessible-live-region: polite; text: "Listing files…"; font-weight: 700; }
             Text { text: "No files are changed during this check."; color: #454039; wrap: word-wrap; }
             if root.preflight-loading : Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 110px;
@@ -706,7 +708,7 @@ export component AppWindow inherits Window {
                     text: "I understand that the listed destination files will be overwritten or deleted.";
                     checked <=> root.preflight-mirror-confirmed;
                 }
-                Text { text: root.preflight-start-action + " will be available when transfer execution is connected."; color: #454039; wrap: word-wrap; }
+                Text { text: root.preflight-start-action + " will be available when transfer execution is connected. This review is read-only."; color: #454039; wrap: word-wrap; }
             }
             VerticalBox {
                 Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.cancel-run-direction(); } }

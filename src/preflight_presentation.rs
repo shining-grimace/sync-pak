@@ -29,9 +29,19 @@ impl From<&Preflight> for PreflightPresentation {
     fn from(preflight: &Preflight) -> Self {
         let summary = preflight.plan().summary();
         Self {
-            additions: count(summary.additions(), "new", "new"),
-            overwrites: count(summary.overwrites(), "overwrite", "overwrites"),
-            deletions: count(summary.deletions(), "deletion", "deletions"),
+            additions: count_with_size(summary.additions(), "new", "new", summary.copy_byte_size()),
+            overwrites: count_with_size(
+                summary.overwrites(),
+                "overwrite",
+                "overwrites",
+                summary.overwrite_byte_size(),
+            ),
+            deletions: count_with_size(
+                summary.deletions(),
+                "deletion",
+                "deletions",
+                summary.delete_byte_size(),
+            ),
             skipped: count(summary.skipped(), "skipped", "skipped"),
             start_action: start_action(preflight.plan()),
             requires_mirror_confirmation: preflight.plan().mode() == SyncMode::Mirror
@@ -94,6 +104,14 @@ fn bytes(size: u64) -> String {
 fn count(count: usize, singular: &str, plural: &str) -> String {
     let label = if count == 1 { singular } else { plural };
     format!("{count} {label}")
+}
+
+fn count_with_size(item_count: usize, singular: &str, plural: &str, byte_size: u64) -> String {
+    format!(
+        "{} · {}",
+        count(item_count, singular, plural),
+        bytes(byte_size)
+    )
 }
 
 fn start_action(plan: &TransferPlan) -> &'static str {
