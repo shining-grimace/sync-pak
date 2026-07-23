@@ -21,6 +21,11 @@ pub(crate) fn configure(window: &AppWindow, diagnostics: SharedDiagnosticLog) {
 }
 
 fn select_folder(weak: &slint::Weak<AppWindow>, diagnostics: &SharedDiagnosticLog) {
+    let Some(window) = weak.upgrade() else { return };
+    if window.get_folder_picker_open() {
+        return;
+    }
+    window.set_folder_picker_open(true);
     let result: PickResult = Arc::new(Mutex::new(None));
     let completion_result = Arc::clone(&result);
     let completion = Box::new(move |selection| {
@@ -45,13 +50,18 @@ fn poll_for_selection(
         Some(Ok(Some(selection))) => match selection.display_value() {
             Ok(path) => {
                 if let Some(window) = weak.upgrade() {
+                    window.set_folder_picker_open(false);
                     window.set_connection_form_local(path.into());
                     window.set_status_message(Default::default());
                 }
             }
             Err(error) => set_error(&weak, &diagnostics, error),
         },
-        Some(Ok(None)) => {}
+        Some(Ok(None)) => {
+            if let Some(window) = weak.upgrade() {
+                window.set_folder_picker_open(false);
+            }
+        }
         Some(Err(error)) => set_error(&weak, &diagnostics, error),
         None => slint::Timer::single_shot(Duration::from_millis(25), move || {
             poll_for_selection(weak, diagnostics, result)
@@ -65,6 +75,7 @@ fn set_error(
     error: CapabilityError,
 ) {
     if let Some(window) = weak.upgrade() {
+        window.set_folder_picker_open(false);
         let (technical_details, message) = match error {
             CapabilityError::UnsupportedPath => (
                 "selected path is not UTF-8",

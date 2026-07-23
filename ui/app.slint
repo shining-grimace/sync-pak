@@ -85,6 +85,7 @@ export component AppWindow inherits Window {
     in-out property <int> connection-form-mode;
     in-out property <string> connection-form-retention: "1";
     in-out property <string> connection-form-original;
+    in-out property <bool> folder-picker-open: false;
     in-out property <string> run-connection-id;
     in-out property <string> run-connection-name;
     in-out property <string> run-connection-mode;
@@ -422,8 +423,9 @@ export component AppWindow inherits Window {
             Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
             Text { text: "Local folder"; font-weight: 700; }
             VerticalBox { spacing: 6px;
-                connection-local := LineEdit { accessible-label: "Local folder"; placeholder-text: "Full local folder path"; text <=> root.connection-form-local; }
-                Button { text: "Select folder"; clicked => { root.select-local-folder(); } }
+                connection-local := LineEdit { accessible-label: "Local folder"; placeholder-text: "Full local folder path"; text <=> root.connection-form-local; enabled: !root.folder-picker-open; }
+                Button { text: root.folder-picker-open ? "Selecting folder…" : "Select folder"; enabled: !root.folder-picker-open; clicked => { root.select-local-folder(); } }
+                if root.folder-picker-open : Text { text: "Waiting for folder selection…"; color: #454039; wrap: word-wrap; }
             }
             Text { text: "Mode"; font-weight: 700; }
             connection-mode := ComboBox { accessible-label: "Mode"; model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
