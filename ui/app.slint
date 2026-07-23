@@ -385,7 +385,8 @@ export component AppWindow inherits Window {
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
             if root.providers-total == 0 : Button { text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
             if root.providers-total > 0 : Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
-            VerticalBox { spacing: 6px;
+            VerticalBox { accessible-role: region; accessible-label: "Filter connections by mode"; spacing: 6px;
+                Text { text: "Filter by mode"; color: #454039; font-weight: 700; }
                 HorizontalBox { spacing: 6px;
                     Button { accessible-label: root.connection-filter == 0 ? "All connections, selected" : "Show all connections"; text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
                     Button { accessible-label: root.connection-filter == 1 ? "Add-only connections, selected" : "Show add-only connections"; text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
@@ -394,6 +395,10 @@ export component AppWindow inherits Window {
                     Button { accessible-label: root.connection-filter == 2 ? "Mirror connections, selected" : "Show mirror connections"; text: "Mirror"; primary: root.connection-filter == 2; clicked => { root.set-connection-filter(2); } }
                     Button { accessible-label: root.connection-filter == 3 ? "Archive connections, selected" : "Show archive connections"; text: "Archive"; primary: root.connection-filter == 3; clicked => { root.set-connection-filter(3); } }
                 }
+            }
+            if root.connections-total > 0 : Text {
+                text: root.connections.length == root.connections-total ? "Showing all " + root.connections-total + (root.connections-total == 1 ? " connection." : " connections.") : "Showing " + root.connections.length + " of " + root.connections-total + " connections.";
+                color: #454039; wrap: word-wrap;
             }
             if root.connections.length == 0 : VerticalBox {
                 spacing: 8px;
@@ -407,6 +412,8 @@ export component AppWindow inherits Window {
                 height: 280px;
                 vertical-scrollbar-policy: always-on;
                 for connection in root.connections : Rectangle {
+                    accessible-role: list-item;
+                    accessible-label: connection.name + ". " + connection.detail + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
                     background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 98px;
                         VerticalBox { padding: 10px; spacing: 8px;
                             VerticalBox { spacing: 3px;
@@ -414,12 +421,12 @@ export component AppWindow inherits Window {
                                 Text { text: connection.detail; color: #454039; }
                                 HorizontalBox { spacing: 8px;
                                     VerticalBox { horizontal-stretch: 1; spacing: 2px;
-                                        Text { text: "This device"; color: #454039; font-weight: 700; }
+                                        Text { text: "On this device"; color: #454039; font-weight: 700; }
                                         Text { text: connection.local-path; color: #454039; wrap: word-wrap; }
                                     }
-                                    Text { text: connection.mode == 2 ? "▣" : "⇄"; color: #2c2925; font-size: 22px; vertical-alignment: center; }
+                                    Text { accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders"; text: connection.mode == 2 ? "▣" : "⇄"; color: #2c2925; font-size: 22px; vertical-alignment: center; }
                                     VerticalBox { horizontal-stretch: 1; spacing: 2px;
-                                        Text { text: connection.provider-name; color: #454039; font-weight: 700; wrap: word-wrap; }
+                                        Text { text: "In " + connection.provider-name; color: #454039; font-weight: 700; wrap: word-wrap; }
                                         Text { text: connection.remote-location; color: #454039; wrap: word-wrap; }
                                     }
                                 }
