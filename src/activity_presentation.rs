@@ -1,5 +1,7 @@
 use crate::{
+    configuration::SyncMode,
     execution::ExecutionState,
+    planning::Direction,
     queue::{QueueEntry, QueueState},
 };
 
@@ -22,10 +24,7 @@ impl ActivityPresentation {
         Self {
             operation_id: entry.operation_id.to_string(),
             title: entry.snapshot.connection_name.clone(),
-            detail: format!(
-                "{} → {}",
-                entry.snapshot.local_endpoint, entry.snapshot.remote_endpoint
-            ),
+            detail: detail(&entry.snapshot),
             status: status(entry.state),
             progress_summary: entry.progress.as_ref().map_or_else(
                 String::new,
@@ -35,6 +34,32 @@ impl ActivityPresentation {
             can_cancel: entry.state == QueueState::Running,
             can_remove: entry.state == QueueState::Queued,
         }
+    }
+}
+
+fn detail(snapshot: &crate::activity_snapshot::ActivitySnapshot) -> String {
+    format!(
+        "{} · {} · {} → {}",
+        mode(snapshot.mode),
+        direction(snapshot.direction),
+        snapshot.local_endpoint,
+        snapshot.remote_endpoint
+    )
+}
+
+fn mode(mode: SyncMode) -> &'static str {
+    match mode {
+        SyncMode::AddOnly => "Add-only",
+        SyncMode::Mirror => "Mirror",
+        SyncMode::Archive => "Archive",
+    }
+}
+
+fn direction(direction: Direction) -> &'static str {
+    match direction {
+        Direction::Upload => "Upload",
+        Direction::Download => "Download",
+        Direction::BothWays => "Both ways",
     }
 }
 

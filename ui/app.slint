@@ -555,8 +555,8 @@ export component AppWindow inherits Window {
                         VerticalBox { spacing: 2px;
                             Text { text: activity.title + " · " + activity.status; font-weight: 700; wrap: word-wrap; }
                             Text { text: activity.detail; color: #454039; wrap: word-wrap; }
-                            if activity.progress != "" : Text { text: activity.progress; color: #454039; wrap: word-wrap; }
-                            if activity.result != "" : Text { text: activity.result; color: #454039; wrap: word-wrap; }
+                            if activity.progress != "" : Text { text: "Progress: " + activity.progress; color: #454039; wrap: word-wrap; }
+                            if activity.result != "" : Text { accessible-live-region: polite; text: "Result: " + activity.result; color: #454039; wrap: word-wrap; }
                         }
                         if activity.can-cancel || activity.can-remove : HorizontalBox {
                             spacing: 8px;
