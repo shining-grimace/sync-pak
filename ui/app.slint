@@ -51,6 +51,7 @@ export component AppWindow inherits Window {
     in-out property <[string]> provider-names;
     in-out property <[string]> provider-buckets;
     in-out property <[string]> provider-verified-buckets;
+    in-out property <bool> provider-bucket-list-empty: false;
     in-out property <string> status-message;
     in-out property <string> notice-message;
     in-out property <string> diagnostic-text;
@@ -288,6 +289,10 @@ export component AppWindow inherits Window {
                     enabled: !root.provider-verifying;
                     selected => { root.provider-form-bucket = root.provider-verified-buckets[self.current-index]; }
                 }
+            }
+            if !root.provider-verifying && root.provider-bucket-list-empty : Text {
+                text: "These credentials verified successfully, but no buckets were visible. Enter a bucket manually if its access is restricted.";
+                color: #454039; wrap: word-wrap;
             }
             Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
             if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced."; color: #454039; wrap: word-wrap; }

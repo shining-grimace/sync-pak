@@ -133,6 +133,7 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
             .then(|| window.get_provider_form_session_token().to_string()),
     };
     window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
+    window.set_provider_bucket_list_empty(false);
     window.set_provider_verifying(true);
     #[cfg(feature = "provider-s3")]
     crate::s3_provider_verify_controller::start(weak.clone(), provider, credentials, diagnostics);
@@ -140,6 +141,7 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
     {
         let _ = (provider, credentials);
         window.set_provider_verifying(false);
+        window.set_provider_bucket_list_empty(false);
         diagnostics_controller::present(
             &window,
             &diagnostics,
@@ -167,6 +169,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_advanced_expanded(false);
         window.set_provider_verifying(false);
         window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
+        window.set_provider_bucket_list_empty(false);
         mark_clean(&window);
         window.set_page(2);
     }
@@ -294,6 +297,7 @@ fn edit(
     window.set_provider_form_session_token(SharedString::default());
     window.set_provider_advanced_expanded(false);
     window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
+    window.set_provider_bucket_list_empty(false);
     match configuration
         .load()
         .map_err(|error| error.to_string())

@@ -47,6 +47,7 @@ fn poll(
         match receiver.try_recv() {
             Ok(Ok(verification)) => {
                 window.set_provider_verifying(false);
+                window.set_provider_bucket_list_empty(verification.buckets.is_empty());
                 window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(
                     VecModel::from_iter(verification.buckets.iter().cloned().map(Into::into)),
                 )));
