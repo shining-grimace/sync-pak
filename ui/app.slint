@@ -183,12 +183,12 @@ export component AppWindow inherits Window {
             spacing: 6px;
             Text { text: "SYNCPAK"; color: #2c2925; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
             HorizontalBox { spacing: 6px;
-                Button { text: "Connections"; clicked => { root.show-connections(); } }
-                Button { text: "Providers"; clicked => { root.show-providers(); } }
+                Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; clicked => { root.show-connections(); } }
+                Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; clicked => { root.show-providers(); } }
             }
             HorizontalBox { spacing: 6px;
-                Button { text: "Activity"; clicked => { root.show-activity(); } }
-                Button { text: "Privacy"; clicked => { root.show-privacy(); } }
+                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12; clicked => { root.show-activity(); } }
+                Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; clicked => { root.show-privacy(); } }
                 Rectangle { horizontal-stretch: 1; }
             }
         }
@@ -598,7 +598,7 @@ export component AppWindow inherits Window {
             Text { text: "This removes the connection from SyncPak. It does not delete local or cloud files."; wrap: word-wrap; }
             VerticalBox {
                 Button { accessible-label: "Keep connection " + root.pending-connection-name; text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
-                Button { accessible-label: "Delete connection " + root.pending-connection-name; text: "Delete connection"; primary: true; clicked => { root.confirm-connection-delete(); } }
+                Button { accessible-label: "Delete connection " + root.pending-connection-name; text: "Delete " + root.pending-connection-name; primary: true; clicked => { root.confirm-connection-delete(); } }
             }
             }
         }
@@ -609,7 +609,7 @@ export component AppWindow inherits Window {
             Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
             VerticalBox {
                 Button { accessible-label: "Keep " + root.pending-cancel-activity-name + " running"; text: "Keep running"; clicked => { root.dismiss-cancel-activity(); } }
-                Button { accessible-label: "Cancel operation " + root.pending-cancel-activity-name; text: "Cancel operation"; primary: true; clicked => { root.confirm-cancel-activity(); } }
+                Button { accessible-label: "Cancel operation " + root.pending-cancel-activity-name; text: "Cancel " + root.pending-cancel-activity-name; primary: true; clicked => { root.confirm-cancel-activity(); } }
             }
             }
         }
