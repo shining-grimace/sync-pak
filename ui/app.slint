@@ -154,6 +154,22 @@ export component AppWindow inherits Window {
     min-height: 520px;
     background: #f7f2e8;
 
+    keyboard-shortcuts := FocusScope {
+        focus-on-click: false;
+        focus-on-tab-navigation: false;
+        capture-key-pressed(event) => {
+            if event.text == Key.Escape {
+                if root.page == 6 { root.cancel-provider-delete(); return accept; }
+                if root.page == 7 { root.cancel-connection-delete(); return accept; }
+                if root.page == 10 || root.page == 11 { root.cancel-run-direction(); return accept; }
+                if root.page == 12 { root.dismiss-cancel-activity(); return accept; }
+                if root.page == 13 { root.cancel-save-provider(); return accept; }
+                if root.page == 14 { root.cancel-discard-connection(); return accept; }
+                if root.page == 15 { root.cancel-discard-provider(); return accept; }
+            }
+            reject
+        }
+
     VerticalBox {
         padding: 16px;
         spacing: 16px;
@@ -681,5 +697,6 @@ export component AppWindow inherits Window {
             }
         }
         Rectangle { vertical-stretch: 1; }
+    }
     }
 }
