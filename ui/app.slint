@@ -387,7 +387,7 @@ export component AppWindow inherits Window {
                                         Text { text: "This device"; color: #454039; font-weight: 700; }
                                         Text { text: connection.local-path; color: #454039; wrap: word-wrap; }
                                     }
-                                    Text { text: "⇄"; color: #2c2925; font-size: 22px; vertical-alignment: center; }
+                                    Text { text: connection.mode == 2 ? "▣" : "⇄"; color: #2c2925; font-size: 22px; vertical-alignment: center; }
                                     VerticalBox { horizontal-stretch: 1; spacing: 2px;
                                         Text { text: connection.provider-name; color: #454039; font-weight: 700; }
                                         Text { text: connection.remote-location; color: #454039; wrap: word-wrap; }
