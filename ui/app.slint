@@ -363,6 +363,7 @@ export component AppWindow inherits Window {
                 if root.connections-total == 0 && root.providers-total == 0 : Text { text: "Add a cloud provider, then create a connection to choose what to copy."; wrap: word-wrap; }
                 if root.connections-total == 0 && root.providers-total > 0 : Text { text: "Create a connection to link a local folder with cloud storage."; wrap: word-wrap; }
                 if root.connections-total > 0 : Text { text: "Choose another filter or create a new connection."; wrap: word-wrap; }
+                if root.connections-total > 0 && root.connection-filter != 0 : Button { text: "Show all connections"; primary: true; clicked => { root.set-connection-filter(0); } }
             }
             if root.connections.length > 0 : ScrollView {
                 height: 280px;
