@@ -295,7 +295,8 @@ export component AppWindow inherits Window {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 10px;
             Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "Credentials are saved in protected storage before this provider is added."; wrap: word-wrap; }
+            Text { text: "Credentials are saved in this device's protected storage only when you save this provider."; wrap: word-wrap; }
+            if root.provider-form-id != "" : Text { text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values."; color: #454039; wrap: word-wrap; }
             Text { text: "Provider name"; font-weight: 700; }
             provider-name := LineEdit { accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
             Text { text: "Provider type"; font-weight: 700; }
@@ -333,23 +334,24 @@ export component AppWindow inherits Window {
             Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
             HorizontalBox {
                 LineEdit { accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; enabled: !root.provider-verifying; }
-                Button { text: root.provider-secret-visible ? "Hide" : "Reveal"; enabled: !root.provider-verifying; clicked => { root.provider-secret-visible = !root.provider-secret-visible; } }
+                Button { accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key"); text: root.provider-secret-visible ? "Hide" : "Reveal"; enabled: !root.provider-verifying; clicked => { root.provider-secret-visible = !root.provider-secret-visible; } }
             }
             if root.provider-secret-visible : Text { text: "Make sure nobody else can see your screen."; color: #7b241c; wrap: word-wrap; }
-            Button { text: root.provider-advanced-expanded ? "Hide advanced" : "Advanced"; enabled: !root.provider-verifying; clicked => { root.provider-advanced-expanded = !root.provider-advanced-expanded; } }
+            Button { accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings"; text: root.provider-advanced-expanded ? "Hide advanced" : "Advanced"; enabled: !root.provider-verifying; clicked => { root.provider-advanced-expanded = !root.provider-advanced-expanded; } }
             if root.provider-advanced-expanded : VerticalBox {
                 spacing: 4px;
                 Text { text: "Custom endpoint"; font-weight: 700; }
                 LineEdit { accessible-label: "Custom endpoint"; placeholder-text: "Optional S3-compatible endpoint"; text <=> root.provider-form-endpoint; enabled: !root.provider-verifying; }
                 Text { text: "Session token"; font-weight: 700; }
                 LineEdit { accessible-label: "Session token"; placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; enabled: !root.provider-verifying; }
+                Text { text: "Use this only when your provider issued a temporary session credential."; color: #454039; wrap: word-wrap; }
             }
             Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: #454039; wrap: word-wrap; }
             if root.provider-verifying : Text { accessible-live-region: polite; text: "Checking these settings without changing cloud data…"; color: #454039; wrap: word-wrap; }
             VerticalBox {
                 Button { text: "Back"; clicked => { root.request-discard-provider(); } }
-                Button { text: root.provider-verifying ? "Verifying…" : "Verify provider"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
-                Button { text: "Save without verifying"; primary: true; enabled: !root.provider-verifying; clicked => { root.request-save-provider(); } }
+                Button { accessible-label: "Save " + root.provider-form-name + " without verifying"; text: "Save without verifying"; enabled: !root.provider-verifying; clicked => { root.request-save-provider(); } }
+                Button { accessible-label: "Verify settings for " + root.provider-form-name; text: root.provider-verifying ? "Verifying…" : "Verify settings"; primary: true; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
             }
             }
         }
@@ -361,7 +363,7 @@ export component AppWindow inherits Window {
             Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
             VerticalBox {
                 Button { accessible-label: "Continue editing provider " + root.provider-form-name; text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
-                Button { accessible-label: "Save provider " + root.provider-form-name + " without verifying"; text: "Save without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
+                Button { accessible-label: "Save provider " + root.provider-form-name + " without verifying"; text: "Save " + root.provider-form-name + " without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
             }
             }
         }
