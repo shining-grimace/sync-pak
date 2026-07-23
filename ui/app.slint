@@ -173,12 +173,14 @@ export component AppWindow inherits Window {
         }
 
         if root.status-message != "" : Text {
+            accessible-live-region: assertive;
             text: root.status-message;
             color: #7b241c;
             wrap: word-wrap;
         }
 
         if root.notice-message != "" : Text {
+            accessible-live-region: polite;
             text: root.notice-message;
             color: #23623a;
             wrap: word-wrap;
