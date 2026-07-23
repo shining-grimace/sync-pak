@@ -357,12 +357,12 @@ export component AppWindow inherits Window {
             if root.providers-total > 0 : Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
             VerticalBox { spacing: 6px;
                 HorizontalBox { spacing: 6px;
-                    Button { text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
-                    Button { text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
+                    Button { accessible-label: root.connection-filter == 0 ? "All connections, selected" : "Show all connections"; text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
+                    Button { accessible-label: root.connection-filter == 1 ? "Add-only connections, selected" : "Show add-only connections"; text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
                 }
                 HorizontalBox { spacing: 6px;
-                    Button { text: "Mirror"; primary: root.connection-filter == 2; clicked => { root.set-connection-filter(2); } }
-                    Button { text: "Archive"; primary: root.connection-filter == 3; clicked => { root.set-connection-filter(3); } }
+                    Button { accessible-label: root.connection-filter == 2 ? "Mirror connections, selected" : "Show mirror connections"; text: "Mirror"; primary: root.connection-filter == 2; clicked => { root.set-connection-filter(2); } }
+                    Button { accessible-label: root.connection-filter == 3 ? "Archive connections, selected" : "Show archive connections"; text: "Archive"; primary: root.connection-filter == 3; clicked => { root.set-connection-filter(3); } }
                 }
             }
             if root.connections.length == 0 : VerticalBox {
@@ -599,21 +599,21 @@ export component AppWindow inherits Window {
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Upload"; font-weight: 700; }
                     Text { text: "Use the local folder as the source and cloud storage as the destination."; wrap: word-wrap; }
-                    Button { text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
+                    Button { accessible-label: root.run-direction == 0 ? "Upload direction, selected" : "Choose upload direction"; text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
                 }
             }
             Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Download"; font-weight: 700; }
                     Text { text: "Use cloud storage as the source and the local folder as the destination."; wrap: word-wrap; }
-                    Button { text: "Choose download"; primary: root.run-direction == 1; clicked => { root.choose-run-direction(1); } }
+                    Button { accessible-label: root.run-direction == 1 ? "Download direction, selected" : "Choose download direction"; text: "Choose download"; primary: root.run-direction == 1; clicked => { root.choose-run-direction(1); } }
                 }
             }
             if root.run-allows-both-ways : Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Both ways"; font-weight: 700; }
                     Text { text: "Copy files found on only one side to the other. Changed files are skipped."; wrap: word-wrap; }
-                    Button { text: "Choose both ways"; primary: root.run-direction == 2; clicked => { root.choose-run-direction(2); } }
+                    Button { accessible-label: root.run-direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction"; text: "Choose both ways"; primary: root.run-direction == 2; clicked => { root.choose-run-direction(2); } }
                 }
             }
             VerticalBox {
