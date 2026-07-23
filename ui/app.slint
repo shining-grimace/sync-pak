@@ -191,7 +191,7 @@ export component AppWindow inherits Window {
             VerticalBox { padding: 12px; spacing: 8px;
                 VerticalBox { spacing: 2px;
                     Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; }
-                    Text { text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
+                    Text { accessible-live-region: polite; text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
                 Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
             }
@@ -317,7 +317,7 @@ export component AppWindow inherits Window {
                 LineEdit { accessible-label: "Session token"; placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; enabled: !root.provider-verifying; }
             }
             Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: #454039; wrap: word-wrap; }
-            if root.provider-verifying : Text { text: "Checking these settings without changing cloud data…"; color: #454039; wrap: word-wrap; }
+            if root.provider-verifying : Text { accessible-live-region: polite; text: "Checking these settings without changing cloud data…"; color: #454039; wrap: word-wrap; }
             VerticalBox {
                 Button { text: "Back"; clicked => { root.request-discard-provider(); } }
                 Button { text: root.provider-verifying ? "Verifying…" : "Verify provider"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
@@ -437,7 +437,7 @@ export component AppWindow inherits Window {
                 connection-local := LineEdit { accessible-label: "Local folder"; placeholder-text: "Full local folder path"; text <=> root.connection-form-local; enabled: !root.folder-picker-open; }
                 Text { text: "Selecting a folder lets SyncPak inventory and transfer files only for this connection. Your system may ask you to allow access to the folder you choose."; color: #454039; wrap: word-wrap; }
                 Button { text: root.folder-picker-open ? "Selecting folder…" : "Select folder"; enabled: !root.folder-picker-open; clicked => { root.select-local-folder(); } }
-                if root.folder-picker-open : Text { text: "Waiting for folder selection…"; color: #454039; wrap: word-wrap; }
+                if root.folder-picker-open : Text { accessible-live-region: polite; text: "Waiting for folder selection…"; color: #454039; wrap: word-wrap; }
             }
             Text { text: "Mode"; font-weight: 700; }
             connection-mode := ComboBox { accessible-label: "Mode"; model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
@@ -629,7 +629,7 @@ export component AppWindow inherits Window {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : "Ready to start"); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            if root.preflight-loading : Text { text: "Listing files…"; font-weight: 700; }
+            if root.preflight-loading : Text { accessible-live-region: polite; text: "Listing files…"; font-weight: 700; }
             Text { text: "No files are changed during this check."; color: #454039; wrap: word-wrap; }
             if root.preflight-loading : Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 110px;
                 Text { text: "Preflight will compare the local folder and cloud storage, then show additions, overwrites, deletions, and skipped files before anything starts."; wrap: word-wrap; x: 16px; y: 16px; width: parent.width - 32px; height: parent.height - 32px; }
