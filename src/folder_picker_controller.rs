@@ -45,6 +45,12 @@ fn poll_for_selection(
     diagnostics: SharedDiagnosticLog,
     result: PickResult,
 ) {
+    let Some(window) = weak.upgrade() else { return };
+    if window.get_page() != 5 {
+        window.set_folder_picker_open(false);
+        return;
+    }
+    drop(window);
     let selection = result.lock().ok().and_then(|mut pending| pending.take());
     match selection {
         Some(Ok(Some(selection))) => match selection.display_value() {
