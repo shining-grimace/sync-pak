@@ -226,8 +226,9 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 1 : VerticalBox {
-            spacing: 12px;
+        if root.page == 1 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Providers"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Provider credentials are kept in this device's protected storage."; color: #454039; wrap: word-wrap; }
             Button { text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
@@ -256,6 +257,7 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
+            }
             }
         }
 
@@ -341,8 +343,9 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 4 : VerticalBox {
-            spacing: 12px;
+        if root.page == 4 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
             if root.providers-total == 0 : Button { text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
@@ -388,6 +391,7 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
+            }
             }
         }
 
@@ -473,8 +477,9 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 8 : VerticalBox {
-            spacing: 12px;
+        if root.page == 8 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Diagnostics"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "This report excludes provider credentials. Paths are hidden unless you choose to include them."; wrap: word-wrap; }
             include-paths := CheckBox { text: "Include file and folder paths"; checked <=> root.diagnostic-include-paths; toggled => { root.set-diagnostic-include-paths(self.checked); } }
@@ -485,10 +490,12 @@ export component AppWindow inherits Window {
                 }
             }
             Button { text: "Back"; clicked => { root.show-privacy(); } }
+            }
         }
 
-        if root.page == 9 : VerticalBox {
-            spacing: 12px;
+        if root.page == 9 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Activity"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Queued and completed operations appear here until SyncPak exits."; color: #454039; wrap: word-wrap; }
             if root.activity-rows.length > 0 : VerticalBox {
@@ -525,6 +532,7 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
+            }
             }
         }
 
