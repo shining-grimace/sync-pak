@@ -190,7 +190,7 @@ export component AppWindow inherits Window {
                     Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; }
                     Text { text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
-                Button { text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
+                Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
             }
         }
 
@@ -250,8 +250,8 @@ export component AppWindow inherits Window {
                             Text { text: provider.connection-summary; color: #454039; }
                         }
                         HorizontalBox { spacing: 8px;
-                            Button { text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
-                            Button { text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
+                            Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
+                            Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
                             Rectangle { horizontal-stretch: 1; }
                         }
                     }
@@ -386,9 +386,9 @@ export component AppWindow inherits Window {
                             if connection.mode == 2 : Text { text: "Keeps the last " + connection.archive-retention + " archives"; color: #454039; }
                         }
                         HorizontalBox { spacing: 8px;
-                            Button { text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
-                            Button { text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
-                            Button { text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
+                            Button { accessible-label: "Run connection " + connection.name; text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
+                            Button { accessible-label: "Edit connection " + connection.name; text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
+                            Button { accessible-label: "Delete connection " + connection.name; text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
                             Rectangle { horizontal-stretch: 1; }
                         }
                     }
@@ -526,8 +526,8 @@ export component AppWindow inherits Window {
                         }
                         if activity.can-cancel || activity.can-remove : HorizontalBox {
                             spacing: 8px;
-                            if activity.can-cancel : Button { text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
-                            if activity.can-remove : Button { text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
+                            if activity.can-cancel : Button { accessible-label: "Cancel " + activity.title; text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
+                            if activity.can-remove : Button { accessible-label: "Remove " + activity.title; text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
                             Rectangle { horizontal-stretch: 1; }
                         }
                     }
