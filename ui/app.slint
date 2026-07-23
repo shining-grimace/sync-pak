@@ -578,7 +578,7 @@ export component AppWindow inherits Window {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Delete " + root.pending-provider-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "This deletes its protected credentials and " + root.pending-connection-count + " connection(s). No cloud files will be deleted."; wrap: word-wrap; }
+            Text { text: "This deletes its protected credentials and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " connection." : " connections.") + " It does not delete local or cloud files."; wrap: word-wrap; }
             if root.pending-provider-connections.length > 0 : VerticalBox {
                 spacing: 3px;
                 Text { text: "Connections that will be deleted"; font-weight: 700; }
@@ -586,7 +586,7 @@ export component AppWindow inherits Window {
             }
             VerticalBox {
                 Button { accessible-label: "Keep provider " + root.pending-provider-name; text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
-                Button { accessible-label: "Delete provider " + root.pending-provider-name + " and " + root.pending-connection-count + " connections"; text: "Delete provider and " + root.pending-connection-count + " connections"; primary: true; clicked => { root.confirm-provider-delete(); } }
+                Button { accessible-label: "Delete provider " + root.pending-provider-name + " and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " connection" : " connections"); text: "Delete " + root.pending-provider-name + " and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " connection" : " connections"); primary: true; clicked => { root.confirm-provider-delete(); } }
             }
             }
         }
