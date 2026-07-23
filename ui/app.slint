@@ -266,25 +266,26 @@ export component AppWindow inherits Window {
             Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Credentials are saved in protected storage before this provider is added."; wrap: word-wrap; }
             Text { text: "Provider name"; font-weight: 700; }
-            provider-name := LineEdit { placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
+            provider-name := LineEdit { accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
             Text { text: "Provider type"; font-weight: 700; }
-            provider-kind := ComboBox { model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; current-index <=> root.provider-form-kind; enabled: !root.provider-verifying; }
+            provider-kind := ComboBox { accessible-label: "Provider type"; model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; current-index <=> root.provider-form-kind; enabled: !root.provider-verifying; }
             if root.provider-form-kind == 0 : VerticalBox {
                 spacing: 4px;
                 Text { text: "Account ID"; font-weight: 700; }
-                LineEdit { placeholder-text: "Cloudflare account ID"; text <=> root.provider-form-account-id; enabled: !root.provider-verifying; }
+                LineEdit { accessible-label: "Cloudflare account ID"; placeholder-text: "Cloudflare account ID"; text <=> root.provider-form-account-id; enabled: !root.provider-verifying; }
             }
             if root.provider-form-kind != 0 : VerticalBox {
                 spacing: 4px;
                 Text { text: "Region"; font-weight: 700; }
-                LineEdit { placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; enabled: !root.provider-verifying; }
+                LineEdit { accessible-label: "Region"; placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; enabled: !root.provider-verifying; }
             }
             Text { text: "Default bucket (optional)"; font-weight: 700; }
-            LineEdit { placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; enabled: !root.provider-verifying; }
+            LineEdit { accessible-label: "Default bucket"; placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; enabled: !root.provider-verifying; }
             if root.provider-verified-buckets.length > 0 : VerticalBox {
                 spacing: 4px;
                 Text { text: "Verified available buckets"; color: #454039; }
                 ComboBox {
+                    accessible-label: "Verified available buckets";
                     model: root.provider-verified-buckets;
                     enabled: !root.provider-verifying;
                     selected => { root.provider-form-bucket = root.provider-verified-buckets[self.current-index]; }
@@ -297,10 +298,10 @@ export component AppWindow inherits Window {
             Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
             if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced."; color: #454039; wrap: word-wrap; }
             Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
-            access-key := LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; enabled: !root.provider-verifying; }
+            access-key := LineEdit { accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; enabled: !root.provider-verifying; }
             Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
             HorizontalBox {
-                LineEdit { placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; enabled: !root.provider-verifying; }
+                LineEdit { accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; enabled: !root.provider-verifying; }
                 Button { text: root.provider-secret-visible ? "Hide" : "Reveal"; enabled: !root.provider-verifying; clicked => { root.provider-secret-visible = !root.provider-secret-visible; } }
             }
             if root.provider-secret-visible : Text { text: "Make sure nobody else can see your screen."; color: #7b241c; wrap: word-wrap; }
@@ -308,9 +309,9 @@ export component AppWindow inherits Window {
             if root.provider-advanced-expanded : VerticalBox {
                 spacing: 4px;
                 Text { text: "Custom endpoint"; font-weight: 700; }
-                LineEdit { placeholder-text: "Optional S3-compatible endpoint"; text <=> root.provider-form-endpoint; enabled: !root.provider-verifying; }
+                LineEdit { accessible-label: "Custom endpoint"; placeholder-text: "Optional S3-compatible endpoint"; text <=> root.provider-form-endpoint; enabled: !root.provider-verifying; }
                 Text { text: "Session token"; font-weight: 700; }
-                LineEdit { placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; enabled: !root.provider-verifying; }
+                LineEdit { accessible-label: "Session token"; placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; enabled: !root.provider-verifying; }
             }
             Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: #454039; wrap: word-wrap; }
             if root.provider-verifying : Text { text: "Checking these settings without changing cloud data…"; color: #454039; wrap: word-wrap; }
@@ -402,12 +403,12 @@ export component AppWindow inherits Window {
             Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
             Text { text: "Connection name"; font-weight: 700; }
-            connection-name := LineEdit { placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
+            connection-name := LineEdit { accessible-label: "Connection name"; placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
             Text { text: "Used in the connection list and archive filenames."; color: #454039; wrap: word-wrap; }
             Text { text: "Provider"; font-weight: 700; }
-            connection-provider := ComboBox { model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
+            connection-provider := ComboBox { accessible-label: "Provider"; model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
             Text { text: "Bucket"; font-weight: 700; }
-            connection-bucket := LineEdit { placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
+            connection-bucket := LineEdit { accessible-label: "Bucket"; placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
             if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" : Text {
                 text: "This provider locks connections to its default bucket.";
                 color: #454039; wrap: word-wrap;
@@ -417,15 +418,15 @@ export component AppWindow inherits Window {
                 color: #454039; wrap: word-wrap;
             }
             Text { text: "Remote folder"; font-weight: 700; }
-            connection-remote := LineEdit { placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
+            connection-remote := LineEdit { accessible-label: "Remote folder"; placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
             Text { text: "Local folder"; font-weight: 700; }
             VerticalBox { spacing: 6px;
-                connection-local := LineEdit { placeholder-text: "Full local folder path"; text <=> root.connection-form-local; }
+                connection-local := LineEdit { accessible-label: "Local folder"; placeholder-text: "Full local folder path"; text <=> root.connection-form-local; }
                 Button { text: "Select folder"; clicked => { root.select-local-folder(); } }
             }
             Text { text: "Mode"; font-weight: 700; }
-            connection-mode := ComboBox { model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
+            connection-mode := ComboBox { accessible-label: "Mode"; model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
             if connection-mode.current-index == 0 : Text {
                 text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
                 color: #454039; wrap: word-wrap;
@@ -438,7 +439,7 @@ export component AppWindow inherits Window {
                 spacing: 4px;
                 Text { text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting."; color: #454039; wrap: word-wrap; }
                 Text { text: "Keep last N archives"; font-weight: 700; }
-                connection-retention := LineEdit { text <=> root.connection-form-retention; }
+                connection-retention := LineEdit { accessible-label: "Keep last N archives"; text <=> root.connection-form-retention; }
                 Text { text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain."; color: #454039; wrap: word-wrap; }
             }
             VerticalBox {
