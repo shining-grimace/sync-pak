@@ -452,29 +452,32 @@ export component AppWindow inherits Window {
             VerticalBox { width: parent.width - 12px; spacing: 10px;
             Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
+            VerticalBox { accessible-role: region; accessible-label: "Connection identity and cloud destination"; spacing: 6px;
             Text { text: "Connection name"; font-weight: 700; }
             connection-name := LineEdit { accessible-label: "Connection name"; placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
             Text { text: "Used in the connection list and archive filenames."; color: #454039; wrap: word-wrap; }
             Text { text: "Provider"; font-weight: 700; }
-            connection-provider := ComboBox { accessible-label: "Provider"; model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
+            connection-provider := ComboBox { accessible-label: root.provider-names.length == 0 ? "Provider; add a provider first" : "Provider"; model: root.provider-names; enabled: root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
+            if root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
             Text { text: "Bucket"; font-weight: 700; }
-            connection-bucket := LineEdit { accessible-label: "Bucket"; placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
+            connection-bucket := LineEdit { accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket"; placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
             if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" : Text {
-                text: "This provider locks connections to its default bucket.";
+                text: "This provider locks connections to its default bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
                 color: #454039; wrap: word-wrap;
             }
             if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" : Text {
-                text: "Enter a bucket manually, or verify the provider first to see buckets available to its current credentials.";
+                text: "Enter the bucket name manually. A provider default bucket, when configured, is locked for every connection using that provider.";
                 color: #454039; wrap: word-wrap;
             }
             Text { text: "Remote folder"; font-weight: 700; }
             connection-remote := LineEdit { accessible-label: "Remote folder"; placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
             Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
+            }
             Text { text: "Local folder"; font-weight: 700; }
             VerticalBox { spacing: 6px;
                 connection-local := LineEdit { accessible-label: "Local folder"; placeholder-text: "Full local folder path"; text <=> root.connection-form-local; enabled: !root.folder-picker-open; }
                 Text { text: "Selecting a folder lets SyncPak inventory and transfer files only for this connection. Your system may ask you to allow access to the folder you choose."; color: #454039; wrap: word-wrap; }
-                Button { text: root.folder-picker-open ? "Selecting folder…" : "Select folder"; enabled: !root.folder-picker-open; clicked => { root.select-local-folder(); } }
+                Button { accessible-label: root.folder-picker-open ? "Folder selection in progress" : "Select local folder"; text: root.folder-picker-open ? "Selecting folder…" : "Select folder"; enabled: !root.folder-picker-open; clicked => { root.select-local-folder(); } }
                 if root.folder-picker-open : Text { accessible-live-region: polite; text: "Waiting for folder selection…"; color: #454039; wrap: word-wrap; }
             }
             Text { text: "Mode"; font-weight: 700; }
@@ -484,7 +487,7 @@ export component AppWindow inherits Window {
                 color: #454039; wrap: word-wrap;
             }
             if connection-mode.current-index == 1 : Text {
-                text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts.";
+                text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts. Any files or metadata that cannot be matched are listed when the operation finishes.";
                 color: #454039; wrap: word-wrap;
             }
             if connection-mode.current-index == 2 : VerticalBox {
@@ -496,7 +499,7 @@ export component AppWindow inherits Window {
             }
             VerticalBox {
                 Button { text: "Back"; clicked => { root.request-discard-connection(); } }
-                Button { text: "Save"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
+                Button { accessible-label: "Save connection " + root.connection-form-name + " without transferring files"; text: "Save connection"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
             }
             }
         }
@@ -508,7 +511,7 @@ export component AppWindow inherits Window {
             Text { text: "Your changes to this connection have not been saved."; wrap: word-wrap; }
             VerticalBox {
                 Button { accessible-label: "Continue editing connection " + root.connection-form-name; text: "Continue editing"; clicked => { root.cancel-discard-connection(); } }
-                Button { accessible-label: "Discard changes to connection " + root.connection-form-name; text: "Discard changes"; primary: true; clicked => { root.confirm-discard-connection(); } }
+                Button { accessible-label: "Discard changes to connection " + root.connection-form-name; text: "Discard " + root.connection-form-name + " changes"; primary: true; clicked => { root.confirm-discard-connection(); } }
             }
             }
         }
