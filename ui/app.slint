@@ -5,6 +5,8 @@ export struct ProviderRow {
     id: string,
     name: string,
     kind: string,
+    verification: string,
+    verifying: bool,
     connection-summary: string,
 }
 
@@ -115,6 +117,7 @@ export component AppWindow inherits Window {
     callback set-diagnostic-include-paths(bool);
     callback request-provider-delete(string);
     callback request-provider-edit(string);
+    callback verify-saved-provider(string);
     callback verify-provider();
     callback confirm-provider-delete();
     callback cancel-provider-delete();
@@ -269,10 +272,11 @@ export component AppWindow inherits Window {
                     VerticalBox { padding: 10px; spacing: 8px;
                         VerticalBox { spacing: 2px;
                             Text { text: provider.name; font-weight: 700; wrap: word-wrap; }
-                            Text { text: provider.kind + " · Not verified"; color: #454039; }
+                            Text { text: provider.kind + " · " + provider.verification; color: #454039; }
                             Text { text: provider.connection-summary; color: #454039; wrap: word-wrap; }
                         }
                         HorizontalBox { spacing: 8px;
+                            Button { accessible-label: "Verify provider " + provider.name; text: provider.verifying ? "Verifying…" : "Verify"; enabled: !provider.verifying; clicked => { root.verify-saved-provider(provider.id); } }
                             Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
                             Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
                             Rectangle { horizontal-stretch: 1; }

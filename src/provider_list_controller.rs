@@ -6,6 +6,7 @@ use crate::{
     AppWindow, ProviderRow,
     configuration::{ConfigStore, ProviderKind},
     diagnostics_controller::{self, SharedDiagnosticLog},
+    provider_list_verification_controller::{self, VerificationStates},
 };
 
 pub(crate) fn configure(
@@ -13,10 +14,31 @@ pub(crate) fn configure(
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
 ) {
+    let states: VerificationStates = Default::default();
     let weak = window.as_weak();
-    let configuration = Rc::clone(configuration);
-    window
-        .on_show_providers(move || show(&weak, Rc::clone(&configuration), Rc::clone(&diagnostics)));
+    let show_configuration = Rc::clone(configuration);
+    let verify_configuration = Rc::clone(configuration);
+    let show_states = Rc::clone(&states);
+    let show_diagnostics = Rc::clone(&diagnostics);
+    window.on_show_providers(move || {
+        show_with_states(
+            &weak,
+            Rc::clone(&show_configuration),
+            Rc::clone(&show_diagnostics),
+            Rc::clone(&show_states),
+        )
+    });
+
+    let weak = window.as_weak();
+    window.on_verify_saved_provider(move |id| {
+        provider_list_verification_controller::verify(
+            &weak,
+            Rc::clone(&verify_configuration),
+            Rc::clone(&diagnostics),
+            Rc::clone(&states),
+            id.to_string(),
+        )
+    });
 }
 
 pub(crate) fn show(
@@ -24,20 +46,30 @@ pub(crate) fn show(
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
 ) {
+    show_with_states(weak, configuration, diagnostics, Default::default());
+}
+
+fn show_with_states(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+    states: VerificationStates,
+) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     window.set_notice_message(SharedString::default());
     window.set_page(1);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
-        refresh(&weak, &configuration, &diagnostics)
+        refresh(&weak, &configuration, &diagnostics, &states)
     });
 }
 
-fn refresh(
+pub(crate) fn refresh(
     weak: &slint::Weak<AppWindow>,
     configuration: &ConfigStore,
     diagnostics: &SharedDiagnosticLog,
+    states: &VerificationStates,
 ) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
@@ -52,6 +84,15 @@ fn refresh(
                     id: provider.id.as_str().into(),
                     name: provider.name.into(),
                     kind: kind_name(provider.kind).into(),
+                    verification: provider_list_verification_controller::status(
+                        states,
+                        provider.id.as_str(),
+                    )
+                    .into(),
+                    verifying: provider_list_verification_controller::is_checking(
+                        states,
+                        provider.id.as_str(),
+                    ),
                     connection_summary: connection_summary(connection_count).into(),
                 }
             });

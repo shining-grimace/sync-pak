@@ -72,6 +72,7 @@ mod provider_delete_controller;
 mod provider_form;
 mod provider_form_controller;
 mod provider_list_controller;
+mod provider_list_verification_controller;
 pub mod provider_multipart_conformance;
 #[cfg(feature = "provider-probes")]
 pub mod provider_probe;
@@ -105,6 +106,7 @@ mod s3_settings;
 pub mod s3_transport;
 #[cfg(feature = "provider-s3")]
 mod s3_writer;
+mod saved_provider_verification;
 pub mod temporary_cleanup;
 pub mod transfer_delete;
 pub mod transfer_execution;
