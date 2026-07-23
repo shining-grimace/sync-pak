@@ -317,23 +317,27 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 13 : VerticalBox {
-            spacing: 12px;
+        if root.page == 13 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Save without verifying?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
             VerticalBox {
                 Button { text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
                 Button { text: "Save without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
             }
+            }
         }
 
-        if root.page == 15 : VerticalBox {
-            spacing: 12px;
+        if root.page == 15 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this provider have not been saved."; wrap: word-wrap; }
             VerticalBox {
                 Button { text: "Continue editing"; clicked => { root.cancel-discard-provider(); } }
                 Button { text: "Discard changes"; primary: true; clicked => { root.confirm-discard-provider(); } }
+            }
             }
         }
 
@@ -438,13 +442,15 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 14 : VerticalBox {
-            spacing: 12px;
+        if root.page == 14 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this connection have not been saved."; wrap: word-wrap; }
             VerticalBox {
                 Button { text: "Continue editing"; clicked => { root.cancel-discard-connection(); } }
                 Button { text: "Discard changes"; primary: true; clicked => { root.confirm-discard-connection(); } }
+            }
             }
         }
 
@@ -521,8 +527,9 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 6 : VerticalBox {
-            spacing: 12px;
+        if root.page == 6 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Delete " + root.pending-provider-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "This deletes its protected credentials and " + root.pending-connection-count + " connection(s). No cloud files will be deleted."; wrap: word-wrap; }
             if root.pending-provider-connections.length > 0 : VerticalBox {
@@ -534,24 +541,29 @@ export component AppWindow inherits Window {
                 Button { text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
                 Button { text: "Delete provider and " + root.pending-connection-count + " connections"; primary: true; clicked => { root.confirm-provider-delete(); } }
             }
+            }
         }
 
-        if root.page == 7 : VerticalBox {
-            spacing: 12px;
+        if root.page == 7 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Delete " + root.pending-connection-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "This removes the connection from SyncPak. It does not delete local or cloud files."; wrap: word-wrap; }
             VerticalBox {
                 Button { text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
                 Button { text: "Delete connection"; primary: true; clicked => { root.confirm-connection-delete(); } }
             }
+            }
         }
-        if root.page == 12 : VerticalBox {
-            spacing: 12px;
+        if root.page == 12 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Cancel " + root.pending-cancel-activity-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
             VerticalBox {
                 Button { text: "Keep running"; clicked => { root.dismiss-cancel-activity(); } }
                 Button { text: "Cancel operation"; primary: true; clicked => { root.confirm-cancel-activity(); } }
+            }
             }
         }
         if root.page == 10 : ScrollView {
@@ -590,8 +602,9 @@ export component AppWindow inherits Window {
             }
             }
         }
-        if root.page == 11 : VerticalBox {
-            spacing: 12px;
+        if root.page == 11 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : "Ready to start"); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             if root.preflight-loading : Text { text: "Listing files…"; font-weight: 700; }
             Text { text: "No files are changed during this check."; color: #454039; wrap: word-wrap; }
@@ -643,6 +656,7 @@ export component AppWindow inherits Window {
                 Button { text: "Back"; clicked => { root.cancel-run-direction(); } }
                 if root.preflight-failed : Button { text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
                 if !root.preflight-loading && !root.preflight-failed : Button { text: "Refresh review"; clicked => { root.begin-preflight(); } }
+            }
             }
         }
         Rectangle { vertical-stretch: 1; }
