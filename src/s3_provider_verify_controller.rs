@@ -83,7 +83,7 @@ fn poll(
     });
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum VerificationFailure {
     Authentication,
     BucketNotVisible,
@@ -101,6 +101,50 @@ impl From<ProviderError> for VerificationFailure {
             ProviderError::Unavailable => Self::Unavailable,
             _ => Self::Unexpected,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::VerificationFailure;
+    use crate::provider_capabilities::ProviderError;
+
+    #[test]
+    fn maps_provider_errors_to_safe_recovery_categories() {
+        assert_eq!(
+            VerificationFailure::from(ProviderError::Authentication),
+            VerificationFailure::Authentication
+        );
+        assert_eq!(
+            VerificationFailure::from(ProviderError::NotFound),
+            VerificationFailure::BucketNotVisible
+        );
+        assert_eq!(
+            VerificationFailure::from(ProviderError::PermissionDenied),
+            VerificationFailure::PermissionDenied
+        );
+        assert_eq!(
+            VerificationFailure::from(ProviderError::Unavailable),
+            VerificationFailure::Unavailable
+        );
+        assert_eq!(
+            VerificationFailure::from(ProviderError::ClockSkew),
+            VerificationFailure::Unexpected
+        );
+    }
+
+    #[test]
+    fn recovery_messages_remain_specific_without_exposing_credentials() {
+        let authentication = VerificationFailure::Authentication.message();
+        let inaccessible_bucket = VerificationFailure::BucketNotVisible.message();
+        let denied = VerificationFailure::PermissionDenied.message();
+
+        assert!(authentication.contains("access key, secret, and session token"));
+        assert!(inaccessible_bucket.contains("not visible"));
+        assert!(denied.contains("cannot list buckets"));
+        assert!(!authentication.contains("AKIA"));
+        assert!(!inaccessible_bucket.contains("AKIA"));
+        assert!(!denied.contains("AKIA"));
     }
 }
 
