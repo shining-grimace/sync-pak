@@ -47,5 +47,7 @@ fn show(weak: &slint::Weak<AppWindow>, log: &SharedDiagnosticLog) {
 
 fn refresh(weak: &slint::Weak<AppWindow>, log: &SharedDiagnosticLog, include_paths: bool) {
     let Some(window) = weak.upgrade() else { return };
-    window.set_diagnostic_text(log.borrow().report().redacted_text(include_paths).into());
+    let report = log.borrow().report();
+    window.set_diagnostic_entry_count(report.errors.len() as i32);
+    window.set_diagnostic_text(report.redacted_text(include_paths).into());
 }
