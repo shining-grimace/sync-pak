@@ -433,6 +433,7 @@ export component AppWindow inherits Window {
             Text { text: "Local folder"; font-weight: 700; }
             VerticalBox { spacing: 6px;
                 connection-local := LineEdit { accessible-label: "Local folder"; placeholder-text: "Full local folder path"; text <=> root.connection-form-local; enabled: !root.folder-picker-open; }
+                Text { text: "Selecting a folder lets SyncPak inventory and transfer files only for this connection. Your system may ask you to allow access to the folder you choose."; color: #454039; wrap: word-wrap; }
                 Button { text: root.folder-picker-open ? "Selecting folder…" : "Select folder"; enabled: !root.folder-picker-open; clicked => { root.select-local-folder(); } }
                 if root.folder-picker-open : Text { text: "Waiting for folder selection…"; color: #454039; wrap: word-wrap; }
             }
