@@ -190,7 +190,7 @@ export component AppWindow inherits Window {
             background: #2c2925; border-radius: 8px; min-height: 62px;
             VerticalBox { padding: 12px; spacing: 8px;
                 VerticalBox { spacing: 2px;
-                    Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; }
+                    Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; wrap: word-wrap; }
                     Text { accessible-live-region: polite; text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
                 Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
@@ -248,9 +248,9 @@ export component AppWindow inherits Window {
                     background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                     VerticalBox { padding: 10px; spacing: 8px;
                         VerticalBox { spacing: 2px;
-                            Text { text: provider.name; font-weight: 700; }
+                            Text { text: provider.name; font-weight: 700; wrap: word-wrap; }
                             Text { text: provider.kind + " · Not verified"; color: #454039; }
-                            Text { text: provider.connection-summary; color: #454039; }
+                            Text { text: provider.connection-summary; color: #454039; wrap: word-wrap; }
                         }
                         HorizontalBox { spacing: 8px;
                             Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
@@ -266,7 +266,7 @@ export component AppWindow inherits Window {
         if root.page == 2 : ScrollView {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 10px;
-            Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Credentials are saved in protected storage before this provider is added."; wrap: word-wrap; }
             Text { text: "Provider name"; font-weight: 700; }
             provider-name := LineEdit { accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
@@ -382,7 +382,7 @@ export component AppWindow inherits Window {
                     background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 98px;
                         VerticalBox { padding: 10px; spacing: 8px;
                             VerticalBox { spacing: 3px;
-                                Text { text: connection.name; font-weight: 700; }
+                                Text { text: connection.name; font-weight: 700; wrap: word-wrap; }
                                 Text { text: connection.detail; color: #454039; }
                                 HorizontalBox { spacing: 8px;
                                     VerticalBox { horizontal-stretch: 1; spacing: 2px;
@@ -391,7 +391,7 @@ export component AppWindow inherits Window {
                                     }
                                     Text { text: connection.mode == 2 ? "▣" : "⇄"; color: #2c2925; font-size: 22px; vertical-alignment: center; }
                                     VerticalBox { horizontal-stretch: 1; spacing: 2px;
-                                        Text { text: connection.provider-name; color: #454039; font-weight: 700; }
+                                        Text { text: connection.provider-name; color: #454039; font-weight: 700; wrap: word-wrap; }
                                         Text { text: connection.remote-location; color: #454039; wrap: word-wrap; }
                                     }
                                 }
@@ -412,7 +412,7 @@ export component AppWindow inherits Window {
         if root.page == 5 : ScrollView {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 10px;
-            Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; }
+            Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
             Text { text: "Connection name"; font-weight: 700; }
             connection-name := LineEdit { accessible-label: "Connection name"; placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
@@ -533,7 +533,7 @@ export component AppWindow inherits Window {
                     background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 86px;
                     VerticalBox { padding: 12px; spacing: 8px;
                         VerticalBox { spacing: 2px;
-                            Text { text: activity.title + " · " + activity.status; font-weight: 700; }
+                            Text { text: activity.title + " · " + activity.status; font-weight: 700; wrap: word-wrap; }
                             Text { text: activity.detail; color: #454039; wrap: word-wrap; }
                             if activity.progress != "" : Text { text: activity.progress; color: #454039; wrap: word-wrap; }
                             if activity.result != "" : Text { text: activity.result; color: #454039; wrap: word-wrap; }
