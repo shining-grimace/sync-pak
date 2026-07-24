@@ -8,6 +8,7 @@ use crate::{
     diagnostics_controller::{self, SharedDiagnosticLog},
     platform::PlatformCredentialStore,
     provider_bucket_cache::{self, ProviderBucketCache},
+    provider_save_error::ProviderPersistenceError,
 };
 
 pub(crate) fn configure(
@@ -86,15 +87,15 @@ fn delete_provider(
 ) {
     let Some(window) = weak.upgrade() else { return };
     let pending_id = window.get_pending_provider_id();
-    let result = provider_id(configuration, pending_id.as_str()).and_then(|id| {
-        PlatformCredentialStore::new()
-            .map_err(|error| error.to_string())
-            .and_then(|store| {
-                ProviderRepository::new(configuration, &store)
-                    .delete(&id)
-                    .map_err(|error| error.to_string())
-            })
-    });
+    let result = (|| -> Result<_, ProviderPersistenceError> {
+        let id = provider_id(configuration, pending_id.as_str())
+            .map_err(|_| ProviderPersistenceError::Other)?;
+        let store =
+            PlatformCredentialStore::new().map_err(ProviderPersistenceError::ProtectedStore)?;
+        ProviderRepository::new(configuration, &store)
+            .delete(&id)
+            .map_err(ProviderPersistenceError::from)
+    })();
     match result {
         Ok(_) => {
             provider_bucket_cache::remove(buckets, pending_id.as_str());
@@ -106,13 +107,16 @@ fn delete_provider(
             );
             window.set_notice_message("Provider deleted.".into());
         }
-        Err(_) => diagnostics_controller::present(
-            &window,
-            diagnostics,
-            "Provider could not be deleted",
-            "provider deletion failed",
-            "SyncPak could not delete this provider. Check protected storage and try again.",
-        ),
+        Err(error) => {
+            let (summary, technical_details, message) = error.delete_presentation();
+            diagnostics_controller::present(
+                &window,
+                diagnostics,
+                summary,
+                technical_details,
+                message,
+            );
+        }
     }
 }
 

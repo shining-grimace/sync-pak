@@ -18,7 +18,7 @@ use crate::{
         provider_kind_index, provider_options,
     },
     provider_list_controller,
-    provider_save_error::ProviderSaveError,
+    provider_save_error::ProviderPersistenceError,
 };
 
 pub(crate) fn configure(
@@ -239,22 +239,23 @@ fn save(
         options: provider_options(&account_id, &region, &default_bucket, &endpoint),
     };
     let edit_id = window.get_provider_form_id();
-    let result = (|| -> Result<_, ProviderSaveError> {
-        let store = PlatformCredentialStore::new().map_err(ProviderSaveError::ProtectedStore)?;
+    let result = (|| -> Result<_, ProviderPersistenceError> {
+        let store =
+            PlatformCredentialStore::new().map_err(ProviderPersistenceError::ProtectedStore)?;
         let repository = ProviderRepository::new(&configuration, &store);
         if edit_id.is_empty() {
             repository
                 .create(draft, &credentials)
-                .map_err(ProviderSaveError::from)
+                .map_err(ProviderPersistenceError::from)
         } else {
             repository
                 .update(
                     &provider_id(&configuration, edit_id.as_str())
-                        .map_err(|_| ProviderSaveError::Other)?,
+                        .map_err(|_| ProviderPersistenceError::Other)?,
                     draft,
                     &credentials,
                 )
-                .map_err(ProviderSaveError::from)
+                .map_err(ProviderPersistenceError::from)
         }
     })();
     match result {
@@ -295,7 +296,7 @@ fn save(
         Err(error) => {
             window.set_provider_save_after_verification(false);
             window.set_page(2);
-            let (summary, technical_details, message) = error.presentation();
+            let (summary, technical_details, message) = error.save_presentation();
             diagnostics_controller::present(
                 &window,
                 diagnostics,
