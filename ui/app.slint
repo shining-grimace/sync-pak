@@ -302,7 +302,7 @@ export component AppWindow inherits Window {
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Providers"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Provider credentials are kept in this device's protected storage."; color: #454039; wrap: word-wrap; }
-            Button { text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
+            Button { accessible-label: "Add a provider"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
             if root.providers.length == 0 : VerticalBox {
                 spacing: 8px;
                 Text { text: "No providers yet"; font-size: 22px; font-weight: 700; }
@@ -389,7 +389,7 @@ export component AppWindow inherits Window {
             Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: #454039; wrap: word-wrap; }
             if root.provider-verifying : Text { accessible-live-region: polite; text: "Checking these settings without changing cloud data…"; color: #454039; wrap: word-wrap; }
             VerticalBox {
-                Button { text: "Back"; clicked => { root.request-discard-provider(); } }
+                Button { accessible-label: "Back to providers"; text: "Back"; clicked => { root.request-discard-provider(); } }
                 Button { accessible-label: "Save " + root.provider-form-name + " without verifying"; text: "Save without verifying"; enabled: !root.provider-verifying; clicked => { root.request-save-provider(); } }
                 Button { accessible-label: "Verify settings for " + root.provider-form-name; text: "Verify settings"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
                 Button { accessible-label: "Save and verify " + root.provider-form-name; text: root.provider-verifying ? "Verifying…" : "Save and verify"; primary: true; enabled: !root.provider-verifying; clicked => { root.save-and-verify-provider(); } }
@@ -426,8 +426,8 @@ export component AppWindow inherits Window {
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
-            if root.providers-total == 0 : Button { text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
-            if root.providers-total > 0 : Button { text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
+            if root.providers-total == 0 : Button { accessible-label: "Add a provider before creating a connection"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
+            if root.providers-total > 0 : Button { accessible-label: "Create a new connection"; text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
             VerticalBox { accessible-role: region; accessible-label: "Filter connections by mode"; spacing: 6px;
                 Text { text: "Filter by mode"; color: #454039; font-weight: 700; }
                 HorizontalBox { spacing: 6px;
@@ -449,7 +449,7 @@ export component AppWindow inherits Window {
                 if root.connections-total == 0 && root.providers-total == 0 : Text { text: "Add a cloud provider, then create a connection to choose what to copy."; wrap: word-wrap; }
                 if root.connections-total == 0 && root.providers-total > 0 : Text { text: "Create a connection to link a local folder with cloud storage."; wrap: word-wrap; }
                 if root.connections-total > 0 : Text { text: "Choose another filter or create a new connection."; wrap: word-wrap; }
-                if root.connections-total > 0 && root.connection-filter != 0 : Button { text: "Show all connections"; primary: true; clicked => { root.set-connection-filter(0); } }
+                if root.connections-total > 0 && root.connection-filter != 0 : Button { accessible-label: "Remove the connection filter and show all connections"; text: "Show all connections"; primary: true; clicked => { root.set-connection-filter(0); } }
             }
             if root.connections.length > 0 : ListView {
                 height: 280px;
@@ -566,7 +566,7 @@ export component AppWindow inherits Window {
                 Text { text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain."; color: #454039; wrap: word-wrap; }
             }
             VerticalBox {
-                Button { text: "Back"; clicked => { root.request-discard-connection(); } }
+                Button { accessible-label: "Back to connections"; text: "Back"; clicked => { root.request-discard-connection(); } }
                 Button { accessible-label: "Save connection " + root.connection-form-name + " without transferring files"; text: "Save connection"; primary: true; enabled: root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
             }
             }
@@ -602,7 +602,7 @@ export component AppWindow inherits Window {
             }
             Text { text: "SyncPak " + root.app-version; color: #454039; }
             Button { accessible-label: "View redacted diagnostics with credentials excluded"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
-            Button { text: "Back"; clicked => { root.show-welcome(); } }
+            Button { accessible-label: "Back to welcome"; text: "Back"; clicked => { root.show-welcome(); } }
             }
         }
 
@@ -619,7 +619,7 @@ export component AppWindow inherits Window {
                     Text { text: root.diagnostic-text; wrap: word-wrap; width: parent.width - 12px; }
                 }
             }
-            Button { text: "Back"; clicked => { root.show-privacy(); } }
+            Button { accessible-label: "Back to Privacy and About"; text: "Back"; clicked => { root.show-privacy(); } }
             }
         }
 
@@ -880,8 +880,8 @@ export component AppWindow inherits Window {
             }
             VerticalBox {
                 Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.cancel-run-direction(); } }
-                if root.preflight-failed : Button { text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
-                if !root.preflight-loading && !root.preflight-failed : Button { text: "Refresh review"; clicked => { root.begin-preflight(); } }
+                if root.preflight-failed : Button { accessible-label: "Try the preflight check again"; text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
+                if !root.preflight-loading && !root.preflight-failed : Button { accessible-label: "Refresh the read-only preflight review"; text: "Refresh review"; clicked => { root.begin-preflight(); } }
             }
             }
         }
