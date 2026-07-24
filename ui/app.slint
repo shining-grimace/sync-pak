@@ -674,7 +674,8 @@ export component AppWindow inherits Window {
                 Button { accessible-label: "Open Amazon privacy notice in your browser"; text: "AWS privacy notice"; clicked => { Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010"); } }
                 Text { text: "SyncPak's privacy policy and open-source licence notices will be published before release."; color: #454039; wrap: word-wrap; }
             }
-            Button { accessible-label: "View redacted diagnostics with credentials excluded"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
+            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: privacy-diagnostics; init => { self.focus(); } }
+            privacy-diagnostics := Button { accessible-label: "View redacted diagnostics with credentials excluded"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
             Button { accessible-label: "Back to welcome"; text: "Back"; clicked => { root.show-welcome(); } }
             }
         }
