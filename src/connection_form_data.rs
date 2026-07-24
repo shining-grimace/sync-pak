@@ -22,6 +22,13 @@ pub(crate) fn reset(window: &AppWindow) {
     mark_clean(window);
 }
 
+/// Removes the current connection draft and any session-only bucket listing.
+pub(crate) fn clear_transient_state(window: &AppWindow) {
+    reset(window);
+    window.set_provider_names(ModelRc::new(Rc::new(VecModel::default())));
+    window.set_provider_buckets(ModelRc::new(Rc::new(VecModel::default())));
+}
+
 pub(crate) fn populate(
     window: &AppWindow,
     providers: &[ProviderConfig],

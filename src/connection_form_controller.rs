@@ -5,7 +5,7 @@ use slint::{ComponentHandle, SharedString};
 use crate::{
     AppWindow,
     configuration::{ConfigStore, ConnectionRepository},
-    connection_form_data::{draft, existing_id, is_dirty},
+    connection_form_data::{clear_transient_state, draft, existing_id, is_dirty},
     connection_form_state, connection_list_controller,
     diagnostics_controller::{self, SharedDiagnosticLog},
     form_validation,
@@ -93,6 +93,7 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     window.on_confirm_discard_connection(move || {
         if let Some(window) = weak.upgrade() {
+            clear_transient_state(&window);
             window.invoke_complete_pending_navigation();
         }
     });
@@ -106,6 +107,7 @@ fn request_discard(weak: &slint::Weak<AppWindow>) {
     if is_dirty(&window) {
         window.set_page(14);
     } else {
+        clear_transient_state(&window);
         window.invoke_complete_pending_navigation();
     }
 }
@@ -158,6 +160,7 @@ fn save(
     });
     match result {
         Ok(_) => {
+            clear_transient_state(&window);
             connection_list_controller::show(weak, configuration, diagnostics);
             window.set_notice_message("Connection saved.".into());
         }
