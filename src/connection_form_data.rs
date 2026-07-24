@@ -18,6 +18,7 @@ pub(crate) fn reset(window: &AppWindow) {
     window.set_connection_form_local(SharedString::default());
     window.set_connection_form_mode(0);
     window.set_connection_form_retention("1".into());
+    set_verified_buckets(window, None);
     mark_clean(window);
 }
 
@@ -42,6 +43,7 @@ pub(crate) fn populate(
             .to_string()
             .into(),
     );
+    set_verified_buckets(window, None);
     mark_clean(window);
     window.set_status_message(SharedString::default());
     window.set_page(5);
@@ -93,6 +95,15 @@ pub(crate) fn set_provider_bucket(window: &AppWindow, providers: &[ProviderConfi
     if let Some(bucket) = provider_bucket(providers, index) {
         window.set_connection_form_bucket(bucket.into());
     }
+}
+
+pub(crate) fn set_verified_buckets(window: &AppWindow, buckets: Option<Vec<String>>) {
+    let listed = buckets.is_some();
+    let buckets = buckets.unwrap_or_default();
+    window.set_connection_bucket_list_checked(listed);
+    window.set_connection_verified_buckets(ModelRc::new(Rc::new(VecModel::from_iter(
+        buckets.into_iter().map(SharedString::from),
+    ))));
 }
 
 fn provider_bucket(providers: &[ProviderConfig], index: i32) -> Option<&str> {

@@ -96,6 +96,8 @@ export component AppWindow inherits Window {
     in-out property <string> connection-form-name;
     in-out property <int> connection-form-provider;
     in-out property <string> connection-form-bucket;
+    in-out property <[string]> connection-verified-buckets;
+    in-out property <bool> connection-bucket-list-checked: false;
     in-out property <string> connection-form-remote;
     in-out property <string> connection-form-local;
     in-out property <int> connection-form-mode;
@@ -510,8 +512,21 @@ export component AppWindow inherits Window {
                 text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider's current default bucket.";
                 color: #454039; wrap: word-wrap;
             }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" : Text {
-                text: "Enter the bucket name manually. A provider default bucket, when configured, is locked for every connection using that provider.";
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Buckets verified this session"; color: #454039; }
+                ComboBox {
+                    accessible-label: "Buckets verified this session";
+                    model: root.connection-verified-buckets;
+                    selected => { root.connection-form-bucket = root.connection-verified-buckets[self.current-index]; }
+                }
+            }
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length == 0 : Text {
+                text: "These credentials were verified, but no buckets were visible. Enter the bucket name manually if access is restricted.";
+                color: #454039; wrap: word-wrap;
+            }
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && !root.connection-bucket-list-checked : Text {
+                text: "Enter the bucket name manually, or verify this provider to select buckets visible to its current credentials.";
                 color: #454039; wrap: word-wrap;
             }
             Text { text: "Remote folder"; font-weight: 700; }

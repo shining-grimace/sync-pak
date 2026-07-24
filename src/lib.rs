@@ -68,6 +68,7 @@ pub mod preflight_execution;
 pub mod preflight_mirror_execution;
 pub mod preflight_presentation;
 pub mod preflight_review;
+mod provider_bucket_cache;
 pub mod provider_capabilities;
 pub mod provider_conformance;
 mod provider_delete_controller;

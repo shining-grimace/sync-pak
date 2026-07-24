@@ -6,6 +6,7 @@ use crate::{
     AppWindow, ProviderRow,
     configuration::{ConfigStore, ProviderKind},
     diagnostics_controller::{self, SharedDiagnosticLog},
+    provider_bucket_cache::ProviderBucketCache,
     provider_list_verification_controller::{self, VerificationStates},
 };
 
@@ -13,6 +14,7 @@ pub(crate) fn configure(
     window: &AppWindow,
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
+    buckets: ProviderBucketCache,
 ) {
     let states: VerificationStates = Default::default();
     let weak = window.as_weak();
@@ -36,6 +38,7 @@ pub(crate) fn configure(
             Rc::clone(&verify_configuration),
             Rc::clone(&diagnostics),
             Rc::clone(&states),
+            Rc::clone(&buckets),
             id.to_string(),
         )
     });

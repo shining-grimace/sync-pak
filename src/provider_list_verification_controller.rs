@@ -4,6 +4,7 @@ use crate::{
     AppWindow,
     configuration::ConfigStore,
     diagnostics_controller::{self, SharedDiagnosticLog},
+    provider_bucket_cache::{self, ProviderBucketCache},
     provider_verification::ProviderVerification,
     saved_provider_verification::{self, VerificationFailure},
 };
@@ -21,6 +22,7 @@ pub(crate) fn verify(
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
     states: VerificationStates,
+    buckets: ProviderBucketCache,
     provider_id: String,
 ) {
     if states.borrow().contains_key(&provider_id) {
@@ -44,6 +46,7 @@ pub(crate) fn verify(
         configuration,
         diagnostics,
         states,
+        buckets,
         awaiting_id,
         receiver,
     );
@@ -54,6 +57,7 @@ fn await_verification(
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
     states: VerificationStates,
+    buckets: ProviderBucketCache,
     provider_id: String,
     receiver: mpsc::Receiver<Result<ProviderVerification, VerificationFailure>>,
 ) {
@@ -67,7 +71,8 @@ fn await_verification(
             Ok(Ok(verification)) => {
                 states
                     .borrow_mut()
-                    .insert(provider_id, VerificationState::Verified);
+                    .insert(provider_id.clone(), VerificationState::Verified);
+                provider_bucket_cache::record(&buckets, &provider_id, verification.buckets.clone());
                 window.set_notice_message(
                     format!(
                         "Provider verified. {} buckets available.",
@@ -119,6 +124,7 @@ fn await_verification(
                 configuration,
                 diagnostics,
                 states,
+                buckets,
                 provider_id,
                 receiver,
             ),

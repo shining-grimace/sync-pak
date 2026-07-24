@@ -26,11 +26,22 @@ pub(crate) fn initialize(window: &AppWindow) {
         }
     };
     configure_navigation(window);
-    crate::provider_list_controller::configure(window, &configuration, Rc::clone(&diagnostics));
+    let provider_buckets: crate::provider_bucket_cache::ProviderBucketCache = Default::default();
+    crate::provider_list_controller::configure(
+        window,
+        &configuration,
+        Rc::clone(&diagnostics),
+        Rc::clone(&provider_buckets),
+    );
     crate::provider_form_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::provider_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_list_controller::configure(window, &configuration, Rc::clone(&diagnostics));
-    crate::connection_form_controller::configure(window, &configuration, Rc::clone(&diagnostics));
+    crate::connection_form_controller::configure(
+        window,
+        &configuration,
+        Rc::clone(&diagnostics),
+        provider_buckets,
+    );
     crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::run_direction_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::folder_picker_controller::configure(window, Rc::clone(&diagnostics));

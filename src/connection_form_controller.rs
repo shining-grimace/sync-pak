@@ -5,25 +5,29 @@ use slint::{ComponentHandle, SharedString};
 use crate::{
     AppWindow,
     configuration::{ConfigStore, ConnectionRepository},
-    connection_form_data::{draft, existing_id, is_dirty, populate},
+    connection_form_data::{draft, existing_id, is_dirty},
     connection_form_state, connection_list_controller,
     diagnostics_controller::{self, SharedDiagnosticLog},
     form_validation,
+    provider_bucket_cache::ProviderBucketCache,
 };
 
 pub(crate) fn configure(
     window: &AppWindow,
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
+    buckets: ProviderBucketCache,
 ) {
     let weak = window.as_weak();
     let add_configuration = Rc::clone(configuration);
     let add_diagnostics = Rc::clone(&diagnostics);
+    let add_buckets = Rc::clone(&buckets);
     window.on_show_add_connection(move || {
         connection_form_state::show_add(
             &weak,
             Rc::clone(&add_configuration),
             Rc::clone(&add_diagnostics),
+            Rc::clone(&add_buckets),
         )
     });
 
@@ -50,18 +54,27 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let edit_configuration = Rc::clone(configuration);
     let edit_diagnostics = Rc::clone(&diagnostics);
+    let edit_buckets = Rc::clone(&buckets);
     window.on_request_connection_edit(move |id| {
-        edit(&weak, &edit_configuration, &edit_diagnostics, id)
+        connection_form_state::show_edit(
+            &weak,
+            &edit_configuration,
+            &edit_diagnostics,
+            &edit_buckets,
+            id,
+        )
     });
 
     let weak = window.as_weak();
     let provider_configuration = Rc::clone(configuration);
     let provider_diagnostics = Rc::clone(&diagnostics);
+    let provider_buckets = Rc::clone(&buckets);
     window.on_select_connection_provider(move |index| {
         connection_form_state::select_provider(
             &weak,
             &provider_configuration,
             &provider_diagnostics,
+            &provider_buckets,
             index,
         )
     });
@@ -165,44 +178,6 @@ fn save(
             "Connection could not be saved",
             "connection save failed",
             "SyncPak could not save this connection. Check configuration storage and try again.",
-        ),
-    }
-}
-
-fn edit(
-    weak: &slint::Weak<AppWindow>,
-    configuration: &ConfigStore,
-    diagnostics: &SharedDiagnosticLog,
-    id: SharedString,
-) {
-    let Some(window) = weak.upgrade() else { return };
-    let result = configuration
-        .load()
-        .map_err(|error| error.to_string())
-        .and_then(|config| {
-            let connection = config
-                .connections
-                .iter()
-                .find(|connection| id == connection.id.as_str())
-                .cloned()
-                .ok_or_else(|| "The connection no longer exists.".to_owned())?;
-            let provider_index = config
-                .providers
-                .iter()
-                .position(|provider| provider.id == connection.provider_id)
-                .ok_or_else(|| "The connection's provider no longer exists.".to_owned())?;
-            Ok((config.providers, connection, provider_index))
-        });
-    match result {
-        Ok((providers, connection, provider_index)) => {
-            populate(&window, &providers, connection, provider_index)
-        }
-        Err(_) => diagnostics_controller::present(
-            &window,
-            diagnostics,
-            "Connection could not be opened",
-            "connection edit load failed",
-            "SyncPak could not open this connection. It may have been removed.",
         ),
     }
 }
