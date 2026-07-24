@@ -1,4 +1,4 @@
-import { Button, CheckBox, ComboBox, HorizontalBox, LineEdit, ListView, Palette, ScrollView, VerticalBox } from "std-widgets.slint";
+import { Button, CheckBox, ComboBox, HorizontalBox, LineEdit, ListView, Palette, ScrollView, TextEdit, VerticalBox } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 
 export struct ProviderRow {
@@ -635,9 +635,17 @@ export component AppWindow inherits Window {
             Text { accessible-live-region: polite; text: root.diagnostic-entry-count == 0 ? "No errors have been recorded in this session." : root.diagnostic-entry-count == 1 ? "1 error has been recorded in this session." : root.diagnostic-entry-count + " errors have been recorded in this session."; color: #454039; wrap: word-wrap; }
             include-paths := CheckBox { text: "Include file and folder paths"; checked <=> root.diagnostic-include-paths; toggled => { root.set-diagnostic-include-paths(self.checked); } }
             if root.diagnostic-include-paths : Text { accessible-live-region: assertive; text: "Paths can contain personal information. Include them only when you trust the person receiving the report. Turning this option off removes paths from the report immediately."; color: #7b241c; wrap: word-wrap; }
-            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 180px;
-                ScrollView { x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; vertical-scrollbar-policy: always-on;
-                    Text { text: root.diagnostic-text; wrap: word-wrap; width: parent.width - 12px; }
+            Text { text: "Select the report and use your system copy shortcut to copy it."; color: #454039; wrap: word-wrap; }
+            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 220px;
+                TextEdit {
+                    x: 12px;
+                    y: 12px;
+                    width: parent.width - 24px;
+                    height: parent.height - 24px;
+                    accessible-label: "Redacted diagnostics report. Select text and use your system copy shortcut to copy it.";
+                    text: root.diagnostic-text;
+                    read-only: true;
+                    wrap: word-wrap;
                 }
             }
             Button { accessible-label: "Return to the previous screen"; text: "Back"; clicked => { root.dismiss-diagnostics(); } }
