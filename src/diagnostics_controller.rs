@@ -15,6 +15,9 @@ pub(crate) fn configure(window: &AppWindow, log: SharedDiagnosticLog) {
     window.on_show_diagnostics(move || show(&weak, &show_log));
 
     let weak = window.as_weak();
+    window.on_dismiss_diagnostics(move || dismiss(&weak));
+
+    let weak = window.as_weak();
     let paths_log = Rc::clone(&log);
     window.on_set_diagnostic_include_paths(move |include_paths| {
         refresh(&weak, &paths_log, include_paths);
@@ -40,9 +43,20 @@ pub(crate) fn present(
 fn show(weak: &slint::Weak<AppWindow>, log: &SharedDiagnosticLog) {
     refresh(weak, log, false);
     if let Some(window) = weak.upgrade() {
+        if window.get_page() != 8 {
+            window.set_diagnostic_return_page(window.get_page());
+        }
         window.set_diagnostic_include_paths(false);
         window.set_status_message(SharedString::default());
         window.set_page(8);
+    }
+}
+
+fn dismiss(weak: &slint::Weak<AppWindow>) {
+    if let Some(window) = weak.upgrade() {
+        window.set_status_message(SharedString::default());
+        window.set_notice_message(SharedString::default());
+        window.set_page(window.get_diagnostic_return_page());
     }
 }
 

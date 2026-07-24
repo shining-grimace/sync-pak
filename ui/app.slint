@@ -72,6 +72,7 @@ export component AppWindow inherits Window {
     in-out property <string> diagnostic-text;
     in-out property <bool> diagnostic-include-paths;
     in-out property <int> diagnostic-entry-count: 0;
+    in-out property <int> diagnostic-return-page: 3;
     in-out property <string> pending-provider-id;
     in-out property <string> pending-provider-name;
     in-out property <int> pending-connection-count;
@@ -135,6 +136,7 @@ export component AppWindow inherits Window {
     callback request-navigation(int);
     callback complete-pending-navigation();
     callback show-diagnostics();
+    callback dismiss-diagnostics();
     callback set-diagnostic-include-paths(bool);
     callback request-provider-delete(string);
     callback request-provider-edit(string);
@@ -192,6 +194,7 @@ export component AppWindow inherits Window {
             if event.text == Key.Escape {
                 if root.page == 6 { root.cancel-provider-delete(); return accept; }
                 if root.page == 7 { root.cancel-connection-delete(); return accept; }
+                if root.page == 8 { root.dismiss-diagnostics(); return accept; }
                 if root.page == 10 || root.page == 11 { root.cancel-run-direction(); return accept; }
                 if root.page == 12 { root.dismiss-cancel-activity(); return accept; }
                 if root.page == 16 { root.dismiss-activity-result(); return accept; }
@@ -626,7 +629,7 @@ export component AppWindow inherits Window {
                     Text { text: root.diagnostic-text; wrap: word-wrap; width: parent.width - 12px; }
                 }
             }
-            Button { accessible-label: "Back to Privacy and About"; text: "Back"; clicked => { root.show-privacy(); } }
+            Button { accessible-label: "Return to the previous screen"; text: "Back"; clicked => { root.dismiss-diagnostics(); } }
             }
         }
 
