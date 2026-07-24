@@ -3,7 +3,8 @@ use crate::{
     activity_snapshot::ActivitySnapshot,
     configuration::{ConnectionConfig, ConnectionId, ProviderId, SyncMode},
     execution::ExecutionProgress,
-    planning::{Direction, OperationPlan},
+    inventory::RelativePath,
+    planning::{Direction, Endpoint, OperationPlan, PlannedAction},
     queue::OperationQueue,
 };
 
@@ -79,4 +80,28 @@ fn presents_a_queued_cancellation_as_not_started() {
     assert_eq!(presentation.status, "Cancelled");
     assert_eq!(presentation.progress_summary, "");
     assert_eq!(presentation.result_summary, "Cancelled before starting");
+}
+
+#[test]
+fn presents_each_terminal_action_with_its_outcome() {
+    let mut queue = OperationQueue::default();
+    queue.push(
+        OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+        snapshot(),
+    );
+    let entry = queue.take_next().unwrap();
+    let action = PlannedAction::Copy {
+        path: RelativePath::new("photos/new.jpg").unwrap(),
+        from: Endpoint::Source,
+        to: Endpoint::Destination,
+    };
+    let mut progress = ExecutionProgress::new([action]);
+    assert!(progress.start_next().is_some());
+    assert!(progress.complete_current());
+    assert!(queue.finish(entry.operation_id, progress.finish()));
+
+    let presentation = ActivityPresentation::from_entry(queue.entries().next().unwrap());
+
+    assert_eq!(presentation.result_details, ["Completed: photos/new.jpg"]);
+    assert!(presentation.can_view_result);
 }

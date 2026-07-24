@@ -14,13 +14,16 @@ pub struct ActivityPresentation {
     pub status: &'static str,
     pub progress_summary: String,
     pub result_summary: String,
+    pub result_details: Vec<String>,
     pub can_cancel: bool,
     pub can_remove: bool,
+    pub can_view_result: bool,
 }
 
 impl ActivityPresentation {
     pub fn from_entry(entry: &QueueEntry) -> Self {
         let result_summary = entry.result.as_ref().map_or_else(String::new, summary);
+        let result_details = entry.result.as_ref().map_or_else(Vec::new, result_details);
         Self {
             operation_id: entry.operation_id.to_string(),
             title: entry.snapshot.connection_name.clone(),
@@ -28,8 +31,10 @@ impl ActivityPresentation {
             status: status(entry.state),
             progress_summary: progress_summary(entry),
             result_summary,
+            result_details,
             can_cancel: entry.state == QueueState::Running,
             can_remove: entry.state == QueueState::Queued,
+            can_view_result: entry.result.is_some(),
         }
     }
 }
@@ -103,6 +108,33 @@ fn incomplete_summary(result: &crate::execution::ExecutionResult, state: &str) -
         result.incomplete.len(),
         result.not_started.len()
     )
+}
+
+fn result_details(result: &crate::execution::ExecutionResult) -> Vec<String> {
+    let mut details = Vec::new();
+    details.extend(action_details("Completed", &result.completed));
+    details.extend(action_details("Incomplete", &result.incomplete));
+    details.extend(action_details("Not started", &result.not_started));
+    details
+}
+
+fn action_details(status: &str, actions: &[crate::planning::PlannedAction]) -> Vec<String> {
+    actions
+        .iter()
+        .map(|action| format!("{status}: {}", action_name(action)))
+        .collect()
+}
+
+fn action_name(action: &crate::planning::PlannedAction) -> String {
+    use crate::planning::PlannedAction;
+
+    match action {
+        PlannedAction::Copy { path, .. }
+        | PlannedAction::Overwrite { path, .. }
+        | PlannedAction::Delete { path, .. }
+        | PlannedAction::SkipChanged { path } => path.as_str().into(),
+        PlannedAction::CreateArchive { .. } => "archive".into(),
+    }
 }
 
 #[cfg(test)]

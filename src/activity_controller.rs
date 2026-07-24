@@ -13,6 +13,7 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
     window: &AppWindow,
     queue: Arc<BackgroundQueue<E>>,
 ) {
+    crate::activity_result_controller::configure(window, Arc::clone(&queue));
     let weak = window.as_weak();
     let show_queue = Arc::clone(&queue);
     window.on_show_activity(move || show(&weak, Arc::clone(&show_queue)));
@@ -143,6 +144,7 @@ fn refresh<E: OperationExecutor + Send + Sync + 'static>(
             result: activity.result_summary.into(),
             can_cancel: activity.can_cancel,
             can_remove: activity.can_remove,
+            can_view_result: activity.can_view_result,
         }
     });
     window.set_activity_rows(ModelRc::new(std::rc::Rc::new(VecModel::from_iter(rows))));
