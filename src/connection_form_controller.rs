@@ -80,6 +80,19 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
+    let retry_configuration = Rc::clone(configuration);
+    let retry_diagnostics = Rc::clone(&diagnostics);
+    let retry_buckets = Rc::clone(&buckets);
+    window.on_retry_connection_providers(move || {
+        connection_form_state::retry_load_providers(
+            &weak,
+            Rc::clone(&retry_configuration),
+            Rc::clone(&retry_diagnostics),
+            Rc::clone(&retry_buckets),
+        )
+    });
+
+    let weak = window.as_weak();
     window.on_request_discard_connection(move || request_discard(&weak));
 
     let weak = window.as_weak();

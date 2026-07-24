@@ -1,6 +1,6 @@
 use std::{rc::Rc, time::Duration};
 
-use slint::SharedString;
+use slint::{ModelRc, SharedString, VecModel};
 
 use crate::{
     AppWindow,
@@ -22,6 +22,7 @@ pub(crate) fn show_add(
     window.set_status_message(SharedString::default());
     reset(&window);
     window.set_connection_providers_loading(true);
+    window.set_connection_providers_load_failed(false);
     window.set_page(5);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
@@ -41,6 +42,23 @@ pub(crate) fn select_provider(
         Ok(config) => apply_provider_selection(&window, &config.providers, buckets, index),
         Err(_) => provider_load_error(&window, diagnostics),
     }
+}
+
+pub(crate) fn retry_load_providers(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+    buckets: ProviderBucketCache,
+) {
+    let Some(window) = weak.upgrade() else { return };
+    if window.get_connection_providers_loading() {
+        return;
+    }
+    window.set_connection_providers_loading(true);
+    let weak = weak.clone();
+    slint::Timer::single_shot(Duration::ZERO, move || {
+        load_providers(&weak, &configuration, &diagnostics, &buckets)
+    });
 }
 
 pub(crate) fn show_edit(
@@ -92,6 +110,7 @@ fn load_providers(
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => {
+            window.set_connection_providers_load_failed(false);
             set_provider_models(&window, &config.providers);
             apply_provider_selection(
                 &window,
@@ -131,6 +150,11 @@ fn apply_provider_selection(
 
 fn provider_load_error(window: &AppWindow, diagnostics: &SharedDiagnosticLog) {
     window.set_connection_providers_loading(false);
+    window.set_connection_providers_load_failed(true);
+    window.set_connection_form_provider(-1);
+    window.set_provider_names(ModelRc::new(Rc::new(VecModel::default())));
+    window.set_provider_buckets(ModelRc::new(Rc::new(VecModel::default())));
+    set_verified_buckets(window, None);
     diagnostics_controller::present(
         window,
         diagnostics,
