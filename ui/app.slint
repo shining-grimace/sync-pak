@@ -207,7 +207,7 @@ export component AppWindow inherits Window {
         padding: 16px;
         spacing: 16px;
 
-        VerticalBox {
+        if root.width >= 520px : VerticalBox {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
             spacing: 6px;
@@ -886,6 +886,27 @@ export component AppWindow inherits Window {
             }
         }
         Rectangle { vertical-stretch: 1; }
+        if root.width < 520px : Rectangle {
+            accessible-role: navigation;
+            accessible-label: "Primary navigation";
+            background: #fffaf0;
+            border-color: #2c2925;
+            border-width: 1px;
+            border-radius: 8px;
+            min-height: 88px;
+            VerticalBox {
+                padding: 8px;
+                spacing: 6px;
+                HorizontalBox { spacing: 6px;
+                    Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; clicked => { root.request-navigation(4); } }
+                    Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; clicked => { root.request-navigation(1); } }
+                }
+                HorizontalBox { spacing: 6px;
+                    Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; clicked => { root.request-navigation(9); } }
+                    Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; clicked => { root.request-navigation(3); } }
+                }
+            }
+        }
     }
     }
 }
