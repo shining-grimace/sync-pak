@@ -14,7 +14,8 @@ use crate::{
     platform::PlatformCredentialStore,
     provider_bucket_cache::{self, ProviderBucketCache},
     provider_form::{
-        is_dirty, mark_clean, provider_id, provider_kind, provider_kind_index, provider_options,
+        clear_transient_state, is_dirty, mark_clean, provider_id, provider_kind,
+        provider_kind_index, provider_options,
     },
     provider_list_controller,
 };
@@ -92,6 +93,7 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     window.on_confirm_discard_provider(move || {
         if let Some(window) = weak.upgrade() {
+            clear_transient_state(&window);
             window.invoke_complete_pending_navigation();
         }
     });
@@ -171,16 +173,8 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_account_id(SharedString::default());
         window.set_provider_form_region(SharedString::default());
         window.set_provider_form_bucket(SharedString::default());
-        window.set_provider_form_access_key(SharedString::default());
-        window.set_provider_form_secret_key(SharedString::default());
         window.set_provider_form_endpoint(SharedString::default());
-        window.set_provider_form_session_token(SharedString::default());
-        window.set_provider_secret_visible(false);
-        window.set_provider_advanced_expanded(false);
-        window.set_provider_verifying(false);
-        window.set_provider_save_after_verification(false);
-        window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
-        window.set_provider_bucket_list_empty(false);
+        clear_transient_state(&window);
         mark_clean(&window);
         window.set_page(2);
     }
@@ -194,6 +188,7 @@ fn request_discard(weak: &slint::Weak<AppWindow>) {
     if is_dirty(&window) {
         window.set_page(15);
     } else {
+        clear_transient_state(&window);
         window.invoke_complete_pending_navigation();
     }
 }
@@ -263,22 +258,19 @@ fn save(
     match result {
         Ok(saved_provider) => {
             let save_after_verification = window.get_provider_save_after_verification();
-            window.set_provider_save_after_verification(false);
+            let buckets_after_verification =
+                save_after_verification.then(|| verified_buckets(&window));
             if !edit_id.is_empty() {
                 provider_bucket_cache::remove(buckets, edit_id.as_str());
             }
-            if save_after_verification {
+            if let Some(verified_buckets) = buckets_after_verification {
                 provider_bucket_cache::record(
                     buckets,
                     saved_provider.id.as_str(),
-                    verified_buckets(&window),
+                    verified_buckets,
                 );
             }
-            window.set_provider_form_access_key(SharedString::default());
-            window.set_provider_form_secret_key(SharedString::default());
-            window.set_provider_form_session_token(SharedString::default());
-            window.set_provider_secret_visible(false);
-            window.set_provider_advanced_expanded(false);
+            clear_transient_state(&window);
             match complete_welcome(&configuration) {
                 Ok(()) => {
                     provider_list_controller::show(
@@ -327,15 +319,7 @@ fn edit(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    window.set_provider_secret_visible(false);
-    window.set_provider_verifying(false);
-    window.set_provider_save_after_verification(false);
-    window.set_provider_form_access_key(SharedString::default());
-    window.set_provider_form_secret_key(SharedString::default());
-    window.set_provider_form_session_token(SharedString::default());
-    window.set_provider_advanced_expanded(false);
-    window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
-    window.set_provider_bucket_list_empty(false);
+    clear_transient_state(&window);
     match configuration
         .load()
         .map_err(|error| error.to_string())

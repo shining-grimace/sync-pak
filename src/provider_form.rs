@@ -2,6 +2,20 @@ use crate::{
     AppWindow,
     configuration::{ConfigStore, ProviderId, ProviderKind, ProviderOptions},
 };
+use slint::{ModelRc, SharedString, VecModel};
+
+/// Removes credentials and verification data that only belong to the current form session.
+pub(crate) fn clear_transient_state(window: &AppWindow) {
+    window.set_provider_form_access_key(SharedString::default());
+    window.set_provider_form_secret_key(SharedString::default());
+    window.set_provider_form_session_token(SharedString::default());
+    window.set_provider_secret_visible(false);
+    window.set_provider_advanced_expanded(false);
+    window.set_provider_verifying(false);
+    window.set_provider_save_after_verification(false);
+    window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(VecModel::default())));
+    window.set_provider_bucket_list_empty(false);
+}
 
 /// Stores a non-secret form fingerprint for unsaved-change detection.
 pub(crate) fn mark_clean(window: &AppWindow) {

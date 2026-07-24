@@ -255,7 +255,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.active-activity-id != "" : Rectangle {
+        if root.active-activity-id != "" && !root.confirmation-open : Rectangle {
             accessible-role: region;
             accessible-label: "Active operation " + root.active-activity-title;
             background: #2c2925; border-radius: 8px; min-height: 62px;
