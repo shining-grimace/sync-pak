@@ -33,6 +33,7 @@ pub(crate) fn present(
     message: &'static str,
 ) {
     record(log, StructuredError::new(summary, technical_details));
+    window.set_diagnostic_entry_count(log.borrow().report().errors.len() as i32);
     window.set_status_message(message.into());
 }
 
