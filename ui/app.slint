@@ -426,7 +426,18 @@ export component AppWindow inherits Window {
                             VerticalBox { spacing: 3px;
                                 Text { text: connection.name; font-weight: 700; wrap: word-wrap; }
                                 Text { text: connection.detail; color: #454039; }
-                                HorizontalBox { spacing: 8px;
+                                if root.width < 520px : VerticalBox { spacing: 6px;
+                                    VerticalBox { spacing: 2px;
+                                        Text { text: "On this device"; color: #454039; font-weight: 700; }
+                                        Text { text: connection.local-path; color: #454039; wrap: word-wrap; }
+                                    }
+                                    Text { accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders"; text: connection.mode == 2 ? "↓ Archive destination" : "↕ Connected folders"; color: #2c2925; font-weight: 700; }
+                                    VerticalBox { spacing: 2px;
+                                        Text { text: "In " + connection.provider-name; color: #454039; font-weight: 700; wrap: word-wrap; }
+                                        Text { text: connection.remote-location; color: #454039; wrap: word-wrap; }
+                                    }
+                                }
+                                if root.width >= 520px : HorizontalBox { spacing: 8px;
                                     VerticalBox { horizontal-stretch: 1; spacing: 2px;
                                         Text { text: "On this device"; color: #454039; font-weight: 700; }
                                         Text { text: connection.local-path; color: #454039; wrap: word-wrap; }
@@ -693,11 +704,17 @@ export component AppWindow inherits Window {
                     accessible-role: region;
                     accessible-label: "Plan summary: " + root.preflight-additions + ", " + root.preflight-overwrites + ", " + root.preflight-deletions + ", " + root.preflight-skipped;
                     spacing: 4px;
-                    HorizontalBox { spacing: 8px;
+                    if root.width < 520px : VerticalBox { spacing: 3px;
+                        Text { text: root.preflight-additions; font-weight: 700; wrap: word-wrap; }
+                        Text { text: root.preflight-overwrites; font-weight: 700; wrap: word-wrap; }
+                        Text { text: root.preflight-deletions; font-weight: 700; wrap: word-wrap; }
+                        Text { text: root.preflight-skipped; font-weight: 700; wrap: word-wrap; }
+                    }
+                    if root.width >= 520px : HorizontalBox { spacing: 8px;
                         Text { text: root.preflight-additions; font-weight: 700; }
                         Text { text: root.preflight-overwrites; font-weight: 700; }
                     }
-                    HorizontalBox { spacing: 8px;
+                    if root.width >= 520px : HorizontalBox { spacing: 8px;
                         Text { text: root.preflight-deletions; font-weight: 700; }
                         Text { text: root.preflight-skipped; font-weight: 700; }
                     }
