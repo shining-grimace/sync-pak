@@ -53,6 +53,13 @@ export component AppWindow inherits Window {
     in-out property <string> activity-result-status;
     in-out property <string> activity-result-summary;
     in-out property <[string]> activity-result-details;
+    in-out property <string> activity-progress-id;
+    in-out property <string> activity-progress-title;
+    in-out property <string> activity-progress-phase;
+    in-out property <string> activity-progress-summary;
+    in-out property <string> activity-progress-items;
+    in-out property <string> activity-progress-bytes;
+    in-out property <string> activity-progress-path;
     in-out property <string> active-activity-id;
     in-out property <string> active-activity-title;
     in-out property <string> active-activity-progress;
@@ -153,6 +160,8 @@ export component AppWindow inherits Window {
     callback clear-completed-activity();
     callback show-activity-result(string);
     callback dismiss-activity-result();
+    callback show-activity-progress(string);
+    callback dismiss-activity-progress();
     callback request-run-connection(string);
     callback choose-run-direction(int);
     callback begin-preflight();
@@ -177,6 +186,7 @@ export component AppWindow inherits Window {
                 if root.page == 10 || root.page == 11 { root.cancel-run-direction(); return accept; }
                 if root.page == 12 { root.dismiss-cancel-activity(); return accept; }
                 if root.page == 16 { root.dismiss-activity-result(); return accept; }
+                if root.page == 17 { root.dismiss-activity-progress(); return accept; }
                 if root.page == 13 { root.cancel-save-provider(); return accept; }
                 if root.page == 14 { root.cancel-discard-connection(); return accept; }
                 if root.page == 15 { root.cancel-discard-provider(); return accept; }
@@ -198,7 +208,7 @@ export component AppWindow inherits Window {
                 Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; clicked => { root.show-providers(); } }
             }
             HorizontalBox { spacing: 6px;
-                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16; clicked => { root.show-activity(); } }
+                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; clicked => { root.show-activity(); } }
                 Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; clicked => { root.show-privacy(); } }
                 Rectangle { horizontal-stretch: 1; }
             }
@@ -235,7 +245,7 @@ export component AppWindow inherits Window {
                     Text { accessible-live-region: polite; text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
                 HorizontalBox { spacing: 8px;
-                    Button { accessible-label: "View activity for " + root.active-activity-title; text: "View activity"; clicked => { root.show-activity(); } }
+                    Button { accessible-label: "View progress for " + root.active-activity-title; text: "View progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
                     Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
                 }
             }
@@ -622,6 +632,7 @@ export component AppWindow inherits Window {
                         if activity.can-cancel || activity.can-remove || activity.can-view-result : HorizontalBox {
                             spacing: 8px;
                             if activity.can-view-result : Button { accessible-label: "View result for " + activity.title; text: "View result"; clicked => { root.show-activity-result(activity.id); } }
+                            if activity.can-cancel : Button { accessible-label: "View progress for " + activity.title; text: "View progress"; clicked => { root.show-activity-progress(activity.id); } }
                             if activity.can-cancel : Button { accessible-label: "Cancel " + activity.title; text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
                             if activity.can-remove : Button { accessible-label: "Remove " + activity.title; text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
                             Rectangle { horizontal-stretch: 1; }
@@ -656,6 +667,28 @@ export component AppWindow inherits Window {
                 }
             }
             Button { accessible-label: "Return to activity"; text: "Back to activity"; clicked => { root.dismiss-activity-result(); } }
+            }
+        }
+
+        if root.page == 17 : ScrollView {
+            vertical-scrollbar-policy: always-on;
+            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            Text { text: "Progress: " + root.activity-progress-title; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
+            Text { accessible-live-region: polite; text: root.activity-progress-phase; font-weight: 700; }
+            Text { accessible-live-region: polite; text: root.activity-progress-summary; color: #454039; wrap: word-wrap; }
+            Rectangle { accessible-role: region; accessible-label: "Operation progress"; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 120px;
+                VerticalBox { padding: 12px; spacing: 6px;
+                    Text { accessible-live-region: polite; text: root.activity-progress-items; wrap: word-wrap; }
+                    Text { accessible-live-region: polite; text: root.activity-progress-bytes; wrap: word-wrap; }
+                    Text { text: "Current file"; color: #454039; font-weight: 700; }
+                    Text { accessible-live-region: polite; text: root.activity-progress-path; wrap: word-wrap; }
+                }
+            }
+            Text { text: "Minimize leaves this operation running. You can return from Activity at any time."; color: #454039; wrap: word-wrap; }
+            VerticalBox {
+                Button { accessible-label: "Minimize progress for " + root.activity-progress-title; text: "Minimize"; clicked => { root.dismiss-activity-progress(); } }
+                Button { accessible-label: "Cancel " + root.activity-progress-title; text: "Cancel operation"; primary: true; clicked => { root.request-cancel-activity(root.activity-progress-id, root.activity-progress-title); } }
+            }
             }
         }
 

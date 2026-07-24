@@ -14,6 +14,7 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
     queue: Arc<BackgroundQueue<E>>,
 ) {
     crate::activity_result_controller::configure(window, Arc::clone(&queue));
+    crate::activity_progress_controller::configure(window, Arc::clone(&queue));
     let weak = window.as_weak();
     let show_queue = Arc::clone(&queue);
     window.on_show_activity(move || show(&weak, Arc::clone(&show_queue)));
