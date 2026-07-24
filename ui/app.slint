@@ -484,8 +484,12 @@ export component AppWindow inherits Window {
             if root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
             Text { text: "Bucket"; font-weight: 700; }
             connection-bucket := LineEdit { accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket"; placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" : Text {
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket == root.provider-buckets[connection-provider.current-index] : Text {
                 text: "This provider locks connections to its default bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
+                color: #454039; wrap: word-wrap;
+            }
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket != root.provider-buckets[connection-provider.current-index] : Text {
+                text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider's current default bucket.";
                 color: #454039; wrap: word-wrap;
             }
             if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" : Text {

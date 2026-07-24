@@ -42,7 +42,6 @@ pub(crate) fn populate(
             .to_string()
             .into(),
     );
-    set_provider_bucket(window, providers, provider_index as i32);
     mark_clean(window);
     window.set_status_message(SharedString::default());
     window.set_page(5);
@@ -91,19 +90,16 @@ pub(crate) fn set_provider_models(window: &AppWindow, providers: &[ProviderConfi
 }
 
 pub(crate) fn set_provider_bucket(window: &AppWindow, providers: &[ProviderConfig], index: i32) {
-    if let Some(provider) = usize::try_from(index)
+    if let Some(bucket) = provider_bucket(providers, index) {
+        window.set_connection_form_bucket(bucket.into());
+    }
+}
+
+fn provider_bucket(providers: &[ProviderConfig], index: i32) -> Option<&str> {
+    usize::try_from(index)
         .ok()
         .and_then(|index| providers.get(index))
-    {
-        window.set_connection_form_bucket(
-            provider
-                .options
-                .default_bucket
-                .as_deref()
-                .unwrap_or_default()
-                .into(),
-        );
-    }
+        .and_then(|provider| provider.options.default_bucket.as_deref())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -183,3 +179,7 @@ fn archive_retention(mode: SyncMode, input: &str) -> Result<Option<u32>, String>
         .map(Some)
         .ok_or_else(|| "Enter a whole number of at least 1 for archive retention.".to_owned())
 }
+
+#[cfg(test)]
+#[path = "connection_form_data_tests.rs"]
+mod tests;
