@@ -441,7 +441,8 @@ export component AppWindow inherits Window {
             Text { text: "Save without verifying?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
             VerticalBox {
-                Button { accessible-label: "Continue editing provider " + root.provider-form-name; text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: continue-saving-provider; init => { self.focus(); } }
+                continue-saving-provider := Button { accessible-label: "Continue editing provider " + root.provider-form-name; text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
                 Button { accessible-label: "Save provider " + root.provider-form-name + " without verifying"; text: "Save " + root.provider-form-name + " without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
             }
             }
@@ -453,7 +454,8 @@ export component AppWindow inherits Window {
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this provider have not been saved."; wrap: word-wrap; }
             VerticalBox {
-                Button { accessible-label: "Continue editing provider " + root.provider-form-name; text: "Continue editing"; clicked => { root.cancel-discard-provider(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: continue-discarding-provider; init => { self.focus(); } }
+                continue-discarding-provider := Button { accessible-label: "Continue editing provider " + root.provider-form-name; text: "Continue editing"; clicked => { root.cancel-discard-provider(); } }
                 Button { accessible-label: "Discard changes to provider " + root.provider-form-name; text: "Discard changes"; primary: true; clicked => { root.confirm-discard-provider(); } }
             }
             }
@@ -633,7 +635,8 @@ export component AppWindow inherits Window {
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this connection have not been saved."; wrap: word-wrap; }
             VerticalBox {
-                Button { accessible-label: "Continue editing connection " + root.connection-form-name; text: "Continue editing"; clicked => { root.cancel-discard-connection(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: continue-editing-connection; init => { self.focus(); } }
+                continue-editing-connection := Button { accessible-label: "Continue editing connection " + root.connection-form-name; text: "Continue editing"; clicked => { root.cancel-discard-connection(); } }
                 Button { accessible-label: "Discard changes to connection " + root.connection-form-name; text: "Discard " + root.connection-form-name + " changes"; primary: true; clicked => { root.confirm-discard-connection(); } }
             }
             }
@@ -782,7 +785,8 @@ export component AppWindow inherits Window {
                 primary: true;
                 clicked => { root.retry-activity-result(); }
             }
-            Button { accessible-label: "Return to activity"; text: "Back to activity"; clicked => { root.dismiss-activity-result(); } }
+            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: activity-result-back; init => { self.focus(); } }
+            activity-result-back := Button { accessible-label: "Return to activity"; text: "Back to activity"; clicked => { root.dismiss-activity-result(); } }
             }
         }
 
@@ -802,7 +806,8 @@ export component AppWindow inherits Window {
             }
             Text { text: "Minimize leaves this operation running. You can return from Activity at any time."; color: #454039; wrap: word-wrap; }
             VerticalBox {
-                Button { accessible-label: "Minimize progress for " + root.activity-progress-title; text: "Minimize"; clicked => { root.dismiss-activity-progress(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: minimize-progress; init => { self.focus(); } }
+                minimize-progress := Button { accessible-label: "Minimize progress for " + root.activity-progress-title; text: "Minimize"; clicked => { root.dismiss-activity-progress(); } }
                 Button { accessible-label: "Cancel " + root.activity-progress-title; text: "Cancel operation"; primary: true; clicked => { root.request-cancel-activity(root.activity-progress-id, root.activity-progress-title); } }
             }
             }
@@ -830,7 +835,8 @@ export component AppWindow inherits Window {
                 }
             }
             VerticalBox {
-                Button { accessible-label: "Keep provider " + root.pending-provider-name; text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: keep-provider; init => { self.focus(); } }
+                keep-provider := Button { accessible-label: "Keep provider " + root.pending-provider-name; text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
                 Button { accessible-label: "Delete provider " + root.pending-provider-name + " and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " connection" : " connections"); text: "Delete " + root.pending-provider-name + " and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " connection" : " connections"); primary: true; clicked => { root.confirm-provider-delete(); } }
             }
             }
@@ -842,7 +848,8 @@ export component AppWindow inherits Window {
             Text { text: "Delete " + root.pending-connection-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "This removes the connection from SyncPak. It does not delete local or cloud files."; wrap: word-wrap; }
             VerticalBox {
-                Button { accessible-label: "Keep connection " + root.pending-connection-name; text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: keep-connection; init => { self.focus(); } }
+                keep-connection := Button { accessible-label: "Keep connection " + root.pending-connection-name; text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
                 Button { accessible-label: "Delete connection " + root.pending-connection-name; text: "Delete " + root.pending-connection-name; primary: true; clicked => { root.confirm-connection-delete(); } }
             }
             }
@@ -853,7 +860,8 @@ export component AppWindow inherits Window {
             Text { text: "Cancel " + root.pending-cancel-activity-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
             VerticalBox {
-                Button { accessible-label: "Keep " + root.pending-cancel-activity-name + " running"; text: "Keep running"; clicked => { root.dismiss-cancel-activity(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: keep-running; init => { self.focus(); } }
+                keep-running := Button { accessible-label: "Keep " + root.pending-cancel-activity-name + " running"; text: "Keep running"; clicked => { root.dismiss-cancel-activity(); } }
                 Button { accessible-label: "Cancel operation " + root.pending-cancel-activity-name; text: "Cancel " + root.pending-cancel-activity-name; primary: true; clicked => { root.confirm-cancel-activity(); } }
             }
             }
@@ -984,7 +992,8 @@ export component AppWindow inherits Window {
                 Text { text: root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed ? "Transfer execution stays unavailable until you acknowledge the destructive changes above." : "Transfer execution is not connected in this build. This completed review remains read-only."; color: #454039; wrap: word-wrap; }
             }
             VerticalBox {
-                Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.cancel-run-direction(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-back; init => { self.focus(); } }
+                preflight-back := Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.cancel-run-direction(); } }
                 if root.preflight-failed : Button { accessible-label: "Try the preflight check again"; text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
                 if !root.preflight-loading && !root.preflight-failed : Button { accessible-label: "Refresh the read-only preflight review"; text: "Refresh review"; clicked => { root.begin-preflight(); } }
             }
