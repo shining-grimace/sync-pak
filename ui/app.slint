@@ -43,6 +43,7 @@ export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <string> app-version;
     in-out property <[ProviderRow]> providers;
+    in-out property <bool> providers-load-failed: false;
     in-out property <[ConnectionRow]> connections;
     in-out property <int> connections-total;
     in-out property <int> providers-total;
@@ -320,6 +321,16 @@ export component AppWindow inherits Window {
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Providers"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Provider credentials are kept in this device's protected storage."; color: #454039; wrap: word-wrap; }
+            if root.providers-load-failed : VerticalBox {
+                accessible-role: region;
+                accessible-label: "Providers unavailable";
+                spacing: 8px;
+                Text { text: "Providers unavailable"; color: #7b241c; font-size: 22px; font-weight: 700; }
+                Text { text: "SyncPak could not load providers. Check configuration storage and try again."; color: #7b241c; wrap: word-wrap; }
+                Button { accessible-label: "Retry loading providers"; text: "Retry"; primary: true; clicked => { root.show-providers(); } }
+            }
+            if !root.providers-load-failed : VerticalBox {
+            spacing: 12px;
             Button { accessible-label: "Add a provider"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
             if root.providers.length == 0 : VerticalBox {
                 spacing: 8px;
@@ -345,6 +356,7 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
+            }
             }
             }
         }

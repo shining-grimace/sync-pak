@@ -88,6 +88,7 @@ pub(crate) fn refresh(
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => {
+            window.set_providers_load_failed(false);
             let rows = config.providers.into_iter().map(|provider| {
                 let connection_count = config
                     .connections
@@ -114,13 +115,17 @@ pub(crate) fn refresh(
             window.set_providers(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
             window.set_status_message(SharedString::default());
         }
-        Err(_) => diagnostics_controller::present(
-            &window,
-            diagnostics,
-            "Providers could not be loaded",
-            "provider configuration load failed",
-            "SyncPak could not load providers. Check configuration storage and try again.",
-        ),
+        Err(_) => {
+            window.set_providers_load_failed(true);
+            window.set_providers(ModelRc::new(Rc::new(VecModel::default())));
+            diagnostics_controller::present(
+                &window,
+                diagnostics,
+                "Providers could not be loaded",
+                "provider configuration load failed",
+                "SyncPak could not load providers. Check configuration storage and try again.",
+            );
+        }
     }
 }
 
