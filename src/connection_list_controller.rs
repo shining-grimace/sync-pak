@@ -60,6 +60,7 @@ fn refresh(
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
         Ok(config) => {
+            window.set_connections_load_failed(false);
             window.set_connections_total(config.connections.len() as i32);
             window.set_providers_total(config.providers.len() as i32);
             let filter = window.get_connection_filter();
@@ -95,13 +96,19 @@ fn refresh(
             window.set_connections(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
             window.set_status_message(SharedString::default());
         }
-        Err(_) => diagnostics_controller::present(
-            &window,
-            diagnostics,
-            "Connections could not be loaded",
-            "connection configuration load failed",
-            "SyncPak could not load connections. Check configuration storage and try again.",
-        ),
+        Err(_) => {
+            window.set_connections_load_failed(true);
+            window.set_connections_total(0);
+            window.set_providers_total(0);
+            window.set_connections(ModelRc::new(Rc::new(VecModel::default())));
+            diagnostics_controller::present(
+                &window,
+                diagnostics,
+                "Connections could not be loaded",
+                "connection configuration load failed",
+                "SyncPak could not load connections. Check configuration storage and try again.",
+            );
+        }
     }
 }
 

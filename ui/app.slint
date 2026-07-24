@@ -47,6 +47,7 @@ export component AppWindow inherits Window {
     in-out property <int> connections-total;
     in-out property <int> providers-total;
     in-out property <int> connection-filter: 0;
+    in-out property <bool> connections-load-failed: false;
     in-out property <[ActivityRow]> activity-rows;
     in-out property <int> activity-clearable-count: 0;
     in-out property <string> activity-result-title;
@@ -443,6 +444,16 @@ export component AppWindow inherits Window {
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
+            if root.connections-load-failed : VerticalBox {
+                accessible-role: region;
+                accessible-label: "Connections unavailable";
+                spacing: 8px;
+                Text { text: "Connections unavailable"; color: #7b241c; font-size: 22px; font-weight: 700; }
+                Text { text: "SyncPak could not load connections. Check configuration storage and try again."; color: #7b241c; wrap: word-wrap; }
+                Button { accessible-label: "Retry loading connections"; text: "Retry"; primary: true; clicked => { root.show-connections(); } }
+            }
+            if !root.connections-load-failed : VerticalBox {
+            spacing: 12px;
             if root.providers-total == 0 : Button { accessible-label: "Add a provider before creating a connection"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
             if root.providers-total > 0 : Button { accessible-label: "Create a new connection"; text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
             VerticalBox { accessible-role: region; accessible-label: "Filter connections by mode"; spacing: 6px;
@@ -511,6 +522,7 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
+            }
             }
             }
         }
