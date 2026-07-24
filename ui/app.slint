@@ -75,6 +75,7 @@ export component AppWindow inherits Window {
     in-out property <string> diagnostic-text;
     in-out property <bool> diagnostic-include-paths;
     in-out property <int> diagnostic-entry-count: 0;
+    in-out property <string> diagnostic-copy-status;
     in-out property <int> diagnostic-return-page: 3;
     private property <bool> confirmation-open: page == 6 || page == 7 || page == 12 || page == 13 || page == 14 || page == 15;
     in-out property <string> pending-provider-id;
@@ -637,11 +638,11 @@ export component AppWindow inherits Window {
             Text { text: "Diagnostics"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "This report excludes provider credentials. Paths are hidden unless you choose to include them."; wrap: word-wrap; }
             Text { accessible-live-region: polite; text: root.diagnostic-entry-count == 0 ? "No errors have been recorded in this session." : root.diagnostic-entry-count == 1 ? "1 error has been recorded in this session." : root.diagnostic-entry-count + " errors have been recorded in this session."; color: #454039; wrap: word-wrap; }
-            include-paths := CheckBox { text: "Include file and folder paths"; checked <=> root.diagnostic-include-paths; toggled => { root.set-diagnostic-include-paths(self.checked); } }
+            include-paths := CheckBox { text: "Include file and folder paths"; checked <=> root.diagnostic-include-paths; toggled => { root.diagnostic-copy-status = ""; root.set-diagnostic-include-paths(self.checked); } }
             if root.diagnostic-include-paths : Text { accessible-live-region: assertive; text: "Paths can contain personal information. Include them only when you trust the person receiving the report. Turning this option off removes paths from the report immediately."; color: #7b241c; wrap: word-wrap; }
-            Text { text: "Select the report and use your system copy shortcut to copy it."; color: #454039; wrap: word-wrap; }
+            Text { text: "Use Copy report, or select the report and use your system copy shortcut."; color: #454039; wrap: word-wrap; }
             Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 220px;
-                TextEdit {
+                diagnostic-report := TextEdit {
                     x: 12px;
                     y: 12px;
                     width: parent.width - 24px;
@@ -652,6 +653,16 @@ export component AppWindow inherits Window {
                     wrap: word-wrap;
                 }
             }
+            Button {
+                accessible-label: root.diagnostic-include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
+                text: root.diagnostic-include-paths ? "Copy report with paths" : "Copy redacted report";
+                clicked => {
+                    diagnostic-report.select-all();
+                    diagnostic-report.copy();
+                    root.diagnostic-copy-status = root.diagnostic-include-paths ? "Diagnostics report with paths copied." : "Redacted diagnostics report copied.";
+                }
+            }
+            if root.diagnostic-copy-status != "" : Text { accessible-live-region: polite; text: root.diagnostic-copy-status; color: #23623a; wrap: word-wrap; }
             Button { accessible-label: "Return to the previous screen"; text: "Back"; clicked => { root.dismiss-diagnostics(); } }
             }
         }

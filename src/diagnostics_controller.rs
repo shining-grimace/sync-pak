@@ -47,6 +47,7 @@ fn show(weak: &slint::Weak<AppWindow>, log: &SharedDiagnosticLog) {
             window.set_diagnostic_return_page(window.get_page());
         }
         window.set_diagnostic_include_paths(false);
+        window.set_diagnostic_copy_status(SharedString::default());
         window.set_status_message(SharedString::default());
         window.set_page(8);
     }
@@ -56,6 +57,7 @@ fn dismiss(weak: &slint::Weak<AppWindow>) {
     if let Some(window) = weak.upgrade() {
         window.set_status_message(SharedString::default());
         window.set_notice_message(SharedString::default());
+        window.set_diagnostic_copy_status(SharedString::default());
         window.set_page(window.get_diagnostic_return_page());
     }
 }
