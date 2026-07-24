@@ -340,9 +340,12 @@ export component AppWindow inherits Window {
                 Text { text: "Add credentials for Cloudflare R2, Backblaze B2, or AWS S3."; wrap: word-wrap; }
             }
             if root.providers.length > 0 : ListView {
+                accessible-label: "Configured providers";
                 height: 260px;
                 vertical-scrollbar-policy: always-on;
                 for provider in root.providers : Rectangle {
+                    accessible-role: list-item;
+                    accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
                     background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                     VerticalBox { padding: 10px; spacing: 8px;
                         VerticalBox { spacing: 2px;
@@ -708,6 +711,8 @@ export component AppWindow inherits Window {
                 Text { text: "Removes " + root.activity-clearable-count + (root.activity-clearable-count == 1 ? " completed, failed, or cancelled entry." : " completed, failed, or cancelled entries."); color: #454039; wrap: word-wrap; }
             }
             if root.activity-rows.length == 0 : Rectangle {
+                accessible-role: region;
+                accessible-label: "No activity this time";
                 background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 130px;
                 VerticalBox { padding: 20px; spacing: 8px; alignment: center;
                     Text { text: "No activity this time"; font-size: 22px; font-weight: 700; horizontal-alignment: center; }
@@ -715,9 +720,12 @@ export component AppWindow inherits Window {
                 }
             }
             if root.activity-rows.length > 0 : ListView {
+                accessible-label: "Current activity";
                 height: 240px;
                 vertical-scrollbar-policy: always-on;
                 for activity in root.activity-rows : Rectangle {
+                    accessible-role: list-item;
+                    accessible-label: activity.title + ". " + activity.status + ". " + activity.detail + (activity.progress != "" ? ". Progress: " + activity.progress : "") + (activity.result != "" ? ". Result: " + activity.result : "");
                     background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 86px;
                     VerticalBox { padding: 12px; spacing: 8px;
                         VerticalBox { spacing: 2px;
@@ -858,21 +866,21 @@ export component AppWindow inherits Window {
                 background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 66px;
                 Text { text: root.run-archive-download-details; color: #454039; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
             }
-            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+            Rectangle { accessible-role: region; accessible-label: "Upload direction. Use the local folder as the source and cloud storage as the destination."; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Upload"; font-weight: 700; }
                     Text { text: "Use the local folder as the source and cloud storage as the destination."; wrap: word-wrap; }
                     Button { accessible-label: root.run-direction == 0 ? "Upload direction, selected" : "Choose upload direction"; text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
                 }
             }
-            Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+            Rectangle { accessible-role: region; accessible-label: "Download direction. Use cloud storage as the source and the local folder as the destination."; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Download"; font-weight: 700; }
                     Text { text: "Use cloud storage as the source and the local folder as the destination."; wrap: word-wrap; }
                     Button { accessible-label: root.run-direction == 1 ? "Download direction, selected" : "Choose download direction"; text: "Choose download"; primary: root.run-direction == 1; clicked => { root.choose-run-direction(1); } }
                 }
             }
-            if root.run-allows-both-ways : Rectangle { background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+            if root.run-allows-both-ways : Rectangle { accessible-role: region; accessible-label: "Both ways direction. Copy files found on only one side to the other. Changed files are skipped."; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Both ways"; font-weight: 700; }
                     Text { text: "Copy files found on only one side to the other. Changed files are skipped."; wrap: word-wrap; }
