@@ -79,36 +79,21 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
-    let discard_configuration = Rc::clone(configuration);
-    let discard_diagnostics = Rc::clone(&diagnostics);
-    let discard_buckets = Rc::clone(&buckets);
-    window.on_request_discard_provider(move || {
-        request_discard(
-            &weak,
-            Rc::clone(&discard_configuration),
-            Rc::clone(&discard_diagnostics),
-            Rc::clone(&discard_buckets),
-        );
-    });
+    window.on_request_discard_provider(move || request_discard(&weak));
 
     let weak = window.as_weak();
     window.on_cancel_discard_provider(move || {
         if let Some(window) = weak.upgrade() {
+            window.set_pending_navigation_page(-1);
             window.set_page(2);
         }
     });
 
     let weak = window.as_weak();
-    let discard_configuration = Rc::clone(configuration);
-    let discard_diagnostics = Rc::clone(&diagnostics);
-    let discard_buckets = Rc::clone(&buckets);
     window.on_confirm_discard_provider(move || {
-        provider_list_controller::show(
-            &weak,
-            Rc::clone(&discard_configuration),
-            Rc::clone(&discard_diagnostics),
-            Rc::clone(&discard_buckets),
-        );
+        if let Some(window) = weak.upgrade() {
+            window.invoke_complete_pending_navigation();
+        }
     });
 
     let weak = window.as_weak();
@@ -201,17 +186,15 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
     }
 }
 
-fn request_discard(
-    weak: &slint::Weak<AppWindow>,
-    configuration: Rc<ConfigStore>,
-    diagnostics: SharedDiagnosticLog,
-    buckets: ProviderBucketCache,
-) {
+fn request_discard(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_pending_navigation_page() < 0 {
+        window.set_pending_navigation_page(1);
+    }
     if is_dirty(&window) {
         window.set_page(15);
     } else {
-        provider_list_controller::show(weak, configuration, diagnostics, buckets);
+        window.invoke_complete_pending_navigation();
     }
 }
 

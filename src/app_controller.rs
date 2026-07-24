@@ -98,6 +98,12 @@ fn configure_navigation(window: &AppWindow) {
     window.on_show_privacy(move || set_page(&weak, 3));
     let weak = window.as_weak();
     window.on_show_activity(move || set_page(&weak, 9));
+
+    let weak = window.as_weak();
+    window.on_request_navigation(move |page| request_navigation(&weak, page));
+
+    let weak = window.as_weak();
+    window.on_complete_pending_navigation(move || complete_pending_navigation(&weak));
 }
 
 fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
@@ -105,5 +111,41 @@ fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
         window.set_status_message(Default::default());
         window.set_notice_message(Default::default());
         window.set_page(page);
+    }
+}
+
+fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
+    let Some(window) = weak.upgrade() else { return };
+    match window.get_page() {
+        2 => {
+            window.set_pending_navigation_page(page);
+            window.invoke_request_discard_provider();
+        }
+        5 => {
+            window.set_pending_navigation_page(page);
+            window.invoke_request_discard_connection();
+        }
+        _ => navigate(&window, page),
+    }
+}
+
+fn complete_pending_navigation(weak: &slint::Weak<AppWindow>) {
+    let Some(window) = weak.upgrade() else { return };
+    let page = match window.get_pending_navigation_page() {
+        page if page >= 0 => page,
+        _ if window.get_page() == 2 || window.get_page() == 15 => 1,
+        _ => 4,
+    };
+    window.set_pending_navigation_page(-1);
+    navigate(&window, page);
+}
+
+fn navigate(window: &AppWindow, page: i32) {
+    match page {
+        1 => window.invoke_show_providers(),
+        3 => window.invoke_show_privacy(),
+        4 => window.invoke_show_connections(),
+        9 => window.invoke_show_activity(),
+        _ => {}
     }
 }

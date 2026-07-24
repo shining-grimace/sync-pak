@@ -124,6 +124,7 @@ export component AppWindow inherits Window {
     in-out property <[PreflightRow]> preflight-items;
     in-out property <string> pending-cancel-activity-id;
     in-out property <string> pending-cancel-activity-name;
+    in-out property <int> pending-navigation-page: -1;
     callback show-providers();
     callback show-connections();
     callback show-add-provider();
@@ -131,6 +132,8 @@ export component AppWindow inherits Window {
     callback show-welcome();
     callback show-privacy();
     callback show-activity();
+    callback request-navigation(int);
+    callback complete-pending-navigation();
     callback show-diagnostics();
     callback set-diagnostic-include-paths(bool);
     callback request-provider-delete(string);
@@ -194,6 +197,8 @@ export component AppWindow inherits Window {
                 if root.page == 13 { root.cancel-save-provider(); return accept; }
                 if root.page == 14 { root.cancel-discard-connection(); return accept; }
                 if root.page == 15 { root.cancel-discard-provider(); return accept; }
+                if root.page == 2 { root.request-discard-provider(); return accept; }
+                if root.page == 5 { root.request-discard-connection(); return accept; }
             }
             reject
         }
@@ -208,12 +213,12 @@ export component AppWindow inherits Window {
             spacing: 6px;
             Text { text: "SYNCPAK"; color: #2c2925; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
             HorizontalBox { spacing: 6px;
-                Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; clicked => { root.show-connections(); } }
-                Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; clicked => { root.show-providers(); } }
+                Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; clicked => { root.request-navigation(4); } }
+                Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; clicked => { root.request-navigation(1); } }
             }
             HorizontalBox { spacing: 6px;
-                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; clicked => { root.show-activity(); } }
-                Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; clicked => { root.show-privacy(); } }
+                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; clicked => { root.request-navigation(9); } }
+                Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; clicked => { root.request-navigation(3); } }
                 Rectangle { horizontal-stretch: 1; }
             }
         }

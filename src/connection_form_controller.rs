@@ -80,44 +80,33 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
-    let discard_configuration = Rc::clone(configuration);
-    let discard_diagnostics = Rc::clone(&diagnostics);
-    window.on_request_discard_connection(move || {
-        request_discard(
-            &weak,
-            Rc::clone(&discard_configuration),
-            Rc::clone(&discard_diagnostics),
-        );
-    });
+    window.on_request_discard_connection(move || request_discard(&weak));
 
     let weak = window.as_weak();
     window.on_cancel_discard_connection(move || {
         if let Some(window) = weak.upgrade() {
+            window.set_pending_navigation_page(-1);
             window.set_page(5);
         }
     });
 
     let weak = window.as_weak();
-    let discard_configuration = Rc::clone(configuration);
     window.on_confirm_discard_connection(move || {
-        connection_list_controller::show(
-            &weak,
-            Rc::clone(&discard_configuration),
-            Rc::clone(&diagnostics),
-        );
+        if let Some(window) = weak.upgrade() {
+            window.invoke_complete_pending_navigation();
+        }
     });
 }
 
-fn request_discard(
-    weak: &slint::Weak<AppWindow>,
-    configuration: Rc<ConfigStore>,
-    diagnostics: SharedDiagnosticLog,
-) {
+fn request_discard(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_pending_navigation_page() < 0 {
+        window.set_pending_navigation_page(4);
+    }
     if is_dirty(&window) {
         window.set_page(14);
     } else {
-        connection_list_controller::show(weak, configuration, diagnostics);
+        window.invoke_complete_pending_navigation();
     }
 }
 
