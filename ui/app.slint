@@ -211,9 +211,10 @@ export component AppWindow inherits Window {
         width: root.width;
         height: root.height;
         padding: 16px;
+        padding-left: root.width >= 700px ? 176px : 16px;
         spacing: 16px;
 
-        if root.width >= 520px : VerticalBox {
+        if root.width >= 520px && root.width < 700px : VerticalBox {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
             spacing: 6px;
@@ -912,6 +913,28 @@ export component AppWindow inherits Window {
                     Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; clicked => { root.request-navigation(3); } }
                 }
             }
+        }
+    }
+    if root.width >= 700px : Rectangle {
+        accessible-role: navigation;
+        accessible-label: "Primary navigation";
+        x: 16px;
+        y: 16px;
+        width: 144px;
+        height: root.height - 32px;
+        background: #fffaf0;
+        border-color: #2c2925;
+        border-width: 1px;
+        border-radius: 8px;
+        VerticalBox {
+            padding: 12px;
+            spacing: 8px;
+            Text { text: "SYNCPAK"; color: #2c2925; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
+            Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; clicked => { root.request-navigation(4); } }
+            Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; clicked => { root.request-navigation(1); } }
+            Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; clicked => { root.request-navigation(9); } }
+            Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; clicked => { root.request-navigation(3); } }
+            Rectangle { vertical-stretch: 1; }
         }
     }
     }
