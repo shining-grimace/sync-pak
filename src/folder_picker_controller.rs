@@ -66,6 +66,9 @@ fn poll_for_selection(
         Some(Ok(None)) => {
             if let Some(window) = weak.upgrade() {
                 window.set_folder_picker_open(false);
+                window.set_notice_message(
+                    "No folder was selected. Enter a path manually or try again.".into(),
+                );
             }
         }
         Some(Err(error)) => set_error(&weak, &diagnostics, error),
