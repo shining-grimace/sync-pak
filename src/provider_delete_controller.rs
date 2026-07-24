@@ -7,12 +7,14 @@ use crate::{
     configuration::{ConfigStore, ProviderId, ProviderRepository},
     diagnostics_controller::{self, SharedDiagnosticLog},
     platform::PlatformCredentialStore,
+    provider_bucket_cache::{self, ProviderBucketCache},
 };
 
 pub(crate) fn configure(
     window: &AppWindow,
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
+    buckets: ProviderBucketCache,
 ) {
     let weak = window.as_weak();
     let request_config = Rc::clone(configuration);
@@ -24,18 +26,26 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let confirm_config = Rc::clone(configuration);
     let confirm_diagnostics = Rc::clone(&diagnostics);
+    let confirm_buckets = Rc::clone(&buckets);
     window.on_confirm_provider_delete(move || {
-        delete_provider(&weak, &confirm_config, &confirm_diagnostics);
+        delete_provider(
+            &weak,
+            &confirm_config,
+            &confirm_diagnostics,
+            &confirm_buckets,
+        );
     });
 
     let weak = window.as_weak();
     let cancel_config = Rc::clone(configuration);
     let cancel_diagnostics = Rc::clone(&diagnostics);
+    let cancel_buckets = Rc::clone(&buckets);
     window.on_cancel_provider_delete(move || {
         crate::provider_list_controller::show(
             &weak,
             Rc::clone(&cancel_config),
             Rc::clone(&cancel_diagnostics),
+            Rc::clone(&cancel_buckets),
         );
     });
 }
@@ -72,24 +82,27 @@ fn delete_provider(
     weak: &slint::Weak<AppWindow>,
     configuration: &Rc<ConfigStore>,
     diagnostics: &SharedDiagnosticLog,
+    buckets: &ProviderBucketCache,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    let result =
-        provider_id(configuration, window.get_pending_provider_id().as_str()).and_then(|id| {
-            PlatformCredentialStore::new()
-                .map_err(|error| error.to_string())
-                .and_then(|store| {
-                    ProviderRepository::new(configuration, &store)
-                        .delete(&id)
-                        .map_err(|error| error.to_string())
-                })
-        });
+    let pending_id = window.get_pending_provider_id();
+    let result = provider_id(configuration, pending_id.as_str()).and_then(|id| {
+        PlatformCredentialStore::new()
+            .map_err(|error| error.to_string())
+            .and_then(|store| {
+                ProviderRepository::new(configuration, &store)
+                    .delete(&id)
+                    .map_err(|error| error.to_string())
+            })
+    });
     match result {
         Ok(_) => {
+            provider_bucket_cache::remove(buckets, pending_id.as_str());
             crate::provider_list_controller::show(
                 weak,
                 Rc::clone(configuration),
                 Rc::clone(diagnostics),
+                Rc::clone(buckets),
             );
             window.set_notice_message("Provider deleted.".into());
         }

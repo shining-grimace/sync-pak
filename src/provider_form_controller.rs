@@ -12,6 +12,7 @@ use crate::{
     form_validation,
     onboarding::complete_welcome,
     platform::PlatformCredentialStore,
+    provider_bucket_cache::{self, ProviderBucketCache},
     provider_form::{
         is_dirty, mark_clean, provider_id, provider_kind, provider_kind_index, provider_options,
     },
@@ -22,6 +23,7 @@ pub(crate) fn configure(
     window: &AppWindow,
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
+    buckets: ProviderBucketCache,
 ) {
     let weak = window.as_weak();
     window.on_show_add_provider(move || show_add(&weak));
@@ -29,11 +31,13 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let save_configuration = Rc::clone(configuration);
     let save_diagnostics = Rc::clone(&diagnostics);
+    let save_buckets = Rc::clone(&buckets);
     window.on_save_provider(move |name, kind, access_key_id, secret_access_key| {
         save(
             &weak,
             Rc::clone(&save_configuration),
             &save_diagnostics,
+            &save_buckets,
             name,
             kind,
             access_key_id,
@@ -63,11 +67,13 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let discard_configuration = Rc::clone(configuration);
     let discard_diagnostics = Rc::clone(&diagnostics);
+    let discard_buckets = Rc::clone(&buckets);
     window.on_request_discard_provider(move || {
         request_discard(
             &weak,
             Rc::clone(&discard_configuration),
             Rc::clone(&discard_diagnostics),
+            Rc::clone(&discard_buckets),
         );
     });
 
@@ -81,11 +87,13 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let discard_configuration = Rc::clone(configuration);
     let discard_diagnostics = Rc::clone(&diagnostics);
+    let discard_buckets = Rc::clone(&buckets);
     window.on_confirm_discard_provider(move || {
         provider_list_controller::show(
             &weak,
             Rc::clone(&discard_configuration),
             Rc::clone(&discard_diagnostics),
+            Rc::clone(&discard_buckets),
         );
     });
 
@@ -179,12 +187,13 @@ fn request_discard(
     weak: &slint::Weak<AppWindow>,
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
+    buckets: ProviderBucketCache,
 ) {
     let Some(window) = weak.upgrade() else { return };
     if is_dirty(&window) {
         window.set_page(15);
     } else {
-        provider_list_controller::show(weak, configuration, diagnostics);
+        provider_list_controller::show(weak, configuration, diagnostics, buckets);
     }
 }
 
@@ -192,6 +201,7 @@ fn save(
     weak: &slint::Weak<AppWindow>,
     configuration: Rc<ConfigStore>,
     diagnostics: &SharedDiagnosticLog,
+    buckets: &ProviderBucketCache,
     name: SharedString,
     kind: i32,
     access_key_id: SharedString,
@@ -251,6 +261,9 @@ fn save(
     })();
     match result {
         Ok(_) => {
+            if !edit_id.is_empty() {
+                provider_bucket_cache::remove(buckets, edit_id.as_str());
+            }
             window.set_provider_form_access_key(SharedString::default());
             window.set_provider_form_secret_key(SharedString::default());
             window.set_provider_form_session_token(SharedString::default());
@@ -258,7 +271,12 @@ fn save(
             window.set_provider_advanced_expanded(false);
             match complete_welcome(&configuration) {
                 Ok(()) => {
-                    provider_list_controller::show(weak, configuration, Rc::clone(diagnostics));
+                    provider_list_controller::show(
+                        weak,
+                        configuration,
+                        Rc::clone(diagnostics),
+                        Rc::clone(buckets),
+                    );
                     window.set_notice_message("Provider saved securely.".into());
                 }
                 Err(_) => diagnostics_controller::present(

@@ -14,7 +14,6 @@ pub(crate) type VerificationStates = Rc<RefCell<HashMap<String, VerificationStat
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum VerificationState {
     Checking,
-    Verified,
 }
 
 pub(crate) fn verify(
@@ -31,7 +30,7 @@ pub(crate) fn verify(
     states
         .borrow_mut()
         .insert(provider_id.clone(), VerificationState::Checking);
-    crate::provider_list_controller::refresh(weak, &configuration, &diagnostics, &states);
+    crate::provider_list_controller::refresh(weak, &configuration, &diagnostics, &states, &buckets);
     let (sender, receiver) = mpsc::sync_channel(1);
     let configuration_path = configuration.path().to_path_buf();
     let awaiting_id = provider_id.clone();
@@ -69,9 +68,7 @@ fn await_verification(
         }
         match receiver.try_recv() {
             Ok(Ok(verification)) => {
-                states
-                    .borrow_mut()
-                    .insert(provider_id.clone(), VerificationState::Verified);
+                states.borrow_mut().remove(&provider_id);
                 provider_bucket_cache::record(&buckets, &provider_id, verification.buckets.clone());
                 window.set_notice_message(
                     format!(
@@ -85,6 +82,7 @@ fn await_verification(
                     &configuration,
                     &diagnostics,
                     &states,
+                    &buckets,
                 );
             }
             Ok(Err(failure)) => {
@@ -101,6 +99,7 @@ fn await_verification(
                     &configuration,
                     &diagnostics,
                     &states,
+                    &buckets,
                 );
             }
             Err(mpsc::TryRecvError::Disconnected) => {
@@ -117,6 +116,7 @@ fn await_verification(
                     &configuration,
                     &diagnostics,
                     &states,
+                    &buckets,
                 );
             }
             Err(mpsc::TryRecvError::Empty) => await_verification(
@@ -132,10 +132,16 @@ fn await_verification(
     });
 }
 
-pub(crate) fn status(states: &VerificationStates, provider_id: &str) -> &'static str {
+pub(crate) fn status(
+    states: &VerificationStates,
+    buckets: &ProviderBucketCache,
+    provider_id: &str,
+) -> &'static str {
     match states.borrow().get(provider_id) {
         Some(VerificationState::Checking) => "Checking",
-        Some(VerificationState::Verified) => "Verified this session",
+        None if provider_bucket_cache::buckets(buckets, provider_id).is_some() => {
+            "Verified this session"
+        }
         None => "Not verified",
     }
 }
@@ -145,4 +151,25 @@ pub(crate) fn is_checking(states: &VerificationStates, provider_id: &str) -> boo
         states.borrow().get(provider_id),
         Some(VerificationState::Checking)
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{VerificationStates, status};
+    use crate::provider_bucket_cache::{ProviderBucketCache, record, remove};
+
+    #[test]
+    fn reports_a_cached_listing_as_verified_until_it_is_invalidated() {
+        let states: VerificationStates = Default::default();
+        let buckets: ProviderBucketCache = Default::default();
+
+        record(&buckets, "provider", Vec::new());
+        assert_eq!(
+            status(&states, &buckets, "provider"),
+            "Verified this session"
+        );
+
+        remove(&buckets, "provider");
+        assert_eq!(status(&states, &buckets, "provider"), "Not verified");
+    }
 }

@@ -33,14 +33,24 @@ pub(crate) fn initialize(window: &AppWindow) {
         Rc::clone(&diagnostics),
         Rc::clone(&provider_buckets),
     );
-    crate::provider_form_controller::configure(window, &configuration, Rc::clone(&diagnostics));
-    crate::provider_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
+    crate::provider_form_controller::configure(
+        window,
+        &configuration,
+        Rc::clone(&diagnostics),
+        Rc::clone(&provider_buckets),
+    );
+    crate::provider_delete_controller::configure(
+        window,
+        &configuration,
+        Rc::clone(&diagnostics),
+        Rc::clone(&provider_buckets),
+    );
     crate::connection_list_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_form_controller::configure(
         window,
         &configuration,
         Rc::clone(&diagnostics),
-        provider_buckets,
+        Rc::clone(&provider_buckets),
     );
     crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::run_direction_controller::configure(window, &configuration, Rc::clone(&diagnostics));
@@ -63,7 +73,12 @@ pub(crate) fn initialize(window: &AppWindow) {
                 );
             }
             if config.welcome_completed {
-                crate::provider_list_controller::show(&window.as_weak(), configuration, diagnostics)
+                crate::provider_list_controller::show(
+                    &window.as_weak(),
+                    configuration,
+                    diagnostics,
+                    provider_buckets,
+                )
             }
         }
         Err(_) => diagnostics_controller::present(

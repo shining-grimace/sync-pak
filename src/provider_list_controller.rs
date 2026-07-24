@@ -22,12 +22,14 @@ pub(crate) fn configure(
     let verify_configuration = Rc::clone(configuration);
     let show_states = Rc::clone(&states);
     let show_diagnostics = Rc::clone(&diagnostics);
+    let show_buckets = Rc::clone(&buckets);
     window.on_show_providers(move || {
         show_with_states(
             &weak,
             Rc::clone(&show_configuration),
             Rc::clone(&show_diagnostics),
             Rc::clone(&show_states),
+            Rc::clone(&show_buckets),
         )
     });
 
@@ -48,8 +50,15 @@ pub(crate) fn show(
     weak: &slint::Weak<AppWindow>,
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
+    buckets: ProviderBucketCache,
 ) {
-    show_with_states(weak, configuration, diagnostics, Default::default());
+    show_with_states(
+        weak,
+        configuration,
+        diagnostics,
+        Default::default(),
+        buckets,
+    );
 }
 
 fn show_with_states(
@@ -57,6 +66,7 @@ fn show_with_states(
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
     states: VerificationStates,
+    buckets: ProviderBucketCache,
 ) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
@@ -64,7 +74,7 @@ fn show_with_states(
     window.set_page(1);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
-        refresh(&weak, &configuration, &diagnostics, &states)
+        refresh(&weak, &configuration, &diagnostics, &states, &buckets)
     });
 }
 
@@ -73,6 +83,7 @@ pub(crate) fn refresh(
     configuration: &ConfigStore,
     diagnostics: &SharedDiagnosticLog,
     states: &VerificationStates,
+    buckets: &ProviderBucketCache,
 ) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
@@ -89,6 +100,7 @@ pub(crate) fn refresh(
                     kind: kind_name(provider.kind).into(),
                     verification: provider_list_verification_controller::status(
                         states,
+                        buckets,
                         provider.id.as_str(),
                     )
                     .into(),

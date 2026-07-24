@@ -11,9 +11,13 @@ pub(crate) fn buckets(cache: &ProviderBucketCache, provider_id: &str) -> Option<
     cache.borrow().get(provider_id).cloned()
 }
 
+pub(crate) fn remove(cache: &ProviderBucketCache, provider_id: &str) {
+    cache.borrow_mut().remove(provider_id);
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{ProviderBucketCache, buckets, record};
+    use super::{ProviderBucketCache, buckets, record, remove};
 
     #[test]
     fn preserves_an_empty_verified_listing_separately_from_no_listing() {
@@ -22,5 +26,15 @@ mod tests {
         assert_eq!(buckets(&cache, "provider"), None);
         record(&cache, "provider", Vec::new());
         assert_eq!(buckets(&cache, "provider"), Some(Vec::new()));
+    }
+
+    #[test]
+    fn removes_a_listing_when_its_provider_changes() {
+        let cache: ProviderBucketCache = Default::default();
+        record(&cache, "provider", vec!["archive".into()]);
+
+        remove(&cache, "provider");
+
+        assert_eq!(buckets(&cache, "provider"), None);
     }
 }
