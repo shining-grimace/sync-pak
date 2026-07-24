@@ -53,6 +53,9 @@ export component AppWindow inherits Window {
     in-out property <string> activity-result-status;
     in-out property <string> activity-result-summary;
     in-out property <[string]> activity-result-details;
+    in-out property <string> activity-result-connection-id;
+    in-out property <int> activity-result-retry-direction: 0;
+    in-out property <bool> activity-result-can-retry: false;
     in-out property <string> activity-progress-id;
     in-out property <string> activity-progress-title;
     in-out property <string> activity-progress-phase;
@@ -171,6 +174,7 @@ export component AppWindow inherits Window {
     callback clear-completed-activity();
     callback show-activity-result(string);
     callback dismiss-activity-result();
+    callback retry-activity-result();
     callback show-activity-progress(string);
     callback dismiss-activity-progress();
     callback request-run-connection(string);
@@ -717,6 +721,12 @@ export component AppWindow inherits Window {
                         text: detail; wrap: word-wrap;
                     }
                 }
+            }
+            if root.activity-result-can-retry : Button {
+                accessible-label: "Retry " + root.activity-result-title + " with a new preflight review";
+                text: "Retry with a new preflight";
+                primary: true;
+                clicked => { root.retry-activity-result(); }
             }
             Button { accessible-label: "Return to activity"; text: "Back to activity"; clicked => { root.dismiss-activity-result(); } }
             }
