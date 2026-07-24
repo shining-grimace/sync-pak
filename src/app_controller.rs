@@ -116,6 +116,9 @@ fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
 
 fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
     let Some(window) = weak.upgrade() else { return };
+    if navigation_is_blocked(window.get_page()) {
+        return;
+    }
     match window.get_page() {
         2 => {
             window.set_pending_navigation_page(page);
@@ -127,6 +130,10 @@ fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
         }
         _ => navigate(&window, page),
     }
+}
+
+fn navigation_is_blocked(page: i32) -> bool {
+    matches!(page, 6 | 7 | 12..=15)
 }
 
 fn complete_pending_navigation(weak: &slint::Weak<AppWindow>) {
@@ -147,5 +154,20 @@ fn navigate(window: &AppWindow, page: i32) {
         4 => window.invoke_show_connections(),
         9 => window.invoke_show_activity(),
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::navigation_is_blocked;
+
+    #[test]
+    fn navigation_cannot_bypass_confirmation_pages() {
+        for page in [6, 7, 12, 13, 14, 15] {
+            assert!(navigation_is_blocked(page));
+        }
+        for page in [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 16, 17] {
+            assert!(!navigation_is_blocked(page));
+        }
     }
 }
