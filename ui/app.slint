@@ -311,7 +311,7 @@ export component AppWindow inherits Window {
                         }
                     }
                     Rectangle { height: 16px; background: transparent; }
-                    HorizontalBox { alignment: center; Button { accessible-label: "Add your first provider"; text: "Add your first provider"; primary: true; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-add-provider(); } } }
+                    HorizontalBox { alignment: center; FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: welcome-add-provider; init => { self.focus(); } } welcome-add-provider := Button { accessible-label: "Add your first provider"; text: "Add your first provider"; primary: true; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-add-provider(); } } }
                     HorizontalBox { alignment: center; Button { accessible-label: "Read how SyncPak protects your privacy"; text: "Read how SyncPak protects your privacy"; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-privacy(); } } }
                 }
             }
@@ -324,16 +324,18 @@ export component AppWindow inherits Window {
             Text { text: "Providers"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Provider credentials are kept in this device's protected storage."; color: #454039; wrap: word-wrap; }
             if root.providers-load-failed : VerticalBox {
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: providers-retry; init => { self.focus(); } }
                 accessible-role: region;
                 accessible-label: "Providers unavailable";
                 spacing: 8px;
                 Text { text: "Providers unavailable"; color: #7b241c; font-size: 22px; font-weight: 700; }
                 Text { text: "SyncPak could not load providers. Check configuration storage and try again."; color: #7b241c; wrap: word-wrap; }
-                Button { accessible-label: "Retry loading providers"; text: "Retry"; primary: true; clicked => { root.show-providers(); } }
+                providers-retry := Button { accessible-label: "Retry loading providers"; text: "Retry"; primary: true; clicked => { root.show-providers(); } }
             }
             if !root.providers-load-failed : VerticalBox {
             spacing: 12px;
-            Button { accessible-label: "Add a provider"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
+            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: provider-add; init => { self.focus(); } }
+            provider-add := Button { accessible-label: "Add a provider"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
             if root.providers.length == 0 : VerticalBox {
                 spacing: 8px;
                 Text { text: "No providers yet"; font-size: 22px; font-weight: 700; }
@@ -372,6 +374,7 @@ export component AppWindow inherits Window {
             Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Credentials are saved in this device's protected storage only when you save this provider."; wrap: word-wrap; }
             if root.provider-form-id != "" : Text { text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values."; color: #454039; wrap: word-wrap; }
+            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: provider-name; init => { self.focus(); } }
             Text { text: "Provider name"; font-weight: 700; }
             provider-name := LineEdit { accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
             Text { text: "Provider type"; font-weight: 700; }
@@ -550,6 +553,7 @@ export component AppWindow inherits Window {
             Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
             VerticalBox { accessible-role: region; accessible-label: "Connection identity and cloud destination"; spacing: 6px;
+            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-name; init => { self.focus(); } }
             Text { text: "Connection name"; font-weight: 700; }
             connection-name := LineEdit { accessible-label: "Connection name"; placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
             Text { text: "Used in the connection list and archive filenames."; color: #454039; wrap: word-wrap; }
@@ -685,6 +689,7 @@ export component AppWindow inherits Window {
                     read-only: true;
                     wrap: word-wrap;
                 }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: diagnostic-report; init => { self.focus(); } }
             }
             Button {
                 accessible-label: root.diagnostic-include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
@@ -870,7 +875,8 @@ export component AppWindow inherits Window {
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Upload"; font-weight: 700; }
                     Text { text: "Use the local folder as the source and cloud storage as the destination."; wrap: word-wrap; }
-                    Button { accessible-label: root.run-direction == 0 ? "Upload direction, selected" : "Choose upload direction"; text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
+                    FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: choose-upload; init => { self.focus(); } }
+                    choose-upload := Button { accessible-label: root.run-direction == 0 ? "Upload direction, selected" : "Choose upload direction"; text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
                 }
             }
             Rectangle { accessible-role: region; accessible-label: "Download direction. Use cloud storage as the source and the local folder as the destination."; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
