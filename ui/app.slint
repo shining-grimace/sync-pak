@@ -612,6 +612,14 @@ export component AppWindow inherits Window {
                 VerticalBox { padding: 12px; spacing: 4px; Text { text: "File encryption"; font-size: 20px; font-weight: 700; } Text { text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption."; wrap: word-wrap; } }
             }
             Text { text: "SyncPak " + root.app-version; color: #454039; }
+            VerticalBox { accessible-role: region; accessible-label: "Privacy and source links"; spacing: 6px;
+                Text { text: "Links"; font-weight: 700; }
+                Button { accessible-label: "Open SyncPak source code in your browser"; text: "Source code"; clicked => { Platform.open-url("https://github.com/shining-grimace/sync-pak"); } }
+                Button { accessible-label: "Open Cloudflare privacy policy in your browser"; text: "Cloudflare privacy policy"; clicked => { Platform.open-url("https://www.cloudflare.com/privacypolicy/"); } }
+                Button { accessible-label: "Open Backblaze privacy policy in your browser"; text: "Backblaze privacy policy"; clicked => { Platform.open-url("https://www.backblaze.com/company/policies/privacy.html"); } }
+                Button { accessible-label: "Open Amazon privacy notice in your browser"; text: "AWS privacy notice"; clicked => { Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010"); } }
+                Text { text: "SyncPak's privacy policy and open-source licence notices will be published before release."; color: #454039; wrap: word-wrap; }
+            }
             Button { accessible-label: "View redacted diagnostics with credentials excluded"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
             Button { accessible-label: "Back to welcome"; text: "Back"; clicked => { root.show-welcome(); } }
             }
