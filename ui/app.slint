@@ -467,17 +467,24 @@ export component AppWindow inherits Window {
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
             if root.connections-load-failed : VerticalBox {
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connections-retry; init => { self.focus(); } }
                 accessible-role: region;
                 accessible-label: "Connections unavailable";
                 spacing: 8px;
                 Text { text: "Connections unavailable"; color: #7b241c; font-size: 22px; font-weight: 700; }
                 Text { text: "SyncPak could not load connections. Check configuration storage and try again."; color: #7b241c; wrap: word-wrap; }
-                Button { accessible-label: "Retry loading connections"; text: "Retry"; primary: true; clicked => { root.show-connections(); } }
+                connections-retry := Button { accessible-label: "Retry loading connections"; text: "Retry"; primary: true; clicked => { root.show-connections(); } }
             }
             if !root.connections-load-failed : VerticalBox {
             spacing: 12px;
-            if root.providers-total == 0 : Button { accessible-label: "Add a provider before creating a connection"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
-            if root.providers-total > 0 : Button { accessible-label: "Create a new connection"; text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
+            if root.providers-total == 0 : VerticalBox {
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-add-provider; init => { self.focus(); } }
+                connection-add-provider := Button { accessible-label: "Add a provider before creating a connection"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
+            }
+            if root.providers-total > 0 : VerticalBox {
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-new; init => { self.focus(); } }
+                connection-new := Button { accessible-label: "Create a new connection"; text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
+            }
             VerticalBox { accessible-role: region; accessible-label: "Filter connections by mode"; spacing: 6px;
                 Text { text: "Filter by mode"; color: #454039; font-weight: 700; }
                 HorizontalBox { spacing: 6px;
@@ -715,7 +722,8 @@ export component AppWindow inherits Window {
             Text { text: "Queued and completed operations appear here until SyncPak exits."; color: #454039; wrap: word-wrap; }
             if root.activity-clearable-count > 0 : VerticalBox {
                 spacing: 4px;
-                Button { accessible-label: "Clear " + root.activity-clearable-count + " completed activity entries"; text: root.activity-clearable-count == 1 ? "Clear completed entry" : "Clear completed entries"; clicked => { root.clear-completed-activity(); } }
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: clear-completed-activity; init => { self.focus(); } }
+                clear-completed-activity := Button { accessible-label: "Clear " + root.activity-clearable-count + " completed activity entries"; text: root.activity-clearable-count == 1 ? "Clear completed entry" : "Clear completed entries"; clicked => { root.clear-completed-activity(); } }
                 Text { text: "Removes " + root.activity-clearable-count + (root.activity-clearable-count == 1 ? " completed, failed, or cancelled entry." : " completed, failed, or cancelled entries."); color: #454039; wrap: word-wrap; }
             }
             if root.activity-rows.length == 0 : Rectangle {
