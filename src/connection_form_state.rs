@@ -21,6 +21,7 @@ pub(crate) fn show_add(
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     reset(&window);
+    window.set_connection_providers_loading(true);
     window.set_page(5);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
@@ -102,6 +103,7 @@ fn load_providers(
         }
         Err(_) => provider_load_error(&window, diagnostics),
     }
+    window.set_connection_providers_loading(false);
 }
 
 pub(crate) fn set_cached_buckets(
@@ -128,6 +130,7 @@ fn apply_provider_selection(
 }
 
 fn provider_load_error(window: &AppWindow, diagnostics: &SharedDiagnosticLog) {
+    window.set_connection_providers_loading(false);
     diagnostics_controller::present(
         window,
         diagnostics,

@@ -19,6 +19,7 @@ pub(crate) fn reset(window: &AppWindow) {
     window.set_connection_form_mode(0);
     window.set_connection_form_retention("1".into());
     set_verified_buckets(window, None);
+    window.set_connection_providers_loading(false);
     mark_clean(window);
 }
 
@@ -51,6 +52,7 @@ pub(crate) fn populate(
             .into(),
     );
     set_verified_buckets(window, None);
+    window.set_connection_providers_loading(false);
     mark_clean(window);
     window.set_status_message(SharedString::default());
     window.set_page(5);
