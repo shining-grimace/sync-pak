@@ -81,6 +81,7 @@ pub mod provider_multipart_conformance;
 pub mod provider_probe;
 #[cfg(feature = "provider-probes")]
 mod provider_probe_config;
+mod provider_save_error;
 pub mod provider_verification;
 pub mod queue;
 pub mod queue_progress_observer;

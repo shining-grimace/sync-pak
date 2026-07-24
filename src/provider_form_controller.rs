@@ -18,6 +18,7 @@ use crate::{
         provider_kind_index, provider_options,
     },
     provider_list_controller,
+    provider_save_error::ProviderSaveError,
 };
 
 pub(crate) fn configure(
@@ -238,21 +239,22 @@ fn save(
         options: provider_options(&account_id, &region, &default_bucket, &endpoint),
     };
     let edit_id = window.get_provider_form_id();
-    let result = (|| {
-        let store = PlatformCredentialStore::new().map_err(|error| error.to_string())?;
+    let result = (|| -> Result<_, ProviderSaveError> {
+        let store = PlatformCredentialStore::new().map_err(ProviderSaveError::ProtectedStore)?;
         let repository = ProviderRepository::new(&configuration, &store);
         if edit_id.is_empty() {
             repository
                 .create(draft, &credentials)
-                .map_err(|error| error.to_string())
+                .map_err(ProviderSaveError::from)
         } else {
             repository
                 .update(
-                    &provider_id(&configuration, edit_id.as_str())?,
+                    &provider_id(&configuration, edit_id.as_str())
+                        .map_err(|_| ProviderSaveError::Other)?,
                     draft,
                     &credentials,
                 )
-                .map_err(|error| error.to_string())
+                .map_err(ProviderSaveError::from)
         }
     })();
     match result {
@@ -290,15 +292,16 @@ fn save(
                 ),
             }
         }
-        Err(_) => {
+        Err(error) => {
             window.set_provider_save_after_verification(false);
             window.set_page(2);
+            let (summary, technical_details, message) = error.presentation();
             diagnostics_controller::present(
                 &window,
                 diagnostics,
-                "Provider settings could not be saved",
-                "provider save failed",
-                "SyncPak could not save this provider. Check its settings and protected storage, then try again.",
+                summary,
+                technical_details,
+                message,
             );
         }
     }
