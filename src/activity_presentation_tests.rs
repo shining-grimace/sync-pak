@@ -42,7 +42,7 @@ fn presents_terminal_results_from_the_immutable_activity_snapshot() {
         "Add-only · Upload · /pictures → R2 / backups / phone"
     );
     assert_eq!(presentation.status, "Completed");
-    assert_eq!(presentation.progress_summary, "Preparing");
+    assert_eq!(presentation.progress_summary, "");
     assert_eq!(presentation.result_summary, "0 items completed");
     assert!(!presentation.can_cancel);
     assert!(!presentation.can_remove);
@@ -63,4 +63,20 @@ fn identifies_archive_and_bidirectional_activity_context() {
 
     assert!(presentation.detail.starts_with("Archive · Download ·"));
     assert_eq!(super::direction(Direction::BothWays), "Both ways");
+}
+
+#[test]
+fn presents_a_queued_cancellation_as_not_started() {
+    let mut queue = OperationQueue::default();
+    let operation_id = queue.push(
+        OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+        snapshot(),
+    );
+    assert!(queue.cancel_queued(operation_id));
+
+    let presentation = ActivityPresentation::from_entry(queue.entries().next().unwrap());
+
+    assert_eq!(presentation.status, "Cancelled");
+    assert_eq!(presentation.progress_summary, "");
+    assert_eq!(presentation.result_summary, "Cancelled before starting");
 }

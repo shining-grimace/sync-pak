@@ -26,15 +26,23 @@ impl ActivityPresentation {
             title: entry.snapshot.connection_name.clone(),
             detail: detail(&entry.snapshot),
             status: status(entry.state),
-            progress_summary: entry.progress.as_ref().map_or_else(
-                String::new,
-                crate::operation_progress::OperationProgress::summary,
-            ),
+            progress_summary: progress_summary(entry),
             result_summary,
             can_cancel: entry.state == QueueState::Running,
             can_remove: entry.state == QueueState::Queued,
         }
     }
+}
+
+fn progress_summary(entry: &QueueEntry) -> String {
+    (entry.state == QueueState::Running)
+        .then(|| {
+            entry.progress.as_ref().map_or_else(
+                String::new,
+                crate::operation_progress::OperationProgress::summary,
+            )
+        })
+        .unwrap_or_default()
 }
 
 fn detail(snapshot: &crate::activity_snapshot::ActivitySnapshot) -> String {
@@ -76,22 +84,25 @@ fn status(state: QueueState) -> &'static str {
 fn summary(result: &crate::execution::ExecutionResult) -> String {
     match result.state {
         ExecutionState::Completed => format!("{} items completed", result.completed.len()),
-        ExecutionState::Failed => format!(
-            "{} completed · {} incomplete · {} not started",
-            result.completed.len(),
-            result.incomplete.len(),
-            result.not_started.len()
-        ),
-        ExecutionState::Cancelled => format!(
-            "{} completed · {} incomplete · {} not started",
-            result.completed.len(),
-            result.incomplete.len(),
-            result.not_started.len()
-        ),
+        ExecutionState::Failed => incomplete_summary(result, "Failed"),
+        ExecutionState::Cancelled => incomplete_summary(result, "Cancelled"),
         ExecutionState::Preparing | ExecutionState::Copying | ExecutionState::Finalizing => {
             String::new()
         }
     }
+}
+
+fn incomplete_summary(result: &crate::execution::ExecutionResult, state: &str) -> String {
+    if result.completed.is_empty() && result.incomplete.is_empty() && result.not_started.is_empty()
+    {
+        return format!("{state} before starting");
+    }
+    format!(
+        "{} completed · {} incomplete · {} not started",
+        result.completed.len(),
+        result.incomplete.len(),
+        result.not_started.len()
+    )
 }
 
 #[cfg(test)]
