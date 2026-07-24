@@ -775,7 +775,7 @@ export component AppWindow inherits Window {
         if root.page == 11 : ScrollView {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 12px;
-            Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : "Ready to start"); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
+            Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : (root.preflight-requires-mirror-confirmation ? "Review mirror changes" : "Ready to start")); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Reviewing " + root.run-connection-name + " · " + root.run-connection-mode + " · " + (root.run-direction == 0 ? "Upload" : (root.run-direction == 1 ? "Download" : "Both ways")); color: #454039; wrap: word-wrap; }
             if root.preflight-loading : Text { accessible-live-region: polite; text: "Listing files…"; font-weight: 700; }
             Text { text: "No files are changed during this check."; color: #454039; wrap: word-wrap; }
@@ -804,10 +804,15 @@ export component AppWindow inherits Window {
                         Text { text: root.preflight-skipped; font-weight: 700; }
                     }
                 }
-                if root.preflight-requires-mirror-confirmation : Text {
-                    accessible-live-region: assertive;
-                    text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
-                    color: #7b241c; wrap: word-wrap;
+                if root.preflight-requires-mirror-confirmation : Rectangle {
+                    accessible-role: region;
+                    accessible-label: "Destructive mirror changes";
+                    background: #fff4f2; border-color: #7b241c; border-width: 1px; border-radius: 8px; min-height: 86px;
+                    VerticalBox { padding: 12px; spacing: 5px;
+                        Text { text: "Destructive mirror changes"; color: #7b241c; font-weight: 700; }
+                        Text { accessible-live-region: assertive; text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing."; color: #7b241c; wrap: word-wrap; }
+                        Text { text: root.preflight-overwrites + " · " + root.preflight-deletions; color: #7b241c; wrap: word-wrap; }
+                    }
                 }
                 if root.preflight-items.length == 0 : Text {
                     text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
@@ -833,10 +838,22 @@ export component AppWindow inherits Window {
                     }
                 }
                 if root.preflight-requires-mirror-confirmation : CheckBox {
+                    accessible-label: "Acknowledge the listed overwrites and deletions";
                     text: "I understand that the listed destination files will be overwritten or deleted.";
                     checked <=> root.preflight-mirror-confirmed;
                 }
-                Text { text: root.preflight-start-action + " will be available when transfer execution is connected. This review is read-only."; color: #454039; wrap: word-wrap; }
+                if root.preflight-requires-mirror-confirmation : Text {
+                    accessible-live-region: polite;
+                    text: root.preflight-mirror-confirmed ? "Destructive mirror changes acknowledged." : "Acknowledge the listed changes before this mirror can start.";
+                    color: root.preflight-mirror-confirmed ? #23623a : #7b241c;
+                    wrap: word-wrap;
+                }
+                Button {
+                    accessible-label: (root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed) ? root.preflight-start-action + " is unavailable until destructive changes are acknowledged" : root.preflight-start-action + " is unavailable because transfer execution is not connected";
+                    text: root.preflight-start-action + " (unavailable)";
+                    enabled: false;
+                }
+                Text { text: root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed ? "Transfer execution stays unavailable until you acknowledge the destructive changes above." : "Transfer execution is not connected in this build. This completed review remains read-only."; color: #454039; wrap: word-wrap; }
             }
             VerticalBox {
                 Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.cancel-run-direction(); } }
