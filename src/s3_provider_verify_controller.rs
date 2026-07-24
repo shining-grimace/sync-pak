@@ -47,6 +47,7 @@ fn poll(
         match receiver.try_recv() {
             Ok(Ok(verification)) => {
                 window.set_provider_verifying(false);
+                let save_after_verification = window.get_provider_save_after_verification();
                 window.set_provider_bucket_list_empty(verification.buckets.is_empty());
                 window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(
                     VecModel::from_iter(verification.buckets.iter().cloned().map(Into::into)),
@@ -58,9 +59,18 @@ fn poll(
                     )
                     .into(),
                 );
+                if save_after_verification {
+                    window.invoke_save_provider(
+                        window.get_provider_form_name(),
+                        window.get_provider_form_kind(),
+                        window.get_provider_form_access_key(),
+                        window.get_provider_form_secret_key(),
+                    );
+                }
             }
             Ok(Err(failure)) => {
                 window.set_provider_verifying(false);
+                window.set_provider_save_after_verification(false);
                 diagnostics_controller::present(
                     &window,
                     &diagnostics,
@@ -71,6 +81,7 @@ fn poll(
             }
             Err(mpsc::TryRecvError::Disconnected) => {
                 window.set_provider_verifying(false);
+                window.set_provider_save_after_verification(false);
                 diagnostics_controller::present(
                     &window,
                     &diagnostics,

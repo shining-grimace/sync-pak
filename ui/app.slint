@@ -90,6 +90,7 @@ export component AppWindow inherits Window {
     in-out property <bool> provider-secret-visible: false;
     in-out property <bool> provider-advanced-expanded: false;
     in-out property <bool> provider-verifying: false;
+    in-out property <bool> provider-save-after-verification: false;
     in-out property <string> pending-connection-id;
     in-out property <string> pending-connection-name;
     in-out property <string> connection-form-id;
@@ -136,6 +137,7 @@ export component AppWindow inherits Window {
     callback request-provider-edit(string);
     callback verify-saved-provider(string);
     callback verify-provider();
+    callback save-and-verify-provider();
     callback confirm-provider-delete();
     callback cancel-provider-delete();
     callback request-connection-delete(string);
@@ -384,7 +386,8 @@ export component AppWindow inherits Window {
             VerticalBox {
                 Button { text: "Back"; clicked => { root.request-discard-provider(); } }
                 Button { accessible-label: "Save " + root.provider-form-name + " without verifying"; text: "Save without verifying"; enabled: !root.provider-verifying; clicked => { root.request-save-provider(); } }
-                Button { accessible-label: "Verify settings for " + root.provider-form-name; text: root.provider-verifying ? "Verifying…" : "Verify settings"; primary: true; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
+                Button { accessible-label: "Verify settings for " + root.provider-form-name; text: "Verify settings"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
+                Button { accessible-label: "Save and verify " + root.provider-form-name; text: root.provider-verifying ? "Verifying…" : "Save and verify"; primary: true; enabled: !root.provider-verifying; clicked => { root.save-and-verify-provider(); } }
             }
             }
         }

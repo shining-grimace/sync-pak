@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
+use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 
 use crate::{
     AppWindow,
@@ -47,7 +47,21 @@ pub(crate) fn configure(
 
     let weak = window.as_weak();
     let verify_diagnostics = Rc::clone(&diagnostics);
-    window.on_verify_provider(move || verify(&weak, Rc::clone(&verify_diagnostics)));
+    window.on_verify_provider(move || {
+        if let Some(window) = weak.upgrade() {
+            window.set_provider_save_after_verification(false);
+        }
+        verify(&weak, Rc::clone(&verify_diagnostics));
+    });
+
+    let weak = window.as_weak();
+    let save_and_verify_diagnostics = Rc::clone(&diagnostics);
+    window.on_save_and_verify_provider(move || {
+        if let Some(window) = weak.upgrade() {
+            window.set_provider_save_after_verification(true);
+        }
+        verify(&weak, Rc::clone(&save_and_verify_diagnostics));
+    });
 
     let weak = window.as_weak();
     window.on_request_save_provider(move || {
@@ -105,6 +119,7 @@ pub(crate) fn configure(
 fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
     let Some(window) = weak.upgrade() else { return };
     let Some(kind) = provider_kind(window.get_provider_form_kind()) else {
+        window.set_provider_save_after_verification(false);
         return;
     };
     let account = window.get_provider_form_account_id();
@@ -123,6 +138,7 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
         &bucket,
         &endpoint,
     ) {
+        window.set_provider_save_after_verification(false);
         window.set_status_message(error.into());
         return;
     }
@@ -149,6 +165,7 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
     {
         let _ = (provider, credentials);
         window.set_provider_verifying(false);
+        window.set_provider_save_after_verification(false);
         window.set_provider_bucket_list_empty(false);
         diagnostics_controller::present(
             &window,
@@ -176,6 +193,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_secret_visible(false);
         window.set_provider_advanced_expanded(false);
         window.set_provider_verifying(false);
+        window.set_provider_save_after_verification(false);
         window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
         window.set_provider_bucket_list_empty(false);
         mark_clean(&window);
@@ -260,9 +278,18 @@ fn save(
         }
     })();
     match result {
-        Ok(_) => {
+        Ok(saved_provider) => {
+            let save_after_verification = window.get_provider_save_after_verification();
+            window.set_provider_save_after_verification(false);
             if !edit_id.is_empty() {
                 provider_bucket_cache::remove(buckets, edit_id.as_str());
+            }
+            if save_after_verification {
+                provider_bucket_cache::record(
+                    buckets,
+                    saved_provider.id.as_str(),
+                    verified_buckets(&window),
+                );
             }
             window.set_provider_form_access_key(SharedString::default());
             window.set_provider_form_secret_key(SharedString::default());
@@ -289,6 +316,7 @@ fn save(
             }
         }
         Err(_) => {
+            window.set_provider_save_after_verification(false);
             window.set_page(2);
             diagnostics_controller::present(
                 &window,
@@ -301,6 +329,14 @@ fn save(
     }
 }
 
+fn verified_buckets(window: &AppWindow) -> Vec<String> {
+    window
+        .get_provider_verified_buckets()
+        .iter()
+        .map(|bucket| bucket.to_string())
+        .collect()
+}
+
 fn edit(
     weak: &slint::Weak<AppWindow>,
     configuration: &ConfigStore,
@@ -310,6 +346,7 @@ fn edit(
     let Some(window) = weak.upgrade() else { return };
     window.set_provider_secret_visible(false);
     window.set_provider_verifying(false);
+    window.set_provider_save_after_verification(false);
     window.set_provider_form_access_key(SharedString::default());
     window.set_provider_form_secret_key(SharedString::default());
     window.set_provider_form_session_token(SharedString::default());
