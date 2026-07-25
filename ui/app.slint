@@ -120,6 +120,8 @@ export component AppWindow inherits Window {
     in-out property <string> run-connection-id;
     in-out property <string> run-connection-name;
     in-out property <string> run-connection-mode;
+    in-out property <string> run-local-endpoint;
+    in-out property <string> run-remote-endpoint;
     in-out property <string> run-archive-upload-details;
     in-out property <string> run-archive-download-details;
     in-out property <bool> run-allows-both-ways;
@@ -922,25 +924,31 @@ export component AppWindow inherits Window {
                 background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 66px;
                 Text { text: root.run-archive-download-details; color: #454039; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
             }
-            Rectangle { accessible-role: region; accessible-label: "Upload direction. Use the local folder as the source and cloud storage as the destination."; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+            Rectangle { accessible-role: region; accessible-label: "Upload direction. Source: " + root.run-local-endpoint + ". Destination: " + root.run-remote-endpoint; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 132px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Upload"; font-weight: 700; }
                     Text { text: "Use the local folder as the source and cloud storage as the destination."; wrap: word-wrap; }
+                    Text { text: "Source: " + root.run-local-endpoint; color: #454039; wrap: word-wrap; }
+                    Text { text: "Destination: " + root.run-remote-endpoint; color: #454039; wrap: word-wrap; }
                     FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: choose-upload; init => { self.focus(); } }
                     choose-upload := Button { accessible-label: root.run-direction == 0 ? "Upload direction, selected" : "Choose upload direction"; text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
                 }
             }
-            Rectangle { accessible-role: region; accessible-label: "Download direction. Use cloud storage as the source and the local folder as the destination."; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+            Rectangle { accessible-role: region; accessible-label: "Download direction. Source: " + root.run-remote-endpoint + ". Destination: " + root.run-local-endpoint; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 132px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Download"; font-weight: 700; }
                     Text { text: "Use cloud storage as the source and the local folder as the destination."; wrap: word-wrap; }
+                    Text { text: "Source: " + root.run-remote-endpoint; color: #454039; wrap: word-wrap; }
+                    Text { text: "Destination: " + root.run-local-endpoint; color: #454039; wrap: word-wrap; }
                     Button { accessible-label: root.run-direction == 1 ? "Download direction, selected" : "Choose download direction"; text: "Choose download"; primary: root.run-direction == 1; clicked => { root.choose-run-direction(1); } }
                 }
             }
-            if root.run-allows-both-ways : Rectangle { accessible-role: region; accessible-label: "Both ways direction. Copy files found on only one side to the other. Changed files are skipped."; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 82px;
+            if root.run-allows-both-ways : Rectangle { accessible-role: region; accessible-label: "Both ways direction between " + root.run-local-endpoint + " and " + root.run-remote-endpoint; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 132px;
                 VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: "Both ways"; font-weight: 700; }
                     Text { text: "Copy files found on only one side to the other. Changed files are skipped."; wrap: word-wrap; }
+                    Text { text: "This device: " + root.run-local-endpoint; color: #454039; wrap: word-wrap; }
+                    Text { text: "Cloud storage: " + root.run-remote-endpoint; color: #454039; wrap: word-wrap; }
                     Button { accessible-label: root.run-direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction"; text: "Choose both ways"; primary: root.run-direction == 2; clicked => { root.choose-run-direction(2); } }
                 }
             }

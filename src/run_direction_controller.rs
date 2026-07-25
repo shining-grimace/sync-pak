@@ -8,6 +8,7 @@ use crate::{
     connection_list_controller,
     diagnostics_controller::{self, SharedDiagnosticLog},
     planning::Direction,
+    run_direction_presentation::{archive_details, mode_label, remote_endpoint},
     run_request::RunRequest,
 };
 
@@ -146,20 +147,32 @@ fn show(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    let connection = configuration.load().ok().and_then(|config| {
+    let run = configuration.load().ok().and_then(|config| {
         config
             .connections
-            .into_iter()
+            .iter()
             .find(|item| item.id.as_str() == id.as_str())
+            .cloned()
+            .map(|connection| {
+                let provider_name = config
+                    .providers
+                    .iter()
+                    .find(|provider| provider.id == connection.provider_id)
+                    .map_or("Unavailable provider", |provider| provider.name.as_str());
+                let remote_endpoint = remote_endpoint(provider_name, &connection);
+                (connection, remote_endpoint)
+            })
     });
-    match connection {
-        Some(connection) => {
+    match run {
+        Some((connection, remote_endpoint)) => {
             let archive_upload_details = archive_details(&connection, Direction::Upload);
             let archive_download_details = archive_details(&connection, Direction::Download);
             window.set_status_message(SharedString::default());
             window.set_run_connection_id(connection.id.as_str().into());
             window.set_run_connection_name(connection.name.into());
             window.set_run_connection_mode(mode_label(connection.mode).into());
+            window.set_run_local_endpoint(connection.local_path.into());
+            window.set_run_remote_endpoint(remote_endpoint.into());
             window.set_run_archive_upload_details(archive_upload_details.into());
             window.set_run_archive_download_details(archive_download_details.into());
             window.set_run_allows_both_ways(connection.mode == SyncMode::AddOnly);
@@ -173,41 +186,6 @@ fn show(
             "run connection load failed",
             "SyncPak could not open this connection. It may have been removed.",
         ),
-    }
-}
-
-fn archive_details(
-    connection: &crate::configuration::ConnectionConfig,
-    direction: Direction,
-) -> String {
-    if connection.mode != SyncMode::Archive {
-        return String::new();
-    }
-    match direction {
-        Direction::Upload => {
-            let destination = if connection.remote_path.is_empty() {
-                format!("the root of {}", connection.bucket)
-            } else {
-                format!("{}/{}", connection.bucket, connection.remote_path)
-            };
-            format!(
-                "A new ZIP will be stored in {destination}. SyncPak will keep the newest {} remote archives.",
-                connection.keep_last_archives.unwrap_or_default()
-            )
-        }
-        Direction::Download => format!(
-            "SyncPak will create a ZIP in {} from the cloud folder. Remote archive retention does not apply to this download.",
-            connection.local_path
-        ),
-        Direction::BothWays => String::new(),
-    }
-}
-
-fn mode_label(mode: SyncMode) -> &'static str {
-    match mode {
-        SyncMode::AddOnly => "Add-only",
-        SyncMode::Mirror => "Mirror",
-        SyncMode::Archive => "Archive",
     }
 }
 

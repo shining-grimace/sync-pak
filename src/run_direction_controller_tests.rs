@@ -3,7 +3,7 @@ use crate::{
     planning::Direction,
 };
 
-use super::archive_details;
+use crate::run_direction_presentation::{archive_details, remote_endpoint};
 
 fn archive_connection() -> ConnectionConfig {
     ConnectionConfig {
@@ -29,5 +29,22 @@ fn archive_details_name_the_destination_for_each_direction() {
     assert_eq!(
         archive_details(&connection, Direction::Download),
         "SyncPak will create a ZIP in /photos from the cloud folder. Remote archive retention does not apply to this download."
+    );
+}
+
+#[test]
+fn remote_endpoint_names_the_provider_bucket_and_folder() {
+    let connection = archive_connection();
+
+    assert_eq!(
+        remote_endpoint("Personal cloud", &connection),
+        "Personal cloud · archives/daily"
+    );
+
+    let mut root_connection = connection;
+    root_connection.remote_path.clear();
+    assert_eq!(
+        remote_endpoint("Personal cloud", &root_connection),
+        "Personal cloud · archives (bucket root)"
     );
 }
