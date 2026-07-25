@@ -1019,7 +1019,8 @@ export component AppWindow inherits Window {
                     color: #23623a; wrap: word-wrap;
                 }
                 if root.preflight-items.length > 0 : Text {
-                    text: root.preflight-item-filter == 0 ? "Reviewing " + root.preflight-items.length + " planned file changes." : (root.preflight-item-filter == 1 ? "Reviewing planned additions." : (root.preflight-item-filter == 2 ? "Reviewing planned overwrites." : (root.preflight-item-filter == 3 ? "Reviewing planned deletions." : "Reviewing planned warnings.")));
+                    accessible-live-region: polite;
+                    text: root.preflight-item-filter == 0 ? "Reviewing " + root.preflight-items.length + " planned file changes." : "Showing " + root.preflight-visible-items.length + " matching planned changes.";
                     color: #454039; wrap: word-wrap;
                 }
                 if root.preflight-items.length > 0 : VerticalBox {
@@ -1038,7 +1039,7 @@ export component AppWindow inherits Window {
                     }
                     FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-filter-all; init => { self.focus(); } }
                 }
-                if root.preflight-items.length > 0 : ListView {
+                if root.preflight-visible-items.length > 0 : ListView {
                     accessible-label: root.preflight-item-filter == 0 ? "All planned file changes" : (root.preflight-item-filter == 1 ? "Planned new files" : (root.preflight-item-filter == 2 ? "Planned overwrites" : (root.preflight-item-filter == 3 ? "Planned deletions" : "Planned warnings")));
                     height: 180px;
                     vertical-scrollbar-policy: always-on;
