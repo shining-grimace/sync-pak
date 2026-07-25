@@ -108,6 +108,8 @@ pub(crate) fn configure(
 fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
     let Some(window) = weak.upgrade() else { return };
     crate::provider_secret_reveal_controller::hide(&window);
+    window.set_status_message(SharedString::default());
+    window.set_notice_message(SharedString::default());
     let Some(kind) = provider_kind(window.get_provider_form_kind()) else {
         window.set_provider_save_after_verification(false);
         return;

@@ -60,7 +60,7 @@ fn poll(
                 window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(
                     VecModel::from_iter(verification.buckets.iter().cloned().map(Into::into)),
                 )));
-                window.set_status_message(
+                window.set_notice_message(
                     format!(
                         "Provider verified. {} buckets available.",
                         verification.buckets.len()
