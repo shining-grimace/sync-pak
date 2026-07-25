@@ -262,8 +262,8 @@ export component AppWindow inherits Window {
             accessible-label: "Action needed";
             background: #fff4f2; border-color: #7b241c; border-width: 1px; border-radius: 8px; min-height: 58px;
             VerticalBox { padding: 10px; spacing: 4px;
-                Text { accessible-live-region: assertive; text: "Action needed"; color: #7b241c; font-weight: 700; }
-                Text { text: root.status-message; color: #7b241c; wrap: word-wrap; }
+                Text { text: "Action needed"; color: #7b241c; font-weight: 700; }
+                Text { accessible-live-region: assertive; text: root.status-message; color: #7b241c; wrap: word-wrap; }
                 if root.diagnostic-entry-count > 0 : Button { accessible-label: "View redacted diagnostics for this error"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
             }
         }
@@ -273,8 +273,8 @@ export component AppWindow inherits Window {
             accessible-label: "Update";
             background: #f2fbf3; border-color: #23623a; border-width: 1px; border-radius: 8px; min-height: 48px;
             VerticalBox { padding: 10px; spacing: 4px;
-                Text { accessible-live-region: polite; text: "Update"; color: #23623a; font-weight: 700; }
-                Text { text: root.notice-message; color: #23623a; wrap: word-wrap; }
+                Text { text: "Update"; color: #23623a; font-weight: 700; }
+                Text { accessible-live-region: polite; text: root.notice-message; color: #23623a; wrap: word-wrap; }
             }
         }
 
@@ -285,7 +285,7 @@ export component AppWindow inherits Window {
             VerticalBox { padding: 12px; spacing: 8px;
                 VerticalBox { spacing: 2px;
                     Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; wrap: word-wrap; }
-                    Text { accessible-live-region: polite; text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
+                    Text { text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
                 if root.width < 420px : VerticalBox { spacing: 8px;
                     Button { accessible-label: "View progress for " + root.active-activity-title; text: "View progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
