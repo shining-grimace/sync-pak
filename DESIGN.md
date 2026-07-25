@@ -662,7 +662,7 @@ before a new archive is stored successfully.
 Exit criterion: queued operations execute in order and cancellation, app backgrounding, and
 configuration deletion behave as documented on all targets.
 
-## 7. Complete User Interface
+## 7. Complete User Interface — Complete
 
 - Build welcome, connection, provider, direction, preflight, progress, activity, privacy,
   diagnostics, and confirmation screens using the source copy in this document.
@@ -672,6 +672,8 @@ configuration deletion behave as documented on all targets.
 
 Exit criterion: all documented flows are usable without a mouse and on the smallest supported
 Android layout, and destructive actions are never ambiguous.
+
+Device validation checklist: [`docs/device-test-plan.md`](docs/device-test-plan.md).
 
 ## 8. Privacy, Ads, and Release Integration
 

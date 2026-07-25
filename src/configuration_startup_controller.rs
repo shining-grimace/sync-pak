@@ -118,10 +118,27 @@ fn configure_operation_queue(
     let executor = Arc::new(crate::s3_operation_executor::S3OperationExecutor::new(
         configuration.path().to_owned(),
     ));
-    let queue = Arc::new(crate::background_queue::BackgroundQueue::new(executor));
+    let queue = Arc::new(make_operation_queue(executor));
     crate::activity_controller::configure(window, Arc::clone(&queue));
     crate::operation_start_controller::configure(window, Arc::clone(&queue));
     queue
+}
+
+#[cfg(all(feature = "provider-s3", target_os = "android"))]
+fn make_operation_queue(
+    executor: Arc<crate::s3_operation_executor::S3OperationExecutor>,
+) -> crate::background_queue::BackgroundQueue<crate::s3_operation_executor::S3OperationExecutor> {
+    crate::background_queue::BackgroundQueue::with_background_execution(
+        executor,
+        Arc::new(crate::platform::PlatformBackgroundExecution),
+    )
+}
+
+#[cfg(all(feature = "provider-s3", not(target_os = "android")))]
+fn make_operation_queue(
+    executor: Arc<crate::s3_operation_executor::S3OperationExecutor>,
+) -> crate::background_queue::BackgroundQueue<crate::s3_operation_executor::S3OperationExecutor> {
+    crate::background_queue::BackgroundQueue::new(executor)
 }
 
 fn record_temporary_cleanup_failures(
