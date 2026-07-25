@@ -425,6 +425,7 @@ export component AppWindow inherits Window {
         }
 
         if root.page == 2 : ScrollView {
+            vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
             Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
@@ -1165,7 +1166,6 @@ export component AppWindow inherits Window {
             }
             }
         }
-        Rectangle { vertical-stretch: 1; }
         if root.width < 520px : Rectangle {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
