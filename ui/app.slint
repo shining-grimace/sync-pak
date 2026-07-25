@@ -1,6 +1,19 @@
 import { Button, CheckBox, ComboBox, HorizontalBox, LineEdit, ListView, Palette, ScrollView, TextEdit, VerticalBox } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 
+component CenteredPageColumn inherits HorizontalBox {
+    in property <length> content-spacing: 12px;
+    alignment: center;
+
+    VerticalBox {
+        preferred-width: Dimensions.welcome-content-max-width;
+        max-width: Dimensions.welcome-content-max-width;
+        horizontal-stretch: 1;
+        spacing: root.content-spacing;
+        @children
+    }
+}
+
 export struct ProviderRow {
     id: string,
     name: string,
@@ -358,7 +371,7 @@ export component AppWindow inherits Window {
 
         if root.page == 1 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Providers"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Provider credentials are kept in this device's protected storage."; color: #454039; wrap: word-wrap; }
             if root.providers-load-failed : VerticalBox {
@@ -413,7 +426,7 @@ export component AppWindow inherits Window {
 
         if root.page == 2 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 10px;
+            CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
             Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Credentials are saved in this device's protected storage only when you save this provider."; wrap: word-wrap; }
             if root.provider-form-id != "" : Text { text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values."; color: #454039; wrap: word-wrap; }
@@ -480,7 +493,7 @@ export component AppWindow inherits Window {
 
         if root.page == 13 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Save without verifying?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
             VerticalBox {
@@ -493,7 +506,7 @@ export component AppWindow inherits Window {
 
         if root.page == 15 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this provider have not been saved."; wrap: word-wrap; }
             VerticalBox {
@@ -506,7 +519,7 @@ export component AppWindow inherits Window {
 
         if root.page == 4 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: #454039; wrap: word-wrap; }
             if root.connections-load-failed : VerticalBox {
@@ -606,7 +619,7 @@ export component AppWindow inherits Window {
 
         if root.page == 5 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 10px;
+            CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
             Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
             VerticalBox { accessible-role: region; accessible-label: "Connection identity and cloud destination"; spacing: 6px;
@@ -687,7 +700,7 @@ export component AppWindow inherits Window {
 
         if root.page == 14 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
             Text { text: "Your changes to this connection have not been saved."; wrap: word-wrap; }
             VerticalBox {
@@ -700,7 +713,7 @@ export component AppWindow inherits Window {
 
         if root.page == 3 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Privacy & About"; color: #171512; font-size: 32px; font-weight: 800; }
             Rectangle { accessible-role: region; accessible-label: "Direct transfers"; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 72px;
                 VerticalBox { padding: 12px; spacing: 4px; Text { text: "Direct transfers"; font-size: 20px; font-weight: 700; } Text { text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them."; wrap: word-wrap; } }
@@ -731,7 +744,7 @@ export component AppWindow inherits Window {
 
         if root.page == 8 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Diagnostics"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "This report excludes provider credentials. Paths are hidden unless you choose to include them."; wrap: word-wrap; }
             Text { accessible-live-region: polite; text: root.diagnostic-entry-count == 0 ? "No errors have been recorded in this session." : root.diagnostic-entry-count == 1 ? "1 error has been recorded in this session." : root.diagnostic-entry-count + " errors have been recorded in this session."; color: #454039; wrap: word-wrap; }
@@ -767,7 +780,7 @@ export component AppWindow inherits Window {
 
         if root.page == 9 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Activity"; color: #171512; font-size: 32px; font-weight: 800; }
             Text { text: "Queued and completed operations appear here until SyncPak exits."; color: #454039; wrap: word-wrap; }
             if root.activity-clearable-count > 0 : VerticalBox {
@@ -823,7 +836,7 @@ export component AppWindow inherits Window {
 
         if root.page == 16 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Result: " + root.activity-result-title; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: root.activity-result-status; font-weight: 700; }
             Text { text: root.activity-result-summary; color: #454039; wrap: word-wrap; }
@@ -872,7 +885,7 @@ export component AppWindow inherits Window {
 
         if root.page == 17 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Progress: " + root.activity-progress-title; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { accessible-live-region: polite; text: root.activity-progress-phase; font-weight: 700; }
             Text { text: root.activity-progress-summary; color: #454039; wrap: word-wrap; }
@@ -900,7 +913,7 @@ export component AppWindow inherits Window {
 
         if root.page == 6 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Delete " + root.pending-provider-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Rectangle { accessible-role: region; accessible-label: "Provider deletion consequences"; background: #fff4f2; border-color: #7b241c; border-width: 1px; border-radius: 8px; min-height: 108px;
                 VerticalBox { padding: 12px; spacing: 5px;
@@ -935,7 +948,7 @@ export component AppWindow inherits Window {
 
         if root.page == 7 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Delete " + root.pending-connection-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Rectangle { accessible-role: region; accessible-label: "Connection deletion consequences"; background: #fff4f2; border-color: #7b241c; border-width: 1px; border-radius: 8px; min-height: 94px;
                 VerticalBox { padding: 12px; spacing: 5px;
@@ -953,7 +966,7 @@ export component AppWindow inherits Window {
         }
         if root.page == 12 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Cancel " + root.pending-cancel-activity-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
             VerticalBox {
@@ -965,7 +978,7 @@ export component AppWindow inherits Window {
         }
         if root.page == 10 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Run " + root.run-connection-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: root.run-connection-mode + " connection"; color: #454039; }
             if root.run-direction == 0 && root.run-archive-upload-details != "" : Rectangle {
@@ -1013,7 +1026,7 @@ export component AppWindow inherits Window {
         }
         if root.page == 11 : ScrollView {
             vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px; spacing: 12px;
+            CenteredPageColumn { width: parent.width - 12px;
             Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : (root.preflight-requires-mirror-confirmation ? "Review mirror changes" : "Ready to start")); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: "Reviewing " + root.run-connection-name + " · " + root.run-connection-mode + " · " + (root.run-direction == 0 ? "Upload" : (root.run-direction == 1 ? "Download" : "Both ways")); color: #454039; wrap: word-wrap; }
             Rectangle { accessible-role: region; accessible-label: root.run-direction == 2 ? "Comparing both sides: " + root.run-local-endpoint + " and " + root.run-remote-endpoint : "Comparing source " + (root.run-direction == 0 ? root.run-local-endpoint : root.run-remote-endpoint) + " with destination " + (root.run-direction == 0 ? root.run-remote-endpoint : root.run-local-endpoint); background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 78px;
