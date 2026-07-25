@@ -215,35 +215,42 @@ export component AppWindow inherits Window {
     min-height: 520px;
     background: #f7f2e8;
 
-    keyboard-shortcuts := FocusScope {
-        width: 0px;
-        height: 0px;
-        focus-on-click: false;
-        focus-on-tab-navigation: false;
-        capture-key-pressed(event) => {
-            if event.text == Key.Escape {
-                if root.page == 6 { root.cancel-provider-delete(); return accept; }
-                if root.page == 7 { root.cancel-connection-delete(); return accept; }
-                if root.page == 8 { root.dismiss-diagnostics(); return accept; }
-                if root.page == 10 { root.cancel-run-direction(); return accept; }
-                if root.page == 11 { root.return-to-run-direction(); return accept; }
-                if root.page == 12 { root.dismiss-cancel-activity(); return accept; }
-                if root.page == 16 { root.dismiss-activity-result(); return accept; }
-                if root.page == 17 { root.dismiss-activity-progress(); return accept; }
-                if root.page == 13 { root.cancel-save-provider(); return accept; }
-                if root.page == 14 { root.cancel-discard-connection(); return accept; }
-                if root.page == 15 { root.cancel-discard-provider(); return accept; }
-                if root.page == 2 { root.request-discard-provider(); return accept; }
-                if root.page == 5 { root.request-discard-connection(); return accept; }
-            }
-            reject
-        }
-
-    VerticalBox {
+    Rectangle {
         x: 0px;
         y: 0px;
         width: root.width;
         height: root.height;
+
+        keyboard-shortcuts := FocusScope {
+            width: 0px;
+            height: 0px;
+            focus-on-click: false;
+            focus-on-tab-navigation: false;
+            capture-key-pressed(event) => {
+                if event.text == Key.Escape {
+                    if root.page == 6 { root.cancel-provider-delete(); return accept; }
+                    if root.page == 7 { root.cancel-connection-delete(); return accept; }
+                    if root.page == 8 { root.dismiss-diagnostics(); return accept; }
+                    if root.page == 10 { root.cancel-run-direction(); return accept; }
+                    if root.page == 11 { root.return-to-run-direction(); return accept; }
+                    if root.page == 12 { root.dismiss-cancel-activity(); return accept; }
+                    if root.page == 16 { root.dismiss-activity-result(); return accept; }
+                    if root.page == 17 { root.dismiss-activity-progress(); return accept; }
+                    if root.page == 13 { root.cancel-save-provider(); return accept; }
+                    if root.page == 14 { root.cancel-discard-connection(); return accept; }
+                    if root.page == 15 { root.cancel-discard-provider(); return accept; }
+                    if root.page == 2 { root.request-discard-provider(); return accept; }
+                    if root.page == 5 { root.request-discard-connection(); return accept; }
+                }
+                reject
+            }
+        }
+
+        VerticalBox {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
         padding: 16px;
         padding-left: root.width >= 700px ? 176px : 16px;
         spacing: 16px;
@@ -1167,7 +1174,7 @@ export component AppWindow inherits Window {
                 }
             }
         }
-    }
+        }
     if root.width >= 700px : Rectangle {
         accessible-role: navigation;
         accessible-label: "Primary navigation";
