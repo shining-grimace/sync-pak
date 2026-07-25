@@ -14,8 +14,8 @@ use crate::{
     platform::PlatformCredentialStore,
     provider_bucket_cache::{self, ProviderBucketCache},
     provider_form::{
-        clear_transient_state, is_dirty, mark_clean, provider_id, provider_kind,
-        provider_kind_index, provider_options,
+        begin_verification, clear_transient_state, invalidate_verification, is_dirty, mark_clean,
+        provider_id, provider_kind, provider_kind_index, provider_options,
     },
     provider_list_controller,
     provider_save_error::ProviderPersistenceError,
@@ -146,9 +146,15 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
     };
     window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
     window.set_provider_bucket_list_empty(false);
-    window.set_provider_verifying(true);
+    let _generation = begin_verification(&window);
     #[cfg(feature = "provider-s3")]
-    crate::s3_provider_verify_controller::start(weak.clone(), provider, credentials, diagnostics);
+    crate::s3_provider_verify_controller::start(
+        weak.clone(),
+        provider,
+        credentials,
+        diagnostics,
+        _generation,
+    );
     #[cfg(not(feature = "provider-s3"))]
     {
         let _ = (provider, credentials);
@@ -183,6 +189,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
 
 fn request_discard(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
+    invalidate_verification(&window);
     if window.get_pending_navigation_page() < 0 {
         window.set_pending_navigation_page(1);
     }

@@ -16,6 +16,7 @@ pub(crate) fn start(
     provider: ProviderConfig,
     credentials: ProviderCredentials,
     diagnostics: SharedDiagnosticLog,
+    generation: i32,
 ) {
     let (sender, receiver) = mpsc::sync_channel(1);
     std::thread::spawn(move || {
@@ -31,17 +32,24 @@ pub(crate) fn start(
             });
         let _ = sender.send(result);
     });
-    poll(weak, receiver, diagnostics);
+    poll(weak, receiver, diagnostics, generation);
 }
 
 fn poll(
     weak: slint::Weak<AppWindow>,
     receiver: mpsc::Receiver<Result<ProviderVerification, VerificationFailure>>,
     diagnostics: SharedDiagnosticLog,
+    generation: i32,
 ) {
     slint::Timer::single_shot(Duration::from_millis(50), move || {
         let Some(window) = weak.upgrade() else { return };
-        if window.get_page() != 2 || !window.get_provider_verifying() {
+        if window.get_page() != 2
+            || !window.get_provider_verifying()
+            || !crate::provider_form::is_current_verification(
+                generation,
+                window.get_provider_verification_generation(),
+            )
+        {
             return;
         }
         match receiver.try_recv() {
@@ -90,7 +98,7 @@ fn poll(
                     "SyncPak could not complete provider verification. Try again.",
                 );
             }
-            Err(mpsc::TryRecvError::Empty) => poll(weak, receiver, diagnostics),
+            Err(mpsc::TryRecvError::Empty) => poll(weak, receiver, diagnostics, generation),
         }
     });
 }

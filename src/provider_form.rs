@@ -11,10 +11,35 @@ pub(crate) fn clear_transient_state(window: &AppWindow) {
     window.set_provider_form_session_token(SharedString::default());
     window.set_provider_secret_visible(false);
     window.set_provider_advanced_expanded(false);
-    window.set_provider_verifying(false);
-    window.set_provider_save_after_verification(false);
+    invalidate_verification(window);
     window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(VecModel::default())));
     window.set_provider_bucket_list_empty(false);
+}
+
+/// Starts a distinct verification attempt for the currently visible provider form.
+pub(crate) fn begin_verification(window: &AppWindow) -> i32 {
+    let generation = next_verification_generation(window.get_provider_verification_generation());
+    window.set_provider_verification_generation(generation);
+    window.set_provider_verifying(true);
+    generation
+}
+
+/// Prevents a late verification worker from updating a form that has been left or reset.
+pub(crate) fn invalidate_verification(window: &AppWindow) {
+    window.set_provider_verification_generation(next_verification_generation(
+        window.get_provider_verification_generation(),
+    ));
+    window.set_provider_verifying(false);
+    window.set_provider_save_after_verification(false);
+}
+
+#[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
+pub(crate) fn is_current_verification(expected: i32, current: i32) -> bool {
+    expected == current
+}
+
+fn next_verification_generation(current: i32) -> i32 {
+    current.wrapping_add(1)
 }
 
 /// Stores a non-secret form fingerprint for unsaved-change detection.
@@ -87,4 +112,21 @@ pub(crate) fn provider_id(configuration: &ConfigStore, id: &str) -> Result<Provi
         .find(|provider| provider.id.as_str() == id)
         .map(|provider| provider.id)
         .ok_or_else(|| "The provider no longer exists.".to_owned())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_current_verification, next_verification_generation};
+
+    #[test]
+    fn only_the_current_verification_attempt_can_update_a_form() {
+        assert!(is_current_verification(8, 8));
+        assert!(!is_current_verification(8, 9));
+    }
+
+    #[test]
+    fn verification_generation_advances_across_integer_wraparound() {
+        assert_eq!(next_verification_generation(8), 9);
+        assert_eq!(next_verification_generation(i32::MAX), i32::MIN);
+    }
 }
