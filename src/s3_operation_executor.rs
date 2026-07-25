@@ -156,6 +156,10 @@ async fn execute_confirmed(
         &retry,
         &sleeper,
     );
+    let history_directory = configuration_path
+        .parent()
+        .ok_or(CapabilityError::Unavailable)?;
+    let history = crate::archive_history::ArchiveHistory::new(history_directory);
     match confirmed.request().connection.mode {
         SyncMode::AddOnly => execute_add_only_actions(
             confirmed.request().direction,
@@ -182,6 +186,7 @@ async fn execute_confirmed(
             confirmed.preflight().preflight(),
             &transfer,
             cancellation,
+            &history,
             observer,
             jitter_seed,
         )

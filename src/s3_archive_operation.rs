@@ -1,7 +1,8 @@
 use crate::{
     archive_download::download_and_create_archive,
-    archive_execution::create_and_upload_archive,
+    archive_history::ArchiveHistory,
     archive_naming::archive_filename,
+    archive_store::{ArchiveStoreError, create_upload_and_prune_archive},
     cancellation::CancellationToken,
     execution::{ExecutionProgress, ExecutionResult, ExecutionState},
     inventory::RelativePath,
@@ -22,6 +23,7 @@ pub(crate) async fn execute(
     preflight: &Preflight,
     transfer: &LocalRemoteTransfer<'_, S3Transport, impl RetrySleeper>,
     cancellation: &CancellationToken,
+    history: &ArchiveHistory,
     observer: &dyn TransferProgressObserver,
     jitter_seed: u64,
 ) -> ExecutionResult {
@@ -55,18 +57,19 @@ pub(crate) async fn execute(
     let root = LocalTransferRoot::new(&request.connection.local_path);
     let timestamp = utc_timestamp();
     let success = match request.direction {
-        Direction::Upload => create_and_upload_archive(
-            &root,
-            preflight.source(),
-            root.as_path(),
-            &timestamp,
-            &request.connection.name,
-            transfer,
-            cancellation,
-            jitter_seed,
-        )
-        .await
-        .is_ok(),
+        Direction::Upload => {
+            create_upload_archive(
+                request,
+                preflight,
+                transfer,
+                &root,
+                &timestamp,
+                cancellation,
+                history,
+                jitter_seed,
+            )
+            .await
+        }
         Direction::Download => {
             create_download_archive(
                 preflight,
@@ -108,6 +111,53 @@ pub(crate) async fn execute(
         );
         result
     }
+}
+
+async fn create_upload_archive(
+    request: &RunRequest,
+    preflight: &Preflight,
+    transfer: &LocalRemoteTransfer<'_, S3Transport, impl RetrySleeper>,
+    root: &LocalTransferRoot,
+    timestamp: &str,
+    cancellation: &CancellationToken,
+    history: &ArchiveHistory,
+    jitter_seed: u64,
+) -> bool {
+    let connection_id = &request.connection.id;
+    let Ok(existing) = history.load(connection_id) else {
+        return false;
+    };
+    let Some(keep_last) = request.connection.keep_last_archives else {
+        return false;
+    };
+    let stored = create_upload_and_prune_archive(
+        root,
+        preflight.source(),
+        root.as_path(),
+        timestamp,
+        connection_id,
+        &request.connection.name,
+        &existing,
+        keep_last,
+        transfer,
+        transfer,
+        cancellation,
+        jitter_seed,
+    )
+    .await;
+    let (archive, pruned, completed) = match stored {
+        Ok(stored) => (stored.archive, stored.pruned, true),
+        Err(ArchiveStoreError::Prune { archive, .. }) => (archive, Vec::new(), false),
+        Err(ArchiveStoreError::Store(_)) => return false,
+    };
+    let mut retained = existing;
+    retained.push(archive);
+    retained.retain(|record| {
+        !pruned
+            .iter()
+            .any(|pruned| pruned.location == record.location)
+    });
+    history.save(connection_id, &retained).is_ok() && completed
 }
 async fn create_download_archive(
     preflight: &Preflight,

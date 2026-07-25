@@ -15,6 +15,7 @@ mod archive_create_writer;
 pub mod archive_download;
 pub mod archive_download_store;
 pub mod archive_execution;
+pub mod archive_history;
 pub mod archive_naming;
 pub mod archive_prune;
 pub mod archive_retention;
