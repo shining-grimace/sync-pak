@@ -20,13 +20,14 @@ pub(crate) fn start(
     request: RunRequest,
     configuration_path: PathBuf,
     diagnostics: SharedDiagnosticLog,
+    generation: i32,
 ) {
     let connection_id = request.connection.id.as_str().to_owned();
     let (sender, receiver) = mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let _ = sender.send(collect(request, configuration_path));
     });
-    await_result(weak, connection_id, receiver, diagnostics);
+    await_result(weak, connection_id, generation, receiver, diagnostics);
 }
 
 fn collect(
@@ -52,12 +53,13 @@ fn collect(
 fn await_result(
     weak: slint::Weak<AppWindow>,
     connection_id: String,
+    generation: i32,
     receiver: Receiver<Result<Preflight, PreflightFailure>>,
     diagnostics: SharedDiagnosticLog,
 ) {
     slint::Timer::single_shot(Duration::from_millis(50), move || {
         let Some(window) = weak.upgrade() else { return };
-        if !is_active(&window, &connection_id) {
+        if !is_active(&window, &connection_id, generation) {
             return;
         }
         match receiver.try_recv() {
@@ -85,16 +87,20 @@ fn await_result(
                 );
             }
             Err(mpsc::TryRecvError::Empty) => {
-                await_result(weak, connection_id, receiver, diagnostics)
+                await_result(weak, connection_id, generation, receiver, diagnostics)
             }
         }
     });
 }
 
-fn is_active(window: &AppWindow, connection_id: &str) -> bool {
+fn is_active(window: &AppWindow, connection_id: &str, generation: i32) -> bool {
     window.get_page() == 11
         && window.get_preflight_loading()
         && window.get_run_connection_id().as_str() == connection_id
+        && crate::preflight_controller::is_current_generation(
+            generation,
+            window.get_preflight_generation(),
+        )
 }
 
 #[derive(Clone, Copy)]

@@ -41,7 +41,17 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let configuration = Rc::clone(configuration);
     window.on_cancel_run_direction(move || {
+        if let Some(window) = weak.upgrade() {
+            crate::preflight_controller::invalidate(&window);
+        }
         connection_list_controller::show(&weak, Rc::clone(&configuration), Rc::clone(&diagnostics));
+    });
+
+    let weak = window.as_weak();
+    window.on_return_to_run_direction(move || {
+        let Some(window) = weak.upgrade() else { return };
+        crate::preflight_controller::invalidate(&window);
+        window.set_page(10);
     });
 }
 
@@ -63,11 +73,13 @@ fn begin_preflight(
         Ok(request) => {
             window.set_status_message(SharedString::default());
             crate::preflight_controller::show_loading(&window);
+            let generation = window.get_preflight_generation();
             start_preflight(
                 weak.clone(),
                 request,
                 configuration.path().to_owned(),
                 Rc::clone(diagnostics),
+                generation,
             );
         }
         Err(_) => {
@@ -89,8 +101,15 @@ fn start_preflight(
     request: RunRequest,
     configuration_path: std::path::PathBuf,
     diagnostics: SharedDiagnosticLog,
+    generation: i32,
 ) {
-    crate::s3_preflight_controller::start(weak, request, configuration_path, diagnostics);
+    crate::s3_preflight_controller::start(
+        weak,
+        request,
+        configuration_path,
+        diagnostics,
+        generation,
+    );
 }
 
 #[cfg(not(feature = "provider-s3"))]
@@ -99,6 +118,7 @@ fn start_preflight(
     _: RunRequest,
     _: std::path::PathBuf,
     diagnostics: SharedDiagnosticLog,
+    _: i32,
 ) {
     let Some(window) = weak.upgrade() else { return };
     crate::preflight_controller::show_failed(&window);

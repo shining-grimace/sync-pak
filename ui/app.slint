@@ -125,6 +125,7 @@ export component AppWindow inherits Window {
     in-out property <int> run-direction: 0;
     in-out property <bool> preflight-loading: false;
     in-out property <bool> preflight-failed: false;
+    in-out property <int> preflight-generation: 0;
     in-out property <string> preflight-additions;
     in-out property <string> preflight-overwrites;
     in-out property <string> preflight-deletions;
@@ -188,6 +189,7 @@ export component AppWindow inherits Window {
     callback choose-run-direction(int);
     callback begin-preflight();
     callback cancel-run-direction();
+    callback return-to-run-direction();
     callback set-connection-filter(int);
 
     init => { Palette.color-scheme = ColorScheme.light; }
@@ -208,7 +210,8 @@ export component AppWindow inherits Window {
                 if root.page == 6 { root.cancel-provider-delete(); return accept; }
                 if root.page == 7 { root.cancel-connection-delete(); return accept; }
                 if root.page == 8 { root.dismiss-diagnostics(); return accept; }
-                if root.page == 10 || root.page == 11 { root.cancel-run-direction(); return accept; }
+                if root.page == 10 { root.cancel-run-direction(); return accept; }
+                if root.page == 11 { root.return-to-run-direction(); return accept; }
                 if root.page == 12 { root.dismiss-cancel-activity(); return accept; }
                 if root.page == 16 { root.dismiss-activity-result(); return accept; }
                 if root.page == 17 { root.dismiss-activity-progress(); return accept; }
@@ -1011,7 +1014,7 @@ export component AppWindow inherits Window {
             }
             VerticalBox {
                 FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-back; init => { self.focus(); } }
-                preflight-back := Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.cancel-run-direction(); } }
+                preflight-back := Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.return-to-run-direction(); } }
                 if root.preflight-failed : Button { accessible-label: "Try the preflight check again"; text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
                 if !root.preflight-loading && !root.preflight-failed : Button { accessible-label: "Refresh the read-only preflight review"; text: "Refresh review"; clicked => { root.begin-preflight(); } }
             }
