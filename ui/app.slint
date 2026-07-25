@@ -55,6 +55,9 @@ export component AppWindow inherits Window {
     in-out property <string> activity-result-title;
     in-out property <string> activity-result-status;
     in-out property <string> activity-result-summary;
+    in-out property <int> activity-result-completed-count: 0;
+    in-out property <int> activity-result-incomplete-count: 0;
+    in-out property <int> activity-result-not-started-count: 0;
     in-out property <[string]> activity-result-details;
     in-out property <string> activity-result-connection-id;
     in-out property <int> activity-result-retry-direction: 0;
@@ -816,6 +819,18 @@ export component AppWindow inherits Window {
             Text { text: "Result: " + root.activity-result-title; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: root.activity-result-status; font-weight: 700; }
             Text { text: root.activity-result-summary; color: #454039; wrap: word-wrap; }
+            Rectangle { accessible-role: region; accessible-label: "Outcome totals: " + root.activity-result-completed-count + " completed, " + root.activity-result-incomplete-count + " incomplete, " + root.activity-result-not-started-count + " not started"; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < 420px ? 126px : 68px;
+                if root.width < 420px : VerticalBox { padding: 12px; spacing: 4px;
+                    Text { text: root.activity-result-completed-count + " completed"; font-weight: 700; }
+                    Text { text: root.activity-result-incomplete-count + " incomplete"; font-weight: 700; }
+                    Text { text: root.activity-result-not-started-count + " not started"; font-weight: 700; }
+                }
+                if root.width >= 420px : HorizontalBox { padding: 12px; spacing: 12px;
+                    Text { text: root.activity-result-completed-count + " completed"; font-weight: 700; }
+                    Text { text: root.activity-result-incomplete-count + " incomplete"; font-weight: 700; }
+                    Text { text: root.activity-result-not-started-count + " not started"; font-weight: 700; }
+                }
+            }
             if root.activity-result-details.length == 0 : Text {
                 text: "No actions were started for this operation.";
                 color: #454039; wrap: word-wrap;

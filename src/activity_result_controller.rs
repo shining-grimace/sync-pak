@@ -54,6 +54,10 @@ fn show<E: OperationExecutor + Send + Sync + 'static>(
     window.set_activity_result_title(activity.title.into());
     window.set_activity_result_status(activity.status.into());
     window.set_activity_result_summary(activity.result_summary.into());
+    let (completed, incomplete, not_started) = result_counts(entry.result.as_ref());
+    window.set_activity_result_completed_count(completed);
+    window.set_activity_result_incomplete_count(incomplete);
+    window.set_activity_result_not_started_count(not_started);
     window.set_activity_result_connection_id(entry.plan.connection_id.into());
     window.set_activity_result_retry_direction(direction_index(entry.plan.direction));
     window.set_activity_result_can_retry(retryable(entry.state));
@@ -94,9 +98,19 @@ fn direction_index(direction: Direction) -> i32 {
     }
 }
 
+fn result_counts(result: Option<&crate::execution::ExecutionResult>) -> (i32, i32, i32) {
+    result.map_or((0, 0, 0), |result| {
+        (
+            result.completed.len() as i32,
+            result.incomplete.len() as i32,
+            result.not_started.len() as i32,
+        )
+    })
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{direction_index, retryable};
+    use super::{direction_index, result_counts, retryable};
     use crate::{planning::Direction, queue::QueueState};
 
     #[test]
@@ -113,5 +127,10 @@ mod tests {
         assert_eq!(direction_index(Direction::Upload), 0);
         assert_eq!(direction_index(Direction::Download), 1);
         assert_eq!(direction_index(Direction::BothWays), 2);
+    }
+
+    #[test]
+    fn absent_results_have_no_outcome_counts() {
+        assert_eq!(result_counts(None), (0, 0, 0));
     }
 }
