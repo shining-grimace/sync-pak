@@ -700,13 +700,13 @@ export component AppWindow inherits Window {
             Text { text: "SyncPak " + root.app-version; color: #454039; }
             VerticalBox { accessible-role: region; accessible-label: "Privacy and source links"; spacing: 6px;
                 Text { text: "Links"; font-weight: 700; }
-                Button { accessible-label: "Open SyncPak source code in your browser"; text: "Source code"; clicked => { Platform.open-url("https://github.com/shining-grimace/sync-pak"); } }
+                privacy-source-code := Button { accessible-label: "Open SyncPak source code in your browser"; text: "Source code"; clicked => { Platform.open-url("https://github.com/shining-grimace/sync-pak"); } }
                 Button { accessible-label: "Open Cloudflare privacy policy in your browser"; text: "Cloudflare privacy policy"; clicked => { Platform.open-url("https://www.cloudflare.com/privacypolicy/"); } }
                 Button { accessible-label: "Open Backblaze privacy policy in your browser"; text: "Backblaze privacy policy"; clicked => { Platform.open-url("https://www.backblaze.com/company/policies/privacy.html"); } }
                 Button { accessible-label: "Open Amazon privacy notice in your browser"; text: "AWS privacy notice"; clicked => { Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010"); } }
                 Text { text: "SyncPak's privacy policy and open-source licence notices will be published before release."; color: #454039; wrap: word-wrap; }
             }
-            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: privacy-diagnostics; init => { self.focus(); } }
+            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: privacy-source-code; init => { self.focus(); } }
             privacy-diagnostics := Button { accessible-label: "View redacted diagnostics with credentials excluded"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
             Button { accessible-label: "Back to welcome"; text: "Back"; clicked => { root.show-welcome(); } }
             }
@@ -1026,7 +1026,7 @@ export component AppWindow inherits Window {
                     spacing: 6px;
                     Text { text: "Show planned changes"; color: #454039; font-weight: 700; }
                     HorizontalBox { spacing: 6px;
-                        Button { accessible-label: root.preflight-item-filter == 0 ? "All planned changes, selected" : "Show all planned changes"; text: "All"; primary: root.preflight-item-filter == 0; clicked => { root.set-preflight-item-filter(0); } }
+                        preflight-filter-all := Button { accessible-label: root.preflight-item-filter == 0 ? "All planned changes, selected" : "Show all planned changes"; text: "All"; primary: root.preflight-item-filter == 0; clicked => { root.set-preflight-item-filter(0); } }
                         Button { accessible-label: root.preflight-item-filter == 1 ? "New files, selected" : "Show new files"; text: "New"; primary: root.preflight-item-filter == 1; clicked => { root.set-preflight-item-filter(1); } }
                         Button { accessible-label: root.preflight-item-filter == 2 ? "Overwrites, selected" : "Show overwrites"; text: "Overwrites"; primary: root.preflight-item-filter == 2; clicked => { root.set-preflight-item-filter(2); } }
                     }
@@ -1034,6 +1034,7 @@ export component AppWindow inherits Window {
                         Button { accessible-label: root.preflight-item-filter == 3 ? "Deletions, selected" : "Show deletions"; text: "Deletions"; primary: root.preflight-item-filter == 3; clicked => { root.set-preflight-item-filter(3); } }
                         Button { accessible-label: root.preflight-item-filter == 4 ? "Warnings, selected" : "Show warnings"; text: "Warnings"; primary: root.preflight-item-filter == 4; clicked => { root.set-preflight-item-filter(4); } }
                     }
+                    FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-filter-all; init => { self.focus(); } }
                 }
                 if root.preflight-items.length > 0 : ListView {
                     accessible-label: root.preflight-item-filter == 0 ? "All planned file changes" : (root.preflight-item-filter == 1 ? "Planned new files" : (root.preflight-item-filter == 2 ? "Planned overwrites" : (root.preflight-item-filter == 3 ? "Planned deletions" : "Planned warnings")));
@@ -1087,7 +1088,7 @@ export component AppWindow inherits Window {
                 Text { text: root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed ? "Transfer execution stays unavailable until you acknowledge the destructive changes above." : "Transfer execution is not connected in this build. This completed review remains read-only."; color: #454039; wrap: word-wrap; }
             }
             VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-back; init => { self.focus(); } }
+                if root.preflight-loading || root.preflight-failed || root.preflight-items.length == 0 : FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-back; init => { self.focus(); } }
                 preflight-back := Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.return-to-run-direction(); } }
                 if root.preflight-failed : Button { accessible-label: "Try the preflight check again"; text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
                 if !root.preflight-loading && !root.preflight-failed : Button { accessible-label: "Refresh the read-only preflight review"; text: "Refresh review"; clicked => { root.begin-preflight(); } }
