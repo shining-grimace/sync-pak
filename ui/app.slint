@@ -66,6 +66,8 @@ export component AppWindow inherits Window {
     in-out property <string> activity-progress-items;
     in-out property <string> activity-progress-bytes;
     in-out property <string> activity-progress-path;
+    in-out property <float> activity-progress-fraction: 0;
+    in-out property <int> activity-progress-percent: 0;
     in-out property <string> active-activity-id;
     in-out property <string> active-activity-title;
     in-out property <string> active-activity-progress;
@@ -846,8 +848,13 @@ export component AppWindow inherits Window {
             Text { text: "Progress: " + root.activity-progress-title; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { accessible-live-region: polite; text: root.activity-progress-phase; font-weight: 700; }
             Text { text: root.activity-progress-summary; color: #454039; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: "Operation progress"; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 120px;
+            Rectangle { accessible-role: region; accessible-label: "Overall progress: " + root.activity-progress-percent + " percent. " + root.activity-progress-items + ". " + root.activity-progress-bytes; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 150px;
                 VerticalBox { padding: 12px; spacing: 6px;
+                    Text { text: "Overall progress"; font-weight: 700; }
+                    Rectangle { background: #e2ddd4; border-radius: 6px; height: 12px;
+                        Rectangle { background: #23623a; border-radius: 6px; width: parent.width * root.activity-progress-fraction; height: parent.height; }
+                    }
+                    Text { text: root.activity-progress-percent + "% complete"; color: #454039; wrap: word-wrap; }
                     Text { text: root.activity-progress-items; wrap: word-wrap; }
                     Text { text: root.activity-progress-bytes; wrap: word-wrap; }
                     Text { text: "Current item"; color: #454039; font-weight: 700; }

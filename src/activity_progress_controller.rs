@@ -128,5 +128,61 @@ fn refresh<E: OperationExecutor + Send + Sync + 'static>(
             .unwrap_or("No file is active yet.")
             .into(),
     );
+    let fraction = progress_fraction(progress);
+    window.set_activity_progress_fraction(fraction);
+    window.set_activity_progress_percent((fraction * 100.0).round() as i32);
     true
+}
+
+fn progress_fraction(progress: Option<&crate::operation_progress::OperationProgress>) -> f32 {
+    let Some(progress) = progress else { return 0.0 };
+    let fraction = if progress.total_items > 0 {
+        progress.completed_items as f32 / progress.total_items as f32
+    } else if progress.total_bytes > 0 {
+        progress.transferred_bytes as f32 / progress.total_bytes as f32
+    } else {
+        return 0.0;
+    };
+    fraction.clamp(0.0, 1.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::progress_fraction;
+    use crate::operation_progress::OperationProgress;
+
+    #[test]
+    fn prefers_item_progress_and_falls_back_to_bytes() {
+        assert_eq!(
+            progress_fraction(Some(&OperationProgress {
+                completed_items: 2,
+                total_items: 5,
+                transferred_bytes: 8,
+                total_bytes: 10,
+                ..Default::default()
+            })),
+            0.4
+        );
+        assert_eq!(
+            progress_fraction(Some(&OperationProgress {
+                transferred_bytes: 1,
+                total_bytes: 4,
+                ..Default::default()
+            })),
+            0.25
+        );
+        assert_eq!(progress_fraction(None), 0.0);
+    }
+
+    #[test]
+    fn fraction_never_exceeds_complete() {
+        assert_eq!(
+            progress_fraction(Some(&OperationProgress {
+                completed_items: 8,
+                total_items: 5,
+                ..Default::default()
+            })),
+            1.0
+        );
+    }
 }
