@@ -67,7 +67,7 @@ fn await_result(
                 crate::preflight_controller::show_review(&window, &preflight);
             }
             Ok(Err(failure)) => {
-                crate::preflight_controller::show_failed(&window);
+                crate::preflight_controller::show_failed(&window, failure.message());
                 diagnostics_controller::present(
                     &window,
                     &diagnostics,
@@ -77,7 +77,10 @@ fn await_result(
                 );
             }
             Err(mpsc::TryRecvError::Disconnected) => {
-                crate::preflight_controller::show_failed(&window);
+                crate::preflight_controller::show_failed(
+                    &window,
+                    "SyncPak could not complete the preflight. Run the connection again.",
+                );
                 diagnostics_controller::present(
                     &window,
                     &diagnostics,

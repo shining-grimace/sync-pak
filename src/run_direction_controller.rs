@@ -84,7 +84,10 @@ fn begin_preflight(
             );
         }
         Err(_) => {
-            crate::preflight_controller::show_failed(&window);
+            crate::preflight_controller::show_failed(
+                &window,
+                "SyncPak could not prepare this connection. Check that it and its provider still exist.",
+            );
             diagnostics_controller::present(
                 &window,
                 diagnostics,
@@ -122,7 +125,10 @@ fn start_preflight(
     _: i32,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    crate::preflight_controller::show_failed(&window);
+    crate::preflight_controller::show_failed(
+        &window,
+        "This SyncPak build cannot connect to cloud storage. Install a build with provider support and try again.",
+    );
     diagnostics_controller::present(
         &window,
         &diagnostics,

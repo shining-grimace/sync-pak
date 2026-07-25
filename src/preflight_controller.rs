@@ -23,6 +23,7 @@ pub fn show_loading(window: &AppWindow) {
     window.set_preflight_generation(next_generation(window.get_preflight_generation()));
     window.set_preflight_loading(true);
     window.set_preflight_failed(false);
+    window.set_preflight_failure_message(SharedString::default());
     window.set_preflight_items(empty_rows());
     window.set_preflight_additions(SharedString::default());
     window.set_preflight_overwrites(SharedString::default());
@@ -40,6 +41,7 @@ pub fn show_review(window: &AppWindow, preflight: &Preflight) {
     let presentation = PreflightPresentation::from(preflight);
     window.set_preflight_loading(false);
     window.set_preflight_failed(false);
+    window.set_preflight_failure_message(SharedString::default());
     window.set_preflight_additions(presentation.additions.into());
     window.set_preflight_overwrites(presentation.overwrites.into());
     window.set_preflight_deletions(presentation.deletions.into());
@@ -53,9 +55,10 @@ pub fn show_review(window: &AppWindow, preflight: &Preflight) {
 }
 
 /// Shows a preflight failure without preserving an earlier connection's review items.
-pub fn show_failed(window: &AppWindow) {
+pub fn show_failed(window: &AppWindow, message: &str) {
     window.set_preflight_loading(false);
     window.set_preflight_failed(true);
+    window.set_preflight_failure_message(message.into());
     window.set_preflight_items(empty_rows());
     window.set_preflight_additions(SharedString::default());
     window.set_preflight_overwrites(SharedString::default());
