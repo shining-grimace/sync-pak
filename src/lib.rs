@@ -27,6 +27,7 @@ pub mod cancellation;
 pub mod capabilities;
 pub mod comparison;
 pub mod configuration;
+mod configuration_startup_controller;
 pub mod confirmed_preflight;
 mod connection_delete_controller;
 mod connection_form_controller;

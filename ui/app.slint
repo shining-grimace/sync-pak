@@ -42,6 +42,7 @@ export struct PreflightRow {
 export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <string> app-version;
+    in-out property <bool> configuration-unavailable: false;
     in-out property <[ProviderRow]> providers;
     in-out property <bool> providers-load-failed: false;
     in-out property <[ConnectionRow]> connections;
@@ -140,6 +141,7 @@ export component AppWindow inherits Window {
     callback show-add-provider();
     callback show-add-connection();
     callback show-welcome();
+    callback retry-configuration();
     callback show-privacy();
     callback show-activity();
     callback request-navigation(int);
@@ -234,11 +236,11 @@ export component AppWindow inherits Window {
             spacing: 6px;
             Text { text: "SYNCPAK"; color: #2c2925; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
             HorizontalBox { spacing: 6px;
-                Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open; clicked => { root.request-navigation(4); } }
-                Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open; clicked => { root.request-navigation(1); } }
+                Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(4); } }
+                Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(1); } }
             }
             HorizontalBox { spacing: 6px;
-                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open; clicked => { root.request-navigation(9); } }
+                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(9); } }
                 Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; enabled: !root.confirmation-open; clicked => { root.request-navigation(3); } }
                 Rectangle { horizontal-stretch: 1; }
             }
@@ -311,7 +313,14 @@ export component AppWindow inherits Window {
                         }
                     }
                     Rectangle { height: 16px; background: transparent; }
-                    HorizontalBox { alignment: center; FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: welcome-add-provider; init => { self.focus(); } } welcome-add-provider := Button { accessible-label: "Add your first provider"; text: "Add your first provider"; primary: true; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-add-provider(); } } }
+                    if root.configuration-unavailable : Rectangle { accessible-role: region; accessible-label: "Configuration storage unavailable"; background: #fff4f2; border-color: #7b241c; border-width: 1px; border-radius: 12px; max-width: Dimensions.welcome-content-max-width; min-height: 122px;
+                        VerticalBox { padding: 14px; spacing: 6px;
+                            Text { text: "Configuration storage is unavailable"; color: #7b241c; font-weight: 700; horizontal-alignment: center; wrap: word-wrap; }
+                            Text { text: "SyncPak cannot save providers or connections until its configuration storage is available."; color: #7b241c; horizontal-alignment: center; wrap: word-wrap; }
+                            HorizontalBox { alignment: center; FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: retry-configuration; init => { self.focus(); } } retry-configuration := Button { accessible-label: "Retry opening configuration storage"; text: "Retry"; primary: true; clicked => { root.retry-configuration(); } } }
+                        }
+                    }
+                    if !root.configuration-unavailable : HorizontalBox { alignment: center; FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: welcome-add-provider; init => { self.focus(); } } welcome-add-provider := Button { accessible-label: "Add your first provider"; text: "Add your first provider"; primary: true; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-add-provider(); } } }
                     HorizontalBox { alignment: center; Button { accessible-label: "Read how SyncPak protects your privacy"; text: "Read how SyncPak protects your privacy"; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-privacy(); } } }
                 }
             }
@@ -1021,11 +1030,11 @@ export component AppWindow inherits Window {
                 padding: 8px;
                 spacing: 6px;
                 HorizontalBox { spacing: 6px;
-                    Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open; clicked => { root.request-navigation(4); } }
-                    Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open; clicked => { root.request-navigation(1); } }
+                    Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(4); } }
+                    Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(1); } }
                 }
                 HorizontalBox { spacing: 6px;
-                    Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open; clicked => { root.request-navigation(9); } }
+                    Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(9); } }
                     Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; enabled: !root.confirmation-open; clicked => { root.request-navigation(3); } }
                 }
             }
@@ -1046,9 +1055,9 @@ export component AppWindow inherits Window {
             padding: 12px;
             spacing: 8px;
             Text { text: "SYNCPAK"; color: #2c2925; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
-            Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open; clicked => { root.request-navigation(4); } }
-            Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open; clicked => { root.request-navigation(1); } }
-            Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open; clicked => { root.request-navigation(9); } }
+            Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(4); } }
+            Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(1); } }
+            Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(9); } }
             Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; enabled: !root.confirmation-open; clicked => { root.request-navigation(3); } }
             Rectangle { vertical-stretch: 1; }
         }

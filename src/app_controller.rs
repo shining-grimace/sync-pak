@@ -2,93 +2,14 @@ use std::rc::Rc;
 
 use slint::ComponentHandle;
 
-use crate::{
-    AppWindow,
-    configuration::{ConfigStore, StructuredError},
-    diagnostics_controller,
-};
+use crate::{AppWindow, diagnostics_controller};
 
 pub(crate) fn initialize(window: &AppWindow) {
     window.set_app_version(env!("CARGO_PKG_VERSION").into());
     let diagnostics = Rc::new(std::cell::RefCell::new(Default::default()));
     diagnostics_controller::configure(window, Rc::clone(&diagnostics));
-    let configuration = match ConfigStore::for_current_platform() {
-        Ok(configuration) => Rc::new(configuration),
-        Err(_) => {
-            diagnostics_controller::present(
-                window,
-                &diagnostics,
-                "Configuration could not be opened",
-                "configuration directory unavailable",
-                "SyncPak could not access its configuration. Check its storage location and try again.",
-            );
-            return;
-        }
-    };
     configure_navigation(window);
-    let provider_buckets: crate::provider_bucket_cache::ProviderBucketCache = Default::default();
-    crate::provider_list_controller::configure(
-        window,
-        &configuration,
-        Rc::clone(&diagnostics),
-        Rc::clone(&provider_buckets),
-    );
-    crate::provider_form_controller::configure(
-        window,
-        &configuration,
-        Rc::clone(&diagnostics),
-        Rc::clone(&provider_buckets),
-    );
-    crate::provider_delete_controller::configure(
-        window,
-        &configuration,
-        Rc::clone(&diagnostics),
-        Rc::clone(&provider_buckets),
-    );
-    crate::connection_list_controller::configure(window, &configuration, Rc::clone(&diagnostics));
-    crate::connection_form_controller::configure(
-        window,
-        &configuration,
-        Rc::clone(&diagnostics),
-        Rc::clone(&provider_buckets),
-    );
-    crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
-    crate::run_direction_controller::configure(window, &configuration, Rc::clone(&diagnostics));
-    crate::folder_picker_controller::configure(window, Rc::clone(&diagnostics));
-    match configuration.load() {
-        Ok(config) => {
-            let report = crate::temporary_cleanup::remove_stale_files(
-                config
-                    .connections
-                    .iter()
-                    .map(|connection| &connection.local_path),
-            );
-            if !report.failures.is_empty() {
-                diagnostics_controller::record(
-                    &diagnostics,
-                    StructuredError::new(
-                        "Could not remove temporary data from an earlier operation",
-                        "startup temporary-file cleanup failed",
-                    ),
-                );
-            }
-            if config.welcome_completed {
-                crate::provider_list_controller::show(
-                    &window.as_weak(),
-                    configuration,
-                    diagnostics,
-                    provider_buckets,
-                )
-            }
-        }
-        Err(_) => diagnostics_controller::present(
-            window,
-            &diagnostics,
-            "Configuration could not be loaded",
-            "configuration load failed",
-            "SyncPak could not load its configuration. Check the file and try again.",
-        ),
-    }
+    crate::configuration_startup_controller::configure(window, diagnostics);
 }
 
 fn configure_navigation(window: &AppWindow) {
@@ -108,6 +29,9 @@ fn configure_navigation(window: &AppWindow) {
 
 fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
     if let Some(window) = weak.upgrade() {
+        if window.get_configuration_unavailable() && !configuration_unavailable_allows(page) {
+            return;
+        }
         window.set_status_message(Default::default());
         window.set_notice_message(Default::default());
         window.set_page(page);
@@ -136,6 +60,10 @@ fn navigation_is_blocked(page: i32) -> bool {
     matches!(page, 6 | 7 | 12..=15)
 }
 
+fn configuration_unavailable_allows(page: i32) -> bool {
+    matches!(page, 0 | 3)
+}
+
 fn complete_pending_navigation(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
     let page = match window.get_pending_navigation_page() {
@@ -159,7 +87,7 @@ fn navigate(window: &AppWindow, page: i32) {
 
 #[cfg(test)]
 mod tests {
-    use super::navigation_is_blocked;
+    use super::{configuration_unavailable_allows, navigation_is_blocked};
 
     #[test]
     fn navigation_cannot_bypass_confirmation_pages() {
@@ -169,5 +97,13 @@ mod tests {
         for page in [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 16, 17] {
             assert!(!navigation_is_blocked(page));
         }
+    }
+
+    #[test]
+    fn unavailable_configuration_only_allows_welcome_and_privacy() {
+        assert!(configuration_unavailable_allows(0));
+        assert!(configuration_unavailable_allows(3));
+        assert!(!configuration_unavailable_allows(1));
+        assert!(!configuration_unavailable_allows(9));
     }
 }
