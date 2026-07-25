@@ -9,10 +9,7 @@ pub(crate) fn clear_transient_state(window: &AppWindow) {
     window.set_provider_form_access_key(SharedString::default());
     window.set_provider_form_secret_key(SharedString::default());
     window.set_provider_form_session_token(SharedString::default());
-    window.set_provider_secret_visible(false);
-    window.set_provider_secret_reveal_generation(next_reveal_generation(
-        window.get_provider_secret_reveal_generation(),
-    ));
+    crate::provider_secret_reveal_controller::hide(window);
     window.set_provider_advanced_expanded(false);
     invalidate_verification(window);
     window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(VecModel::default())));
@@ -42,10 +39,6 @@ pub(crate) fn is_current_verification(expected: i32, current: i32) -> bool {
 }
 
 fn next_verification_generation(current: i32) -> i32 {
-    current.wrapping_add(1)
-}
-
-fn next_reveal_generation(current: i32) -> i32 {
     current.wrapping_add(1)
 }
 
@@ -123,7 +116,7 @@ pub(crate) fn provider_id(configuration: &ConfigStore, id: &str) -> Result<Provi
 
 #[cfg(test)]
 mod tests {
-    use super::{is_current_verification, next_reveal_generation, next_verification_generation};
+    use super::{is_current_verification, next_verification_generation};
 
     #[test]
     fn only_the_current_verification_attempt_can_update_a_form() {
@@ -135,11 +128,5 @@ mod tests {
     fn verification_generation_advances_across_integer_wraparound() {
         assert_eq!(next_verification_generation(8), 9);
         assert_eq!(next_verification_generation(i32::MAX), i32::MIN);
-    }
-
-    #[test]
-    fn clearing_a_form_retires_an_older_secret_reveal_timer() {
-        assert_eq!(next_reveal_generation(2), 3);
-        assert_eq!(next_reveal_generation(i32::MAX), i32::MIN);
     }
 }

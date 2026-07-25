@@ -68,6 +68,7 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     window.on_request_save_provider(move || {
         if let Some(window) = weak.upgrade() {
+            crate::provider_secret_reveal_controller::hide(&window);
             window.set_status_message(SharedString::default());
             window.set_page(13);
         }
@@ -106,6 +107,7 @@ pub(crate) fn configure(
 
 fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
     let Some(window) = weak.upgrade() else { return };
+    crate::provider_secret_reveal_controller::hide(&window);
     let Some(kind) = provider_kind(window.get_provider_form_kind()) else {
         window.set_provider_save_after_verification(false);
         return;
@@ -189,6 +191,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
 
 fn request_discard(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
+    crate::provider_secret_reveal_controller::hide(&window);
     invalidate_verification(&window);
     if window.get_pending_navigation_page() < 0 {
         window.set_pending_navigation_page(1);
@@ -212,6 +215,7 @@ fn save(
     secret_access_key: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    crate::provider_secret_reveal_controller::hide(&window);
     let Some(kind) = provider_kind(kind) else {
         window.set_status_message("Choose a provider type.".into());
         return;

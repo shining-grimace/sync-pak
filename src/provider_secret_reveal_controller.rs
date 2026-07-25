@@ -11,14 +11,23 @@ pub(crate) fn configure(window: &AppWindow) {
     let weak = window.as_weak();
     window.on_toggle_provider_secret_visibility(move || {
         let Some(window) = weak.upgrade() else { return };
-        let generation = next_generation(window.get_provider_secret_reveal_generation());
-        window.set_provider_secret_reveal_generation(generation);
-        let visible = !window.get_provider_secret_visible();
-        window.set_provider_secret_visible(visible);
-        if visible {
+        if window.get_provider_secret_visible() {
+            hide(&window);
+        } else {
+            let generation = next_generation(window.get_provider_secret_reveal_generation());
+            window.set_provider_secret_reveal_generation(generation);
+            window.set_provider_secret_visible(true);
             hide_after_timeout(weak.clone(), generation);
         }
     });
+}
+
+/// Hides credentials immediately and retires any scheduled reveal timeout.
+pub(crate) fn hide(window: &AppWindow) {
+    window.set_provider_secret_visible(false);
+    window.set_provider_secret_reveal_generation(next_generation(
+        window.get_provider_secret_reveal_generation(),
+    ));
 }
 
 fn hide_after_timeout(weak: slint::Weak<AppWindow>, generation: i32) {
