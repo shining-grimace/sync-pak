@@ -849,7 +849,7 @@ export component AppWindow inherits Window {
                     Text { text: root.activity-progress-items; wrap: word-wrap; }
                     Text { text: root.activity-progress-bytes; wrap: word-wrap; }
                     Text { text: "Current item"; color: #454039; font-weight: 700; }
-                    Text { accessible-live-region: polite; text: root.activity-progress-path; wrap: word-wrap; }
+                    Text { text: root.activity-progress-path; wrap: word-wrap; }
                 }
             }
             Text { text: "Minimize leaves this operation running. You can return from Activity at any time."; color: #454039; wrap: word-wrap; }
@@ -1052,6 +1052,20 @@ export component AppWindow inherits Window {
                         VerticalBox { spacing: 2px;
                             Text { text: item.detail; color: #454039; wrap: word-wrap; }
                         }
+                    }
+                }
+                if root.preflight-items.length > 0 && root.preflight-visible-items.length == 0 : Rectangle {
+                    accessible-role: region;
+                    accessible-label: "No entries in the selected planned change category";
+                    background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: 74px;
+                    Text {
+                        text: root.preflight-item-filter == 1 ? "No new files are planned." : (root.preflight-item-filter == 2 ? "No overwrites are planned." : (root.preflight-item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
+                        color: #454039;
+                        wrap: word-wrap;
+                        x: 12px;
+                        y: 12px;
+                        width: parent.width - 24px;
+                        height: parent.height - 24px;
                     }
                 }
                 if root.preflight-requires-mirror-confirmation : CheckBox {
