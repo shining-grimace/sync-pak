@@ -27,6 +27,7 @@ pub(crate) fn configure(
     };
     window.set_configuration_unavailable(false);
     window.set_status_message(Default::default());
+    crate::preflight_controller::configure(window);
     let provider_buckets: crate::provider_bucket_cache::ProviderBucketCache = Default::default();
     crate::provider_list_controller::configure(
         window,

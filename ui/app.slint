@@ -136,7 +136,9 @@ export component AppWindow inherits Window {
     in-out property <string> preflight-start-action;
     in-out property <bool> preflight-requires-mirror-confirmation: false;
     in-out property <bool> preflight-mirror-confirmed: false;
+    in-out property <int> preflight-item-filter: 0;
     in-out property <[PreflightRow]> preflight-items;
+    in-out property <[PreflightRow]> preflight-visible-items;
     in-out property <string> pending-cancel-activity-id;
     in-out property <string> pending-cancel-activity-name;
     in-out property <int> pending-navigation-page: -1;
@@ -191,6 +193,7 @@ export component AppWindow inherits Window {
     callback request-run-connection(string);
     callback choose-run-direction(int);
     callback begin-preflight();
+    callback set-preflight-item-filter(int);
     callback cancel-run-direction();
     callback return-to-run-direction();
     callback set-connection-filter(int);
@@ -1014,14 +1017,29 @@ export component AppWindow inherits Window {
                     color: #23623a; wrap: word-wrap;
                 }
                 if root.preflight-items.length > 0 : Text {
-                    text: "Reviewing " + root.preflight-items.length + " planned file changes.";
+                    text: root.preflight-item-filter == 0 ? "Reviewing " + root.preflight-items.length + " planned file changes." : (root.preflight-item-filter == 1 ? "Reviewing planned additions." : (root.preflight-item-filter == 2 ? "Reviewing planned overwrites." : (root.preflight-item-filter == 3 ? "Reviewing planned deletions." : "Reviewing planned warnings.")));
                     color: #454039; wrap: word-wrap;
                 }
+                if root.preflight-items.length > 0 : VerticalBox {
+                    accessible-role: region;
+                    accessible-label: "Filter planned file changes";
+                    spacing: 6px;
+                    Text { text: "Show planned changes"; color: #454039; font-weight: 700; }
+                    HorizontalBox { spacing: 6px;
+                        Button { accessible-label: root.preflight-item-filter == 0 ? "All planned changes, selected" : "Show all planned changes"; text: "All"; primary: root.preflight-item-filter == 0; clicked => { root.set-preflight-item-filter(0); } }
+                        Button { accessible-label: root.preflight-item-filter == 1 ? "New files, selected" : "Show new files"; text: "New"; primary: root.preflight-item-filter == 1; clicked => { root.set-preflight-item-filter(1); } }
+                        Button { accessible-label: root.preflight-item-filter == 2 ? "Overwrites, selected" : "Show overwrites"; text: "Overwrites"; primary: root.preflight-item-filter == 2; clicked => { root.set-preflight-item-filter(2); } }
+                    }
+                    HorizontalBox { spacing: 6px;
+                        Button { accessible-label: root.preflight-item-filter == 3 ? "Deletions, selected" : "Show deletions"; text: "Deletions"; primary: root.preflight-item-filter == 3; clicked => { root.set-preflight-item-filter(3); } }
+                        Button { accessible-label: root.preflight-item-filter == 4 ? "Warnings, selected" : "Show warnings"; text: "Warnings"; primary: root.preflight-item-filter == 4; clicked => { root.set-preflight-item-filter(4); } }
+                    }
+                }
                 if root.preflight-items.length > 0 : ListView {
-                    accessible-label: "Planned file changes";
+                    accessible-label: root.preflight-item-filter == 0 ? "All planned file changes" : (root.preflight-item-filter == 1 ? "Planned new files" : (root.preflight-item-filter == 2 ? "Planned overwrites" : (root.preflight-item-filter == 3 ? "Planned deletions" : "Planned warnings")));
                     height: 180px;
                     vertical-scrollbar-policy: always-on;
-                    for item in root.preflight-items : VerticalBox {
+                    for item in root.preflight-visible-items : VerticalBox {
                         accessible-role: list-item;
                         accessible-label: item.status + ": " + item.path + ". " + item.detail;
                         spacing: 4px;
