@@ -97,6 +97,7 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-session-token;
     in-out property <string> provider-form-original;
     in-out property <bool> provider-secret-visible: false;
+    in-out property <int> provider-secret-reveal-generation: 0;
     in-out property <bool> provider-advanced-expanded: false;
     in-out property <bool> provider-verifying: false;
     in-out property <int> provider-verification-generation: 0;
@@ -158,6 +159,7 @@ export component AppWindow inherits Window {
     callback request-provider-delete(string);
     callback request-provider-edit(string);
     callback verify-saved-provider(string);
+    callback toggle-provider-secret-visibility();
     callback verify-provider();
     callback save-and-verify-provider();
     callback confirm-provider-delete();
@@ -439,9 +441,9 @@ export component AppWindow inherits Window {
             Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
             HorizontalBox {
                 LineEdit { accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; enabled: !root.provider-verifying; }
-                Button { accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key"); text: root.provider-secret-visible ? "Hide" : "Reveal"; enabled: !root.provider-verifying; clicked => { root.provider-secret-visible = !root.provider-secret-visible; } }
+                Button { accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key"); text: root.provider-secret-visible ? "Hide" : "Reveal"; enabled: !root.provider-verifying; clicked => { root.toggle-provider-secret-visibility(); } }
             }
-            if root.provider-secret-visible : Text { text: "Make sure nobody else can see your screen."; color: #7b241c; wrap: word-wrap; }
+            if root.provider-secret-visible : Text { accessible-live-region: polite; text: "Make sure nobody else can see your screen. This value hides again in 15 seconds."; color: #7b241c; wrap: word-wrap; }
             Button { accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings"; text: root.provider-advanced-expanded ? "Hide advanced" : "Advanced"; enabled: !root.provider-verifying; clicked => { root.provider-advanced-expanded = !root.provider-advanced-expanded; } }
             if root.provider-advanced-expanded : VerticalBox {
                 spacing: 4px;

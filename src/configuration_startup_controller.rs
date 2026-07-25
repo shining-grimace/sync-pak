@@ -41,6 +41,7 @@ pub(crate) fn configure(
         Rc::clone(&diagnostics),
         Rc::clone(&provider_buckets),
     );
+    crate::provider_secret_reveal_controller::configure(window);
     crate::provider_delete_controller::configure(
         window,
         &configuration,

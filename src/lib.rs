@@ -83,6 +83,7 @@ pub mod provider_probe;
 #[cfg(feature = "provider-probes")]
 mod provider_probe_config;
 mod provider_save_error;
+mod provider_secret_reveal_controller;
 pub mod provider_verification;
 pub mod queue;
 pub mod queue_progress_observer;
