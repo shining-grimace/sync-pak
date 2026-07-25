@@ -831,13 +831,16 @@ export component AppWindow inherits Window {
                     }
                 }
             }
-            if root.activity-result-can-retry : Button {
-                accessible-label: "Retry " + root.activity-result-title + " with a new preflight review";
-                text: "Retry with a new preflight";
-                primary: true;
-                clicked => { root.retry-activity-result(); }
+            if root.activity-result-can-retry : VerticalBox {
+                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: retry-activity-result; init => { self.focus(); } }
+                retry-activity-result := Button {
+                    accessible-label: "Retry " + root.activity-result-title + " with a new preflight review";
+                    text: "Retry with a new preflight";
+                    primary: true;
+                    clicked => { root.retry-activity-result(); }
+                }
             }
-            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: activity-result-back; init => { self.focus(); } }
+            if !root.activity-result-can-retry : FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: activity-result-back; init => { self.focus(); } }
             activity-result-back := Button { accessible-label: "Return to activity"; text: "Back to activity"; clicked => { root.dismiss-activity-result(); } }
             }
         }
@@ -874,7 +877,13 @@ export component AppWindow inherits Window {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Delete " + root.pending-provider-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "This permanently deletes its protected credentials and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " dependent connection from SyncPak." : " dependent connections from SyncPak.") + " It does not delete local or cloud files."; wrap: word-wrap; }
+            Rectangle { accessible-role: region; accessible-label: "Provider deletion consequences"; background: #fff4f2; border-color: #7b241c; border-width: 1px; border-radius: 8px; min-height: 108px;
+                VerticalBox { padding: 12px; spacing: 5px;
+                    Text { text: "What will be deleted"; color: #7b241c; font-weight: 700; }
+                    Text { text: "The protected credentials and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " dependent connection will be removed from SyncPak." : " dependent connections will be removed from SyncPak."); color: #7b241c; wrap: word-wrap; }
+                    Text { text: "Local folders and cloud files are not deleted."; color: #7b241c; wrap: word-wrap; }
+                }
+            }
             if root.pending-provider-connections.length > 0 : VerticalBox {
                 spacing: 3px;
                 Text { text: "Connections that will be deleted"; font-weight: 700; }
@@ -903,7 +912,13 @@ export component AppWindow inherits Window {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px; spacing: 12px;
             Text { text: "Delete " + root.pending-connection-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "This removes the connection from SyncPak. It does not delete local or cloud files."; wrap: word-wrap; }
+            Rectangle { accessible-role: region; accessible-label: "Connection deletion consequences"; background: #fff4f2; border-color: #7b241c; border-width: 1px; border-radius: 8px; min-height: 94px;
+                VerticalBox { padding: 12px; spacing: 5px;
+                    Text { text: "What will be deleted"; color: #7b241c; font-weight: 700; }
+                    Text { text: "This removes the connection from SyncPak."; color: #7b241c; wrap: word-wrap; }
+                    Text { text: "Its local folder and cloud files are not deleted."; color: #7b241c; wrap: word-wrap; }
+                }
+            }
             VerticalBox {
                 FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: keep-connection; init => { self.focus(); } }
                 keep-connection := Button { accessible-label: "Keep connection " + root.pending-connection-name; text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
