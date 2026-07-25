@@ -28,7 +28,7 @@ pub trait AddOnlyTransfer {
 }
 
 /// Executes the copy and skip actions of an add-only plan in their planned order.
-pub async fn execute_add_only_actions<T: AddOnlyTransfer, O: TransferProgressObserver>(
+pub async fn execute_add_only_actions<T: AddOnlyTransfer, O: TransferProgressObserver + ?Sized>(
     direction: Direction,
     actions: &[PlannedAction],
     transfer: &T,

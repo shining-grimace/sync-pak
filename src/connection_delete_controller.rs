@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use slint::{ComponentHandle, SharedString};
 
@@ -6,12 +6,14 @@ use crate::{
     AppWindow,
     configuration::{ConfigStore, ConnectionRepository},
     diagnostics_controller::{self, SharedDiagnosticLog},
+    operation_cancellation::ConnectionOperationCanceller,
 };
 
 pub(crate) fn configure(
     window: &AppWindow,
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
+    canceller: Option<Arc<dyn ConnectionOperationCanceller + Send + Sync>>,
 ) {
     let weak = window.as_weak();
     let request_config = Rc::clone(configuration);
@@ -23,8 +25,14 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     let confirm_config = Rc::clone(configuration);
     let confirm_diagnostics = Rc::clone(&diagnostics);
+    let confirm_canceller = canceller.clone();
     window.on_confirm_connection_delete(move || {
-        delete_connection(&weak, &confirm_config, &confirm_diagnostics)
+        delete_connection(
+            &weak,
+            &confirm_config,
+            &confirm_diagnostics,
+            confirm_canceller.as_deref(),
+        )
     });
 
     let weak = window.as_weak();
@@ -67,13 +75,22 @@ fn delete_connection(
     weak: &slint::Weak<AppWindow>,
     configuration: &Rc<ConfigStore>,
     diagnostics: &SharedDiagnosticLog,
+    canceller: Option<&(dyn ConnectionOperationCanceller + Send + Sync)>,
 ) {
     let Some(window) = weak.upgrade() else { return };
     let result = connection(configuration, window.get_pending_connection_id().as_str()).and_then(
-        |connection| {
-            ConnectionRepository::new(configuration)
+        |connection| match canceller {
+            Some(canceller) => crate::operation_cancellation::delete_connection(
+                configuration,
+                canceller,
+                &connection.id,
+            )
+            .map(|_| ())
+            .map_err(|error| error.to_string()),
+            None => ConnectionRepository::new(configuration)
                 .delete(&connection.id)
-                .map_err(|error| error.to_string())
+                .map(|_| ())
+                .map_err(|error| error.to_string()),
         },
     );
     match result {

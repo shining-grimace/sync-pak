@@ -1,5 +1,8 @@
 use std::rc::Rc;
 
+#[cfg(feature = "provider-s3")]
+use std::cell::RefCell;
+
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 
 use crate::{
@@ -7,6 +10,17 @@ use crate::{
     preflight::Preflight,
     preflight_presentation::{PreflightItemPresentation, PreflightPresentation},
 };
+
+#[cfg(feature = "provider-s3")]
+use crate::{
+    reviewed_operation::{ConfirmedOperation, ReviewedOperation},
+    run_request::RunRequest,
+};
+
+#[cfg(feature = "provider-s3")]
+thread_local! {
+    static REVIEWED_OPERATION: RefCell<Option<ReviewedOperation>> = const { RefCell::new(None) };
+}
 
 /// Connects filtering controls to a derived, display-only preflight row model.
 pub(crate) fn configure(window: &AppWindow) {
@@ -20,6 +34,7 @@ pub(crate) fn configure(window: &AppWindow) {
 
 /// Clears the review model while read-only inventory collection is in progress.
 pub fn show_loading(window: &AppWindow) {
+    clear_reviewed_operation();
     window.set_preflight_generation(next_generation(window.get_preflight_generation()));
     window.set_preflight_loading(true);
     window.set_preflight_failed(false);
@@ -54,8 +69,35 @@ pub fn show_review(window: &AppWindow, preflight: &Preflight) {
     window.set_page(11);
 }
 
+/// Shows and retains the immutable review that may later be confirmed for queue submission.
+#[cfg(feature = "provider-s3")]
+pub(crate) fn show_reviewed(window: &AppWindow, request: RunRequest, preflight: &Preflight) {
+    REVIEWED_OPERATION.with(|review| {
+        *review.borrow_mut() = Some(ReviewedOperation::new(request, preflight.clone()));
+    });
+    show_review(window, preflight);
+}
+
+/// Consumes the displayed review, binding any destructive acknowledgement to its exact plan.
+#[cfg(feature = "provider-s3")]
+pub(crate) fn take_confirmed(
+    mirror_acknowledged: bool,
+) -> Result<ConfirmedOperation, crate::confirmed_preflight::StartError> {
+    REVIEWED_OPERATION.with(|review| {
+        let confirmed = review
+            .borrow()
+            .as_ref()
+            .cloned()
+            .ok_or(crate::confirmed_preflight::StartError::AcknowledgementRequired)?
+            .confirm(mirror_acknowledged)?;
+        *review.borrow_mut() = None;
+        Ok(confirmed)
+    })
+}
+
 /// Shows a preflight failure without preserving an earlier connection's review items.
 pub fn show_failed(window: &AppWindow, message: &str) {
+    clear_reviewed_operation();
     window.set_preflight_loading(false);
     window.set_preflight_failed(true);
     window.set_preflight_failure_message(message.into());
@@ -73,8 +115,14 @@ pub fn show_failed(window: &AppWindow, message: &str) {
 
 /// Retires any in-flight inventory result when the person leaves its review.
 pub fn invalidate(window: &AppWindow) {
+    clear_reviewed_operation();
     window.set_preflight_generation(next_generation(window.get_preflight_generation()));
     window.set_preflight_loading(false);
+}
+
+fn clear_reviewed_operation() {
+    #[cfg(feature = "provider-s3")]
+    REVIEWED_OPERATION.with(|review| *review.borrow_mut() = None);
 }
 
 #[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]

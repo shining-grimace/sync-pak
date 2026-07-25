@@ -89,7 +89,10 @@ fn status(state: QueueState) -> &'static str {
 fn summary(result: &crate::execution::ExecutionResult) -> String {
     match result.state {
         ExecutionState::Completed => format!("{} items completed", result.completed.len()),
-        ExecutionState::Failed => incomplete_summary(result, "Failed"),
+        ExecutionState::Failed => result
+            .failure_message
+            .clone()
+            .unwrap_or_else(|| incomplete_summary(result, "Failed")),
         ExecutionState::Cancelled => incomplete_summary(result, "Cancelled"),
         ExecutionState::Preparing | ExecutionState::Copying | ExecutionState::Finalizing => {
             String::new()

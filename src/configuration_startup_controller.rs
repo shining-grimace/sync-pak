@@ -1,5 +1,8 @@
 use std::rc::Rc;
 
+#[cfg(feature = "provider-s3")]
+use std::sync::Arc;
+
 use slint::ComponentHandle;
 
 use crate::{
@@ -42,12 +45,6 @@ pub(crate) fn configure(
         Rc::clone(&provider_buckets),
     );
     crate::provider_secret_reveal_controller::configure(window);
-    crate::provider_delete_controller::configure(
-        window,
-        &configuration,
-        Rc::clone(&diagnostics),
-        Rc::clone(&provider_buckets),
-    );
     crate::connection_list_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::connection_form_controller::configure(
         window,
@@ -55,9 +52,41 @@ pub(crate) fn configure(
         Rc::clone(&diagnostics),
         Rc::clone(&provider_buckets),
     );
-    crate::connection_delete_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::run_direction_controller::configure(window, &configuration, Rc::clone(&diagnostics));
     crate::folder_picker_controller::configure(window, Rc::clone(&diagnostics));
+    #[cfg(feature = "provider-s3")]
+    {
+        let queue = configure_operation_queue(window, &configuration);
+        crate::provider_delete_controller::configure(
+            window,
+            &configuration,
+            Rc::clone(&diagnostics),
+            Rc::clone(&provider_buckets),
+            Some(queue.clone()),
+        );
+        crate::connection_delete_controller::configure(
+            window,
+            &configuration,
+            Rc::clone(&diagnostics),
+            Some(queue),
+        );
+    }
+    #[cfg(not(feature = "provider-s3"))]
+    {
+        crate::provider_delete_controller::configure(
+            window,
+            &configuration,
+            Rc::clone(&diagnostics),
+            Rc::clone(&provider_buckets),
+            None,
+        );
+        crate::connection_delete_controller::configure(
+            window,
+            &configuration,
+            Rc::clone(&diagnostics),
+            None,
+        );
+    }
     match configuration.load() {
         Ok(config) => {
             record_temporary_cleanup_failures(&config, &diagnostics);
@@ -78,6 +107,21 @@ pub(crate) fn configure(
             "SyncPak could not load its configuration. Check the file and try again.",
         ),
     }
+}
+
+#[cfg(feature = "provider-s3")]
+fn configure_operation_queue(
+    window: &AppWindow,
+    configuration: &Rc<ConfigStore>,
+) -> Arc<crate::background_queue::BackgroundQueue<crate::s3_operation_executor::S3OperationExecutor>>
+{
+    let executor = Arc::new(crate::s3_operation_executor::S3OperationExecutor::new(
+        configuration.path().to_owned(),
+    ));
+    let queue = Arc::new(crate::background_queue::BackgroundQueue::new(executor));
+    crate::activity_controller::configure(window, Arc::clone(&queue));
+    crate::operation_start_controller::configure(window, Arc::clone(&queue));
+    queue
 }
 
 fn record_temporary_cleanup_failures(

@@ -15,7 +15,7 @@ pub trait ConnectionOperationCanceller {
 }
 
 /// Cancels all operations associated with a provider's dependent connections.
-pub fn cancel_for_connections<C: ConnectionOperationCanceller>(
+pub fn cancel_for_connections<C: ConnectionOperationCanceller + ?Sized>(
     canceller: &C,
     connection_ids: impl IntoIterator<Item = impl AsRef<str>>,
 ) -> Result<usize, CapabilityError> {
@@ -29,7 +29,7 @@ pub fn cancel_for_connections<C: ConnectionOperationCanceller>(
 }
 
 /// Cancels a connection's work before deleting its configuration.
-pub fn delete_connection<C: ConnectionOperationCanceller>(
+pub fn delete_connection<C: ConnectionOperationCanceller + ?Sized>(
     configuration: &ConfigStore,
     canceller: &C,
     connection_id: &ConnectionId,
@@ -62,7 +62,7 @@ impl std::fmt::Display for ConnectionDeletionError {
 impl std::error::Error for ConnectionDeletionError {}
 
 /// Cancels every operation using a provider before deleting its credentials and connections.
-pub fn delete_provider<C: ConnectionOperationCanceller, S: ProtectedCredentialStore>(
+pub fn delete_provider<C: ConnectionOperationCanceller + ?Sized, S: ProtectedCredentialStore>(
     configuration: &ConfigStore,
     credentials: &S,
     canceller: &C,

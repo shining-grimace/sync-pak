@@ -201,6 +201,7 @@ export component AppWindow inherits Window {
     callback request-run-connection(string);
     callback choose-run-direction(int);
     callback begin-preflight();
+    callback start-preflight-operation();
     callback set-preflight-item-filter(int);
     callback cancel-run-direction();
     callback return-to-run-direction();
@@ -1128,11 +1129,13 @@ export component AppWindow inherits Window {
                     wrap: word-wrap;
                 }
                 Button {
-                    accessible-label: (root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed) ? root.preflight-start-action + " is unavailable until destructive changes are acknowledged" : root.preflight-start-action + " is unavailable because transfer execution is not connected";
-                    text: root.preflight-start-action + " (unavailable)";
-                    enabled: false;
+                    accessible-label: root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed ? root.preflight-start-action + " is unavailable until destructive changes are acknowledged" : root.preflight-start-action;
+                    text: root.preflight-start-action;
+                    enabled: !root.preflight-loading && !root.preflight-failed && (!root.preflight-requires-mirror-confirmation || root.preflight-mirror-confirmed);
+                    primary: true;
+                    clicked => { root.start-preflight-operation(); }
                 }
-                Text { text: root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed ? "Transfer execution stays unavailable until you acknowledge the destructive changes above." : "Transfer execution is not connected in this build. This completed review remains read-only."; color: #454039; wrap: word-wrap; }
+                if root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed : Text { text: "Acknowledge the destructive changes above before starting."; color: #7b241c; wrap: word-wrap; }
             }
             VerticalBox {
                 if root.preflight-loading || root.preflight-failed || root.preflight-items.length == 0 : FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-back; init => { self.focus(); } }

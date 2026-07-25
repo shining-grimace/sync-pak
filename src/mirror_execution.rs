@@ -34,7 +34,7 @@ pub trait MirrorTransfer {
 }
 
 /// Executes a mirror plan only after its destructive actions have been confirmed.
-pub async fn execute_confirmed_mirror<T: MirrorTransfer, O: TransferProgressObserver>(
+pub async fn execute_confirmed_mirror<T: MirrorTransfer, O: TransferProgressObserver + ?Sized>(
     plan: &TransferPlan,
     confirmation: Option<&DestructiveConfirmation>,
     transfer: &T,

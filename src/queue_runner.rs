@@ -2,6 +2,7 @@ use crate::{
     capabilities::CapabilityError,
     execution::{ExecutionResult, OperationExecutor},
     queue::OperationQueue,
+    transfer_progress::NoopProgressObserver,
 };
 
 /// Runs one queued operation at a time and records its terminal activity result.
@@ -19,7 +20,7 @@ impl<'a, E: OperationExecutor> QueueRunner<'a, E> {
         let Some(entry) = queue.take_next() else {
             return Ok(false);
         };
-        match self.executor.execute(&entry.plan) {
+        match self.executor.execute(&entry, &NoopProgressObserver) {
             Ok(result) if result.is_terminal() => {
                 if queue.finish(entry.operation_id, result) {
                     Ok(true)
@@ -32,7 +33,10 @@ impl<'a, E: OperationExecutor> QueueRunner<'a, E> {
                 Err(CapabilityError::Unexpected)
             }
             Err(error) => {
-                let _ = queue.finish(entry.operation_id, ExecutionResult::failed_before_start());
+                let _ = queue.finish(
+                    entry.operation_id,
+                    ExecutionResult::failed_before_start_with_message(error.to_string()),
+                );
                 Err(error)
             }
         }
@@ -49,6 +53,7 @@ mod tests {
         configuration::{ConnectionConfig, ConnectionId, ProviderId, SyncMode},
         execution::{ExecutionProgress, ExecutionState, OperationExecutor},
         planning::{Direction, OperationPlan},
+        queue::QueueEntry,
         queue::QueueState,
     };
 
@@ -61,12 +66,13 @@ mod tests {
     impl OperationExecutor for Executor {
         fn execute(
             &self,
-            plan: &OperationPlan,
+            entry: &QueueEntry,
+            _: &dyn crate::transfer_progress::TransferProgressObserver,
         ) -> Result<crate::execution::ExecutionResult, CapabilityError> {
             self.completed
                 .lock()
                 .unwrap()
-                .push(plan.connection_id.clone());
+                .push(entry.plan.connection_id.clone());
             Ok(ExecutionProgress::new([]).finish())
         }
 

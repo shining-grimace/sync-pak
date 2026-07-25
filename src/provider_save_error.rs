@@ -3,6 +3,7 @@ use crate::{capabilities::CapabilityError, configuration::CredentialError};
 /// Safe, actionable presentation categories for provider credential persistence failures.
 pub(crate) enum ProviderPersistenceError {
     ProtectedStore(CapabilityError),
+    OperationCancellation,
     Other,
 }
 
@@ -11,6 +12,20 @@ impl From<CredentialError> for ProviderPersistenceError {
         match error {
             CredentialError::ProtectedStore(error) => Self::ProtectedStore(error),
             _ => Self::Other,
+        }
+    }
+}
+
+impl From<crate::operation_cancellation::ProviderDeletionError> for ProviderPersistenceError {
+    fn from(error: crate::operation_cancellation::ProviderDeletionError) -> Self {
+        match error {
+            crate::operation_cancellation::ProviderDeletionError::Provider(error) => {
+                Self::from(error)
+            }
+            crate::operation_cancellation::ProviderDeletionError::Cancellation(_) => {
+                Self::OperationCancellation
+            }
+            crate::operation_cancellation::ProviderDeletionError::Configuration(_) => Self::Other,
         }
     }
 }
@@ -28,6 +43,7 @@ impl ProviderPersistenceError {
                 "protected credential storage unavailable",
                 "SyncPak could not securely save these credentials. Unlock your device's credential store, then try again.",
             ),
+            Self::OperationCancellation => Self::Other.save_presentation(),
             Self::Other => (
                 "Provider settings could not be saved",
                 "provider save failed",
@@ -47,6 +63,11 @@ impl ProviderPersistenceError {
                 "Protected credential storage is unavailable",
                 "protected credential storage unavailable during provider deletion",
                 "SyncPak could not securely remove this provider's credentials. Unlock your device's credential store, then try again.",
+            ),
+            Self::OperationCancellation => (
+                "Provider operations could not be cancelled",
+                "provider operation cancellation failed before deletion",
+                "SyncPak could not stop this provider's active work. Wait for it to finish, then try deleting the provider again.",
             ),
             Self::Other => (
                 "Provider could not be deleted",

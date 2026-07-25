@@ -23,11 +23,19 @@ pub(crate) fn start(
     generation: i32,
 ) {
     let connection_id = request.connection.id.as_str().to_owned();
+    let review_request = request.clone();
     let (sender, receiver) = mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let _ = sender.send(collect(request, configuration_path));
     });
-    await_result(weak, connection_id, generation, receiver, diagnostics);
+    await_result(
+        weak,
+        connection_id,
+        generation,
+        receiver,
+        diagnostics,
+        review_request,
+    );
 }
 
 fn collect(
@@ -56,6 +64,7 @@ fn await_result(
     generation: i32,
     receiver: Receiver<Result<Preflight, PreflightFailure>>,
     diagnostics: SharedDiagnosticLog,
+    review_request: RunRequest,
 ) {
     slint::Timer::single_shot(Duration::from_millis(50), move || {
         let Some(window) = weak.upgrade() else { return };
@@ -64,7 +73,7 @@ fn await_result(
         }
         match receiver.try_recv() {
             Ok(Ok(preflight)) => {
-                crate::preflight_controller::show_review(&window, &preflight);
+                crate::preflight_controller::show_reviewed(&window, review_request, &preflight);
             }
             Ok(Err(failure)) => {
                 crate::preflight_controller::show_failed(&window, failure.message());
@@ -89,9 +98,14 @@ fn await_result(
                     "SyncPak could not complete the preflight. Run the connection again.",
                 );
             }
-            Err(mpsc::TryRecvError::Empty) => {
-                await_result(weak, connection_id, generation, receiver, diagnostics)
-            }
+            Err(mpsc::TryRecvError::Empty) => await_result(
+                weak,
+                connection_id,
+                generation,
+                receiver,
+                diagnostics,
+                review_request,
+            ),
         }
     });
 }

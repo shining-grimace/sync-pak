@@ -1,5 +1,6 @@
 use crate::{
     confirmed_preflight::{ConfirmedPreflight, StartError},
+    planning::OperationPlan,
     preflight::Preflight,
     run_request::RunRequest,
 };
@@ -47,6 +48,15 @@ impl ConfirmedOperation {
 
     pub fn preflight(&self) -> &ConfirmedPreflight {
         &self.preflight
+    }
+
+    /// Returns the queue identity without exposing credentials or mutable review state.
+    pub fn operation_plan(&self) -> OperationPlan {
+        OperationPlan::new(
+            self.request.connection.id.as_str(),
+            self.preflight.preflight().plan().mode(),
+            self.preflight.preflight().plan().direction(),
+        )
     }
 }
 
@@ -136,5 +146,10 @@ mod tests {
             Direction::Upload
         );
         assert!(confirmed.preflight().destructive_confirmation().is_some());
+        assert_eq!(
+            confirmed.operation_plan().connection_id,
+            request.connection.id.as_str()
+        );
+        assert_eq!(confirmed.operation_plan().mode, SyncMode::Mirror);
     }
 }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
@@ -6,6 +6,7 @@ use crate::{
     AppWindow,
     configuration::{ConfigStore, ProviderId, ProviderRepository},
     diagnostics_controller::{self, SharedDiagnosticLog},
+    operation_cancellation::ConnectionOperationCanceller,
     platform::PlatformCredentialStore,
     provider_bucket_cache::{self, ProviderBucketCache},
     provider_save_error::ProviderPersistenceError,
@@ -16,6 +17,7 @@ pub(crate) fn configure(
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
     buckets: ProviderBucketCache,
+    canceller: Option<Arc<dyn ConnectionOperationCanceller + Send + Sync>>,
 ) {
     let weak = window.as_weak();
     let request_config = Rc::clone(configuration);
@@ -28,12 +30,14 @@ pub(crate) fn configure(
     let confirm_config = Rc::clone(configuration);
     let confirm_diagnostics = Rc::clone(&diagnostics);
     let confirm_buckets = Rc::clone(&buckets);
+    let confirm_canceller = canceller.clone();
     window.on_confirm_provider_delete(move || {
         delete_provider(
             &weak,
             &confirm_config,
             &confirm_diagnostics,
             &confirm_buckets,
+            confirm_canceller.as_deref(),
         );
     });
 
@@ -84,6 +88,7 @@ fn delete_provider(
     configuration: &Rc<ConfigStore>,
     diagnostics: &SharedDiagnosticLog,
     buckets: &ProviderBucketCache,
+    canceller: Option<&(dyn ConnectionOperationCanceller + Send + Sync)>,
 ) {
     let Some(window) = weak.upgrade() else { return };
     let pending_id = window.get_pending_provider_id();
@@ -92,9 +97,20 @@ fn delete_provider(
             .map_err(|_| ProviderPersistenceError::Other)?;
         let store =
             PlatformCredentialStore::new().map_err(ProviderPersistenceError::ProtectedStore)?;
-        ProviderRepository::new(configuration, &store)
-            .delete(&id)
-            .map_err(ProviderPersistenceError::from)
+        match canceller {
+            Some(canceller) => crate::operation_cancellation::delete_provider(
+                configuration,
+                &store,
+                canceller,
+                &id,
+            )
+            .map(|_| ())
+            .map_err(ProviderPersistenceError::from),
+            None => ProviderRepository::new(configuration, &store)
+                .delete(&id)
+                .map(|_| ())
+                .map_err(ProviderPersistenceError::from),
+        }
     })();
     match result {
         Ok(_) => {

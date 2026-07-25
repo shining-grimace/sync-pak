@@ -15,6 +15,7 @@ use crate::{
     operation_progress::{OperationProgress, RetryStatus},
     planning::OperationPlan,
     queue::{OperationQueue, QueueEntry},
+    reviewed_operation::ConfirmedOperation,
 };
 
 /// Owns one background worker for this launch's in-memory operation queue.
@@ -72,6 +73,21 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             .lock()
             .expect("queue mutex poisoned")
             .push(plan, snapshot);
+        wake.notify_one();
+        operation_id
+    }
+
+    /// Queues the exact reviewed operation that received any required confirmation.
+    pub fn enqueue_confirmed(
+        &self,
+        confirmed_operation: ConfirmedOperation,
+        snapshot: ActivitySnapshot,
+    ) -> Uuid {
+        let (queue, wake) = &*self.queue;
+        let operation_id = queue
+            .lock()
+            .expect("queue mutex poisoned")
+            .push_confirmed(confirmed_operation, snapshot);
         wake.notify_one();
         operation_id
     }

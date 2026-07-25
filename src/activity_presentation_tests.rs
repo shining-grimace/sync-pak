@@ -105,3 +105,26 @@ fn presents_each_terminal_action_with_its_outcome() {
     assert_eq!(presentation.result_details, ["Completed: photos/new.jpg"]);
     assert!(presentation.can_view_result);
 }
+
+#[test]
+fn presents_a_safe_failure_reason_for_work_that_never_started() {
+    let mut queue = OperationQueue::default();
+    queue.push(
+        OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
+        snapshot(),
+    );
+    let entry = queue.take_next().unwrap();
+    assert!(queue.finish(
+        entry.operation_id,
+        crate::execution::ExecutionResult::failed_before_start_with_message(
+            "Files changed since this review. Refresh the review before starting the operation.",
+        ),
+    ));
+
+    let presentation = ActivityPresentation::from_entry(queue.entries().next().unwrap());
+
+    assert_eq!(
+        presentation.result_summary,
+        "Files changed since this review. Refresh the review before starting the operation."
+    );
+}

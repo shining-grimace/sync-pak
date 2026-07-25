@@ -10,6 +10,7 @@ use crate::{
     capabilities::BackgroundExecution,
     execution::{ExecutionResult, OperationExecutor},
     queue::{OperationQueue, QueueEntry},
+    queue_progress_observer::QueueProgressObserver,
 };
 
 pub(crate) fn start<E: OperationExecutor + Send + Sync + 'static>(
@@ -31,7 +32,7 @@ pub(crate) fn start<E: OperationExecutor + Send + Sync + 'static>(
             let (queue, _) = &*shared;
             let _ = queue.lock().expect("queue mutex poisoned").finish(
                 entry.operation_id,
-                execute(&*executor, background.as_deref(), &entry),
+                execute(&*executor, background.as_deref(), &entry, &shared),
             );
             *active_connection
                 .lock()
@@ -44,15 +45,26 @@ fn execute<E: OperationExecutor>(
     executor: &E,
     background: Option<&(dyn BackgroundExecution + Send + Sync)>,
     entry: &QueueEntry,
+    shared: &(Mutex<OperationQueue>, Condvar),
 ) -> ExecutionResult {
     let foreground = background.map_or(Ok(()), |background| {
         background.start(&entry.snapshot.connection_name)
     });
     let result = match foreground {
-        Ok(()) => executor
-            .execute(&entry.plan)
-            .unwrap_or_else(|_| ExecutionResult::failed_before_start()),
-        Err(_) => ExecutionResult::failed_before_start(),
+        Ok(()) => {
+            let observer =
+                QueueProgressObserver::new(entry.operation_id, |operation_id, progress| {
+                    let (queue, _) = shared;
+                    let _ = queue
+                        .lock()
+                        .expect("queue mutex poisoned")
+                        .update_progress(operation_id, progress);
+                });
+            executor.execute(entry, &observer).unwrap_or_else(|error| {
+                ExecutionResult::failed_before_start_with_message(error.to_string())
+            })
+        }
+        Err(error) => ExecutionResult::failed_before_start_with_message(error.to_string()),
     };
     if foreground.is_ok()
         && let Some(background) = background

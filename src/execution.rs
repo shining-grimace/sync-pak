@@ -1,8 +1,8 @@
 use std::collections::VecDeque;
 
 use crate::{
-    capabilities::CapabilityError,
-    planning::{OperationPlan, PlannedAction},
+    capabilities::CapabilityError, planning::PlannedAction, queue::QueueEntry,
+    transfer_progress::TransferProgressObserver,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -19,6 +19,7 @@ pub enum ExecutionState {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExecutionResult {
     pub state: ExecutionState,
+    pub failure_message: Option<String>,
     pub completed: Vec<PlannedAction>,
     pub incomplete: Vec<PlannedAction>,
     pub not_started: Vec<PlannedAction>,
@@ -35,6 +36,14 @@ impl ExecutionResult {
         Self::before_start(ExecutionState::Failed)
     }
 
+    /// Creates a failed result while retaining a safe, user-facing reason.
+    pub fn failed_before_start_with_message(message: impl Into<String>) -> Self {
+        Self {
+            failure_message: Some(message.into()),
+            ..Self::failed_before_start()
+        }
+    }
+
     pub fn is_terminal(&self) -> bool {
         matches!(
             self.state,
@@ -45,6 +54,7 @@ impl ExecutionResult {
     fn before_start(state: ExecutionState) -> Self {
         Self {
             state,
+            failure_message: None,
             completed: Vec::new(),
             incomplete: Vec::new(),
             not_started: Vec::new(),
@@ -102,6 +112,7 @@ impl ExecutionProgress {
     fn into_result(self, state: ExecutionState) -> ExecutionResult {
         ExecutionResult {
             state,
+            failure_message: None,
             completed: self.completed,
             incomplete: self.current.into_iter().collect(),
             not_started: self.pending.into_iter().collect(),
@@ -110,7 +121,12 @@ impl ExecutionProgress {
 }
 
 pub trait OperationExecutor {
-    fn execute(&self, plan: &OperationPlan) -> Result<ExecutionResult, CapabilityError>;
+    /// Runs one queued operation and reports its non-secret progress while it is active.
+    fn execute(
+        &self,
+        entry: &QueueEntry,
+        observer: &dyn TransferProgressObserver,
+    ) -> Result<ExecutionResult, CapabilityError>;
     fn cancel(&self, connection_id: &str) -> Result<(), CapabilityError>;
 }
 
@@ -181,6 +197,7 @@ mod tests {
         assert!(
             !super::ExecutionResult {
                 state: ExecutionState::Copying,
+                failure_message: None,
                 completed: Vec::new(),
                 incomplete: Vec::new(),
                 not_started: Vec::new(),

@@ -13,6 +13,7 @@ use crate::{
     configuration::{ConnectionConfig, ConnectionId, ProviderId, SyncMode},
     execution::{ExecutionProgress, OperationExecutor},
     planning::{Direction, OperationPlan},
+    queue::QueueEntry,
     queue::QueueState,
 };
 
@@ -46,9 +47,13 @@ impl BackgroundExecution for Foreground {
 impl OperationExecutor for Executor {
     fn execute(
         &self,
-        plan: &OperationPlan,
+        entry: &QueueEntry,
+        _: &dyn crate::transfer_progress::TransferProgressObserver,
     ) -> Result<crate::execution::ExecutionResult, crate::CapabilityError> {
-        self.0.lock().unwrap().push(plan.connection_id.clone());
+        self.0
+            .lock()
+            .unwrap()
+            .push(entry.plan.connection_id.clone());
         Ok(ExecutionProgress::new([]).finish())
     }
 
@@ -60,7 +65,8 @@ impl OperationExecutor for Executor {
 impl OperationExecutor for BlockingExecutor {
     fn execute(
         &self,
-        plan: &OperationPlan,
+        entry: &QueueEntry,
+        _: &dyn crate::transfer_progress::TransferProgressObserver,
     ) -> Result<crate::execution::ExecutionResult, crate::CapabilityError> {
         self.started.store(true, Ordering::Release);
         while !self
@@ -68,7 +74,7 @@ impl OperationExecutor for BlockingExecutor {
             .lock()
             .unwrap()
             .iter()
-            .any(|connection| connection == &plan.connection_id)
+            .any(|connection| connection == &entry.plan.connection_id)
         {
             thread::sleep(Duration::from_millis(1));
         }

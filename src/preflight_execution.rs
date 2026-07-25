@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Runs an add-only preflight only when the inventories still match its confirmation.
-pub async fn execute_current_add_only<T: AddOnlyTransfer, O: TransferProgressObserver>(
+pub async fn execute_current_add_only<T: AddOnlyTransfer, O: TransferProgressObserver + ?Sized>(
     preflight: &Preflight,
     source: &Inventory,
     destination: &Inventory,

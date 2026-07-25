@@ -11,7 +11,10 @@ use crate::{
 };
 
 /// Executes a confirmed mirror plan only while both reviewed inventories remain unchanged.
-pub async fn execute_current_confirmed_mirror<T: MirrorTransfer, O: TransferProgressObserver>(
+pub async fn execute_current_confirmed_mirror<
+    T: MirrorTransfer,
+    O: TransferProgressObserver + ?Sized,
+>(
     preflight: &Preflight,
     source: &Inventory,
     destination: &Inventory,

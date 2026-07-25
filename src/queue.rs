@@ -7,6 +7,7 @@ use crate::{
     execution::{ExecutionResult, ExecutionState},
     operation_progress::{OperationProgress, RetryStatus},
     planning::OperationPlan,
+    reviewed_operation::ConfirmedOperation,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -22,6 +23,7 @@ pub enum QueueState {
 pub struct QueueEntry {
     pub operation_id: Uuid,
     pub plan: OperationPlan,
+    pub confirmed_operation: Option<ConfirmedOperation>,
     pub snapshot: ActivitySnapshot,
     pub state: QueueState,
     pub progress: Option<OperationProgress>,
@@ -35,10 +37,30 @@ pub struct OperationQueue {
 
 impl OperationQueue {
     pub fn push(&mut self, plan: OperationPlan, snapshot: ActivitySnapshot) -> Uuid {
+        self.push_entry(plan, snapshot, None)
+    }
+
+    /// Queues the exact reviewed operation that was confirmed before execution.
+    pub fn push_confirmed(
+        &mut self,
+        confirmed_operation: ConfirmedOperation,
+        snapshot: ActivitySnapshot,
+    ) -> Uuid {
+        let plan = confirmed_operation.operation_plan();
+        self.push_entry(plan, snapshot, Some(confirmed_operation))
+    }
+
+    fn push_entry(
+        &mut self,
+        plan: OperationPlan,
+        snapshot: ActivitySnapshot,
+        confirmed_operation: Option<ConfirmedOperation>,
+    ) -> Uuid {
         let operation_id = Uuid::new_v4();
         self.entries.push_back(QueueEntry {
             operation_id,
             plan,
+            confirmed_operation,
             snapshot,
             state: QueueState::Queued,
             progress: None,

@@ -60,6 +60,8 @@ pub mod notifications;
 mod onboarding;
 pub mod operation_cancellation;
 pub mod operation_progress;
+#[cfg(feature = "provider-s3")]
+mod operation_start_controller;
 pub mod plan_summary;
 pub mod planning;
 pub mod platform;
@@ -96,9 +98,13 @@ mod run_direction_controller;
 mod run_direction_presentation;
 pub mod run_request;
 #[cfg(feature = "provider-s3")]
+mod s3_archive_operation;
+#[cfg(feature = "provider-s3")]
 mod s3_error;
 #[cfg(feature = "provider-s3")]
 mod s3_multipart;
+#[cfg(feature = "provider-s3")]
+pub mod s3_operation_executor;
 #[cfg(feature = "provider-s3")]
 pub mod s3_preflight;
 #[cfg(feature = "provider-s3")]

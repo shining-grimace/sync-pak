@@ -13,7 +13,7 @@ pub trait TransferProgressObserver {
     fn on_progress(&self, progress: &TransferProgress);
 }
 
-pub(crate) struct NoopProgressObserver;
+pub struct NoopProgressObserver;
 
 impl TransferProgressObserver for NoopProgressObserver {
     fn on_progress(&self, _: &TransferProgress) {}

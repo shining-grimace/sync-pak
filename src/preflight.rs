@@ -18,6 +18,8 @@ pub enum CaseSensitivity {
 pub struct Preflight {
     comparison: Vec<ComparedEntry>,
     plan: TransferPlan,
+    source: Inventory,
+    destination: Inventory,
     source_fingerprint: InventoryFingerprint,
     destination_fingerprint: InventoryFingerprint,
 }
@@ -29,6 +31,16 @@ impl Preflight {
 
     pub fn plan(&self) -> &TransferPlan {
         &self.plan
+    }
+
+    /// Returns the immutable source inventory that was reviewed with this plan.
+    pub fn source(&self) -> &Inventory {
+        &self.source
+    }
+
+    /// Returns the immutable destination inventory that was reviewed with this plan.
+    pub fn destination(&self) -> &Inventory {
+        &self.destination
     }
 
     pub fn is_current(&self, source: &Inventory, destination: &Inventory) -> bool {
@@ -66,6 +78,8 @@ pub fn preflight(
     Ok(Preflight {
         comparison,
         plan,
+        source: source.clone(),
+        destination: destination.clone(),
         source_fingerprint: fingerprint(source),
         destination_fingerprint: fingerprint(destination),
     })
