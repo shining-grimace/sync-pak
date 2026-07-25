@@ -603,7 +603,7 @@ export component AppWindow inherits Window {
             connection-name := LineEdit { accessible-label: "Connection name"; placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
             Text { text: "Used in the connection list and archive filenames."; color: #454039; wrap: word-wrap; }
             Text { text: "Provider"; font-weight: 700; }
-            connection-provider := ComboBox { accessible-label: root.connection-providers-loading ? "Loading providers" : (root.connection-providers-load-failed ? "Providers unavailable" : (root.provider-names.length == 0 ? "Provider; add a provider first" : "Provider")); model: root.provider-names; enabled: !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
+            connection-provider := ComboBox { accessible-label: root.connection-providers-loading ? "Loading providers" : (root.connection-providers-load-failed ? "Providers unavailable" : (root.provider-names.length == 0 ? "Provider; add a provider first" : "Provider")); model: root.provider-names; enabled: !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
             if root.connection-providers-loading : Text { accessible-live-region: polite; text: "Loading providers…"; color: #454039; wrap: word-wrap; }
             if root.connection-providers-load-failed : VerticalBox { spacing: 6px;
                 Text { accessible-live-region: assertive; text: "SyncPak could not load providers. Check configuration storage and try again."; color: #7b241c; wrap: word-wrap; }
@@ -611,7 +611,7 @@ export component AppWindow inherits Window {
             }
             if !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: #7b241c; wrap: word-wrap; }
             Text { text: "Bucket"; font-weight: 700; }
-            connection-bucket := LineEdit { accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket"; placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
+            connection-bucket := LineEdit { accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket"; placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: !root.folder-picker-open && connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
             if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket == root.provider-buckets[connection-provider.current-index] : Text {
                 text: "This provider locks connections to its default bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
                 color: #454039; wrap: word-wrap;
@@ -626,6 +626,7 @@ export component AppWindow inherits Window {
                 ComboBox {
                     accessible-label: "Buckets verified this session";
                     model: root.connection-verified-buckets;
+                    enabled: !root.folder-picker-open;
                     selected => { root.connection-form-bucket = root.connection-verified-buckets[self.current-index]; }
                 }
             }
@@ -638,7 +639,7 @@ export component AppWindow inherits Window {
                 color: #454039; wrap: word-wrap;
             }
             Text { text: "Remote folder"; font-weight: 700; }
-            connection-remote := LineEdit { accessible-label: "Remote folder"; placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; }
+            connection-remote := LineEdit { accessible-label: "Remote folder"; placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; enabled: !root.folder-picker-open; }
             Text { text: "Leave empty to use the root of the bucket."; color: #454039; wrap: word-wrap; }
             }
             Text { text: "Local folder"; font-weight: 700; }
@@ -649,7 +650,7 @@ export component AppWindow inherits Window {
                 if root.folder-picker-open : Text { accessible-live-region: polite; text: "Waiting for folder selection…"; color: #454039; wrap: word-wrap; }
             }
             Text { text: "Mode"; font-weight: 700; }
-            connection-mode := ComboBox { accessible-label: "Mode"; model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; }
+            connection-mode := ComboBox { accessible-label: "Mode"; model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; enabled: !root.folder-picker-open; }
             if connection-mode.current-index == 0 : Text {
                 text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
                 color: #454039; wrap: word-wrap;
@@ -662,12 +663,12 @@ export component AppWindow inherits Window {
                 spacing: 4px;
                 Text { text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting."; color: #454039; wrap: word-wrap; }
                 Text { text: "Keep last N archives"; font-weight: 700; }
-                connection-retention := LineEdit { accessible-label: "Keep last N archives"; text <=> root.connection-form-retention; }
+                connection-retention := LineEdit { accessible-label: "Keep last N archives"; text <=> root.connection-form-retention; enabled: !root.folder-picker-open; }
                 Text { text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain."; color: #454039; wrap: word-wrap; }
             }
             VerticalBox {
                 Button { accessible-label: "Back to connections"; text: "Back"; clicked => { root.request-discard-connection(); } }
-                Button { accessible-label: "Save connection " + root.connection-form-name + " without transferring files"; text: "Save connection"; primary: true; enabled: !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
+                Button { accessible-label: root.folder-picker-open ? "Save connection unavailable while folder selection is in progress" : "Save connection " + root.connection-form-name + " without transferring files"; text: "Save connection"; primary: true; enabled: !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
             }
             }
         }
