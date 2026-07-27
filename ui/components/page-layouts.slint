@@ -1,0 +1,35 @@
+import { HorizontalBox, ScrollView, VerticalBox } from "std-widgets.slint";
+import { Dimensions } from "../dimensions.slint";
+
+export component PageRoot inherits ScrollView {
+    vertical-scrollbar-policy: always-on;
+
+    VerticalBox {
+        width: parent.width - 12px;
+        @children
+    }
+}
+
+export component CenteredPageColumn inherits VerticalBox {
+    in property <length> content-spacing: 12px;
+
+    HorizontalBox {
+        alignment: center;
+        vertical-stretch: 0;
+
+        VerticalBox {
+            preferred-width: Dimensions.welcome-content-max-width;
+            max-width: Dimensions.welcome-content-max-width;
+            horizontal-stretch: 1;
+            spacing: root.content-spacing;
+            @children
+        }
+    }
+}
+
+export component CenteredPageRoot inherits PageRoot {
+    CenteredPageColumn {
+        width: parent.width;
+        @children
+    }
+}

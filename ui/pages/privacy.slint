@@ -1,0 +1,22 @@
+import { Button, ComboBox, VerticalBox } from "std-widgets.slint";
+import { Colors } from "../colors.slint";
+import { CenteredPageRoot } from "../components/page-layouts.slint";
+
+export component PrivacyPage inherits CenteredPageRoot {
+    in property <string> app-version;
+    in-out property <int> appearance-preference;
+    in property <bool> configuration-unavailable;
+    callback apply-appearance-preference(); callback change-appearance-preference(int); callback show-diagnostics(); callback show-welcome();
+    Text { text: "Privacy & About"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
+    Rectangle { accessible-role: region; accessible-label: "Direct transfers"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px; VerticalBox { padding: 12px; spacing: 4px; Text { text: "Direct transfers"; font-size: 20px; font-weight: 700; } Text { text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them."; wrap: word-wrap; } } }
+    Rectangle { accessible-role: region; accessible-label: "Protected credentials"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px; VerticalBox { padding: 12px; spacing: 4px; Text { text: "Protected credentials"; font-size: 20px; font-weight: 700; } Text { text: "Provider credentials are stored using this device's protected facilities and are retrieved only when SyncPak connects to that provider."; wrap: word-wrap; } } }
+    Rectangle { accessible-role: region; accessible-label: "Data on this device"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px; VerticalBox { padding: 12px; spacing: 4px; Text { text: "Data on this device"; font-size: 20px; font-weight: 700; } Text { text: "Connection settings are stored locally. Activity is kept in memory and cleared when SyncPak exits."; wrap: word-wrap; } } }
+    Rectangle { accessible-role: region; accessible-label: "File encryption"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px; VerticalBox { padding: 12px; spacing: 4px; Text { text: "File encryption"; font-size: 20px; font-weight: 700; } Text { text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption."; wrap: word-wrap; } } }
+    Text { text: "SyncPak " + root.app-version; color: Colors.text-secondary; }
+    VerticalBox { accessible-role: region; accessible-label: "Appearance"; spacing: 6px; Text { text: "Appearance"; font-weight: 700; } Text { text: "Choose whether SyncPak follows your system appearance or always uses a light or dark theme."; color: Colors.text-secondary; wrap: word-wrap; }
+        ComboBox { accessible-label: "Appearance"; model: ["System default", "Light", "Dark"]; current-index <=> root.appearance-preference; enabled: !root.configuration-unavailable; selected => { root.apply-appearance-preference(); root.change-appearance-preference(self.current-index); } }
+    }
+    VerticalBox { accessible-role: region; accessible-label: "Privacy and source links"; spacing: 6px; Text { text: "Links"; font-weight: 700; } Button { accessible-label: "Open SyncPak source code in your browser"; text: "Source code"; clicked => { Platform.open-url("https://github.com/shining-grimace/sync-pak"); } } Button { accessible-label: "Open Cloudflare privacy policy in your browser"; text: "Cloudflare privacy policy"; clicked => { Platform.open-url("https://www.cloudflare.com/privacypolicy/"); } } Button { accessible-label: "Open Backblaze privacy policy in your browser"; text: "Backblaze privacy policy"; clicked => { Platform.open-url("https://www.backblaze.com/company/policies/privacy.html"); } } Button { accessible-label: "Open Amazon privacy notice in your browser"; text: "AWS privacy notice"; clicked => { Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010"); } } Text { text: "SyncPak's privacy policy and open-source licence notices will be published before release."; color: Colors.text-secondary; wrap: word-wrap; } }
+    Button { accessible-label: "View redacted diagnostics with credentials excluded"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
+    Button { accessible-label: "Back to welcome"; text: "Back"; clicked => { root.show-welcome(); } }
+}

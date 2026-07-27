@@ -1,0 +1,76 @@
+import { Button, ComboBox, HorizontalBox, LineEdit, ScrollView, VerticalBox } from "std-widgets.slint";
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import { CenteredPageColumn } from "../components/page-layouts.slint";
+
+export component ProviderFormPage inherits ScrollView {
+    in-out property <string> provider-form-id; in-out property <string> provider-form-name; in-out property <int> provider-form-kind; in-out property <string> provider-form-account-id; in-out property <string> provider-form-region; in-out property <string> provider-form-bucket; in-out property <string> provider-form-access-key; in-out property <string> provider-form-secret-key; in-out property <string> provider-form-endpoint; in-out property <string> provider-form-session-token;
+    in-out property <bool> provider-secret-visible; in-out property <bool> provider-advanced-expanded; in property <bool> provider-verifying; in property <[string]> provider-verified-buckets; in property <bool> provider-bucket-list-empty;
+    callback toggle-provider-secret-visibility(); callback request-discard-provider(); callback request-save-provider(); callback verify-provider(); callback save-and-verify-provider();
+    vertical-stretch: 1;
+    vertical-scrollbar-policy: always-on;
+            CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
+            Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
+            Text { text: "Credentials are saved in this device's protected storage only when you save this provider."; wrap: word-wrap; }
+            if root.provider-form-id != "" : Text { text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values."; color: Colors.text-secondary; wrap: word-wrap; }
+            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: provider-name; init => { self.focus(); } }
+            Text { text: "Provider name"; font-weight: 700; }
+            provider-name := LineEdit { height: Dimensions.control-height; accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
+            Text { text: "Provider type"; font-weight: 700; }
+            provider-kind := ComboBox { accessible-label: "Provider type"; model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; current-index <=> root.provider-form-kind; enabled: !root.provider-verifying; }
+            if root.provider-form-kind == 0 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Account ID"; font-weight: 700; }
+                LineEdit { height: Dimensions.control-height; accessible-label: "Cloudflare account ID"; placeholder-text: "Cloudflare account ID"; text <=> root.provider-form-account-id; enabled: !root.provider-verifying; }
+            }
+            if root.provider-form-kind != 0 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Region"; font-weight: 700; }
+                LineEdit { height: Dimensions.control-height; accessible-label: "Region"; placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; enabled: !root.provider-verifying; }
+            }
+            Text { text: "Default bucket (optional)"; font-weight: 700; }
+            LineEdit { height: Dimensions.control-height; accessible-label: "Default bucket"; placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; enabled: !root.provider-verifying; }
+            if root.provider-verified-buckets.length > 0 : VerticalBox {
+                spacing: 4px;
+                Text { text: "Verified available buckets"; color: Colors.text-secondary; }
+                ComboBox {
+                    accessible-label: "Verified available buckets";
+                    model: root.provider-verified-buckets;
+                    enabled: !root.provider-verifying;
+                    selected => { root.provider-form-bucket = root.provider-verified-buckets[self.current-index]; }
+                }
+            }
+            if !root.provider-verifying && root.provider-bucket-list-empty : Text {
+                text: "These credentials verified successfully, but no buckets were visible. Enter a bucket manually if its access is restricted.";
+                color: Colors.text-secondary; wrap: word-wrap;
+            }
+            Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: Colors.text-secondary; wrap: word-wrap; }
+            if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced."; color: Colors.text-secondary; wrap: word-wrap; }
+            Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
+            access-key := LineEdit { height: Dimensions.control-height; accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; enabled: !root.provider-verifying; }
+            Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
+            HorizontalBox {
+                LineEdit { accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; enabled: !root.provider-verifying; }
+                Button { accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key"); text: root.provider-secret-visible ? "Hide" : "Reveal"; enabled: !root.provider-verifying; clicked => { root.toggle-provider-secret-visibility(); } }
+            }
+            if root.provider-secret-visible : Text { accessible-live-region: polite; text: "Make sure nobody else can see your screen. This value hides again in 15 seconds."; color: Colors.danger; wrap: word-wrap; }
+            Button { accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings"; text: root.provider-advanced-expanded ? "Hide advanced" : "Advanced"; enabled: !root.provider-verifying; clicked => { root.provider-advanced-expanded = !root.provider-advanced-expanded; } }
+            if root.provider-advanced-expanded : VerticalBox {
+                spacing: 4px;
+                Text { text: "Custom endpoint"; font-weight: 700; }
+                LineEdit { accessible-label: "Custom endpoint"; placeholder-text: "Optional S3-compatible endpoint"; text <=> root.provider-form-endpoint; enabled: !root.provider-verifying; }
+                Text { text: "Session token"; font-weight: 700; }
+                LineEdit { accessible-label: "Session token"; placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; enabled: !root.provider-verifying; }
+                Text { text: "Use this only when your provider issued a temporary session credential."; color: Colors.text-secondary; wrap: word-wrap; }
+            }
+            Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: Colors.text-secondary; wrap: word-wrap; }
+            if root.provider-verifying : Text { accessible-live-region: polite; text: "Checking these settings without changing cloud data…"; color: Colors.text-secondary; wrap: word-wrap; }
+            VerticalBox {
+                Button { accessible-label: "Back to providers"; text: "Back"; clicked => { root.request-discard-provider(); } }
+                Button { accessible-label: "Save " + root.provider-form-name + " without verifying"; text: "Save without verifying"; enabled: !root.provider-verifying; clicked => { root.request-save-provider(); } }
+                Button { accessible-label: "Verify settings for " + root.provider-form-name; text: "Verify settings"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
+                Button { accessible-label: "Save and verify " + root.provider-form-name; text: root.provider-verifying ? "Verifying…" : "Save and verify"; primary: true; enabled: !root.provider-verifying; clicked => { root.save-and-verify-provider(); } }
+            }
+            }
+}
+

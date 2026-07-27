@@ -1,0 +1,26 @@
+import { Button, ListView, VerticalBox } from "std-widgets.slint";
+import { Colors } from "../colors.slint";
+import { CenteredPageRoot } from "../components/page-layouts.slint";
+
+export component ProviderDeletePage inherits CenteredPageRoot {
+    in property <string> provider-name; in property <int> connection-count; in property <[string]> connections;
+    callback cancel(); callback confirm();
+    Text { text: "Delete " + root.provider-name + "?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; wrap: word-wrap; }
+    Rectangle { accessible-role: region; accessible-label: "Provider deletion consequences"; background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 108px; VerticalBox { padding: 12px; spacing: 5px; Text { text: "What will be deleted"; color: Colors.danger; font-weight: 700; } Text { text: "The protected credentials and " + root.connection-count + (root.connection-count == 1 ? " dependent connection will be removed from SyncPak." : " dependent connections will be removed from SyncPak."); color: Colors.danger; wrap: word-wrap; } Text { text: "Local folders and cloud files are not deleted."; color: Colors.danger; wrap: word-wrap; } } }
+    if root.connections.length > 0 : VerticalBox { spacing: 3px; Text { text: "Connections that will be deleted"; font-weight: 700; } ListView { accessible-label: "Connections that will be deleted"; height: 180px; vertical-scrollbar-policy: always-on; for connection-name in root.connections : Text { accessible-role: list-item; accessible-label: connection-name; text: "• " + connection-name; color: Colors.text-secondary; wrap: word-wrap; } } }
+    VerticalBox { Button { accessible-label: "Keep provider " + root.provider-name; text: "Cancel"; clicked => { root.cancel(); } } Button { accessible-label: "Delete provider " + root.provider-name; text: "Delete " + root.provider-name + " and " + root.connection-count + (root.connection-count == 1 ? " connection" : " connections"); primary: true; clicked => { root.confirm(); } } }
+}
+
+export component ConnectionDeletePage inherits CenteredPageRoot {
+    in property <string> connection-name; callback cancel(); callback confirm();
+    Text { text: "Delete " + root.connection-name + "?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; wrap: word-wrap; }
+    Rectangle { accessible-role: region; accessible-label: "Connection deletion consequences"; background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 94px; VerticalBox { padding: 12px; spacing: 5px; Text { text: "What will be deleted"; color: Colors.danger; font-weight: 700; } Text { text: "This removes the connection from SyncPak."; color: Colors.danger; wrap: word-wrap; } Text { text: "Its local folder and cloud files are not deleted."; color: Colors.danger; wrap: word-wrap; } } }
+    VerticalBox { Button { accessible-label: "Keep connection " + root.connection-name; text: "Cancel"; clicked => { root.cancel(); } } Button { accessible-label: "Delete connection " + root.connection-name; text: "Delete " + root.connection-name; primary: true; clicked => { root.confirm(); } } }
+}
+
+export component ActivityCancelPage inherits CenteredPageRoot {
+    in property <string> activity-name; callback dismiss(); callback confirm();
+    Text { text: "Cancel " + root.activity-name + "?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; wrap: word-wrap; }
+    Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
+    VerticalBox { Button { accessible-label: "Keep " + root.activity-name + " running"; text: "Keep running"; clicked => { root.dismiss(); } } Button { accessible-label: "Cancel operation " + root.activity-name; text: "Cancel " + root.activity-name; primary: true; clicked => { root.confirm(); } } }
+}

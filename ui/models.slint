@@ -1,0 +1,37 @@
+export struct ProviderRow {
+    id: string,
+    name: string,
+    kind: string,
+    verification: string,
+    verifying: bool,
+    connection-summary: string,
+}
+
+export struct ConnectionRow {
+    id: string,
+    name: string,
+    detail: string,
+    mode: int,
+    local-path: string,
+    provider-name: string,
+    remote-location: string,
+    archive-retention: string,
+}
+
+export struct ActivityRow {
+    id: string,
+    title: string,
+    detail: string,
+    status: string,
+    progress: string,
+    result: string,
+    can-cancel: bool,
+    can-remove: bool,
+    can-view-result: bool,
+}
+
+export struct PreflightRow {
+    path: string,
+    status: string,
+    detail: string,
+}

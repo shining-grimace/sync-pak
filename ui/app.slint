@@ -1,23 +1,22 @@
-import { Button, CheckBox, ComboBox, HorizontalBox, LineEdit, ListView, Palette, ScrollView, TextEdit, VerticalBox } from "std-widgets.slint";
+import { Button, HorizontalBox, Palette, VerticalBox } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 import { Colors } from "colors.slint";
-
-component CenteredPageColumn inherits VerticalBox {
-    in property <length> content-spacing: 12px;
-
-    HorizontalBox {
-        alignment: center;
-        vertical-stretch: 0;
-
-        VerticalBox {
-            preferred-width: Dimensions.welcome-content-max-width;
-            max-width: Dimensions.welcome-content-max-width;
-            horizontal-stretch: 1;
-            spacing: root.content-spacing;
-            @children
-        }
-    }
-}
+import { WelcomePage } from "pages/welcome.slint";
+import { ProvidersPage } from "pages/providers.slint";
+import { PrivacyPage } from "pages/privacy.slint";
+import { DiagnosticsPage } from "pages/diagnostics.slint";
+import { ProviderSaveConfirmationPage, ProviderDiscardConfirmationPage } from "pages/provider-confirmations.slint";
+import { ConnectionDiscardConfirmationPage } from "pages/connection-confirmations.slint";
+import { ProviderDeletePage, ConnectionDeletePage, ActivityCancelPage } from "pages/destructive-confirmations.slint";
+import { ActivityProgressPage } from "pages/activity-progress.slint";
+import { ActivityResultPage } from "pages/activity-result.slint";
+import { ProviderFormPage } from "pages/provider-form.slint";
+import { ConnectionsPage } from "pages/connections.slint";
+import { ConnectionFormPage } from "pages/connection-form.slint";
+import { ActivityPage } from "pages/activity.slint";
+import { RunDirectionPage } from "pages/run-direction.slint";
+import { PreflightPage } from "pages/preflight.slint";
+import { ProviderRow, ConnectionRow, ActivityRow, PreflightRow } from "models.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -38,44 +37,6 @@ export global Page {
     out property <int> provider-discard-confirmation: 15;
     out property <int> activity-result: 16;
     out property <int> activity-progress: 17;
-}
-
-export struct ProviderRow {
-    id: string,
-    name: string,
-    kind: string,
-    verification: string,
-    verifying: bool,
-    connection-summary: string,
-}
-
-export struct ConnectionRow {
-    id: string,
-    name: string,
-    detail: string,
-    mode: int,
-    local-path: string,
-    provider-name: string,
-    remote-location: string,
-    archive-retention: string,
-}
-
-export struct ActivityRow {
-    id: string,
-    title: string,
-    detail: string,
-    status: string,
-    progress: string,
-    result: string,
-    can-cancel: bool,
-    can-remove: bool,
-    can-view-result: bool,
-}
-
-export struct PreflightRow {
-    path: string,
-    status: string,
-    detail: string,
 }
 
 export component AppWindow inherits Window {
@@ -359,860 +320,90 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == Page.welcome : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            VerticalBox { width: parent.width - 12px;
-            HorizontalBox {
-                alignment: center;
-                VerticalBox {
-                    preferred-width: Dimensions.welcome-content-max-width;
-                    max-width: Dimensions.welcome-content-max-width;
-                    horizontal-stretch: 1;
-                    spacing: 14px;
-                    alignment: center;
-                    Text { text: "Your files, your cloud."; color: Colors.text-primary; font-size: 36px; font-weight: 800; horizontal-alignment: center; wrap: word-wrap; }
-                    Text { text: "SyncPak copies folders directly between this device and cloud providers you choose. SyncPak does not operate an intermediary file service."; color: Colors.text-secondary; font-size: 18px; horizontal-alignment: center; wrap: word-wrap; max-width: Dimensions.welcome-content-max-width; }
-                    Rectangle { height: 16px; background: transparent; }
-                    Rectangle {
-                        accessible-role: region; accessible-label: "Protected credentials";
-                        background: Colors.surface; border-color: Colors.border; border-width: 2px; border-radius: 12px; max-width: Dimensions.welcome-content-max-width; min-height: 92px;
-                        Text { text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider."; color: Colors.border; font-size: 16px; horizontal-alignment: center; vertical-alignment: center; wrap: word-wrap; x: 24px; width: parent.width - 48px; height: parent.height; }
-                    }
-                    Rectangle {
-                        accessible-role: region; accessible-label: "Choose how each connection behaves";
-                        background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 12px; max-width: Dimensions.welcome-content-max-width; min-height: 106px;
-                        VerticalBox { padding: 14px; spacing: 5px;
-                            Text { text: "Choose how each connection behaves"; font-weight: 700; horizontal-alignment: center; }
-                            Text { text: "Add-only — Copy new files without overwriting or deleting anything."; color: Colors.text-secondary; wrap: word-wrap; }
-                            Text { text: "Mirror — Attempt to make a destination match its source after previewing destructive changes. Any issues are listed when the operation finishes."; color: Colors.text-secondary; wrap: word-wrap; }
-                            Text { text: "Archive — Create timestamped ZIP archives and keep the number you choose."; color: Colors.text-secondary; wrap: word-wrap; }
-                        }
-                    }
-                    Rectangle { height: 16px; background: transparent; }
-                    if root.configuration-unavailable : Rectangle { accessible-role: region; accessible-label: "Configuration storage unavailable"; background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 12px; max-width: Dimensions.welcome-content-max-width; min-height: 122px;
-                        VerticalBox { padding: 14px; spacing: 6px;
-                            Text { text: "Configuration storage is unavailable"; color: Colors.danger; font-weight: 700; horizontal-alignment: center; wrap: word-wrap; }
-                            Text { text: "SyncPak cannot save providers or connections until its configuration storage is available."; color: Colors.danger; horizontal-alignment: center; wrap: word-wrap; }
-                            HorizontalBox { alignment: center; FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: retry-configuration; init => { self.focus(); } } retry-configuration := Button { accessible-label: "Retry opening configuration storage"; text: "Retry"; primary: true; clicked => { root.retry-configuration(); } } }
-                        }
-                    }
-                    if !root.configuration-unavailable : HorizontalBox { alignment: center; FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: welcome-add-provider; init => { self.focus(); } } welcome-add-provider := Button { accessible-label: "Add your first provider"; text: "Add your first provider"; primary: true; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-add-provider(); } } }
-                    HorizontalBox { alignment: center; Button { accessible-label: "Read how SyncPak protects your privacy"; text: "Read how SyncPak protects your privacy"; preferred-width: Dimensions.welcome-action-max-width; max-width: Dimensions.welcome-action-max-width; clicked => { root.show-privacy(); } } }
-                }
-            }
-            }
+        if root.page == Page.welcome : WelcomePage {
+            configuration-unavailable: root.configuration-unavailable;
+            retry-configuration => { root.retry-configuration(); }
+            show-add-provider => { root.show-add-provider(); }
+            show-privacy => { root.show-privacy(); }
         }
 
-        if root.page == Page.providers : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Providers"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
-            Text { text: "Provider credentials are kept in this device's protected storage."; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.providers-load-failed : VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: providers-retry; init => { self.focus(); } }
-                accessible-role: region;
-                accessible-label: "Providers unavailable";
-                spacing: 8px;
-                Text { text: "Providers unavailable"; color: Colors.danger; font-size: 22px; font-weight: 700; }
-                Text { text: "SyncPak could not load providers. Check configuration storage and try again."; color: Colors.danger; wrap: word-wrap; }
-                providers-retry := Button { accessible-label: "Retry loading providers"; text: "Retry"; primary: true; clicked => { root.show-providers(); } }
-            }
-            if !root.providers-load-failed : VerticalBox {
-            spacing: 12px;
-            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: provider-add; init => { self.focus(); } }
-            provider-add := Button { accessible-label: "Add a provider"; text: "Add provider"; height: Dimensions.control-height; primary: true; clicked => { root.show-add-provider(); } }
-            if root.providers.length == 0 : VerticalBox {
-                spacing: 8px;
-                Text { text: "No providers yet"; font-size: 22px; font-weight: 700; }
-                Text { text: "Add credentials for Cloudflare R2, Backblaze B2, or AWS S3."; wrap: word-wrap; }
-            }
-            if root.providers.length > 0 : ListView {
-                accessible-label: "Configured providers";
-                height: 260px;
-                vertical-scrollbar-policy: always-on;
-                for provider in root.providers : Rectangle {
-                    accessible-role: list-item;
-                    accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
-                    background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
-                    VerticalBox { padding: 10px; spacing: 8px;
-                        VerticalBox { spacing: 2px;
-                            Text { text: provider.name; font-weight: 700; wrap: word-wrap; }
-                            Text { text: provider.kind + " · " + provider.verification; color: Colors.text-secondary; }
-                            Text { text: provider.connection-summary; color: Colors.text-secondary; wrap: word-wrap; }
-                        }
-                        if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { spacing: 8px;
-                            Button { accessible-label: "Verify provider " + provider.name; text: provider.verifying ? "Verifying…" : "Verify"; enabled: !provider.verifying; clicked => { root.verify-saved-provider(provider.id); } }
-                            Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
-                            Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
-                        }
-                        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
-                            Button { accessible-label: "Verify provider " + provider.name; text: provider.verifying ? "Verifying…" : "Verify"; enabled: !provider.verifying; clicked => { root.verify-saved-provider(provider.id); } }
-                            Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
-                            Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
-                            Rectangle { horizontal-stretch: 1; }
-                        }
-                    }
-                }
-            }
-            }
-            }
+        if root.page == Page.providers : ProvidersPage {
+            providers: root.providers;
+            load-failed: root.providers-load-failed;
+            show-providers => { root.show-providers(); }
+            show-add-provider => { root.show-add-provider(); }
+            verify-saved-provider(id) => { root.verify-saved-provider(id); }
+            request-provider-edit(id) => { root.request-provider-edit(id); }
+            request-provider-delete(id) => { root.request-provider-delete(id); }
         }
 
-        if root.page == Page.provider-form : ScrollView {
-            vertical-stretch: 1;
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
-            Text { text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "Credentials are saved in this device's protected storage only when you save this provider."; wrap: word-wrap; }
-            if root.provider-form-id != "" : Text { text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values."; color: Colors.text-secondary; wrap: word-wrap; }
-            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: provider-name; init => { self.focus(); } }
-            Text { text: "Provider name"; font-weight: 700; }
-            provider-name := LineEdit { height: Dimensions.control-height; accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
-            Text { text: "Provider type"; font-weight: 700; }
-            provider-kind := ComboBox { accessible-label: "Provider type"; model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; current-index <=> root.provider-form-kind; enabled: !root.provider-verifying; }
-            if root.provider-form-kind == 0 : VerticalBox {
-                spacing: 4px;
-                Text { text: "Account ID"; font-weight: 700; }
-                LineEdit { height: Dimensions.control-height; accessible-label: "Cloudflare account ID"; placeholder-text: "Cloudflare account ID"; text <=> root.provider-form-account-id; enabled: !root.provider-verifying; }
-            }
-            if root.provider-form-kind != 0 : VerticalBox {
-                spacing: 4px;
-                Text { text: "Region"; font-weight: 700; }
-                LineEdit { height: Dimensions.control-height; accessible-label: "Region"; placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; enabled: !root.provider-verifying; }
-            }
-            Text { text: "Default bucket (optional)"; font-weight: 700; }
-            LineEdit { height: Dimensions.control-height; accessible-label: "Default bucket"; placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; enabled: !root.provider-verifying; }
-            if root.provider-verified-buckets.length > 0 : VerticalBox {
-                spacing: 4px;
-                Text { text: "Verified available buckets"; color: Colors.text-secondary; }
-                ComboBox {
-                    accessible-label: "Verified available buckets";
-                    model: root.provider-verified-buckets;
-                    enabled: !root.provider-verifying;
-                    selected => { root.provider-form-bucket = root.provider-verified-buckets[self.current-index]; }
-                }
-            }
-            if !root.provider-verifying && root.provider-bucket-list-empty : Text {
-                text: "These credentials verified successfully, but no buckets were visible. Enter a bucket manually if its access is restricted.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced."; color: Colors.text-secondary; wrap: word-wrap; }
-            Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
-            access-key := LineEdit { height: Dimensions.control-height; accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; enabled: !root.provider-verifying; }
-            Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
-            HorizontalBox {
-                LineEdit { accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; enabled: !root.provider-verifying; }
-                Button { accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key"); text: root.provider-secret-visible ? "Hide" : "Reveal"; enabled: !root.provider-verifying; clicked => { root.toggle-provider-secret-visibility(); } }
-            }
-            if root.provider-secret-visible : Text { accessible-live-region: polite; text: "Make sure nobody else can see your screen. This value hides again in 15 seconds."; color: Colors.danger; wrap: word-wrap; }
-            Button { accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings"; text: root.provider-advanced-expanded ? "Hide advanced" : "Advanced"; enabled: !root.provider-verifying; clicked => { root.provider-advanced-expanded = !root.provider-advanced-expanded; } }
-            if root.provider-advanced-expanded : VerticalBox {
-                spacing: 4px;
-                Text { text: "Custom endpoint"; font-weight: 700; }
-                LineEdit { accessible-label: "Custom endpoint"; placeholder-text: "Optional S3-compatible endpoint"; text <=> root.provider-form-endpoint; enabled: !root.provider-verifying; }
-                Text { text: "Session token"; font-weight: 700; }
-                LineEdit { accessible-label: "Session token"; placeholder-text: "Optional temporary session token"; text <=> root.provider-form-session-token; input-type: root.provider-secret-visible ? text : password; enabled: !root.provider-verifying; }
-                Text { text: "Use this only when your provider issued a temporary session credential."; color: Colors.text-secondary; wrap: word-wrap; }
-            }
-            Text { text: "Verify checks the credentials and lists available buckets without saving or changing cloud data."; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.provider-verifying : Text { accessible-live-region: polite; text: "Checking these settings without changing cloud data…"; color: Colors.text-secondary; wrap: word-wrap; }
-            VerticalBox {
-                Button { accessible-label: "Back to providers"; text: "Back"; clicked => { root.request-discard-provider(); } }
-                Button { accessible-label: "Save " + root.provider-form-name + " without verifying"; text: "Save without verifying"; enabled: !root.provider-verifying; clicked => { root.request-save-provider(); } }
-                Button { accessible-label: "Verify settings for " + root.provider-form-name; text: "Verify settings"; enabled: !root.provider-verifying; clicked => { root.verify-provider(); } }
-                Button { accessible-label: "Save and verify " + root.provider-form-name; text: root.provider-verifying ? "Verifying…" : "Save and verify"; primary: true; enabled: !root.provider-verifying; clicked => { root.save-and-verify-provider(); } }
-            }
-            }
+        if root.page == Page.provider-form : ProviderFormPage {
+            provider-form-id <=> root.provider-form-id; provider-form-name <=> root.provider-form-name; provider-form-kind <=> root.provider-form-kind; provider-form-account-id <=> root.provider-form-account-id; provider-form-region <=> root.provider-form-region; provider-form-bucket <=> root.provider-form-bucket; provider-form-access-key <=> root.provider-form-access-key; provider-form-secret-key <=> root.provider-form-secret-key; provider-form-endpoint <=> root.provider-form-endpoint; provider-form-session-token <=> root.provider-form-session-token;
+            provider-secret-visible <=> root.provider-secret-visible; provider-advanced-expanded <=> root.provider-advanced-expanded; provider-verifying: root.provider-verifying; provider-verified-buckets: root.provider-verified-buckets; provider-bucket-list-empty: root.provider-bucket-list-empty;
+            toggle-provider-secret-visibility => { root.toggle-provider-secret-visibility(); } request-discard-provider => { root.request-discard-provider(); } request-save-provider => { root.request-save-provider(); } verify-provider => { root.verify-provider(); } save-and-verify-provider => { root.save-and-verify-provider(); }
         }
 
-        if root.page == Page.provider-save-confirmation : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Save without verifying?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; }
-            Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
-            VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: continue-saving-provider; init => { self.focus(); } }
-                continue-saving-provider := Button { accessible-label: "Continue editing provider " + root.provider-form-name; text: "Continue editing"; clicked => { root.cancel-save-provider(); } }
-                Button { accessible-label: "Save provider " + root.provider-form-name + " without verifying"; text: "Save " + root.provider-form-name + " without verifying"; primary: true; clicked => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); } }
-            }
-            }
+        if root.page == Page.provider-save-confirmation : ProviderSaveConfirmationPage {
+            provider-name: root.provider-form-name; cancel => { root.cancel-save-provider(); }
+            save => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); }
         }
 
-        if root.page == Page.provider-discard-confirmation : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Discard unsaved changes?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; }
-            Text { text: "Your changes to this provider have not been saved."; wrap: word-wrap; }
-            VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: continue-discarding-provider; init => { self.focus(); } }
-                continue-discarding-provider := Button { accessible-label: "Continue editing provider " + root.provider-form-name; text: "Continue editing"; clicked => { root.cancel-discard-provider(); } }
-                Button { accessible-label: "Discard changes to provider " + root.provider-form-name; text: "Discard changes"; primary: true; clicked => { root.confirm-discard-provider(); } }
-            }
-            }
+        if root.page == Page.provider-discard-confirmation : ProviderDiscardConfirmationPage {
+            provider-name: root.provider-form-name; cancel => { root.cancel-discard-provider(); } confirm => { root.confirm-discard-provider(); }
         }
 
-        if root.page == Page.connections : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Connections"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
-            Text { text: "A connection links a local folder with a folder in one cloud bucket."; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.connections-load-failed : VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connections-retry; init => { self.focus(); } }
-                accessible-role: region;
-                accessible-label: "Connections unavailable";
-                spacing: 8px;
-                Text { text: "Connections unavailable"; color: Colors.danger; font-size: 22px; font-weight: 700; }
-                Text { text: "SyncPak could not load connections. Check configuration storage and try again."; color: Colors.danger; wrap: word-wrap; }
-                connections-retry := Button { accessible-label: "Retry loading connections"; text: "Retry"; primary: true; clicked => { root.show-connections(); } }
-            }
-            if !root.connections-load-failed : VerticalBox {
-            spacing: 12px;
-            if root.providers-total == 0 : VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-add-provider; init => { self.focus(); } }
-                connection-add-provider := Button { accessible-label: "Add a provider before creating a connection"; text: "Add provider"; height: Dimensions.control-height; primary: true; clicked => { root.show-add-provider(); } }
-            }
-            if root.providers-total > 0 : VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-new; init => { self.focus(); } }
-                connection-new := Button { accessible-label: "Create a new connection"; text: "New connection"; height: Dimensions.control-height; primary: true; clicked => { root.show-add-connection(); } }
-            }
-            VerticalBox { accessible-role: region; accessible-label: "Filter connections by mode"; spacing: 6px;
-                Text { text: "Filter by mode"; color: Colors.text-secondary; font-weight: 700; }
-                HorizontalBox { spacing: 6px;
-                    Button { accessible-label: root.connection-filter == 0 ? "All connections, selected" : "Show all connections"; text: "All"; primary: root.connection-filter == 0; clicked => { root.set-connection-filter(0); } }
-                    Button { accessible-label: root.connection-filter == 1 ? "Add-only connections, selected" : "Show add-only connections"; text: "Add-only"; primary: root.connection-filter == 1; clicked => { root.set-connection-filter(1); } }
-                }
-                HorizontalBox { spacing: 6px;
-                    Button { accessible-label: root.connection-filter == 2 ? "Mirror connections, selected" : "Show mirror connections"; text: "Mirror"; primary: root.connection-filter == 2; clicked => { root.set-connection-filter(2); } }
-                    Button { accessible-label: root.connection-filter == 3 ? "Archive connections, selected" : "Show archive connections"; text: "Archive"; primary: root.connection-filter == 3; clicked => { root.set-connection-filter(3); } }
-                }
-            }
-            if root.connections-total > 0 : Text {
-                text: root.connections.length == root.connections-total ? "Showing all " + root.connections-total + (root.connections-total == 1 ? " connection." : " connections.") : "Showing " + root.connections.length + " of " + root.connections-total + " connections.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            if root.connections.length == 0 : VerticalBox {
-                spacing: 8px;
-                Text { text: root.connections-total == 0 ? "No connections yet" : "No matching connections"; font-size: 22px; font-weight: 700; }
-                if root.connections-total == 0 && root.providers-total == 0 : Text { text: "Add a cloud provider, then create a connection to choose what to copy."; wrap: word-wrap; }
-                if root.connections-total == 0 && root.providers-total > 0 : Text { text: "Create a connection to link a local folder with cloud storage."; wrap: word-wrap; }
-                if root.connections-total > 0 : Text { text: "Choose another filter or create a new connection."; wrap: word-wrap; }
-                if root.connections-total > 0 && root.connection-filter != 0 : Button { accessible-label: "Remove the connection filter and show all connections"; text: "Show all connections"; primary: true; clicked => { root.set-connection-filter(0); } }
-            }
-            if root.connections.length > 0 : ListView {
-                height: 280px;
-                vertical-scrollbar-policy: always-on;
-                for connection in root.connections : Rectangle {
-                    accessible-role: list-item;
-                    accessible-label: connection.name + ". " + connection.detail + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
-                    background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 250px : 98px;
-                        VerticalBox { padding: 10px; spacing: 8px;
-                            VerticalBox { spacing: 3px;
-                                Text { text: connection.name; font-weight: 700; wrap: word-wrap; }
-                                Text { text: connection.detail; color: Colors.text-secondary; }
-                                if root.width < Dimensions.medium-layout-breakpoint : VerticalBox { spacing: 6px;
-                                    VerticalBox { spacing: 2px;
-                                        Text { text: "On this device"; color: Colors.text-secondary; font-weight: 700; }
-                                        Text { text: connection.local-path; color: Colors.text-secondary; wrap: word-wrap; }
-                                    }
-                                    Text { accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders"; text: connection.mode == 2 ? "↓ Archive destination" : "↕ Connected folders"; color: Colors.border; font-weight: 700; }
-                                    VerticalBox { spacing: 2px;
-                                        Text { text: "In " + connection.provider-name; color: Colors.text-secondary; font-weight: 700; wrap: word-wrap; }
-                                        Text { text: connection.remote-location; color: Colors.text-secondary; wrap: word-wrap; }
-                                    }
-                                }
-                                if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
-                                    VerticalBox { horizontal-stretch: 1; spacing: 2px;
-                                        Text { text: "On this device"; color: Colors.text-secondary; font-weight: 700; }
-                                        Text { text: connection.local-path; color: Colors.text-secondary; wrap: word-wrap; }
-                                    }
-                                    Text { accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders"; text: connection.mode == 2 ? "▣" : "⇄"; color: Colors.border; font-size: 22px; vertical-alignment: center; }
-                                    VerticalBox { horizontal-stretch: 1; spacing: 2px;
-                                        Text { text: "In " + connection.provider-name; color: Colors.text-secondary; font-weight: 700; wrap: word-wrap; }
-                                        Text { text: connection.remote-location; color: Colors.text-secondary; wrap: word-wrap; }
-                                    }
-                                }
-                                if connection.mode == 2 : Text { text: "Keeps the last " + connection.archive-retention + " archives"; color: Colors.text-secondary; }
-                            }
-                        if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { spacing: 8px;
-                            Button { accessible-label: "Run connection " + connection.name; text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
-                            Button { accessible-label: "Edit connection " + connection.name; text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
-                            Button { accessible-label: "Delete connection " + connection.name; text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
-                        }
-                        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
-                            Button { accessible-label: "Run connection " + connection.name; text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
-                            Button { accessible-label: "Edit connection " + connection.name; text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
-                            Button { accessible-label: "Delete connection " + connection.name; text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
-                            Rectangle { horizontal-stretch: 1; }
-                        }
-                    }
-                }
-            }
-            }
-            }
+        if root.page == Page.connections : ConnectionsPage {
+            connections: root.connections; connections-total: root.connections-total; providers-total: root.providers-total; connection-filter <=> root.connection-filter; connections-load-failed: root.connections-load-failed;
+            show-connections => { root.show-connections(); } show-add-provider => { root.show-add-provider(); } show-add-connection => { root.show-add-connection(); } set-connection-filter(value) => { root.set-connection-filter(value); } request-run-connection(id) => { root.request-run-connection(id); } request-connection-edit(id) => { root.request-connection-edit(id); } request-connection-delete(id) => { root.request-connection-delete(id); }
         }
 
-        if root.page == Page.connection-form : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
-            Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "Save only stores this connection. It does not transfer files."; wrap: word-wrap; }
-            VerticalBox { accessible-role: region; accessible-label: "Connection identity and cloud destination"; spacing: 6px;
-            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-name; init => { self.focus(); } }
-            Text { text: "Connection name"; font-weight: 700; }
-            connection-name := LineEdit { accessible-label: "Connection name"; placeholder-text: "For example, Photos backup"; text <=> root.connection-form-name; }
-            Text { text: "Used in the connection list and archive filenames."; color: Colors.text-secondary; wrap: word-wrap; }
-            Text { text: "Provider"; font-weight: 700; }
-            connection-provider := ComboBox { accessible-label: root.connection-providers-loading ? "Loading providers" : (root.connection-providers-load-failed ? "Providers unavailable" : (root.provider-names.length == 0 ? "Provider; add a provider first" : "Provider")); model: root.provider-names; enabled: !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0; current-index <=> root.connection-form-provider; selected => { root.select-connection-provider(self.current-index); } }
-            if root.connection-providers-loading : Text { accessible-live-region: polite; text: "Loading providers…"; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.connection-providers-load-failed : VerticalBox { spacing: 6px;
-                Text { accessible-live-region: assertive; text: "SyncPak could not load providers. Check configuration storage and try again."; color: Colors.danger; wrap: word-wrap; }
-                Button { accessible-label: "Retry loading providers for this connection"; text: root.connection-providers-loading ? "Retrying…" : "Retry loading providers"; enabled: !root.connection-providers-loading; clicked => { root.retry-connection-providers(); } }
-            }
-            if !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length == 0 : Text { text: "Add a provider before creating a connection."; color: Colors.danger; wrap: word-wrap; }
-            Text { text: "Bucket"; font-weight: 700; }
-            connection-bucket := LineEdit { accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket"; placeholder-text: "Bucket name"; text <=> root.connection-form-bucket; enabled: !root.folder-picker-open && connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == ""; }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket == root.provider-buckets[connection-provider.current-index] : Text {
-                text: "This provider locks connections to its default bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket != root.provider-buckets[connection-provider.current-index] : Text {
-                text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider's current default bucket.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0 : VerticalBox {
-                spacing: 4px;
-                Text { text: "Buckets verified this session"; color: Colors.text-secondary; }
-                ComboBox {
-                    accessible-label: "Buckets verified this session";
-                    model: root.connection-verified-buckets;
-                    enabled: !root.folder-picker-open;
-                    selected => { root.connection-form-bucket = root.connection-verified-buckets[self.current-index]; }
-                }
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length == 0 : Text {
-                text: "These credentials were verified, but no buckets were visible. Enter the bucket name manually if access is restricted.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && !root.connection-bucket-list-checked : Text {
-                text: "Enter the bucket name manually, or verify this provider to select buckets visible to its current credentials.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            Text { text: "Remote folder"; font-weight: 700; }
-            connection-remote := LineEdit { accessible-label: "Remote folder"; placeholder-text: "Leave empty for the bucket root"; text <=> root.connection-form-remote; enabled: !root.folder-picker-open; }
-            Text { text: "Leave empty to use the root of the bucket."; color: Colors.text-secondary; wrap: word-wrap; }
-            }
-            Text { text: "Local folder"; font-weight: 700; }
-            VerticalBox { spacing: 6px;
-                connection-local := LineEdit { accessible-label: "Local folder"; placeholder-text: "Full local folder path"; text <=> root.connection-form-local; enabled: !root.folder-picker-open; }
-                Text { text: "Selecting a folder lets SyncPak inventory and transfer files only for this connection. Your system may ask you to allow access to the folder you choose."; color: Colors.text-secondary; wrap: word-wrap; }
-                Button { accessible-label: root.folder-picker-open ? "Folder selection in progress" : "Select local folder"; text: root.folder-picker-open ? "Selecting folder…" : "Select folder"; enabled: !root.folder-picker-open; clicked => { root.select-local-folder(); } }
-                if root.folder-picker-open : Text { accessible-live-region: polite; text: "Waiting for folder selection…"; color: Colors.text-secondary; wrap: word-wrap; }
-            }
-            Text { text: "Mode"; font-weight: 700; }
-            connection-mode := ComboBox { accessible-label: "Mode"; model: ["Add-only", "Mirror", "Archive"]; current-index <=> root.connection-form-mode; enabled: !root.folder-picker-open; }
-            if connection-mode.current-index == 0 : Text {
-                text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            if connection-mode.current-index == 1 : Text {
-                text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts. Any files or metadata that cannot be matched are listed when the operation finishes.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            if connection-mode.current-index == 2 : VerticalBox {
-                spacing: 4px;
-                Text { text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting."; color: Colors.text-secondary; wrap: word-wrap; }
-                Text { text: "Keep last N archives"; font-weight: 700; }
-                connection-retention := LineEdit { accessible-label: "Keep last N archives"; text <=> root.connection-form-retention; enabled: !root.folder-picker-open; }
-                Text { text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain."; color: Colors.text-secondary; wrap: word-wrap; }
-            }
-            VerticalBox {
-                Button { accessible-label: "Back to connections"; text: "Back"; clicked => { root.request-discard-connection(); } }
-                Button { accessible-label: root.folder-picker-open ? "Save connection unavailable while folder selection is in progress" : "Save connection " + root.connection-form-name + " without transferring files"; text: "Save connection"; primary: true; enabled: !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0; clicked => { root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention); } }
-            }
-            }
+        if root.page == Page.connection-form : ConnectionFormPage {
+            connection-form-id <=> root.connection-form-id; connection-form-name <=> root.connection-form-name; connection-form-provider <=> root.connection-form-provider; connection-form-bucket <=> root.connection-form-bucket; connection-form-remote <=> root.connection-form-remote; connection-form-local <=> root.connection-form-local; connection-form-mode <=> root.connection-form-mode; connection-form-retention <=> root.connection-form-retention;
+            provider-names: root.provider-names; provider-buckets: root.provider-buckets; connection-verified-buckets: root.connection-verified-buckets; connection-bucket-list-checked: root.connection-bucket-list-checked; connection-providers-loading: root.connection-providers-loading; connection-providers-load-failed: root.connection-providers-load-failed; folder-picker-open: root.folder-picker-open;
+            select-local-folder => { root.select-local-folder(); } select-connection-provider(index) => { root.select-connection-provider(index); } retry-connection-providers => { root.retry-connection-providers(); } save-connection(name, provider, bucket, remote, local, mode, retention) => { root.save-connection(name, provider, bucket, remote, local, mode, retention); } request-discard-connection => { root.request-discard-connection(); }
         }
 
-        if root.page == Page.connection-discard-confirmation : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Discard unsaved changes?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; }
-            Text { text: "Your changes to this connection have not been saved."; wrap: word-wrap; }
-            VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: continue-editing-connection; init => { self.focus(); } }
-                continue-editing-connection := Button { accessible-label: "Continue editing connection " + root.connection-form-name; text: "Continue editing"; clicked => { root.cancel-discard-connection(); } }
-                Button { accessible-label: "Discard changes to connection " + root.connection-form-name; text: "Discard " + root.connection-form-name + " changes"; primary: true; clicked => { root.confirm-discard-connection(); } }
-            }
-            }
+        if root.page == Page.connection-discard-confirmation : ConnectionDiscardConfirmationPage {
+            connection-name: root.connection-form-name; cancel => { root.cancel-discard-connection(); } confirm => { root.confirm-discard-connection(); }
         }
 
-        if root.page == Page.privacy : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Privacy & About"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
-            Rectangle { accessible-role: region; accessible-label: "Direct transfers"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px;
-                VerticalBox { padding: 12px; spacing: 4px; Text { text: "Direct transfers"; font-size: 20px; font-weight: 700; } Text { text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them."; wrap: word-wrap; } }
-            }
-            Rectangle { accessible-role: region; accessible-label: "Protected credentials"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px;
-                VerticalBox { padding: 12px; spacing: 4px; Text { text: "Protected credentials"; font-size: 20px; font-weight: 700; } Text { text: "Provider credentials are stored using this device's protected facilities and are retrieved only when SyncPak connects to that provider."; wrap: word-wrap; } }
-            }
-            Rectangle { accessible-role: region; accessible-label: "Data on this device"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px;
-                VerticalBox { padding: 12px; spacing: 4px; Text { text: "Data on this device"; font-size: 20px; font-weight: 700; } Text { text: "Connection settings are stored locally. Activity is kept in memory and cleared when SyncPak exits."; wrap: word-wrap; } }
-            }
-            Rectangle { accessible-role: region; accessible-label: "File encryption"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 72px;
-                VerticalBox { padding: 12px; spacing: 4px; Text { text: "File encryption"; font-size: 20px; font-weight: 700; } Text { text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption."; wrap: word-wrap; } }
-            }
-            Text { text: "SyncPak " + root.app-version; color: Colors.text-secondary; }
-            VerticalBox { accessible-role: region; accessible-label: "Appearance"; spacing: 6px;
-                Text { text: "Appearance"; font-weight: 700; }
-                Text { text: "Choose whether SyncPak follows your system appearance or always uses a light or dark theme."; color: Colors.text-secondary; wrap: word-wrap; }
-                ComboBox {
-                    accessible-label: "Appearance";
-                    model: ["System default", "Light", "Dark"];
-                    current-index <=> root.appearance-preference;
-                    enabled: !root.configuration-unavailable;
-                    selected => {
-                        root.apply-appearance-preference();
-                        root.change-appearance-preference(self.current-index);
-                    }
-                }
-            }
-            VerticalBox { accessible-role: region; accessible-label: "Privacy and source links"; spacing: 6px;
-                Text { text: "Links"; font-weight: 700; }
-                privacy-source-code := Button { accessible-label: "Open SyncPak source code in your browser"; text: "Source code"; clicked => { Platform.open-url("https://github.com/shining-grimace/sync-pak"); } }
-                Button { accessible-label: "Open Cloudflare privacy policy in your browser"; text: "Cloudflare privacy policy"; clicked => { Platform.open-url("https://www.cloudflare.com/privacypolicy/"); } }
-                Button { accessible-label: "Open Backblaze privacy policy in your browser"; text: "Backblaze privacy policy"; clicked => { Platform.open-url("https://www.backblaze.com/company/policies/privacy.html"); } }
-                Button { accessible-label: "Open Amazon privacy notice in your browser"; text: "AWS privacy notice"; clicked => { Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010"); } }
-                Text { text: "SyncPak's privacy policy and open-source licence notices will be published before release."; color: Colors.text-secondary; wrap: word-wrap; }
-            }
-            FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: privacy-source-code; init => { self.focus(); } }
-            privacy-diagnostics := Button { accessible-label: "View redacted diagnostics with credentials excluded"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
-            Button { accessible-label: "Back to welcome"; text: "Back"; clicked => { root.show-welcome(); } }
-            }
+        if root.page == Page.privacy : PrivacyPage {
+            app-version: root.app-version; appearance-preference <=> root.appearance-preference; configuration-unavailable: root.configuration-unavailable;
+            apply-appearance-preference => { root.apply-appearance-preference(); }
+            change-appearance-preference(index) => { root.change-appearance-preference(index); }
+            show-diagnostics => { root.show-diagnostics(); }
+            show-welcome => { root.show-welcome(); }
         }
 
-        if root.page == Page.diagnostics : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Diagnostics"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
-            Text { text: "This report excludes provider credentials. Paths are hidden unless you choose to include them."; wrap: word-wrap; }
-            Text { accessible-live-region: polite; text: root.diagnostic-entry-count == 0 ? "No errors have been recorded in this session." : root.diagnostic-entry-count == 1 ? "1 error has been recorded in this session." : root.diagnostic-entry-count + " errors have been recorded in this session."; color: Colors.text-secondary; wrap: word-wrap; }
-            include-paths := CheckBox { text: "Include file and folder paths"; checked <=> root.diagnostic-include-paths; toggled => { root.diagnostic-copy-status = ""; root.set-diagnostic-include-paths(self.checked); } }
-            if root.diagnostic-include-paths : Text { accessible-live-region: assertive; text: "Paths can contain personal information. Include them only when you trust the person receiving the report. Turning this option off removes paths from the report immediately."; color: Colors.danger; wrap: word-wrap; }
-            Text { text: "Use Copy report, or select the report and use your system copy shortcut."; color: Colors.text-secondary; wrap: word-wrap; }
-            Rectangle { background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 220px;
-                diagnostic-report := TextEdit {
-                    x: 12px;
-                    y: 12px;
-                    width: parent.width - 24px;
-                    height: parent.height - 24px;
-                    accessible-label: "Redacted diagnostics report. Select text and use your system copy shortcut to copy it.";
-                    text: root.diagnostic-text;
-                    read-only: true;
-                    wrap: word-wrap;
-                }
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: diagnostic-report; init => { self.focus(); } }
-            }
-            Button {
-                accessible-label: root.diagnostic-include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
-                text: root.diagnostic-include-paths ? "Copy report with paths" : "Copy redacted report";
-                clicked => {
-                    diagnostic-report.select-all();
-                    diagnostic-report.copy();
-                    root.diagnostic-copy-status = root.diagnostic-include-paths ? "Diagnostics report with paths copied." : "Redacted diagnostics report copied.";
-                }
-            }
-            if root.diagnostic-copy-status != "" : Text { accessible-live-region: polite; text: root.diagnostic-copy-status; color: Colors.success; wrap: word-wrap; }
-            Button { accessible-label: "Return to the previous screen"; text: "Back"; clicked => { root.dismiss-diagnostics(); } }
-            }
+        if root.page == Page.diagnostics : DiagnosticsPage {
+            diagnostic-text: root.diagnostic-text; include-paths <=> root.diagnostic-include-paths; entry-count: root.diagnostic-entry-count; copy-status <=> root.diagnostic-copy-status;
+            set-include-paths(value) => { root.set-diagnostic-include-paths(value); }
+            dismiss => { root.dismiss-diagnostics(); }
         }
 
-        if root.page == Page.activity : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Activity"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
-            Text { text: "Queued and completed operations appear here until SyncPak exits."; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.activity-clearable-count > 0 : VerticalBox {
-                spacing: 4px;
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: clear-completed-activity; init => { self.focus(); } }
-                clear-completed-activity := Button { accessible-label: "Clear " + root.activity-clearable-count + " completed activity entries"; text: root.activity-clearable-count == 1 ? "Clear completed entry" : "Clear completed entries"; clicked => { root.clear-completed-activity(); } }
-                Text { text: "Removes " + root.activity-clearable-count + (root.activity-clearable-count == 1 ? " completed, failed, or cancelled entry." : " completed, failed, or cancelled entries."); color: Colors.text-secondary; wrap: word-wrap; }
-            }
-            if root.activity-rows.length == 0 : Rectangle {
-                accessible-role: region;
-                accessible-label: "No activity this time";
-                background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 130px;
-                VerticalBox { padding: 20px; spacing: 8px; alignment: center;
-                    Text { text: "No activity this time"; font-size: 22px; font-weight: 700; horizontal-alignment: center; }
-                    Text { text: "Queued and completed operations will appear here until SyncPak exits."; color: Colors.text-secondary; wrap: word-wrap; horizontal-alignment: center; }
-                }
-            }
-            if root.activity-rows.length > 0 : ListView {
-                accessible-label: "Current activity";
-                height: 240px;
-                vertical-scrollbar-policy: always-on;
-                for activity in root.activity-rows : Rectangle {
-                    accessible-role: list-item;
-                    accessible-label: activity.title + ". " + activity.status + ". " + activity.detail + (activity.progress != "" ? ". Progress: " + activity.progress : "") + (activity.result != "" ? ". Result: " + activity.result : "");
-                    background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
-                    VerticalBox { padding: 12px; spacing: 8px;
-                        VerticalBox { spacing: 2px;
-                            Text { text: activity.title + " · " + activity.status; font-weight: 700; wrap: word-wrap; }
-                            Text { text: activity.detail; color: Colors.text-secondary; wrap: word-wrap; }
-                            if activity.progress != "" : Text { text: "Progress: " + activity.progress; color: Colors.text-secondary; wrap: word-wrap; }
-                            if activity.result != "" : Text { text: "Result: " + activity.result; color: Colors.text-secondary; wrap: word-wrap; }
-                        }
-                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalBox {
-                            spacing: 8px;
-                            if activity.can-view-result : Button { accessible-label: "View result for " + activity.title; text: "View result"; clicked => { root.show-activity-result(activity.id); } }
-                            if activity.can-cancel : Button { accessible-label: "View progress for " + activity.title; text: "View progress"; clicked => { root.show-activity-progress(activity.id); } }
-                            if activity.can-cancel : Button { accessible-label: "Cancel " + activity.title; text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
-                            if activity.can-remove : Button { accessible-label: "Remove " + activity.title; text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
-                        }
-                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox {
-                            spacing: 8px;
-                            if activity.can-view-result : Button { accessible-label: "View result for " + activity.title; text: "View result"; clicked => { root.show-activity-result(activity.id); } }
-                            if activity.can-cancel : Button { accessible-label: "View progress for " + activity.title; text: "View progress"; clicked => { root.show-activity-progress(activity.id); } }
-                            if activity.can-cancel : Button { accessible-label: "Cancel " + activity.title; text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
-                            if activity.can-remove : Button { accessible-label: "Remove " + activity.title; text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
-                            Rectangle { horizontal-stretch: 1; }
-                        }
-                    }
-                }
-            }
-            }
+        if root.page == Page.activity : ActivityPage {
+            activity-rows: root.activity-rows; activity-clearable-count: root.activity-clearable-count;
+            clear-completed-activity => { root.clear-completed-activity(); } show-activity-result(id) => { root.show-activity-result(id); } show-activity-progress(id) => { root.show-activity-progress(id); } request-cancel-activity(id, title) => { root.request-cancel-activity(id, title); } remove-queued-activity(id) => { root.remove-queued-activity(id); }
         }
 
-        if root.page == Page.activity-result : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Result: " + root.activity-result-title; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: root.activity-result-status; font-weight: 700; }
-            Text { text: root.activity-result-summary; color: Colors.text-secondary; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: "Outcome totals: " + root.activity-result-completed-count + " completed, " + root.activity-result-incomplete-count + " incomplete, " + root.activity-result-not-started-count + " not started"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
-                if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { padding: 12px; spacing: 4px;
-                    Text { text: root.activity-result-completed-count + " completed"; font-weight: 700; }
-                    Text { text: root.activity-result-incomplete-count + " incomplete"; font-weight: 700; }
-                    Text { text: root.activity-result-not-started-count + " not started"; font-weight: 700; }
-                }
-                if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { padding: 12px; spacing: 12px;
-                    Text { text: root.activity-result-completed-count + " completed"; font-weight: 700; }
-                    Text { text: root.activity-result-incomplete-count + " incomplete"; font-weight: 700; }
-                    Text { text: root.activity-result-not-started-count + " not started"; font-weight: 700; }
-                }
-            }
-            if root.activity-result-details.length == 0 : Text {
-                text: "No actions were started for this operation.";
-                color: Colors.text-secondary; wrap: word-wrap;
-            }
-            if root.activity-result-details.length > 0 : VerticalBox {
-                spacing: 6px;
-                Text { text: "Action outcomes"; font-weight: 700; }
-                ListView {
-                    accessible-label: "Action outcomes";
-                    height: 240px;
-                    vertical-scrollbar-policy: always-on;
-                    for detail in root.activity-result-details : Text {
-                        accessible-role: list-item;
-                        text: detail; wrap: word-wrap;
-                    }
-                }
-            }
-            if root.activity-result-can-retry : VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: retry-activity-result; init => { self.focus(); } }
-                retry-activity-result := Button {
-                    accessible-label: "Retry " + root.activity-result-title + " with a new preflight review";
-                    text: "Retry with a new preflight";
-                    primary: true;
-                    clicked => { root.retry-activity-result(); }
-                }
-            }
-            if !root.activity-result-can-retry : FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: activity-result-back; init => { self.focus(); } }
-            activity-result-back := Button { accessible-label: "Return to activity"; text: "Back to activity"; clicked => { root.dismiss-activity-result(); } }
-            }
+        if root.page == Page.activity-result : ActivityResultPage { title: root.activity-result-title; status: root.activity-result-status; summary: root.activity-result-summary; completed: root.activity-result-completed-count; incomplete: root.activity-result-incomplete-count; not-started: root.activity-result-not-started-count; details: root.activity-result-details; can-retry: root.activity-result-can-retry; retry => { root.retry-activity-result(); } dismiss => { root.dismiss-activity-result(); } }
+
+        if root.page == Page.activity-progress : ActivityProgressPage {
+            id: root.activity-progress-id; title: root.activity-progress-title; phase: root.activity-progress-phase; summary: root.activity-progress-summary; items: root.activity-progress-items; bytes: root.activity-progress-bytes; path: root.activity-progress-path; fraction: root.activity-progress-fraction; percent: root.activity-progress-percent;
+            dismiss => { root.dismiss-activity-progress(); } request-cancel(id, title) => { root.request-cancel-activity(id, title); }
         }
 
-        if root.page == Page.activity-progress : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Progress: " + root.activity-progress-title; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { accessible-live-region: polite; text: root.activity-progress-phase; font-weight: 700; }
-            Text { text: root.activity-progress-summary; color: Colors.text-secondary; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: "Overall progress: " + root.activity-progress-percent + " percent. " + root.activity-progress-items + ". " + root.activity-progress-bytes; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 150px;
-                VerticalBox { padding: 12px; spacing: 6px;
-                    Text { text: "Overall progress"; font-weight: 700; }
-                    Rectangle { background: Colors.progress-track; border-radius: 6px; height: 12px;
-                        Rectangle { background: Colors.success; border-radius: 6px; width: parent.width * root.activity-progress-fraction; height: parent.height; }
-                    }
-                    Text { text: root.activity-progress-percent + "% complete"; color: Colors.text-secondary; wrap: word-wrap; }
-                    Text { text: root.activity-progress-items; wrap: word-wrap; }
-                    Text { text: root.activity-progress-bytes; wrap: word-wrap; }
-                    Text { text: "Current item"; color: Colors.text-secondary; font-weight: 700; }
-                    Text { text: root.activity-progress-path; wrap: word-wrap; }
-                }
-            }
-            Text { text: "Minimize leaves this operation running. You can return from Activity at any time."; color: Colors.text-secondary; wrap: word-wrap; }
-            VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: minimize-progress; init => { self.focus(); } }
-                minimize-progress := Button { accessible-label: "Minimize progress for " + root.activity-progress-title; text: "Minimize"; clicked => { root.dismiss-activity-progress(); } }
-                Button { accessible-label: "Cancel " + root.activity-progress-title; text: "Cancel operation"; primary: true; clicked => { root.request-cancel-activity(root.activity-progress-id, root.activity-progress-title); } }
-            }
-            }
+        if root.page == Page.provider-delete : ProviderDeletePage { provider-name: root.pending-provider-name; connection-count: root.pending-connection-count; connections: root.pending-provider-connections; cancel => { root.cancel-provider-delete(); } confirm => { root.confirm-provider-delete(); } }
+        if root.page == Page.connection-delete : ConnectionDeletePage { connection-name: root.pending-connection-name; cancel => { root.cancel-connection-delete(); } confirm => { root.confirm-connection-delete(); } }
+        if root.page == Page.activity-cancel : ActivityCancelPage { activity-name: root.pending-cancel-activity-name; dismiss => { root.dismiss-cancel-activity(); } confirm => { root.confirm-cancel-activity(); } }
+        if root.page == Page.run-direction : RunDirectionPage {
+            connection-name: root.run-connection-name; connection-mode: root.run-connection-mode; local-endpoint: root.run-local-endpoint; remote-endpoint: root.run-remote-endpoint; archive-upload-details: root.run-archive-upload-details; archive-download-details: root.run-archive-download-details; allows-both-ways: root.run-allows-both-ways; direction: root.run-direction;
+            choose-direction(direction) => { root.choose-run-direction(direction); } cancel => { root.cancel-run-direction(); } begin-preflight => { root.begin-preflight(); }
         }
-
-        if root.page == Page.provider-delete : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Delete " + root.pending-provider-name + "?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: "Provider deletion consequences"; background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 108px;
-                VerticalBox { padding: 12px; spacing: 5px;
-                    Text { text: "What will be deleted"; color: Colors.danger; font-weight: 700; }
-                    Text { text: "The protected credentials and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " dependent connection will be removed from SyncPak." : " dependent connections will be removed from SyncPak."); color: Colors.danger; wrap: word-wrap; }
-                    Text { text: "Local folders and cloud files are not deleted."; color: Colors.danger; wrap: word-wrap; }
-                }
-            }
-            if root.pending-provider-connections.length > 0 : VerticalBox {
-                spacing: 3px;
-                Text { text: "Connections that will be deleted"; font-weight: 700; }
-                ListView {
-                    accessible-label: "Connections that will be deleted";
-                    height: 180px;
-                    vertical-scrollbar-policy: always-on;
-                    for connection-name in root.pending-provider-connections : Text {
-                        accessible-role: list-item;
-                        accessible-label: connection-name;
-                        text: "• " + connection-name;
-                        color: Colors.text-secondary;
-                        wrap: word-wrap;
-                    }
-                }
-            }
-            VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: keep-provider; init => { self.focus(); } }
-                keep-provider := Button { accessible-label: "Keep provider " + root.pending-provider-name; text: "Cancel"; clicked => { root.cancel-provider-delete(); } }
-                Button { accessible-label: "Delete provider " + root.pending-provider-name + " and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " connection" : " connections"); text: "Delete " + root.pending-provider-name + " and " + root.pending-connection-count + (root.pending-connection-count == 1 ? " connection" : " connections"); primary: true; clicked => { root.confirm-provider-delete(); } }
-            }
-            }
-        }
-
-        if root.page == Page.connection-delete : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Delete " + root.pending-connection-name + "?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: "Connection deletion consequences"; background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 94px;
-                VerticalBox { padding: 12px; spacing: 5px;
-                    Text { text: "What will be deleted"; color: Colors.danger; font-weight: 700; }
-                    Text { text: "This removes the connection from SyncPak."; color: Colors.danger; wrap: word-wrap; }
-                    Text { text: "Its local folder and cloud files are not deleted."; color: Colors.danger; wrap: word-wrap; }
-                }
-            }
-            VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: keep-connection; init => { self.focus(); } }
-                keep-connection := Button { accessible-label: "Keep connection " + root.pending-connection-name; text: "Cancel"; clicked => { root.cancel-connection-delete(); } }
-                Button { accessible-label: "Delete connection " + root.pending-connection-name; text: "Delete " + root.pending-connection-name; primary: true; clicked => { root.confirm-connection-delete(); } }
-            }
-            }
-        }
-        if root.page == Page.activity-cancel : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Cancel " + root.pending-cancel-activity-name + "?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "Completed changes will not be undone. Work that has not started will be skipped."; wrap: word-wrap; }
-            VerticalBox {
-                FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: keep-running; init => { self.focus(); } }
-                keep-running := Button { accessible-label: "Keep " + root.pending-cancel-activity-name + " running"; text: "Keep running"; clicked => { root.dismiss-cancel-activity(); } }
-                Button { accessible-label: "Cancel operation " + root.pending-cancel-activity-name; text: "Cancel " + root.pending-cancel-activity-name; primary: true; clicked => { root.confirm-cancel-activity(); } }
-            }
-            }
-        }
-        if root.page == Page.run-direction : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: "Run " + root.run-connection-name; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: root.run-connection-mode + " connection"; color: Colors.text-secondary; }
-            if root.run-direction == 0 && root.run-archive-upload-details != "" : Rectangle {
-                background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 66px;
-                Text { text: root.run-archive-upload-details; color: Colors.text-secondary; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
-            }
-            if root.run-direction == 1 && root.run-archive-download-details != "" : Rectangle {
-                background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 66px;
-                Text { text: root.run-archive-download-details; color: Colors.text-secondary; wrap: word-wrap; x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; }
-            }
-            Rectangle { accessible-role: region; accessible-label: "Upload direction. Source: " + root.run-local-endpoint + ". Destination: " + root.run-remote-endpoint; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 132px;
-                VerticalBox { padding: 12px; spacing: 4px;
-                    Text { text: "Upload"; font-weight: 700; }
-                    Text { text: "Use the local folder as the source and cloud storage as the destination."; wrap: word-wrap; }
-                    Text { text: "Source: " + root.run-local-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    Text { text: "Destination: " + root.run-remote-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: choose-upload; init => { self.focus(); } }
-                    choose-upload := Button { accessible-label: root.run-direction == 0 ? "Upload direction, selected" : "Choose upload direction"; text: "Choose upload"; primary: root.run-direction == 0; clicked => { root.choose-run-direction(0); } }
-                }
-            }
-            Rectangle { accessible-role: region; accessible-label: "Download direction. Source: " + root.run-remote-endpoint + ". Destination: " + root.run-local-endpoint; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 132px;
-                VerticalBox { padding: 12px; spacing: 4px;
-                    Text { text: "Download"; font-weight: 700; }
-                    Text { text: "Use cloud storage as the source and the local folder as the destination."; wrap: word-wrap; }
-                    Text { text: "Source: " + root.run-remote-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    Text { text: "Destination: " + root.run-local-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    Button { accessible-label: root.run-direction == 1 ? "Download direction, selected" : "Choose download direction"; text: "Choose download"; primary: root.run-direction == 1; clicked => { root.choose-run-direction(1); } }
-                }
-            }
-            if root.run-allows-both-ways : Rectangle { accessible-role: region; accessible-label: "Both ways direction between " + root.run-local-endpoint + " and " + root.run-remote-endpoint; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 132px;
-                VerticalBox { padding: 12px; spacing: 4px;
-                    Text { text: "Both ways"; font-weight: 700; }
-                    Text { text: "Copy files found on only one side to the other. Changed files are skipped."; wrap: word-wrap; }
-                    Text { text: "This device: " + root.run-local-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    Text { text: "Cloud storage: " + root.run-remote-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    Button { accessible-label: root.run-direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction"; text: "Choose both ways"; primary: root.run-direction == 2; clicked => { root.choose-run-direction(2); } }
-                }
-            }
-            Text { text: "Continue performs a read-only inventory and shows the complete plan before any files can change."; color: Colors.text-secondary; wrap: word-wrap; }
-            VerticalBox {
-                Button { accessible-label: "Cancel run for " + root.run-connection-name; text: "Cancel"; clicked => { root.cancel-run-direction(); } }
-                Button { accessible-label: "Continue to preflight for " + root.run-connection-name; text: "Continue to preflight"; primary: true; clicked => { root.begin-preflight(); } }
-            }
-            }
-        }
-        if root.page == Page.preflight : ScrollView {
-            vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : (root.preflight-requires-mirror-confirmation ? "Review mirror changes" : "Ready to start")); color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "Reviewing " + root.run-connection-name + " · " + root.run-connection-mode + " · " + (root.run-direction == 0 ? "Upload" : (root.run-direction == 1 ? "Download" : "Both ways")); color: Colors.text-secondary; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: root.run-direction == 2 ? "Comparing both sides: " + root.run-local-endpoint + " and " + root.run-remote-endpoint : "Comparing source " + (root.run-direction == 0 ? root.run-local-endpoint : root.run-remote-endpoint) + " with destination " + (root.run-direction == 0 ? root.run-remote-endpoint : root.run-local-endpoint); background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 78px;
-                VerticalBox { padding: 12px; spacing: 4px;
-                    if root.run-direction != 2 : Text { text: "Source: " + (root.run-direction == 0 ? root.run-local-endpoint : root.run-remote-endpoint); color: Colors.text-secondary; wrap: word-wrap; }
-                    if root.run-direction != 2 : Text { text: "Destination: " + (root.run-direction == 0 ? root.run-remote-endpoint : root.run-local-endpoint); color: Colors.text-secondary; wrap: word-wrap; }
-                    if root.run-direction == 2 : Text { text: "This device: " + root.run-local-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    if root.run-direction == 2 : Text { text: "Cloud storage: " + root.run-remote-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                }
-            }
-            if root.preflight-loading : Text { accessible-live-region: polite; text: "Listing files…"; font-weight: 700; }
-            Text { text: "No files are changed during this check."; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.preflight-loading : Rectangle { background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 110px;
-                Text { text: "Preflight will compare the endpoints above, then show additions, overwrites, deletions, and skipped files before anything starts."; wrap: word-wrap; x: 16px; y: 16px; width: parent.width - 32px; height: parent.height - 32px; }
-            }
-            if root.preflight-failed : Rectangle { accessible-role: region; accessible-label: "Preflight could not start"; background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 92px;
-                VerticalBox { padding: 12px; spacing: 5px;
-                    Text { text: "Resolve this issue, then run the connection again. No files were changed."; color: Colors.danger; font-weight: 700; wrap: word-wrap; }
-                    Text { text: root.preflight-failure-message; color: Colors.danger; wrap: word-wrap; }
-                }
-            }
-            if !root.preflight-loading && !root.preflight-failed : VerticalBox {
-                spacing: 8px;
-                VerticalBox {
-                    accessible-role: region;
-                    accessible-label: "Plan summary: " + root.preflight-additions + ", " + root.preflight-overwrites + ", " + root.preflight-deletions + ", " + root.preflight-skipped;
-                    spacing: 4px;
-                    if root.width < Dimensions.medium-layout-breakpoint : VerticalBox { spacing: 3px;
-                        Text { text: root.preflight-additions; font-weight: 700; wrap: word-wrap; }
-                        Text { text: root.preflight-overwrites; font-weight: 700; wrap: word-wrap; }
-                        Text { text: root.preflight-deletions; font-weight: 700; wrap: word-wrap; }
-                        Text { text: root.preflight-skipped; font-weight: 700; wrap: word-wrap; }
-                    }
-                    if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
-                        Text { text: root.preflight-additions; font-weight: 700; }
-                        Text { text: root.preflight-overwrites; font-weight: 700; }
-                    }
-                    if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
-                        Text { text: root.preflight-deletions; font-weight: 700; }
-                        Text { text: root.preflight-skipped; font-weight: 700; }
-                    }
-                }
-                if root.preflight-requires-mirror-confirmation : Rectangle {
-                    accessible-role: region;
-                    accessible-label: "Destructive mirror changes";
-                    background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 86px;
-                    VerticalBox { padding: 12px; spacing: 5px;
-                        Text { text: "Destructive mirror changes"; color: Colors.danger; font-weight: 700; }
-                        Text { accessible-live-region: assertive; text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing."; color: Colors.danger; wrap: word-wrap; }
-                        Text { text: root.preflight-overwrites + " · " + root.preflight-deletions; color: Colors.danger; wrap: word-wrap; }
-                    }
-                }
-                if root.preflight-items.length == 0 : Text {
-                    text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
-                    color: Colors.success; wrap: word-wrap;
-                }
-                if root.preflight-items.length > 0 : Text {
-                    accessible-live-region: polite;
-                    text: root.preflight-item-filter == 0 ? "Reviewing " + root.preflight-items.length + " planned file changes." : "Showing " + root.preflight-visible-items.length + " matching planned changes.";
-                    color: Colors.text-secondary; wrap: word-wrap;
-                }
-                if root.preflight-items.length > 0 : VerticalBox {
-                    accessible-role: region;
-                    accessible-label: "Filter planned file changes";
-                    spacing: 6px;
-                    Text { text: "Show planned changes"; color: Colors.text-secondary; font-weight: 700; }
-                    HorizontalBox { spacing: 6px;
-                        preflight-filter-all := Button { accessible-label: root.preflight-item-filter == 0 ? "All planned changes, selected" : "Show all planned changes"; text: "All"; primary: root.preflight-item-filter == 0; clicked => { root.set-preflight-item-filter(0); } }
-                        Button { accessible-label: root.preflight-item-filter == 1 ? "New files, selected" : "Show new files"; text: "New"; primary: root.preflight-item-filter == 1; clicked => { root.set-preflight-item-filter(1); } }
-                        Button { accessible-label: root.preflight-item-filter == 2 ? "Overwrites, selected" : "Show overwrites"; text: "Overwrites"; primary: root.preflight-item-filter == 2; clicked => { root.set-preflight-item-filter(2); } }
-                    }
-                    HorizontalBox { spacing: 6px;
-                        Button { accessible-label: root.preflight-item-filter == 3 ? "Deletions, selected" : "Show deletions"; text: "Deletions"; primary: root.preflight-item-filter == 3; clicked => { root.set-preflight-item-filter(3); } }
-                        Button { accessible-label: root.preflight-item-filter == 4 ? "Warnings, selected" : "Show warnings"; text: "Warnings"; primary: root.preflight-item-filter == 4; clicked => { root.set-preflight-item-filter(4); } }
-                    }
-                    FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-filter-all; init => { self.focus(); } }
-                }
-                if root.preflight-visible-items.length > 0 : ListView {
-                    accessible-label: root.preflight-item-filter == 0 ? "All planned file changes" : (root.preflight-item-filter == 1 ? "Planned new files" : (root.preflight-item-filter == 2 ? "Planned overwrites" : (root.preflight-item-filter == 3 ? "Planned deletions" : "Planned warnings")));
-                    height: 180px;
-                    vertical-scrollbar-policy: always-on;
-                    for item in root.preflight-visible-items : VerticalBox {
-                        accessible-role: list-item;
-                        accessible-label: item.status + ": " + item.path + ". " + item.detail;
-                        spacing: 4px;
-                        if root.width < Dimensions.narrow-layout-breakpoint : Text { text: item.status; color: Colors.text-secondary; font-weight: 700; wrap: word-wrap; }
-                        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
-                            Text { text: item.status; width: 110px; color: Colors.text-secondary; }
-                            Text { text: item.path; horizontal-stretch: 1; wrap: word-wrap; }
-                        }
-                        if root.width < Dimensions.narrow-layout-breakpoint : Text { text: item.path; wrap: word-wrap; }
-                        VerticalBox { spacing: 2px;
-                            Text { text: item.detail; color: Colors.text-secondary; wrap: word-wrap; }
-                        }
-                    }
-                }
-                if root.preflight-items.length > 0 && root.preflight-visible-items.length == 0 : Rectangle {
-                    accessible-role: region;
-                    accessible-label: "No entries in the selected planned change category";
-                    background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 74px;
-                    Text {
-                        text: root.preflight-item-filter == 1 ? "No new files are planned." : (root.preflight-item-filter == 2 ? "No overwrites are planned." : (root.preflight-item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
-                        color: Colors.text-secondary;
-                        wrap: word-wrap;
-                        x: 12px;
-                        y: 12px;
-                        width: parent.width - 24px;
-                        height: parent.height - 24px;
-                    }
-                }
-                if root.preflight-requires-mirror-confirmation : CheckBox {
-                    accessible-label: "Acknowledge the listed overwrites and deletions";
-                    text: "I understand that the listed destination files will be overwritten or deleted.";
-                    checked <=> root.preflight-mirror-confirmed;
-                }
-                if root.preflight-requires-mirror-confirmation : Text {
-                    accessible-live-region: polite;
-                    text: root.preflight-mirror-confirmed ? "Destructive mirror changes acknowledged." : "Acknowledge the listed changes before this mirror can start.";
-                    color: root.preflight-mirror-confirmed ? Colors.success : Colors.danger;
-                    wrap: word-wrap;
-                }
-                Button {
-                    accessible-label: root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed ? root.preflight-start-action + " is unavailable until destructive changes are acknowledged" : root.preflight-start-action;
-                    text: root.preflight-start-action;
-                    enabled: !root.preflight-loading && !root.preflight-failed && (!root.preflight-requires-mirror-confirmation || root.preflight-mirror-confirmed);
-                    primary: true;
-                    clicked => { root.start-preflight-operation(); }
-                }
-                if root.preflight-requires-mirror-confirmation && !root.preflight-mirror-confirmed : Text { text: "Acknowledge the destructive changes above before starting."; color: Colors.danger; wrap: word-wrap; }
-            }
-            VerticalBox {
-                if root.preflight-loading || root.preflight-failed || root.preflight-items.length == 0 : FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-back; init => { self.focus(); } }
-                preflight-back := Button { accessible-label: "Return to direction selection for " + root.run-connection-name; text: "Back"; clicked => { root.return-to-run-direction(); } }
-                if root.preflight-failed : Button { accessible-label: "Try the preflight check again"; text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
-                if !root.preflight-loading && !root.preflight-failed : Button { accessible-label: "Refresh the read-only preflight review"; text: "Refresh review"; clicked => { root.begin-preflight(); } }
-            }
-            }
+        if root.page == Page.preflight : PreflightPage {
+            connection-name: root.run-connection-name; connection-mode: root.run-connection-mode; local-endpoint: root.run-local-endpoint; remote-endpoint: root.run-remote-endpoint; direction: root.run-direction;
+            loading: root.preflight-loading; failed: root.preflight-failed; failure-message: root.preflight-failure-message; additions: root.preflight-additions; overwrites: root.preflight-overwrites; deletions: root.preflight-deletions; skipped: root.preflight-skipped; start-action: root.preflight-start-action; requires-mirror-confirmation: root.preflight-requires-mirror-confirmation; mirror-confirmed <=> root.preflight-mirror-confirmed; item-filter: root.preflight-item-filter; items: root.preflight-items; visible-items: root.preflight-visible-items;
+            start-operation => { root.start-preflight-operation(); } set-item-filter(filter) => { root.set-preflight-item-filter(filter); } return-to-direction => { root.return-to-run-direction(); } begin-preflight => { root.begin-preflight(); }
         }
         if root.width < Dimensions.medium-layout-breakpoint : Rectangle {
             accessible-role: navigation;
