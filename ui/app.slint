@@ -1,16 +1,20 @@
 import { Button, CheckBox, ComboBox, HorizontalBox, LineEdit, ListView, Palette, ScrollView, TextEdit, VerticalBox } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 
-component CenteredPageColumn inherits HorizontalBox {
+component CenteredPageColumn inherits VerticalBox {
     in property <length> content-spacing: 12px;
-    alignment: center;
 
-    VerticalBox {
-        preferred-width: Dimensions.welcome-content-max-width;
-        max-width: Dimensions.welcome-content-max-width;
-        horizontal-stretch: 1;
-        spacing: root.content-spacing;
-        @children
+    HorizontalBox {
+        alignment: center;
+        vertical-stretch: 0;
+
+        VerticalBox {
+            preferred-width: Dimensions.welcome-content-max-width;
+            max-width: Dimensions.welcome-content-max-width;
+            horizontal-stretch: 1;
+            spacing: root.content-spacing;
+            @children
+        }
     }
 }
 
@@ -386,7 +390,7 @@ export component AppWindow inherits Window {
             if !root.providers-load-failed : VerticalBox {
             spacing: 12px;
             FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: provider-add; init => { self.focus(); } }
-            provider-add := Button { accessible-label: "Add a provider"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
+            provider-add := Button { accessible-label: "Add a provider"; text: "Add provider"; height: Dimensions.control-height; primary: true; clicked => { root.show-add-provider(); } }
             if root.providers.length == 0 : VerticalBox {
                 spacing: 8px;
                 Text { text: "No providers yet"; font-size: 22px; font-weight: 700; }
@@ -433,21 +437,21 @@ export component AppWindow inherits Window {
             if root.provider-form-id != "" : Text { text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values."; color: #454039; wrap: word-wrap; }
             FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: provider-name; init => { self.focus(); } }
             Text { text: "Provider name"; font-weight: 700; }
-            provider-name := LineEdit { accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
+            provider-name := LineEdit { height: Dimensions.control-height; accessible-label: "Provider name"; placeholder-text: "For example, Personal S3"; text <=> root.provider-form-name; enabled: !root.provider-verifying; }
             Text { text: "Provider type"; font-weight: 700; }
             provider-kind := ComboBox { accessible-label: "Provider type"; model: ["Cloudflare R2", "Backblaze B2", "AWS S3"]; current-index <=> root.provider-form-kind; enabled: !root.provider-verifying; }
             if root.provider-form-kind == 0 : VerticalBox {
                 spacing: 4px;
                 Text { text: "Account ID"; font-weight: 700; }
-                LineEdit { accessible-label: "Cloudflare account ID"; placeholder-text: "Cloudflare account ID"; text <=> root.provider-form-account-id; enabled: !root.provider-verifying; }
+                LineEdit { height: Dimensions.control-height; accessible-label: "Cloudflare account ID"; placeholder-text: "Cloudflare account ID"; text <=> root.provider-form-account-id; enabled: !root.provider-verifying; }
             }
             if root.provider-form-kind != 0 : VerticalBox {
                 spacing: 4px;
                 Text { text: "Region"; font-weight: 700; }
-                LineEdit { accessible-label: "Region"; placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; enabled: !root.provider-verifying; }
+                LineEdit { height: Dimensions.control-height; accessible-label: "Region"; placeholder-text: "For example, ap-southeast-2"; text <=> root.provider-form-region; enabled: !root.provider-verifying; }
             }
             Text { text: "Default bucket (optional)"; font-weight: 700; }
-            LineEdit { accessible-label: "Default bucket"; placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; enabled: !root.provider-verifying; }
+            LineEdit { height: Dimensions.control-height; accessible-label: "Default bucket"; placeholder-text: "Used and locked for connections that select this provider"; text <=> root.provider-form-bucket; enabled: !root.provider-verifying; }
             if root.provider-verified-buckets.length > 0 : VerticalBox {
                 spacing: 4px;
                 Text { text: "Verified available buckets"; color: #454039; }
@@ -465,7 +469,7 @@ export component AppWindow inherits Window {
             Text { text: "When set, new and edited connections using this provider use this bucket and cannot change it."; color: #454039; wrap: word-wrap; }
             if root.provider-form-kind == 1 : Text { text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced."; color: #454039; wrap: word-wrap; }
             Text { text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; font-weight: 700; }
-            access-key := LineEdit { accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; enabled: !root.provider-verifying; }
+            access-key := LineEdit { height: Dimensions.control-height; accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID"; text <=> root.provider-form-access-key; enabled: !root.provider-verifying; }
             Text { text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; font-weight: 700; }
             HorizontalBox {
                 LineEdit { accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key"; text <=> root.provider-form-secret-key; input-type: root.provider-secret-visible ? text : password; horizontal-stretch: 1; enabled: !root.provider-verifying; }
@@ -536,11 +540,11 @@ export component AppWindow inherits Window {
             spacing: 12px;
             if root.providers-total == 0 : VerticalBox {
                 FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-add-provider; init => { self.focus(); } }
-                connection-add-provider := Button { accessible-label: "Add a provider before creating a connection"; text: "Add provider"; primary: true; clicked => { root.show-add-provider(); } }
+                connection-add-provider := Button { accessible-label: "Add a provider before creating a connection"; text: "Add provider"; height: Dimensions.control-height; primary: true; clicked => { root.show-add-provider(); } }
             }
             if root.providers-total > 0 : VerticalBox {
                 FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: connection-new; init => { self.focus(); } }
-                connection-new := Button { accessible-label: "Create a new connection"; text: "New connection"; primary: true; clicked => { root.show-add-connection(); } }
+                connection-new := Button { accessible-label: "Create a new connection"; text: "New connection"; height: Dimensions.control-height; primary: true; clicked => { root.show-add-connection(); } }
             }
             VerticalBox { accessible-role: region; accessible-label: "Filter connections by mode"; spacing: 6px;
                 Text { text: "Filter by mode"; color: #454039; font-weight: 700; }

@@ -66,6 +66,11 @@ cargo run --example provider_operations --features provider-probes
 - (Android): `./android/gradlew --project-dir android :app:assembleDebug` (or open the `android` directory in Android Studio)
 - (Windows 10+): `cargo run`
 
+### Live Preview
+
+To enable live-reloading `.slint` files while the app is running:
+`SLINT_LIVE_PREVIEW=1 cargo run --features slint/live-preview`
+
 ## Distributing
 
 ### Flatpak
