@@ -18,6 +18,27 @@ component CenteredPageColumn inherits VerticalBox {
     }
 }
 
+export global Page {
+    out property <int> welcome: 0;
+    out property <int> providers: 1;
+    out property <int> provider-form: 2;
+    out property <int> privacy: 3;
+    out property <int> connections: 4;
+    out property <int> connection-form: 5;
+    out property <int> provider-delete: 6;
+    out property <int> connection-delete: 7;
+    out property <int> diagnostics: 8;
+    out property <int> activity: 9;
+    out property <int> run-direction: 10;
+    out property <int> preflight: 11;
+    out property <int> activity-cancel: 12;
+    out property <int> provider-save-confirmation: 13;
+    out property <int> connection-discard-confirmation: 14;
+    out property <int> provider-discard-confirmation: 15;
+    out property <int> activity-result: 16;
+    out property <int> activity-progress: 17;
+}
+
 export struct ProviderRow {
     id: string,
     name: string,
@@ -102,7 +123,7 @@ export component AppWindow inherits Window {
     in-out property <int> diagnostic-entry-count: 0;
     in-out property <string> diagnostic-copy-status;
     in-out property <int> diagnostic-return-page: 3;
-    private property <bool> confirmation-open: page == 6 || page == 7 || page == 12 || page == 13 || page == 14 || page == 15;
+    private property <bool> confirmation-open: page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.provider-save-confirmation || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
     in-out property <string> pending-provider-id;
     in-out property <string> pending-provider-name;
     in-out property <int> pending-connection-count;
@@ -229,7 +250,7 @@ export component AppWindow inherits Window {
     preferred-width: 900px;
     preferred-height: 620px;
     min-width: 360px;
-    min-height: 520px;
+    min-height: Dimensions.window-min-height;
     background: #f7f2e8;
 
     Rectangle {
@@ -245,19 +266,19 @@ export component AppWindow inherits Window {
             focus-on-tab-navigation: false;
             capture-key-pressed(event) => {
                 if event.text == Key.Escape {
-                    if root.page == 6 { root.cancel-provider-delete(); return accept; }
-                    if root.page == 7 { root.cancel-connection-delete(); return accept; }
-                    if root.page == 8 { root.dismiss-diagnostics(); return accept; }
-                    if root.page == 10 { root.cancel-run-direction(); return accept; }
-                    if root.page == 11 { root.return-to-run-direction(); return accept; }
-                    if root.page == 12 { root.dismiss-cancel-activity(); return accept; }
-                    if root.page == 16 { root.dismiss-activity-result(); return accept; }
-                    if root.page == 17 { root.dismiss-activity-progress(); return accept; }
-                    if root.page == 13 { root.cancel-save-provider(); return accept; }
-                    if root.page == 14 { root.cancel-discard-connection(); return accept; }
-                    if root.page == 15 { root.cancel-discard-provider(); return accept; }
-                    if root.page == 2 { root.request-discard-provider(); return accept; }
-                    if root.page == 5 { root.request-discard-connection(); return accept; }
+                    if root.page == Page.provider-delete { root.cancel-provider-delete(); return accept; }
+                    if root.page == Page.connection-delete { root.cancel-connection-delete(); return accept; }
+                    if root.page == Page.diagnostics { root.dismiss-diagnostics(); return accept; }
+                    if root.page == Page.run-direction { root.cancel-run-direction(); return accept; }
+                    if root.page == Page.preflight { root.return-to-run-direction(); return accept; }
+                    if root.page == Page.activity-cancel { root.dismiss-cancel-activity(); return accept; }
+                    if root.page == Page.activity-result { root.dismiss-activity-result(); return accept; }
+                    if root.page == Page.activity-progress { root.dismiss-activity-progress(); return accept; }
+                    if root.page == Page.provider-save-confirmation { root.cancel-save-provider(); return accept; }
+                    if root.page == Page.connection-discard-confirmation { root.cancel-discard-connection(); return accept; }
+                    if root.page == Page.provider-discard-confirmation { root.cancel-discard-provider(); return accept; }
+                    if root.page == Page.provider-form { root.request-discard-provider(); return accept; }
+                    if root.page == Page.connection-form { root.request-discard-connection(); return accept; }
                 }
                 reject
             }
@@ -269,10 +290,10 @@ export component AppWindow inherits Window {
         width: parent.width;
         height: parent.height;
         padding: 16px;
-        padding-left: root.width >= 700px ? 176px : 16px;
+        padding-left: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
         spacing: 16px;
 
-        if root.width >= 520px && root.width < 700px : VerticalBox {
+        if root.width >= Dimensions.medium-layout-breakpoint && root.width < Dimensions.desktop-layout-breakpoint : VerticalBox {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
             spacing: 6px;
@@ -318,18 +339,18 @@ export component AppWindow inherits Window {
                     Text { text: root.active-activity-title; color: #fffaf0; font-weight: 700; wrap: word-wrap; }
                     Text { text: root.active-activity-progress; color: #fffaf0; wrap: word-wrap; }
                 }
-                if root.width < 420px : VerticalBox { spacing: 8px;
+                if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { spacing: 8px;
                     Button { accessible-label: "View progress for " + root.active-activity-title; text: "View progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
                     Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
                 }
-                if root.width >= 420px : HorizontalBox { spacing: 8px;
+                if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
                     Button { accessible-label: "View progress for " + root.active-activity-title; text: "View progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
                     Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
                 }
             }
         }
 
-        if root.page == 0 : ScrollView {
+        if root.page == Page.welcome : ScrollView {
             vertical-scrollbar-policy: always-on;
             VerticalBox { width: parent.width - 12px;
             HorizontalBox {
@@ -373,7 +394,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 1 : ScrollView {
+        if root.page == Page.providers : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Providers"; color: #171512; font-size: 32px; font-weight: 800; }
@@ -403,19 +424,19 @@ export component AppWindow inherits Window {
                 for provider in root.providers : Rectangle {
                     accessible-role: list-item;
                     accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
-                    background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < 420px ? 168px : 82px;
+                    background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
                     VerticalBox { padding: 10px; spacing: 8px;
                         VerticalBox { spacing: 2px;
                             Text { text: provider.name; font-weight: 700; wrap: word-wrap; }
                             Text { text: provider.kind + " · " + provider.verification; color: #454039; }
                             Text { text: provider.connection-summary; color: #454039; wrap: word-wrap; }
                         }
-                        if root.width < 420px : VerticalBox { spacing: 8px;
+                        if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { spacing: 8px;
                             Button { accessible-label: "Verify provider " + provider.name; text: provider.verifying ? "Verifying…" : "Verify"; enabled: !provider.verifying; clicked => { root.verify-saved-provider(provider.id); } }
                             Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
                             Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
                         }
-                        if root.width >= 420px : HorizontalBox { spacing: 8px;
+                        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
                             Button { accessible-label: "Verify provider " + provider.name; text: provider.verifying ? "Verifying…" : "Verify"; enabled: !provider.verifying; clicked => { root.verify-saved-provider(provider.id); } }
                             Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } }
                             Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } }
@@ -428,7 +449,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 2 : ScrollView {
+        if root.page == Page.provider-form : ScrollView {
             vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
@@ -496,7 +517,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 13 : ScrollView {
+        if root.page == Page.provider-save-confirmation : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Save without verifying?"; color: #171512; font-size: 28px; font-weight: 800; }
@@ -509,7 +530,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 15 : ScrollView {
+        if root.page == Page.provider-discard-confirmation : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
@@ -522,7 +543,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 4 : ScrollView {
+        if root.page == Page.connections : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Connections"; color: #171512; font-size: 32px; font-weight: 800; }
@@ -575,12 +596,12 @@ export component AppWindow inherits Window {
                 for connection in root.connections : Rectangle {
                     accessible-role: list-item;
                     accessible-label: connection.name + ". " + connection.detail + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
-                    background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < 420px ? 250px : 98px;
+                    background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 250px : 98px;
                         VerticalBox { padding: 10px; spacing: 8px;
                             VerticalBox { spacing: 3px;
                                 Text { text: connection.name; font-weight: 700; wrap: word-wrap; }
                                 Text { text: connection.detail; color: #454039; }
-                                if root.width < 520px : VerticalBox { spacing: 6px;
+                                if root.width < Dimensions.medium-layout-breakpoint : VerticalBox { spacing: 6px;
                                     VerticalBox { spacing: 2px;
                                         Text { text: "On this device"; color: #454039; font-weight: 700; }
                                         Text { text: connection.local-path; color: #454039; wrap: word-wrap; }
@@ -591,7 +612,7 @@ export component AppWindow inherits Window {
                                         Text { text: connection.remote-location; color: #454039; wrap: word-wrap; }
                                     }
                                 }
-                                if root.width >= 520px : HorizontalBox { spacing: 8px;
+                                if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
                                     VerticalBox { horizontal-stretch: 1; spacing: 2px;
                                         Text { text: "On this device"; color: #454039; font-weight: 700; }
                                         Text { text: connection.local-path; color: #454039; wrap: word-wrap; }
@@ -604,12 +625,12 @@ export component AppWindow inherits Window {
                                 }
                                 if connection.mode == 2 : Text { text: "Keeps the last " + connection.archive-retention + " archives"; color: #454039; }
                             }
-                        if root.width < 420px : VerticalBox { spacing: 8px;
+                        if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { spacing: 8px;
                             Button { accessible-label: "Run connection " + connection.name; text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
                             Button { accessible-label: "Edit connection " + connection.name; text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
                             Button { accessible-label: "Delete connection " + connection.name; text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
                         }
-                        if root.width >= 420px : HorizontalBox { spacing: 8px;
+                        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
                             Button { accessible-label: "Run connection " + connection.name; text: "Run"; primary: true; clicked => { root.request-run-connection(connection.id); } }
                             Button { accessible-label: "Edit connection " + connection.name; text: "Edit"; clicked => { root.request-connection-edit(connection.id); } }
                             Button { accessible-label: "Delete connection " + connection.name; text: "Delete"; clicked => { root.request-connection-delete(connection.id); } }
@@ -622,7 +643,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 5 : ScrollView {
+        if root.page == Page.connection-form : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px; content-spacing: 10px;
             Text { text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
@@ -703,7 +724,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 14 : ScrollView {
+        if root.page == Page.connection-discard-confirmation : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Discard unsaved changes?"; color: #171512; font-size: 28px; font-weight: 800; }
@@ -716,7 +737,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 3 : ScrollView {
+        if root.page == Page.privacy : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Privacy & About"; color: #171512; font-size: 32px; font-weight: 800; }
@@ -747,7 +768,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 8 : ScrollView {
+        if root.page == Page.diagnostics : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Diagnostics"; color: #171512; font-size: 32px; font-weight: 800; }
@@ -783,7 +804,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 9 : ScrollView {
+        if root.page == Page.activity : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Activity"; color: #171512; font-size: 32px; font-weight: 800; }
@@ -810,7 +831,7 @@ export component AppWindow inherits Window {
                 for activity in root.activity-rows : Rectangle {
                     accessible-role: list-item;
                     accessible-label: activity.title + ". " + activity.status + ". " + activity.detail + (activity.progress != "" ? ". Progress: " + activity.progress : "") + (activity.result != "" ? ". Result: " + activity.result : "");
-                    background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < 420px ? 166px : 86px;
+                    background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
                     VerticalBox { padding: 12px; spacing: 8px;
                         VerticalBox { spacing: 2px;
                             Text { text: activity.title + " · " + activity.status; font-weight: 700; wrap: word-wrap; }
@@ -818,14 +839,14 @@ export component AppWindow inherits Window {
                             if activity.progress != "" : Text { text: "Progress: " + activity.progress; color: #454039; wrap: word-wrap; }
                             if activity.result != "" : Text { text: "Result: " + activity.result; color: #454039; wrap: word-wrap; }
                         }
-                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < 420px : VerticalBox {
+                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalBox {
                             spacing: 8px;
                             if activity.can-view-result : Button { accessible-label: "View result for " + activity.title; text: "View result"; clicked => { root.show-activity-result(activity.id); } }
                             if activity.can-cancel : Button { accessible-label: "View progress for " + activity.title; text: "View progress"; clicked => { root.show-activity-progress(activity.id); } }
                             if activity.can-cancel : Button { accessible-label: "Cancel " + activity.title; text: "Cancel"; clicked => { root.request-cancel-activity(activity.id, activity.title); } }
                             if activity.can-remove : Button { accessible-label: "Remove " + activity.title; text: "Remove"; clicked => { root.remove-queued-activity(activity.id); } }
                         }
-                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= 420px : HorizontalBox {
+                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox {
                             spacing: 8px;
                             if activity.can-view-result : Button { accessible-label: "View result for " + activity.title; text: "View result"; clicked => { root.show-activity-result(activity.id); } }
                             if activity.can-cancel : Button { accessible-label: "View progress for " + activity.title; text: "View progress"; clicked => { root.show-activity-progress(activity.id); } }
@@ -839,19 +860,19 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 16 : ScrollView {
+        if root.page == Page.activity-result : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Result: " + root.activity-result-title; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
             Text { text: root.activity-result-status; font-weight: 700; }
             Text { text: root.activity-result-summary; color: #454039; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: "Outcome totals: " + root.activity-result-completed-count + " completed, " + root.activity-result-incomplete-count + " incomplete, " + root.activity-result-not-started-count + " not started"; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < 420px ? 126px : 68px;
-                if root.width < 420px : VerticalBox { padding: 12px; spacing: 4px;
+            Rectangle { accessible-role: region; accessible-label: "Outcome totals: " + root.activity-result-completed-count + " completed, " + root.activity-result-incomplete-count + " incomplete, " + root.activity-result-not-started-count + " not started"; background: #fffaf0; border-color: #2c2925; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
+                if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { padding: 12px; spacing: 4px;
                     Text { text: root.activity-result-completed-count + " completed"; font-weight: 700; }
                     Text { text: root.activity-result-incomplete-count + " incomplete"; font-weight: 700; }
                     Text { text: root.activity-result-not-started-count + " not started"; font-weight: 700; }
                 }
-                if root.width >= 420px : HorizontalBox { padding: 12px; spacing: 12px;
+                if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { padding: 12px; spacing: 12px;
                     Text { text: root.activity-result-completed-count + " completed"; font-weight: 700; }
                     Text { text: root.activity-result-incomplete-count + " incomplete"; font-weight: 700; }
                     Text { text: root.activity-result-not-started-count + " not started"; font-weight: 700; }
@@ -888,7 +909,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 17 : ScrollView {
+        if root.page == Page.activity-progress : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Progress: " + root.activity-progress-title; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
@@ -916,7 +937,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 6 : ScrollView {
+        if root.page == Page.provider-delete : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Delete " + root.pending-provider-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
@@ -951,7 +972,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        if root.page == 7 : ScrollView {
+        if root.page == Page.connection-delete : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Delete " + root.pending-connection-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
@@ -969,7 +990,7 @@ export component AppWindow inherits Window {
             }
             }
         }
-        if root.page == 12 : ScrollView {
+        if root.page == Page.activity-cancel : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Cancel " + root.pending-cancel-activity-name + "?"; color: #171512; font-size: 28px; font-weight: 800; wrap: word-wrap; }
@@ -981,7 +1002,7 @@ export component AppWindow inherits Window {
             }
             }
         }
-        if root.page == 10 : ScrollView {
+        if root.page == Page.run-direction : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: "Run " + root.run-connection-name; color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
@@ -1029,7 +1050,7 @@ export component AppWindow inherits Window {
             }
             }
         }
-        if root.page == 11 : ScrollView {
+        if root.page == Page.preflight : ScrollView {
             vertical-scrollbar-policy: always-on;
             CenteredPageColumn { width: parent.width - 12px;
             Text { text: root.preflight-failed ? "This operation cannot start" : (root.preflight-loading ? "Checking before anything changes" : (root.preflight-requires-mirror-confirmation ? "Review mirror changes" : "Ready to start")); color: #171512; font-size: 32px; font-weight: 800; wrap: word-wrap; }
@@ -1059,17 +1080,17 @@ export component AppWindow inherits Window {
                     accessible-role: region;
                     accessible-label: "Plan summary: " + root.preflight-additions + ", " + root.preflight-overwrites + ", " + root.preflight-deletions + ", " + root.preflight-skipped;
                     spacing: 4px;
-                    if root.width < 520px : VerticalBox { spacing: 3px;
+                    if root.width < Dimensions.medium-layout-breakpoint : VerticalBox { spacing: 3px;
                         Text { text: root.preflight-additions; font-weight: 700; wrap: word-wrap; }
                         Text { text: root.preflight-overwrites; font-weight: 700; wrap: word-wrap; }
                         Text { text: root.preflight-deletions; font-weight: 700; wrap: word-wrap; }
                         Text { text: root.preflight-skipped; font-weight: 700; wrap: word-wrap; }
                     }
-                    if root.width >= 520px : HorizontalBox { spacing: 8px;
+                    if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
                         Text { text: root.preflight-additions; font-weight: 700; }
                         Text { text: root.preflight-overwrites; font-weight: 700; }
                     }
-                    if root.width >= 520px : HorizontalBox { spacing: 8px;
+                    if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
                         Text { text: root.preflight-deletions; font-weight: 700; }
                         Text { text: root.preflight-skipped; font-weight: 700; }
                     }
@@ -1117,12 +1138,12 @@ export component AppWindow inherits Window {
                         accessible-role: list-item;
                         accessible-label: item.status + ": " + item.path + ". " + item.detail;
                         spacing: 4px;
-                        if root.width < 420px : Text { text: item.status; color: #454039; font-weight: 700; wrap: word-wrap; }
-                        if root.width >= 420px : HorizontalBox { spacing: 8px;
+                        if root.width < Dimensions.narrow-layout-breakpoint : Text { text: item.status; color: #454039; font-weight: 700; wrap: word-wrap; }
+                        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
                             Text { text: item.status; width: 110px; color: #454039; }
                             Text { text: item.path; horizontal-stretch: 1; wrap: word-wrap; }
                         }
-                        if root.width < 420px : Text { text: item.path; wrap: word-wrap; }
+                        if root.width < Dimensions.narrow-layout-breakpoint : Text { text: item.path; wrap: word-wrap; }
                         VerticalBox { spacing: 2px;
                             Text { text: item.detail; color: #454039; wrap: word-wrap; }
                         }
@@ -1170,7 +1191,7 @@ export component AppWindow inherits Window {
             }
             }
         }
-        if root.width < 520px : Rectangle {
+        if root.width < Dimensions.medium-layout-breakpoint : Rectangle {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
             background: #fffaf0;
@@ -1192,7 +1213,7 @@ export component AppWindow inherits Window {
             }
         }
         }
-    if root.width >= 700px : Rectangle {
+    if root.width >= Dimensions.desktop-layout-breakpoint : Rectangle {
         accessible-role: navigation;
         accessible-label: "Primary navigation";
         x: 16px;
