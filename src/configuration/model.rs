@@ -9,6 +9,7 @@ pub const CURRENT_SCHEMA_VERSION: u32 = 3;
 pub struct AppConfig {
     pub schema_version: u32,
     pub welcome_completed: bool,
+    pub appearance: AppearancePreference,
     pub providers: Vec<ProviderConfig>,
     pub connections: Vec<ConnectionConfig>,
 }
@@ -18,8 +19,37 @@ impl Default for AppConfig {
         Self {
             schema_version: CURRENT_SCHEMA_VERSION,
             welcome_completed: false,
+            appearance: AppearancePreference::System,
             providers: Vec::new(),
             connections: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AppearancePreference {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
+impl AppearancePreference {
+    pub(crate) fn from_index(index: i32) -> Option<Self> {
+        match index {
+            0 => Some(Self::System),
+            1 => Some(Self::Light),
+            2 => Some(Self::Dark),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn index(self) -> i32 {
+        match self {
+            Self::System => 0,
+            Self::Light => 1,
+            Self::Dark => 2,
         }
     }
 }

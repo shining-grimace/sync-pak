@@ -13,8 +13,8 @@ pub use credentials::{CredentialError, ProviderCredentials, ProviderRepository};
 pub use diagnostics::{DiagnosticLog, DiagnosticReport, StructuredError};
 pub use model::CURRENT_SCHEMA_VERSION;
 pub use model::{
-    AppConfig, ConnectionConfig, ConnectionDraft, ConnectionId, CredentialReference,
-    ProviderConfig, ProviderId, ProviderKind, ProviderOptions, SyncMode,
+    AppConfig, AppearancePreference, ConnectionConfig, ConnectionDraft, ConnectionId,
+    CredentialReference, ProviderConfig, ProviderId, ProviderKind, ProviderOptions, SyncMode,
 };
 pub use providers::{DeletedProvider, ProviderDraft};
 pub use store::{ConfigStore, ConfigurationError};

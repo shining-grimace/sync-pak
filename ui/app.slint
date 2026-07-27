@@ -81,6 +81,8 @@ export struct PreflightRow {
 export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <string> app-version;
+    in-out property <int> appearance-preference: 0;
+    in-out property <bool> resolved-dark-mode: false;
     in-out property <bool> configuration-unavailable: false;
     in-out property <[ProviderRow]> providers;
     in-out property <bool> providers-load-failed: false;
@@ -195,6 +197,8 @@ export component AppWindow inherits Window {
     callback show-welcome();
     callback retry-configuration();
     callback show-privacy();
+    callback apply-appearance-preference();
+    callback change-appearance-preference(int);
     callback show-activity();
     callback request-navigation(int);
     callback complete-pending-navigation();
@@ -246,7 +250,11 @@ export component AppWindow inherits Window {
     callback return-to-run-direction();
     callback set-connection-filter(int);
 
-    init => { Palette.color-scheme = ColorScheme.light; }
+    init => { Palette.color-scheme = ColorScheme.unknown; }
+    apply-appearance-preference => {
+        Colors.dark-mode = root.resolved-dark-mode;
+        Palette.color-scheme = root.appearance-preference == 1 ? ColorScheme.light : root.appearance-preference == 2 ? ColorScheme.dark : ColorScheme.unknown;
+    }
     title: "SyncPak";
     preferred-width: 900px;
     preferred-height: 620px;
@@ -755,6 +763,20 @@ export component AppWindow inherits Window {
                 VerticalBox { padding: 12px; spacing: 4px; Text { text: "File encryption"; font-size: 20px; font-weight: 700; } Text { text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption."; wrap: word-wrap; } }
             }
             Text { text: "SyncPak " + root.app-version; color: Colors.text-secondary; }
+            VerticalBox { accessible-role: region; accessible-label: "Appearance"; spacing: 6px;
+                Text { text: "Appearance"; font-weight: 700; }
+                Text { text: "Choose whether SyncPak follows your system appearance or always uses a light or dark theme."; color: Colors.text-secondary; wrap: word-wrap; }
+                ComboBox {
+                    accessible-label: "Appearance";
+                    model: ["System default", "Light", "Dark"];
+                    current-index <=> root.appearance-preference;
+                    enabled: !root.configuration-unavailable;
+                    selected => {
+                        root.apply-appearance-preference();
+                        root.change-appearance-preference(self.current-index);
+                    }
+                }
+            }
             VerticalBox { accessible-role: region; accessible-label: "Privacy and source links"; spacing: 6px;
                 Text { text: "Links"; font-weight: 700; }
                 privacy-source-code := Button { accessible-label: "Open SyncPak source code in your browser"; text: "Source code"; clicked => { Platform.open-url("https://github.com/shining-grimace/sync-pak"); } }

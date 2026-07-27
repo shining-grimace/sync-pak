@@ -10,6 +10,7 @@ mod android_folder_picker;
 #[cfg(target_os = "android")]
 mod android_foreground_execution;
 mod app_controller;
+mod appearance_controller;
 pub mod archive_create;
 mod archive_create_writer;
 pub mod archive_download;
@@ -136,8 +137,12 @@ slint::include_modules!();
 /// Opens the SyncPak application window and runs its event loop.
 pub fn run() -> Result<(), slint::PlatformError> {
     let window = AppWindow::new()?;
+    // The desktop backend resolves the native colour scheme when the window is
+    // shown. Initialise appearance-dependent UI only after that has happened.
+    window.show()?;
     app_controller::initialize(&window);
-    window.run()
+    slint::run_event_loop()?;
+    window.hide()
 }
 
 #[cfg(target_os = "android")]

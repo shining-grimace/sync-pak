@@ -1,5 +1,5 @@
 use super::ConfigStore;
-use crate::configuration::{AppConfig, CURRENT_SCHEMA_VERSION};
+use crate::configuration::{AppConfig, AppearancePreference, CURRENT_SCHEMA_VERSION};
 use std::{
     fs,
     time::{SystemTime, UNIX_EPOCH},
@@ -12,6 +12,21 @@ fn saves_and_loads_a_versioned_configuration() {
     store.save(&AppConfig::default()).unwrap();
     assert_eq!(store.load().unwrap(), AppConfig::default());
     assert!(fs::read_to_string(path).unwrap().contains("schema_version"));
+}
+
+#[test]
+fn saves_and_loads_the_appearance_preference() {
+    let path = test_path("appearance");
+    let store = ConfigStore::at(path.clone());
+    let config = AppConfig {
+        appearance: AppearancePreference::Dark,
+        ..Default::default()
+    };
+
+    store.save(&config).unwrap();
+
+    assert_eq!(store.load().unwrap().appearance, AppearancePreference::Dark);
+    assert!(fs::read_to_string(path).unwrap().contains("appearance"));
 }
 
 #[test]
