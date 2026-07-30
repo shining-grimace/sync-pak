@@ -3,12 +3,105 @@ import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 
 export component ActivityProgressPage inherits CenteredPageRoot {
-    in property <string> id; in property <string> title; in property <string> phase; in property <string> summary; in property <string> items; in property <string> bytes; in property <string> path; in property <float> fraction; in property <int> percent;
-    callback dismiss(); callback request-cancel(string, string);
-    Text { text: "Progress: " + root.title; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-    Text { accessible-live-region: polite; text: root.phase; font-weight: 700; }
-    Text { text: root.summary; color: Colors.text-secondary; wrap: word-wrap; }
-    Rectangle { accessible-role: region; accessible-label: "Overall progress: " + root.percent + " percent. " + root.items + ". " + root.bytes; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 150px; VerticalBox { padding: 12px; spacing: 6px; Text { text: "Overall progress"; font-weight: 700; } Rectangle { background: Colors.progress-track; border-radius: 6px; height: 12px; Rectangle { background: Colors.success; border-radius: 6px; width: parent.width * root.fraction; height: parent.height; } } Text { text: root.percent + "% complete"; color: Colors.text-secondary; wrap: word-wrap; } Text { text: root.items; wrap: word-wrap; } Text { text: root.bytes; wrap: word-wrap; } Text { text: "Current item"; color: Colors.text-secondary; font-weight: 700; } Text { text: root.path; wrap: word-wrap; } } }
-    Text { text: "Minimize leaves this operation running. You can return from Activity at any time."; color: Colors.text-secondary; wrap: word-wrap; }
-    VerticalBox { Button { accessible-label: "Minimize progress for " + root.title; text: "Minimize"; clicked => { root.dismiss(); } } Button { accessible-label: "Cancel " + root.title; text: "Cancel operation"; primary: true; clicked => { root.request-cancel(root.id, root.title); } } }
+    in property <string> id;
+    in property <string> title;
+    in property <string> phase;
+    in property <string> summary;
+    in property <string> items;
+    in property <string> bytes;
+    in property <string> path;
+    in property <float> fraction;
+    in property <int> percent;
+    callback dismiss();
+    callback request-cancel(string, string);
+
+    Text {
+        text: "Progress: " + root.title;
+        color: Colors.text-primary;
+        font-size: 32px;
+        font-weight: 800;
+        wrap: word-wrap;
+    }
+    Text {
+        accessible-live-region: polite;
+        text: root.phase;
+        font-weight: 700;
+    }
+    Text {
+        text: root.summary;
+        color: Colors.text-secondary;
+        wrap: word-wrap;
+    }
+    Rectangle {
+        accessible-role: region;
+        accessible-label: "Overall progress: " + root.percent + " percent. " + root.items + ". " + root.bytes;
+        background: Colors.surface;
+        border-color: Colors.border;
+        border-width: 1px;
+        border-radius: 8px;
+        min-height: 150px;
+        VerticalBox {
+            padding: 12px;
+            spacing: 6px;
+            Text {
+                text: "Overall progress";
+                font-weight: 700;
+            }
+            Rectangle {
+                background: Colors.progress-track;
+                border-radius: 6px;
+                height: 12px;
+                Rectangle {
+                    background: Colors.success;
+                    border-radius: 6px;
+                    width: parent.width * root.fraction;
+                    height: parent.height;
+                }
+            }
+            Text {
+                text: root.percent + "% complete";
+                color: Colors.text-secondary;
+                wrap: word-wrap;
+            }
+            Text {
+                text: root.items;
+                wrap: word-wrap;
+            }
+            Text {
+                text: root.bytes;
+                wrap: word-wrap;
+            }
+            Text {
+                text: "Current item";
+                color: Colors.text-secondary;
+                font-weight: 700;
+            }
+            Text {
+                text: root.path;
+                wrap: word-wrap;
+            }
+        }
+    }
+    Text {
+        text: "Minimize leaves this operation running. You can return from Activity at any time.";
+        color: Colors.text-secondary;
+        wrap: word-wrap;
+    }
+    VerticalBox {
+        Button {
+            accessible-label: "Minimize progress for " + root.title;
+            text: "Minimize";
+            clicked => {
+                root.dismiss();
+            }
+        }
+        Button {
+            accessible-label: "Cancel " + root.title;
+            text: "Cancel operation";
+            primary: true;
+            clicked => {
+                root.request-cancel(root.id, root.title);
+            }
+        }
+    }
 }

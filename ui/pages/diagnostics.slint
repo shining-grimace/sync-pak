@@ -7,17 +7,88 @@ export component DiagnosticsPage inherits CenteredPageRoot {
     in-out property <bool> include-paths;
     in property <int> entry-count;
     in-out property <string> copy-status;
-    callback set-include-paths(bool); callback dismiss();
-    Text { text: "Diagnostics"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
-    Text { text: "This report excludes provider credentials. Paths are hidden unless you choose to include them."; wrap: word-wrap; }
-    Text { accessible-live-region: polite; text: root.entry-count == 0 ? "No errors have been recorded in this session." : root.entry-count == 1 ? "1 error has been recorded in this session." : root.entry-count + " errors have been recorded in this session."; color: Colors.text-secondary; wrap: word-wrap; }
-    CheckBox { text: "Include file and folder paths"; checked <=> root.include-paths; toggled => { root.copy-status = ""; root.set-include-paths(self.checked); } }
-    if root.include-paths : Text { accessible-live-region: assertive; text: "Paths can contain personal information. Include them only when you trust the person receiving the report. Turning this option off removes paths from the report immediately."; color: Colors.danger; wrap: word-wrap; }
-    Text { text: "Use Copy report, or select the report and use your system copy shortcut."; color: Colors.text-secondary; wrap: word-wrap; }
-    Rectangle { background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 220px;
-        report := TextEdit { x: 12px; y: 12px; width: parent.width - 24px; height: parent.height - 24px; accessible-label: "Redacted diagnostics report. Select text and use your system copy shortcut to copy it."; text: root.diagnostic-text; read-only: true; wrap: word-wrap; }
+    callback set-include-paths(bool);
+    callback dismiss();
+
+    Text {
+        text: "Diagnostics";
+        color: Colors.text-primary;
+        font-size: 32px;
+        font-weight: 800;
     }
-    Button { accessible-label: root.include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report"; text: root.include-paths ? "Copy report with paths" : "Copy redacted report"; clicked => { report.select-all(); report.copy(); root.copy-status = root.include-paths ? "Diagnostics report with paths copied." : "Redacted diagnostics report copied."; } }
-    if root.copy-status != "" : Text { accessible-live-region: polite; text: root.copy-status; color: Colors.success; wrap: word-wrap; }
-    Button { accessible-label: "Return to the previous screen"; text: "Back"; clicked => { root.dismiss(); } }
+
+    Text {
+        text: "This report excludes provider credentials. Paths are hidden unless you choose to include them.";
+        wrap: word-wrap;
+    }
+
+    Text {
+        accessible-live-region: polite;
+        text: root.entry-count == 0 ? "No errors have been recorded in this session." : root.entry-count == 1 ? "1 error has been recorded in this session." : root.entry-count + " errors have been recorded in this session.";
+        color: Colors.text-secondary;
+        wrap: word-wrap;
+    }
+
+    CheckBox {
+        text: "Include file and folder paths";
+        checked <=> root.include-paths;
+        toggled => {
+            root.copy-status = "";
+            root.set-include-paths(self.checked);
+        }
+    }
+
+    if root.include-paths: Text {
+        accessible-live-region: assertive;
+        text: "Paths can contain personal information. Include them only when you trust the person receiving the report. Turning this option off removes paths from the report immediately.";
+        color: Colors.danger;
+        wrap: word-wrap;
+    }
+    Text {
+        text: "Use Copy report, or select the report and use your system copy shortcut.";
+        color: Colors.text-secondary;
+        wrap: word-wrap;
+    }
+
+    Rectangle {
+        background: Colors.surface;
+        border-color: Colors.border;
+        border-width: 1px;
+        border-radius: 8px;
+        min-height: 220px;
+        report := TextEdit {
+            x: 12px;
+            y: 12px;
+            width: parent.width - 24px;
+            height: parent.height - 24px;
+            accessible-label: "Redacted diagnostics report. Select text and use your system copy shortcut to copy it.";
+            text: root.diagnostic-text;
+            read-only: true;
+            wrap: word-wrap;
+        }
+    }
+
+    Button {
+        accessible-label: root.include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
+        text: root.include-paths ? "Copy report with paths" : "Copy redacted report";
+        clicked => {
+            report.select-all();
+            report.copy();
+            root.copy-status = root.include-paths ? "Diagnostics report with paths copied." : "Redacted diagnostics report copied.";
+        }
+    }
+
+    if root.copy-status != "": Text {
+        accessible-live-region: polite;
+        text: root.copy-status;
+        color: Colors.success;
+        wrap: word-wrap;
+    }
+    Button {
+        accessible-label: "Return to the previous screen";
+        text: "Back";
+        clicked => {
+            root.dismiss();
+        }
+    }
 }

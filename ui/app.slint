@@ -5,9 +5,18 @@ import { WelcomePage } from "pages/welcome.slint";
 import { ProvidersPage } from "pages/providers.slint";
 import { PrivacyPage } from "pages/privacy.slint";
 import { DiagnosticsPage } from "pages/diagnostics.slint";
-import { ProviderSaveConfirmationPage, ProviderDiscardConfirmationPage } from "pages/provider-confirmations.slint";
-import { ConnectionDiscardConfirmationPage } from "pages/connection-confirmations.slint";
-import { ProviderDeletePage, ConnectionDeletePage, ActivityCancelPage } from "pages/destructive-confirmations.slint";
+import {
+    ProviderSaveConfirmationPage,
+    ProviderDiscardConfirmationPage,
+} from "pages/provider-confirmations.slint";
+import {
+    ConnectionDiscardConfirmationPage,
+} from "pages/connection-confirmations.slint";
+import {
+    ProviderDeletePage,
+    ConnectionDeletePage,
+    ActivityCancelPage,
+} from "pages/destructive-confirmations.slint";
 import { ActivityProgressPage } from "pages/activity-progress.slint";
 import { ActivityResultPage } from "pages/activity-result.slint";
 import { ProviderFormPage } from "pages/provider-form.slint";
@@ -16,7 +25,12 @@ import { ConnectionFormPage } from "pages/connection-form.slint";
 import { ActivityPage } from "pages/activity.slint";
 import { RunDirectionPage } from "pages/run-direction.slint";
 import { PreflightPage } from "pages/preflight.slint";
-import { ProviderRow, ConnectionRow, ActivityRow, PreflightRow } from "models.slint";
+import {
+    ProviderRow,
+    ConnectionRow,
+    ActivityRow,
+    PreflightRow,
+} from "models.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -211,7 +225,9 @@ export component AppWindow inherits Window {
     callback return-to-run-direction();
     callback set-connection-filter(int);
 
-    init => { Palette.color-scheme = ColorScheme.unknown; }
+    init => {
+        Palette.color-scheme = ColorScheme.unknown;
+    }
     apply-appearance-preference => {
         Colors.dark-mode = root.resolved-dark-mode;
         Palette.color-scheme = root.appearance-preference == 1 ? ColorScheme.light : root.appearance-preference == 2 ? ColorScheme.dark : ColorScheme.unknown;
@@ -236,218 +252,709 @@ export component AppWindow inherits Window {
             focus-on-tab-navigation: false;
             capture-key-pressed(event) => {
                 if event.text == Key.Escape {
-                    if root.page == Page.provider-delete { root.cancel-provider-delete(); return accept; }
-                    if root.page == Page.connection-delete { root.cancel-connection-delete(); return accept; }
-                    if root.page == Page.diagnostics { root.dismiss-diagnostics(); return accept; }
-                    if root.page == Page.run-direction { root.cancel-run-direction(); return accept; }
-                    if root.page == Page.preflight { root.return-to-run-direction(); return accept; }
-                    if root.page == Page.activity-cancel { root.dismiss-cancel-activity(); return accept; }
-                    if root.page == Page.activity-result { root.dismiss-activity-result(); return accept; }
-                    if root.page == Page.activity-progress { root.dismiss-activity-progress(); return accept; }
-                    if root.page == Page.provider-save-confirmation { root.cancel-save-provider(); return accept; }
-                    if root.page == Page.connection-discard-confirmation { root.cancel-discard-connection(); return accept; }
-                    if root.page == Page.provider-discard-confirmation { root.cancel-discard-provider(); return accept; }
-                    if root.page == Page.provider-form { root.request-discard-provider(); return accept; }
-                    if root.page == Page.connection-form { root.request-discard-connection(); return accept; }
+                    if root.page == Page.provider-delete {
+                        root.cancel-provider-delete();
+                        return accept;
+                    }
+                    if root.page == Page.connection-delete {
+                        root.cancel-connection-delete();
+                        return accept;
+                    }
+                    if root.page == Page.diagnostics {
+                        root.dismiss-diagnostics();
+                        return accept;
+                    }
+                    if root.page == Page.run-direction {
+                        root.cancel-run-direction();
+                        return accept;
+                    }
+                    if root.page == Page.preflight {
+                        root.return-to-run-direction();
+                        return accept;
+                    }
+                    if root.page == Page.activity-cancel {
+                        root.dismiss-cancel-activity();
+                        return accept;
+                    }
+                    if root.page == Page.activity-result {
+                        root.dismiss-activity-result();
+                        return accept;
+                    }
+                    if root.page == Page.activity-progress {
+                        root.dismiss-activity-progress();
+                        return accept;
+                    }
+                    if root.page == Page.provider-save-confirmation {
+                        root.cancel-save-provider();
+                        return accept;
+                    }
+                    if root.page == Page.connection-discard-confirmation {
+                        root.cancel-discard-connection();
+                        return accept;
+                    }
+                    if root.page == Page.provider-discard-confirmation {
+                        root.cancel-discard-provider();
+                        return accept;
+                    }
+                    if root.page == Page.provider-form {
+                        root.request-discard-provider();
+                        return accept;
+                    }
+                    if root.page == Page.connection-form {
+                        root.request-discard-connection();
+                        return accept;
+                    }
                 }
                 reject
             }
         }
 
         VerticalBox {
-        x: 0px;
-        y: 0px;
-        width: parent.width;
-        height: parent.height;
-        padding: 16px;
-        padding-left: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
-        spacing: 16px;
+            x: 0px;
+            y: 0px;
+            width: parent.width;
+            height: parent.height;
+            padding: 16px;
+            padding-left: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
+            spacing: 16px;
 
-        if root.width >= Dimensions.medium-layout-breakpoint && root.width < Dimensions.desktop-layout-breakpoint : VerticalBox {
+            if root.width >= Dimensions.medium-layout-breakpoint && root.width < Dimensions.desktop-layout-breakpoint: VerticalBox {
+                accessible-role: navigation;
+                accessible-label: "Primary navigation";
+                spacing: 6px;
+                Text {
+                    text: "SYNCPAK";
+                    color: Colors.border;
+                    font-size: 17px;
+                    font-weight: 800;
+                    letter-spacing: 2px;
+                }
+
+                HorizontalBox {
+                    spacing: 6px;
+                    Button {
+                        accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
+                        text: "Connections";
+                        primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
+                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        clicked => {
+                            root.request-navigation(4);
+                        }
+                    }
+
+                    Button {
+                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
+                        text: "Providers";
+                        primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        clicked => {
+                            root.request-navigation(1);
+                        }
+                    }
+                }
+
+                HorizontalBox {
+                    spacing: 6px;
+                    Button {
+                        accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
+                        text: "Activity";
+                        primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
+                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        clicked => {
+                            root.request-navigation(9);
+                        }
+                    }
+
+                    Button {
+                        accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
+                        text: "Privacy";
+                        primary: root.page == 3;
+                        enabled: !root.confirmation-open;
+                        clicked => {
+                            root.request-navigation(3);
+                        }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+                }
+            }
+
+            if root.status-message != "": Rectangle {
+                accessible-role: region;
+                accessible-label: "Action needed";
+                background: Colors.danger-surface;
+                border-color: Colors.danger;
+                border-width: 1px;
+                border-radius: 8px;
+                min-height: 58px;
+                VerticalBox {
+                    padding: 10px;
+                    spacing: 4px;
+                    Text {
+                        text: "Action needed";
+                        color: Colors.danger;
+                        font-weight: 700;
+                    }
+
+                    Text {
+                        accessible-live-region: assertive;
+                        text: root.status-message;
+                        color: Colors.danger;
+                        wrap: word-wrap;
+                    }
+
+                    if root.diagnostic-entry-count > 0: Button {
+                        accessible-label: "View redacted diagnostics for this error";
+                        text: "View redacted diagnostics";
+                        clicked => {
+                            root.show-diagnostics();
+                        }
+                    }
+                }
+            }
+
+            if root.notice-message != "": Rectangle {
+                accessible-role: region;
+                accessible-label: "Update";
+                background: Colors.success-surface;
+                border-color: Colors.success;
+                border-width: 1px;
+                border-radius: 8px;
+                min-height: 48px;
+                VerticalBox {
+                    padding: 10px;
+                    spacing: 4px;
+                    Text {
+                        text: "Update";
+                        color: Colors.success;
+                        font-weight: 700;
+                    }
+
+                    Text {
+                        accessible-live-region: polite;
+                        text: root.notice-message;
+                        color: Colors.success;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+
+            if root.active-activity-id != "" && !root.confirmation-open: Rectangle {
+                accessible-role: region;
+                accessible-label: "Active operation " + root.active-activity-title;
+                background: Colors.border;
+                border-radius: 8px;
+                min-height: 62px;
+                VerticalBox {
+                    padding: 12px;
+                    spacing: 8px;
+                    VerticalBox {
+                        spacing: 2px;
+                        Text {
+                            text: root.active-activity-title;
+                            color: Colors.surface;
+                            font-weight: 700;
+                            wrap: word-wrap;
+                        }
+
+                        Text {
+                            text: root.active-activity-progress;
+                            color: Colors.surface;
+                            wrap: word-wrap;
+                        }
+                    }
+
+                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalBox {
+                        spacing: 8px;
+                        Button {
+                            accessible-label: "View progress for " + root.active-activity-title;
+                            text: "View progress";
+                            clicked => {
+                                root.show-activity-progress(root.active-activity-id);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: "Cancel " + root.active-activity-title;
+                            text: "Cancel";
+                            clicked => {
+                                root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
+                            }
+                        }
+                    }
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+                        spacing: 8px;
+                        Button {
+                            accessible-label: "View progress for " + root.active-activity-title;
+                            text: "View progress";
+                            clicked => {
+                                root.show-activity-progress(root.active-activity-id);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: "Cancel " + root.active-activity-title;
+                            text: "Cancel";
+                            clicked => {
+                                root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if root.page == Page.welcome: WelcomePage {
+                configuration-unavailable: root.configuration-unavailable;
+                retry-configuration => {
+                    root.retry-configuration();
+                }
+                show-add-provider => {
+                    root.show-add-provider();
+                }
+                show-privacy => {
+                    root.show-privacy();
+                }
+            }
+
+            if root.page == Page.providers: ProvidersPage {
+                providers: root.providers;
+                load-failed: root.providers-load-failed;
+                show-providers => {
+                    root.show-providers();
+                }
+                show-add-provider => {
+                    root.show-add-provider();
+                }
+                verify-saved-provider(id) => {
+                    root.verify-saved-provider(id);
+                }
+                request-provider-edit(id) => {
+                    root.request-provider-edit(id);
+                }
+                request-provider-delete(id) => {
+                    root.request-provider-delete(id);
+                }
+            }
+
+            if root.page == Page.provider-form: ProviderFormPage {
+                provider-form-id <=> root.provider-form-id;
+                provider-form-name <=> root.provider-form-name;
+                provider-form-kind <=> root.provider-form-kind;
+                provider-form-account-id <=> root.provider-form-account-id;
+                provider-form-region <=> root.provider-form-region;
+                provider-form-bucket <=> root.provider-form-bucket;
+                provider-form-access-key <=> root.provider-form-access-key;
+                provider-form-secret-key <=> root.provider-form-secret-key;
+                provider-form-endpoint <=> root.provider-form-endpoint;
+                provider-form-session-token <=> root.provider-form-session-token;
+                provider-secret-visible <=> root.provider-secret-visible;
+                provider-advanced-expanded <=> root.provider-advanced-expanded;
+                provider-verifying: root.provider-verifying;
+                provider-verified-buckets: root.provider-verified-buckets;
+                provider-bucket-list-empty: root.provider-bucket-list-empty;
+                toggle-provider-secret-visibility => {
+                    root.toggle-provider-secret-visibility();
+                }
+                request-discard-provider => {
+                    root.request-discard-provider();
+                }
+                request-save-provider => {
+                    root.request-save-provider();
+                }
+                verify-provider => {
+                    root.verify-provider();
+                }
+                save-and-verify-provider => {
+                    root.save-and-verify-provider();
+                }
+            }
+
+            if root.page == Page.provider-save-confirmation: ProviderSaveConfirmationPage {
+                provider-name: root.provider-form-name;
+                cancel => {
+                    root.cancel-save-provider();
+                }
+                save => {
+                    root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key);
+                }
+            }
+
+            if root.page == Page.provider-discard-confirmation: ProviderDiscardConfirmationPage {
+                provider-name: root.provider-form-name;
+                cancel => {
+                    root.cancel-discard-provider();
+                }
+                confirm => {
+                    root.confirm-discard-provider();
+                }
+            }
+
+            if root.page == Page.connections: ConnectionsPage {
+                connections: root.connections;
+                connections-total: root.connections-total;
+                providers-total: root.providers-total;
+                connection-filter <=> root.connection-filter;
+                connections-load-failed: root.connections-load-failed;
+                show-connections => {
+                    root.show-connections();
+                }
+                show-add-provider => {
+                    root.show-add-provider();
+                }
+                show-add-connection => {
+                    root.show-add-connection();
+                }
+                set-connection-filter(value) => {
+                    root.set-connection-filter(value);
+                }
+                request-run-connection(id) => {
+                    root.request-run-connection(id);
+                }
+                request-connection-edit(id) => {
+                    root.request-connection-edit(id);
+                }
+                request-connection-delete(id) => {
+                    root.request-connection-delete(id);
+                }
+            }
+
+            if root.page == Page.connection-form: ConnectionFormPage {
+                connection-form-id <=> root.connection-form-id;
+                connection-form-name <=> root.connection-form-name;
+                connection-form-provider <=> root.connection-form-provider;
+                connection-form-bucket <=> root.connection-form-bucket;
+                connection-form-remote <=> root.connection-form-remote;
+                connection-form-local <=> root.connection-form-local;
+                connection-form-mode <=> root.connection-form-mode;
+                connection-form-retention <=> root.connection-form-retention;
+                provider-names: root.provider-names;
+                provider-buckets: root.provider-buckets;
+                connection-verified-buckets: root.connection-verified-buckets;
+                connection-bucket-list-checked: root.connection-bucket-list-checked;
+                connection-providers-loading: root.connection-providers-loading;
+                connection-providers-load-failed: root.connection-providers-load-failed;
+                folder-picker-open: root.folder-picker-open;
+                select-local-folder => {
+                    root.select-local-folder();
+                }
+                select-connection-provider(index) => {
+                    root.select-connection-provider(index);
+                }
+                retry-connection-providers => {
+                    root.retry-connection-providers();
+                }
+                save-connection(name, provider, bucket, remote, local, mode, retention) => {
+                    root.save-connection(name, provider, bucket, remote, local, mode, retention);
+                }
+                request-discard-connection => {
+                    root.request-discard-connection();
+                }
+            }
+
+            if root.page == Page.connection-discard-confirmation: ConnectionDiscardConfirmationPage {
+                connection-name: root.connection-form-name;
+                cancel => {
+                    root.cancel-discard-connection();
+                }
+                confirm => {
+                    root.confirm-discard-connection();
+                }
+            }
+
+            if root.page == Page.privacy: PrivacyPage {
+                app-version: root.app-version;
+                appearance-preference <=> root.appearance-preference;
+                configuration-unavailable: root.configuration-unavailable;
+                apply-appearance-preference => {
+                    root.apply-appearance-preference();
+                }
+                change-appearance-preference(index) => {
+                    root.change-appearance-preference(index);
+                }
+                show-diagnostics => {
+                    root.show-diagnostics();
+                }
+                show-welcome => {
+                    root.show-welcome();
+                }
+            }
+
+            if root.page == Page.diagnostics: DiagnosticsPage {
+                diagnostic-text: root.diagnostic-text;
+                include-paths <=> root.diagnostic-include-paths;
+                entry-count: root.diagnostic-entry-count;
+                copy-status <=> root.diagnostic-copy-status;
+                set-include-paths(value) => {
+                    root.set-diagnostic-include-paths(value);
+                }
+                dismiss => {
+                    root.dismiss-diagnostics();
+                }
+            }
+
+            if root.page == Page.activity: ActivityPage {
+                activity-rows: root.activity-rows;
+                activity-clearable-count: root.activity-clearable-count;
+                clear-completed-activity => {
+                    root.clear-completed-activity();
+                }
+                show-activity-result(id) => {
+                    root.show-activity-result(id);
+                }
+                show-activity-progress(id) => {
+                    root.show-activity-progress(id);
+                }
+                request-cancel-activity(id, title) => {
+                    root.request-cancel-activity(id, title);
+                }
+                remove-queued-activity(id) => {
+                    root.remove-queued-activity(id);
+                }
+            }
+
+            if root.page == Page.activity-result: ActivityResultPage {
+                title: root.activity-result-title;
+                status: root.activity-result-status;
+                summary: root.activity-result-summary;
+                completed: root.activity-result-completed-count;
+                incomplete: root.activity-result-incomplete-count;
+                not-started: root.activity-result-not-started-count;
+                details: root.activity-result-details;
+                can-retry: root.activity-result-can-retry;
+                retry => {
+                    root.retry-activity-result();
+                }
+                dismiss => {
+                    root.dismiss-activity-result();
+                }
+            }
+
+            if root.page == Page.activity-progress: ActivityProgressPage {
+                id: root.activity-progress-id;
+                title: root.activity-progress-title;
+                phase: root.activity-progress-phase;
+                summary: root.activity-progress-summary;
+                items: root.activity-progress-items;
+                bytes: root.activity-progress-bytes;
+                path: root.activity-progress-path;
+                fraction: root.activity-progress-fraction;
+                percent: root.activity-progress-percent;
+                dismiss => {
+                    root.dismiss-activity-progress();
+                }
+                request-cancel(id, title) => {
+                    root.request-cancel-activity(id, title);
+                }
+            }
+
+            if root.page == Page.provider-delete: ProviderDeletePage {
+                provider-name: root.pending-provider-name;
+                connection-count: root.pending-connection-count;
+                connections: root.pending-provider-connections;
+                cancel => {
+                    root.cancel-provider-delete();
+                }
+                confirm => {
+                    root.confirm-provider-delete();
+                }
+            }
+            if root.page == Page.connection-delete: ConnectionDeletePage {
+                connection-name: root.pending-connection-name;
+                cancel => {
+                    root.cancel-connection-delete();
+                }
+                confirm => {
+                    root.confirm-connection-delete();
+                }
+            }
+            if root.page == Page.activity-cancel: ActivityCancelPage {
+                activity-name: root.pending-cancel-activity-name;
+                dismiss => {
+                    root.dismiss-cancel-activity();
+                }
+                confirm => {
+                    root.confirm-cancel-activity();
+                }
+            }
+            if root.page == Page.run-direction: RunDirectionPage {
+                connection-name: root.run-connection-name;
+                connection-mode: root.run-connection-mode;
+                local-endpoint: root.run-local-endpoint;
+                remote-endpoint: root.run-remote-endpoint;
+                archive-upload-details: root.run-archive-upload-details;
+                archive-download-details: root.run-archive-download-details;
+                allows-both-ways: root.run-allows-both-ways;
+                direction: root.run-direction;
+                choose-direction(direction) => {
+                    root.choose-run-direction(direction);
+                }
+                cancel => {
+                    root.cancel-run-direction();
+                }
+                begin-preflight => {
+                    root.begin-preflight();
+                }
+            }
+            if root.page == Page.preflight: PreflightPage {
+                connection-name: root.run-connection-name;
+                connection-mode: root.run-connection-mode;
+                local-endpoint: root.run-local-endpoint;
+                remote-endpoint: root.run-remote-endpoint;
+                direction: root.run-direction;
+                loading: root.preflight-loading;
+                failed: root.preflight-failed;
+                failure-message: root.preflight-failure-message;
+                additions: root.preflight-additions;
+                overwrites: root.preflight-overwrites;
+                deletions: root.preflight-deletions;
+                skipped: root.preflight-skipped;
+                start-action: root.preflight-start-action;
+                requires-mirror-confirmation: root.preflight-requires-mirror-confirmation;
+                mirror-confirmed <=> root.preflight-mirror-confirmed;
+                item-filter: root.preflight-item-filter;
+                items: root.preflight-items;
+                visible-items: root.preflight-visible-items;
+                start-operation => {
+                    root.start-preflight-operation();
+                }
+                set-item-filter(filter) => {
+                    root.set-preflight-item-filter(filter);
+                }
+                return-to-direction => {
+                    root.return-to-run-direction();
+                }
+                begin-preflight => {
+                    root.begin-preflight();
+                }
+            }
+            if root.width < Dimensions.medium-layout-breakpoint: Rectangle {
+                accessible-role: navigation;
+                accessible-label: "Primary navigation";
+                background: Colors.surface;
+                border-color: Colors.border;
+                border-width: 1px;
+                border-radius: 8px;
+                min-height: 88px;
+                VerticalBox {
+                    padding: 8px;
+                    spacing: 6px;
+                    HorizontalBox {
+                        spacing: 6px;
+                        Button {
+                            accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
+                            text: "Connections";
+                            primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
+                            enabled: !root.confirmation-open && !root.configuration-unavailable;
+                            clicked => {
+                                root.request-navigation(4);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
+                            text: "Providers";
+                            primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                            enabled: !root.confirmation-open && !root.configuration-unavailable;
+                            clicked => {
+                                root.request-navigation(1);
+                            }
+                        }
+                    }
+
+                    HorizontalBox {
+                        spacing: 6px;
+                        Button {
+                            accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
+                            text: "Activity";
+                            primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
+                            enabled: !root.confirmation-open && !root.configuration-unavailable;
+                            clicked => {
+                                root.request-navigation(9);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
+                            text: "Privacy";
+                            primary: root.page == 3;
+                            enabled: !root.confirmation-open;
+                            clicked => {
+                                root.request-navigation(3);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if root.width >= Dimensions.desktop-layout-breakpoint: Rectangle {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
-            spacing: 6px;
-            Text { text: "SYNCPAK"; color: Colors.border; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
-            HorizontalBox { spacing: 6px;
-                Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(4); } }
-                Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(1); } }
-            }
-            HorizontalBox { spacing: 6px;
-                Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(9); } }
-                Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; enabled: !root.confirmation-open; clicked => { root.request-navigation(3); } }
-                Rectangle { horizontal-stretch: 1; }
-            }
-        }
-
-        if root.status-message != "" : Rectangle {
-            accessible-role: region;
-            accessible-label: "Action needed";
-            background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 58px;
-            VerticalBox { padding: 10px; spacing: 4px;
-                Text { text: "Action needed"; color: Colors.danger; font-weight: 700; }
-                Text { accessible-live-region: assertive; text: root.status-message; color: Colors.danger; wrap: word-wrap; }
-                if root.diagnostic-entry-count > 0 : Button { accessible-label: "View redacted diagnostics for this error"; text: "View redacted diagnostics"; clicked => { root.show-diagnostics(); } }
-            }
-        }
-
-        if root.notice-message != "" : Rectangle {
-            accessible-role: region;
-            accessible-label: "Update";
-            background: Colors.success-surface; border-color: Colors.success; border-width: 1px; border-radius: 8px; min-height: 48px;
-            VerticalBox { padding: 10px; spacing: 4px;
-                Text { text: "Update"; color: Colors.success; font-weight: 700; }
-                Text { accessible-live-region: polite; text: root.notice-message; color: Colors.success; wrap: word-wrap; }
-            }
-        }
-
-        if root.active-activity-id != "" && !root.confirmation-open : Rectangle {
-            accessible-role: region;
-            accessible-label: "Active operation " + root.active-activity-title;
-            background: Colors.border; border-radius: 8px; min-height: 62px;
-            VerticalBox { padding: 12px; spacing: 8px;
-                VerticalBox { spacing: 2px;
-                    Text { text: root.active-activity-title; color: Colors.surface; font-weight: 700; wrap: word-wrap; }
-                    Text { text: root.active-activity-progress; color: Colors.surface; wrap: word-wrap; }
-                }
-                if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { spacing: 8px;
-                    Button { accessible-label: "View progress for " + root.active-activity-title; text: "View progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
-                    Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
-                }
-                if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
-                    Button { accessible-label: "View progress for " + root.active-activity-title; text: "View progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
-                    Button { accessible-label: "Cancel " + root.active-activity-title; text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
-                }
-            }
-        }
-
-        if root.page == Page.welcome : WelcomePage {
-            configuration-unavailable: root.configuration-unavailable;
-            retry-configuration => { root.retry-configuration(); }
-            show-add-provider => { root.show-add-provider(); }
-            show-privacy => { root.show-privacy(); }
-        }
-
-        if root.page == Page.providers : ProvidersPage {
-            providers: root.providers;
-            load-failed: root.providers-load-failed;
-            show-providers => { root.show-providers(); }
-            show-add-provider => { root.show-add-provider(); }
-            verify-saved-provider(id) => { root.verify-saved-provider(id); }
-            request-provider-edit(id) => { root.request-provider-edit(id); }
-            request-provider-delete(id) => { root.request-provider-delete(id); }
-        }
-
-        if root.page == Page.provider-form : ProviderFormPage {
-            provider-form-id <=> root.provider-form-id; provider-form-name <=> root.provider-form-name; provider-form-kind <=> root.provider-form-kind; provider-form-account-id <=> root.provider-form-account-id; provider-form-region <=> root.provider-form-region; provider-form-bucket <=> root.provider-form-bucket; provider-form-access-key <=> root.provider-form-access-key; provider-form-secret-key <=> root.provider-form-secret-key; provider-form-endpoint <=> root.provider-form-endpoint; provider-form-session-token <=> root.provider-form-session-token;
-            provider-secret-visible <=> root.provider-secret-visible; provider-advanced-expanded <=> root.provider-advanced-expanded; provider-verifying: root.provider-verifying; provider-verified-buckets: root.provider-verified-buckets; provider-bucket-list-empty: root.provider-bucket-list-empty;
-            toggle-provider-secret-visibility => { root.toggle-provider-secret-visibility(); } request-discard-provider => { root.request-discard-provider(); } request-save-provider => { root.request-save-provider(); } verify-provider => { root.verify-provider(); } save-and-verify-provider => { root.save-and-verify-provider(); }
-        }
-
-        if root.page == Page.provider-save-confirmation : ProviderSaveConfirmationPage {
-            provider-name: root.provider-form-name; cancel => { root.cancel-save-provider(); }
-            save => { root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key); }
-        }
-
-        if root.page == Page.provider-discard-confirmation : ProviderDiscardConfirmationPage {
-            provider-name: root.provider-form-name; cancel => { root.cancel-discard-provider(); } confirm => { root.confirm-discard-provider(); }
-        }
-
-        if root.page == Page.connections : ConnectionsPage {
-            connections: root.connections; connections-total: root.connections-total; providers-total: root.providers-total; connection-filter <=> root.connection-filter; connections-load-failed: root.connections-load-failed;
-            show-connections => { root.show-connections(); } show-add-provider => { root.show-add-provider(); } show-add-connection => { root.show-add-connection(); } set-connection-filter(value) => { root.set-connection-filter(value); } request-run-connection(id) => { root.request-run-connection(id); } request-connection-edit(id) => { root.request-connection-edit(id); } request-connection-delete(id) => { root.request-connection-delete(id); }
-        }
-
-        if root.page == Page.connection-form : ConnectionFormPage {
-            connection-form-id <=> root.connection-form-id; connection-form-name <=> root.connection-form-name; connection-form-provider <=> root.connection-form-provider; connection-form-bucket <=> root.connection-form-bucket; connection-form-remote <=> root.connection-form-remote; connection-form-local <=> root.connection-form-local; connection-form-mode <=> root.connection-form-mode; connection-form-retention <=> root.connection-form-retention;
-            provider-names: root.provider-names; provider-buckets: root.provider-buckets; connection-verified-buckets: root.connection-verified-buckets; connection-bucket-list-checked: root.connection-bucket-list-checked; connection-providers-loading: root.connection-providers-loading; connection-providers-load-failed: root.connection-providers-load-failed; folder-picker-open: root.folder-picker-open;
-            select-local-folder => { root.select-local-folder(); } select-connection-provider(index) => { root.select-connection-provider(index); } retry-connection-providers => { root.retry-connection-providers(); } save-connection(name, provider, bucket, remote, local, mode, retention) => { root.save-connection(name, provider, bucket, remote, local, mode, retention); } request-discard-connection => { root.request-discard-connection(); }
-        }
-
-        if root.page == Page.connection-discard-confirmation : ConnectionDiscardConfirmationPage {
-            connection-name: root.connection-form-name; cancel => { root.cancel-discard-connection(); } confirm => { root.confirm-discard-connection(); }
-        }
-
-        if root.page == Page.privacy : PrivacyPage {
-            app-version: root.app-version; appearance-preference <=> root.appearance-preference; configuration-unavailable: root.configuration-unavailable;
-            apply-appearance-preference => { root.apply-appearance-preference(); }
-            change-appearance-preference(index) => { root.change-appearance-preference(index); }
-            show-diagnostics => { root.show-diagnostics(); }
-            show-welcome => { root.show-welcome(); }
-        }
-
-        if root.page == Page.diagnostics : DiagnosticsPage {
-            diagnostic-text: root.diagnostic-text; include-paths <=> root.diagnostic-include-paths; entry-count: root.diagnostic-entry-count; copy-status <=> root.diagnostic-copy-status;
-            set-include-paths(value) => { root.set-diagnostic-include-paths(value); }
-            dismiss => { root.dismiss-diagnostics(); }
-        }
-
-        if root.page == Page.activity : ActivityPage {
-            activity-rows: root.activity-rows; activity-clearable-count: root.activity-clearable-count;
-            clear-completed-activity => { root.clear-completed-activity(); } show-activity-result(id) => { root.show-activity-result(id); } show-activity-progress(id) => { root.show-activity-progress(id); } request-cancel-activity(id, title) => { root.request-cancel-activity(id, title); } remove-queued-activity(id) => { root.remove-queued-activity(id); }
-        }
-
-        if root.page == Page.activity-result : ActivityResultPage { title: root.activity-result-title; status: root.activity-result-status; summary: root.activity-result-summary; completed: root.activity-result-completed-count; incomplete: root.activity-result-incomplete-count; not-started: root.activity-result-not-started-count; details: root.activity-result-details; can-retry: root.activity-result-can-retry; retry => { root.retry-activity-result(); } dismiss => { root.dismiss-activity-result(); } }
-
-        if root.page == Page.activity-progress : ActivityProgressPage {
-            id: root.activity-progress-id; title: root.activity-progress-title; phase: root.activity-progress-phase; summary: root.activity-progress-summary; items: root.activity-progress-items; bytes: root.activity-progress-bytes; path: root.activity-progress-path; fraction: root.activity-progress-fraction; percent: root.activity-progress-percent;
-            dismiss => { root.dismiss-activity-progress(); } request-cancel(id, title) => { root.request-cancel-activity(id, title); }
-        }
-
-        if root.page == Page.provider-delete : ProviderDeletePage { provider-name: root.pending-provider-name; connection-count: root.pending-connection-count; connections: root.pending-provider-connections; cancel => { root.cancel-provider-delete(); } confirm => { root.confirm-provider-delete(); } }
-        if root.page == Page.connection-delete : ConnectionDeletePage { connection-name: root.pending-connection-name; cancel => { root.cancel-connection-delete(); } confirm => { root.confirm-connection-delete(); } }
-        if root.page == Page.activity-cancel : ActivityCancelPage { activity-name: root.pending-cancel-activity-name; dismiss => { root.dismiss-cancel-activity(); } confirm => { root.confirm-cancel-activity(); } }
-        if root.page == Page.run-direction : RunDirectionPage {
-            connection-name: root.run-connection-name; connection-mode: root.run-connection-mode; local-endpoint: root.run-local-endpoint; remote-endpoint: root.run-remote-endpoint; archive-upload-details: root.run-archive-upload-details; archive-download-details: root.run-archive-download-details; allows-both-ways: root.run-allows-both-ways; direction: root.run-direction;
-            choose-direction(direction) => { root.choose-run-direction(direction); } cancel => { root.cancel-run-direction(); } begin-preflight => { root.begin-preflight(); }
-        }
-        if root.page == Page.preflight : PreflightPage {
-            connection-name: root.run-connection-name; connection-mode: root.run-connection-mode; local-endpoint: root.run-local-endpoint; remote-endpoint: root.run-remote-endpoint; direction: root.run-direction;
-            loading: root.preflight-loading; failed: root.preflight-failed; failure-message: root.preflight-failure-message; additions: root.preflight-additions; overwrites: root.preflight-overwrites; deletions: root.preflight-deletions; skipped: root.preflight-skipped; start-action: root.preflight-start-action; requires-mirror-confirmation: root.preflight-requires-mirror-confirmation; mirror-confirmed <=> root.preflight-mirror-confirmed; item-filter: root.preflight-item-filter; items: root.preflight-items; visible-items: root.preflight-visible-items;
-            start-operation => { root.start-preflight-operation(); } set-item-filter(filter) => { root.set-preflight-item-filter(filter); } return-to-direction => { root.return-to-run-direction(); } begin-preflight => { root.begin-preflight(); }
-        }
-        if root.width < Dimensions.medium-layout-breakpoint : Rectangle {
-            accessible-role: navigation;
-            accessible-label: "Primary navigation";
+            x: 16px;
+            y: 16px;
+            width: 144px;
+            height: root.height - 32px;
             background: Colors.surface;
             border-color: Colors.border;
             border-width: 1px;
             border-radius: 8px;
-            min-height: 88px;
             VerticalBox {
-                padding: 8px;
-                spacing: 6px;
-                HorizontalBox { spacing: 6px;
-                    Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(4); } }
-                    Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(1); } }
+                padding: 12px;
+                spacing: 8px;
+                Text {
+                    text: "SYNCPAK";
+                    color: Colors.border;
+                    font-size: 17px;
+                    font-weight: 800;
+                    letter-spacing: 2px;
                 }
-                HorizontalBox { spacing: 6px;
-                    Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(9); } }
-                    Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; enabled: !root.confirmation-open; clicked => { root.request-navigation(3); } }
+
+                Button {
+                    accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
+                    text: "Connections";
+                    primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
+                    enabled: !root.confirmation-open && !root.configuration-unavailable;
+                    clicked => {
+                        root.request-navigation(4);
+                    }
+                }
+
+                Button {
+                    accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
+                    text: "Providers";
+                    primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                    enabled: !root.confirmation-open && !root.configuration-unavailable;
+                    clicked => {
+                        root.request-navigation(1);
+                    }
+                }
+
+                Button {
+                    accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
+                    text: "Activity";
+                    primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
+                    enabled: !root.confirmation-open && !root.configuration-unavailable;
+                    clicked => {
+                        root.request-navigation(9);
+                    }
+                }
+
+                Button {
+                    accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
+                    text: "Privacy";
+                    primary: root.page == 3;
+                    enabled: !root.confirmation-open;
+                    clicked => {
+                        root.request-navigation(3);
+                    }
+                }
+
+                Rectangle {
+                    vertical-stretch: 1;
                 }
             }
         }
-        }
-    if root.width >= Dimensions.desktop-layout-breakpoint : Rectangle {
-        accessible-role: navigation;
-        accessible-label: "Primary navigation";
-        x: 16px;
-        y: 16px;
-        width: 144px;
-        height: root.height - 32px;
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
-        VerticalBox {
-            padding: 12px;
-            spacing: 8px;
-            Text { text: "SYNCPAK"; color: Colors.border; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
-            Button { accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections"; text: "Connections"; primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(4); } }
-            Button { accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers"; text: "Providers"; primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(1); } }
-            Button { accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity"; text: "Activity"; primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17; enabled: !root.confirmation-open && !root.configuration-unavailable; clicked => { root.request-navigation(9); } }
-            Button { accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy"; text: "Privacy"; primary: root.page == 3; enabled: !root.confirmation-open; clicked => { root.request-navigation(3); } }
-            Rectangle { vertical-stretch: 1; }
-        }
-    }
     }
 }

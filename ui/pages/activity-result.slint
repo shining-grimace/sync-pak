@@ -1,19 +1,125 @@
-import { Button, HorizontalBox, ListView, VerticalBox } from "std-widgets.slint";
+import {
+    Button,
+    HorizontalBox,
+    ListView,
+    VerticalBox,
+} from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 
 export component ActivityResultPage inherits CenteredPageRoot {
-    in property <string> title; in property <string> status; in property <string> summary; in property <int> completed; in property <int> incomplete; in property <int> not-started; in property <[string]> details; in property <bool> can-retry;
-    callback retry(); callback dismiss();
-    Text { text: "Result: " + root.title; color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-    Text { text: root.status; font-weight: 700; } Text { text: root.summary; color: Colors.text-secondary; wrap: word-wrap; }
-    Rectangle { accessible-role: region; accessible-label: "Outcome totals: " + root.completed + " completed, " + root.incomplete + " incomplete, " + root.not-started + " not started"; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
-        if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { padding: 12px; spacing: 4px; Text { text: root.completed + " completed"; font-weight: 700; } Text { text: root.incomplete + " incomplete"; font-weight: 700; } Text { text: root.not-started + " not started"; font-weight: 700; } }
-        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { padding: 12px; spacing: 12px; Text { text: root.completed + " completed"; font-weight: 700; } Text { text: root.incomplete + " incomplete"; font-weight: 700; } Text { text: root.not-started + " not started"; font-weight: 700; } }
+    in property <string> title;
+    in property <string> status;
+    in property <string> summary;
+    in property <int> completed;
+    in property <int> incomplete;
+    in property <int> not-started;
+    in property <[string]> details;
+    in property <bool> can-retry;
+    callback retry();
+    callback dismiss();
+    Text {
+        text: "Result: " + root.title;
+        color: Colors.text-primary;
+        font-size: 32px;
+        font-weight: 800;
+        wrap: word-wrap;
     }
-    if root.details.length == 0 : Text { text: "No actions were started for this operation."; color: Colors.text-secondary; wrap: word-wrap; }
-    if root.details.length > 0 : VerticalBox { spacing: 6px; Text { text: "Action outcomes"; font-weight: 700; } ListView { accessible-label: "Action outcomes"; height: 240px; vertical-scrollbar-policy: always-on; for detail in root.details : Text { accessible-role: list-item; text: detail; wrap: word-wrap; } } }
-    if root.can-retry : Button { accessible-label: "Retry " + root.title + " with a new preflight review"; text: "Retry with a new preflight"; primary: true; clicked => { root.retry(); } }
-    Button { accessible-label: "Return to activity"; text: "Back to activity"; clicked => { root.dismiss(); } }
+
+    Text {
+        text: root.status;
+        font-weight: 700;
+    }
+
+    Text {
+        text: root.summary;
+        color: Colors.text-secondary;
+        wrap: word-wrap;
+    }
+
+    Rectangle {
+        accessible-role: region;
+        accessible-label: "Outcome totals: " + root.completed + " completed, " + root.incomplete + " incomplete, " + root.not-started + " not started";
+        background: Colors.surface;
+        border-color: Colors.border;
+        border-width: 1px;
+        border-radius: 8px;
+        min-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
+        if root.width < Dimensions.narrow-layout-breakpoint: VerticalBox {
+            padding: 12px;
+            spacing: 4px;
+            Text {
+                text: root.completed + " completed";
+                font-weight: 700;
+            }
+
+            Text {
+                text: root.incomplete + " incomplete";
+                font-weight: 700;
+            }
+
+            Text {
+                text: root.not-started + " not started";
+                font-weight: 700;
+            }
+        }
+        if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+            padding: 12px;
+            spacing: 12px;
+            Text {
+                text: root.completed + " completed";
+                font-weight: 700;
+            }
+
+            Text {
+                text: root.incomplete + " incomplete";
+                font-weight: 700;
+            }
+
+            Text {
+                text: root.not-started + " not started";
+                font-weight: 700;
+            }
+        }
+    }
+
+    if root.details.length == 0: Text {
+        text: "No actions were started for this operation.";
+        color: Colors.text-secondary;
+        wrap: word-wrap;
+    }
+    if root.details.length > 0: VerticalBox {
+        spacing: 6px;
+        Text {
+            text: "Action outcomes";
+            font-weight: 700;
+        }
+
+        ListView {
+            accessible-label: "Action outcomes";
+            height: 240px;
+            vertical-scrollbar-policy: always-on;
+            for detail in root.details: Text {
+                accessible-role: list-item;
+                text: detail;
+                wrap: word-wrap;
+            }
+        }
+    }
+    if root.can-retry: Button {
+        accessible-label: "Retry " + root.title + " with a new preflight review";
+        text: "Retry with a new preflight";
+        primary: true;
+        clicked => {
+            root.retry();
+        }
+    }
+    Button {
+        accessible-label: "Return to activity";
+        text: "Back to activity";
+        clicked => {
+            root.dismiss();
+        }
+    }
 }

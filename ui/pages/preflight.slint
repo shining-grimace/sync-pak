@@ -1,151 +1,436 @@
-import { Button, CheckBox, HorizontalBox, ListView, ScrollView, VerticalBox } from "std-widgets.slint";
+import {
+    Button,
+    CheckBox,
+    HorizontalBox,
+    ListView,
+    ScrollView,
+    VerticalBox,
+} from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { PreflightRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
 
 export component PreflightPage inherits ScrollView {
-    in property <string> connection-name; in property <string> connection-mode; in property <string> local-endpoint; in property <string> remote-endpoint; in property <int> direction;
-    in property <bool> loading; in property <bool> failed; in property <string> failure-message; in property <string> additions; in property <string> overwrites; in property <string> deletions; in property <string> skipped; in property <string> start-action; in property <bool> requires-mirror-confirmation; in-out property <bool> mirror-confirmed; in property <int> item-filter; in property <[PreflightRow]> items; in property <[PreflightRow]> visible-items;
-    callback start-operation(); callback set-item-filter(int); callback return-to-direction(); callback begin-preflight();
+    in property <string> connection-name;
+    in property <string> connection-mode;
+    in property <string> local-endpoint;
+    in property <string> remote-endpoint;
+    in property <int> direction;
+    in property <bool> loading;
+    in property <bool> failed;
+    in property <string> failure-message;
+    in property <string> additions;
+    in property <string> overwrites;
+    in property <string> deletions;
+    in property <string> skipped;
+    in property <string> start-action;
+    in property <bool> requires-mirror-confirmation;
+    in-out property <bool> mirror-confirmed;
+    in property <int> item-filter;
+    in property <[PreflightRow]> items;
+    in property <[PreflightRow]> visible-items;
+    callback start-operation();
+    callback set-item-filter(int);
+    callback return-to-direction();
+    callback begin-preflight();
+
     vertical-scrollbar-policy: always-on;
-            CenteredPageColumn { width: parent.width - 12px;
-            Text { text: root.failed ? "This operation cannot start" : (root.loading ? "Checking before anything changes" : (root.requires-mirror-confirmation ? "Review mirror changes" : "Ready to start")); color: Colors.text-primary; font-size: 32px; font-weight: 800; wrap: word-wrap; }
-            Text { text: "Reviewing " + root.connection-name + " · " + root.connection-mode + " · " + (root.direction == 0 ? "Upload" : (root.direction == 1 ? "Download" : "Both ways")); color: Colors.text-secondary; wrap: word-wrap; }
-            Rectangle { accessible-role: region; accessible-label: root.direction == 2 ? "Comparing both sides: " + root.local-endpoint + " and " + root.remote-endpoint : "Comparing source " + (root.direction == 0 ? root.local-endpoint : root.remote-endpoint) + " with destination " + (root.direction == 0 ? root.remote-endpoint : root.local-endpoint); background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 78px;
-                VerticalBox { padding: 12px; spacing: 4px;
-                    if root.direction != 2 : Text { text: "Source: " + (root.direction == 0 ? root.local-endpoint : root.remote-endpoint); color: Colors.text-secondary; wrap: word-wrap; }
-                    if root.direction != 2 : Text { text: "Destination: " + (root.direction == 0 ? root.remote-endpoint : root.local-endpoint); color: Colors.text-secondary; wrap: word-wrap; }
-                    if root.direction == 2 : Text { text: "This device: " + root.local-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                    if root.direction == 2 : Text { text: "Cloud storage: " + root.remote-endpoint; color: Colors.text-secondary; wrap: word-wrap; }
-                }
-            }
-            if root.loading : Text { accessible-live-region: polite; text: "Listing files…"; font-weight: 700; }
-            Text { text: "No files are changed during this check."; color: Colors.text-secondary; wrap: word-wrap; }
-            if root.loading : Rectangle { background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 110px;
-                Text { text: "Preflight will compare the endpoints above, then show additions, overwrites, deletions, and skipped files before anything starts."; wrap: word-wrap; x: 16px; y: 16px; width: parent.width - 32px; height: parent.height - 32px; }
-            }
-            if root.failed : Rectangle { accessible-role: region; accessible-label: "Preflight could not start"; background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 92px;
-                VerticalBox { padding: 12px; spacing: 5px;
-                    Text { text: "Resolve this issue, then run the connection again. No files were changed."; color: Colors.danger; font-weight: 700; wrap: word-wrap; }
-                    Text { text: root.failure-message; color: Colors.danger; wrap: word-wrap; }
-                }
-            }
-            if !root.loading && !root.failed : VerticalBox {
-                spacing: 8px;
-                VerticalBox {
-                    accessible-role: region;
-                    accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
-                    spacing: 4px;
-                    if root.width < Dimensions.medium-layout-breakpoint : VerticalBox { spacing: 3px;
-                        Text { text: root.additions; font-weight: 700; wrap: word-wrap; }
-                        Text { text: root.overwrites; font-weight: 700; wrap: word-wrap; }
-                        Text { text: root.deletions; font-weight: 700; wrap: word-wrap; }
-                        Text { text: root.skipped; font-weight: 700; wrap: word-wrap; }
-                    }
-                    if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
-                        Text { text: root.additions; font-weight: 700; }
-                        Text { text: root.overwrites; font-weight: 700; }
-                    }
-                    if root.width >= Dimensions.medium-layout-breakpoint : HorizontalBox { spacing: 8px;
-                        Text { text: root.deletions; font-weight: 700; }
-                        Text { text: root.skipped; font-weight: 700; }
-                    }
-                }
-                if root.requires-mirror-confirmation : Rectangle {
-                    accessible-role: region;
-                    accessible-label: "Destructive mirror changes";
-                    background: Colors.danger-surface; border-color: Colors.danger; border-width: 1px; border-radius: 8px; min-height: 86px;
-                    VerticalBox { padding: 12px; spacing: 5px;
-                        Text { text: "Destructive mirror changes"; color: Colors.danger; font-weight: 700; }
-                        Text { accessible-live-region: assertive; text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing."; color: Colors.danger; wrap: word-wrap; }
-                        Text { text: root.overwrites + " · " + root.deletions; color: Colors.danger; wrap: word-wrap; }
-                    }
-                }
-                if root.items.length == 0 : Text {
-                    text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
-                    color: Colors.success; wrap: word-wrap;
-                }
-                if root.items.length > 0 : Text {
-                    accessible-live-region: polite;
-                    text: root.item-filter == 0 ? "Reviewing " + root.items.length + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
-                    color: Colors.text-secondary; wrap: word-wrap;
-                }
-                if root.items.length > 0 : VerticalBox {
-                    accessible-role: region;
-                    accessible-label: "Filter planned file changes";
-                    spacing: 6px;
-                    Text { text: "Show planned changes"; color: Colors.text-secondary; font-weight: 700; }
-                    HorizontalBox { spacing: 6px;
-                        preflight-filter-all := Button { accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes"; text: "All"; primary: root.item-filter == 0; clicked => { root.set-item-filter(0); } }
-                        Button { accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files"; text: "New"; primary: root.item-filter == 1; clicked => { root.set-item-filter(1); } }
-                        Button { accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites"; text: "Overwrites"; primary: root.item-filter == 2; clicked => { root.set-item-filter(2); } }
-                    }
-                    HorizontalBox { spacing: 6px;
-                        Button { accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions"; text: "Deletions"; primary: root.item-filter == 3; clicked => { root.set-item-filter(3); } }
-                        Button { accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings"; text: "Warnings"; primary: root.item-filter == 4; clicked => { root.set-item-filter(4); } }
-                    }
-                    FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-filter-all; init => { self.focus(); } }
-                }
-                if root.visible-items.length > 0 : ListView {
-                    accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
-                    height: 180px;
-                    vertical-scrollbar-policy: always-on;
-                    for item in root.visible-items : VerticalBox {
-                        accessible-role: list-item;
-                        accessible-label: item.status + ": " + item.path + ". " + item.detail;
-                        spacing: 4px;
-                        if root.width < Dimensions.narrow-layout-breakpoint : Text { text: item.status; color: Colors.text-secondary; font-weight: 700; wrap: word-wrap; }
-                        if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px;
-                            Text { text: item.status; width: 110px; color: Colors.text-secondary; }
-                            Text { text: item.path; horizontal-stretch: 1; wrap: word-wrap; }
-                        }
-                        if root.width < Dimensions.narrow-layout-breakpoint : Text { text: item.path; wrap: word-wrap; }
-                        VerticalBox { spacing: 2px;
-                            Text { text: item.detail; color: Colors.text-secondary; wrap: word-wrap; }
-                        }
-                    }
-                }
-                if root.items.length > 0 && root.visible-items.length == 0 : Rectangle {
-                    accessible-role: region;
-                    accessible-label: "No entries in the selected planned change category";
-                    background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: 74px;
-                    Text {
-                        text: root.item-filter == 1 ? "No new files are planned." : (root.item-filter == 2 ? "No overwrites are planned." : (root.item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
-                        color: Colors.text-secondary;
-                        wrap: word-wrap;
-                        x: 12px;
-                        y: 12px;
-                        width: parent.width - 24px;
-                        height: parent.height - 24px;
-                    }
-                }
-                if root.requires-mirror-confirmation : CheckBox {
-                    accessible-label: "Acknowledge the listed overwrites and deletions";
-                    text: "I understand that the listed destination files will be overwritten or deleted.";
-                    checked <=> root.mirror-confirmed;
-                }
-                if root.requires-mirror-confirmation : Text {
-                    accessible-live-region: polite;
-                    text: root.mirror-confirmed ? "Destructive mirror changes acknowledged." : "Acknowledge the listed changes before this mirror can start.";
-                    color: root.mirror-confirmed ? Colors.success : Colors.danger;
+
+    CenteredPageColumn {
+        width: parent.width - 12px;
+        Text {
+            text: root.failed ? "This operation cannot start" : (root.loading ? "Checking before anything changes" : (root.requires-mirror-confirmation ? "Review mirror changes" : "Ready to start"));
+            color: Colors.text-primary;
+            font-size: 32px;
+            font-weight: 800;
+            wrap: word-wrap;
+        }
+
+        Text {
+            text: "Reviewing " + root.connection-name + " · " + root.connection-mode + " · " + (root.direction == 0 ? "Upload" : (root.direction == 1 ? "Download" : "Both ways"));
+            color: Colors.text-secondary;
+            wrap: word-wrap;
+        }
+
+        Rectangle {
+            accessible-role: region;
+            accessible-label: root.direction == 2 ? "Comparing both sides: " + root.local-endpoint + " and " + root.remote-endpoint : "Comparing source " + (root.direction == 0 ? root.local-endpoint : root.remote-endpoint) + " with destination " + (root.direction == 0 ? root.remote-endpoint : root.local-endpoint);
+            background: Colors.surface;
+            border-color: Colors.border;
+            border-width: 1px;
+            border-radius: 8px;
+            min-height: 78px;
+            VerticalBox {
+                padding: 12px;
+                spacing: 4px;
+                if root.direction != 2: Text {
+                    text: "Source: " + (root.direction == 0 ? root.local-endpoint : root.remote-endpoint);
+                    color: Colors.text-secondary;
                     wrap: word-wrap;
                 }
-                Button {
-                    accessible-label: root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action;
-                    text: root.start-action;
-                    enabled: !root.loading && !root.failed && (!root.requires-mirror-confirmation || root.mirror-confirmed);
-                    primary: true;
-                    clicked => { root.start-operation(); }
+                if root.direction != 2: Text {
+                    text: "Destination: " + (root.direction == 0 ? root.remote-endpoint : root.local-endpoint);
+                    color: Colors.text-secondary;
+                    wrap: word-wrap;
                 }
-                if root.requires-mirror-confirmation && !root.mirror-confirmed : Text { text: "Acknowledge the destructive changes above before starting."; color: Colors.danger; wrap: word-wrap; }
+                if root.direction == 2: Text {
+                    text: "This device: " + root.local-endpoint;
+                    color: Colors.text-secondary;
+                    wrap: word-wrap;
+                }
+                if root.direction == 2: Text {
+                    text: "Cloud storage: " + root.remote-endpoint;
+                    color: Colors.text-secondary;
+                    wrap: word-wrap;
+                }
             }
-            VerticalBox {
-                if root.loading || root.failed || root.items.length == 0 : FocusScope { width: 0px; height: 0px; focus-on-click: false; focus-on-tab-navigation: false; forward-focus: preflight-back; init => { self.focus(); } }
-                preflight-back := Button { accessible-label: "Return to direction selection for " + root.connection-name; text: "Back"; clicked => { root.return-to-direction(); } }
-                if root.failed : Button { accessible-label: "Try the preflight check again"; text: "Try again"; primary: true; clicked => { root.begin-preflight(); } }
-                if !root.loading && !root.failed : Button { accessible-label: "Refresh the read-only preflight review"; text: "Refresh review"; clicked => { root.begin-preflight(); } }
-            }
-            }
-}
+        }
 
+        if root.loading: Text {
+            accessible-live-region: polite;
+            text: "Listing files…";
+            font-weight: 700;
+        }
+        Text {
+            text: "No files are changed during this check.";
+            color: Colors.text-secondary;
+            wrap: word-wrap;
+        }
+
+        if root.loading: Rectangle {
+            background: Colors.surface;
+            border-color: Colors.border;
+            border-width: 1px;
+            border-radius: 8px;
+            min-height: 110px;
+            Text {
+                text: "Preflight will compare the endpoints above, then show additions, overwrites, deletions, and skipped files before anything starts.";
+                wrap: word-wrap;
+                x: 16px;
+                y: 16px;
+                width: parent.width - 32px;
+                height: parent.height - 32px;
+            }
+        }
+        if root.failed: Rectangle {
+            accessible-role: region;
+            accessible-label: "Preflight could not start";
+            background: Colors.danger-surface;
+            border-color: Colors.danger;
+            border-width: 1px;
+            border-radius: 8px;
+            min-height: 92px;
+            VerticalBox {
+                padding: 12px;
+                spacing: 5px;
+                Text {
+                    text: "Resolve this issue, then run the connection again. No files were changed.";
+                    color: Colors.danger;
+                    font-weight: 700;
+                    wrap: word-wrap;
+                }
+
+                Text {
+                    text: root.failure-message;
+                    color: Colors.danger;
+                    wrap: word-wrap;
+                }
+            }
+        }
+        if !root.loading && !root.failed: VerticalBox {
+            spacing: 8px;
+            VerticalBox {
+                accessible-role: region;
+                accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
+                spacing: 4px;
+                if root.width < Dimensions.medium-layout-breakpoint: VerticalBox {
+                    spacing: 3px;
+                    Text {
+                        text: root.additions;
+                        font-weight: 700;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        text: root.overwrites;
+                        font-weight: 700;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        text: root.deletions;
+                        font-weight: 700;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        text: root.skipped;
+                        font-weight: 700;
+                        wrap: word-wrap;
+                    }
+                }
+                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalBox {
+                    spacing: 8px;
+                    Text {
+                        text: root.additions;
+                        font-weight: 700;
+                    }
+
+                    Text {
+                        text: root.overwrites;
+                        font-weight: 700;
+                    }
+                }
+                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalBox {
+                    spacing: 8px;
+                    Text {
+                        text: root.deletions;
+                        font-weight: 700;
+                    }
+
+                    Text {
+                        text: root.skipped;
+                        font-weight: 700;
+                    }
+                }
+            }
+
+            if root.requires-mirror-confirmation: Rectangle {
+                accessible-role: region;
+                accessible-label: "Destructive mirror changes";
+                background: Colors.danger-surface;
+                border-color: Colors.danger;
+                border-width: 1px;
+                border-radius: 8px;
+                min-height: 86px;
+                VerticalBox {
+                    padding: 12px;
+                    spacing: 5px;
+                    Text {
+                        text: "Destructive mirror changes";
+                        color: Colors.danger;
+                        font-weight: 700;
+                    }
+
+                    Text {
+                        accessible-live-region: assertive;
+                        text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
+                        color: Colors.danger;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        text: root.overwrites + " · " + root.deletions;
+                        color: Colors.danger;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+            if root.items.length == 0: Text {
+                text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
+                color: Colors.success;
+                wrap: word-wrap;
+            }
+            if root.items.length > 0: Text {
+                accessible-live-region: polite;
+                text: root.item-filter == 0 ? "Reviewing " + root.items.length + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
+                color: Colors.text-secondary;
+                wrap: word-wrap;
+            }
+            if root.items.length > 0: VerticalBox {
+                accessible-role: region;
+                accessible-label: "Filter planned file changes";
+                spacing: 6px;
+                Text {
+                    text: "Show planned changes";
+                    color: Colors.text-secondary;
+                    font-weight: 700;
+                }
+
+                HorizontalBox {
+                    spacing: 6px;
+                    preflight-filter-all := Button {
+                        accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
+                        text: "All";
+                        primary: root.item-filter == 0;
+                        clicked => {
+                            root.set-item-filter(0);
+                        }
+                    }
+
+                    Button {
+                        accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
+                        text: "New";
+                        primary: root.item-filter == 1;
+                        clicked => {
+                            root.set-item-filter(1);
+                        }
+                    }
+
+                    Button {
+                        accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
+                        text: "Overwrites";
+                        primary: root.item-filter == 2;
+                        clicked => {
+                            root.set-item-filter(2);
+                        }
+                    }
+                }
+
+                HorizontalBox {
+                    spacing: 6px;
+                    Button {
+                        accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
+                        text: "Deletions";
+                        primary: root.item-filter == 3;
+                        clicked => {
+                            root.set-item-filter(3);
+                        }
+                    }
+
+                    Button {
+                        accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
+                        text: "Warnings";
+                        primary: root.item-filter == 4;
+                        clicked => {
+                            root.set-item-filter(4);
+                        }
+                    }
+                }
+
+                FocusScope {
+                    width: 0px;
+                    height: 0px;
+                    focus-on-click: false;
+                    focus-on-tab-navigation: false;
+                    forward-focus: preflight-filter-all;
+                    init => {
+                        self.focus();
+                    }
+                }
+            }
+            if root.visible-items.length > 0: ListView {
+                accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
+                height: 180px;
+                vertical-scrollbar-policy: always-on;
+                for item in root.visible-items: VerticalBox {
+                    accessible-role: list-item;
+                    accessible-label: item.status + ": " + item.path + ". " + item.detail;
+                    spacing: 4px;
+                    if root.width < Dimensions.narrow-layout-breakpoint: Text {
+                        text: item.status;
+                        color: Colors.text-secondary;
+                        font-weight: 700;
+                        wrap: word-wrap;
+                    }
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+                        spacing: 8px;
+                        Text {
+                            text: item.status;
+                            width: 110px;
+                            color: Colors.text-secondary;
+                        }
+
+                        Text {
+                            text: item.path;
+                            horizontal-stretch: 1;
+                            wrap: word-wrap;
+                        }
+                    }
+                    if root.width < Dimensions.narrow-layout-breakpoint: Text {
+                        text: item.path;
+                        wrap: word-wrap;
+                    }
+                    VerticalBox {
+                        spacing: 2px;
+                        Text {
+                            text: item.detail;
+                            color: Colors.text-secondary;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+            }
+            if root.items.length > 0 && root.visible-items.length == 0: Rectangle {
+                accessible-role: region;
+                accessible-label: "No entries in the selected planned change category";
+                background: Colors.surface;
+                border-color: Colors.border;
+                border-width: 1px;
+                border-radius: 8px;
+                min-height: 74px;
+                Text {
+                    text: root.item-filter == 1 ? "No new files are planned." : (root.item-filter == 2 ? "No overwrites are planned." : (root.item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
+                    color: Colors.text-secondary;
+                    wrap: word-wrap;
+                    x: 12px;
+                    y: 12px;
+                    width: parent.width - 24px;
+                    height: parent.height - 24px;
+                }
+            }
+            if root.requires-mirror-confirmation: CheckBox {
+                accessible-label: "Acknowledge the listed overwrites and deletions";
+                text: "I understand that the listed destination files will be overwritten or deleted.";
+                checked <=> root.mirror-confirmed;
+            }
+            if root.requires-mirror-confirmation: Text {
+                accessible-live-region: polite;
+                text: root.mirror-confirmed ? "Destructive mirror changes acknowledged." : "Acknowledge the listed changes before this mirror can start.";
+                color: root.mirror-confirmed ? Colors.success : Colors.danger;
+                wrap: word-wrap;
+            }
+            Button {
+                accessible-label: root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action;
+                text: root.start-action;
+                enabled: !root.loading && !root.failed && (!root.requires-mirror-confirmation || root.mirror-confirmed);
+                primary: true;
+                clicked => {
+                    root.start-operation();
+                }
+            }
+
+            if root.requires-mirror-confirmation && !root.mirror-confirmed: Text {
+                text: "Acknowledge the destructive changes above before starting.";
+                color: Colors.danger;
+                wrap: word-wrap;
+            }
+        }
+        VerticalBox {
+            if root.loading || root.failed || root.items.length == 0: FocusScope {
+                width: 0px;
+                height: 0px;
+                focus-on-click: false;
+                focus-on-tab-navigation: false;
+                forward-focus: preflight-back;
+                init => {
+                    self.focus();
+                }
+            }
+            preflight-back := Button {
+                accessible-label: "Return to direction selection for " + root.connection-name;
+                text: "Back";
+                clicked => {
+                    root.return-to-direction();
+                }
+            }
+
+            if root.failed: Button {
+                accessible-label: "Try the preflight check again";
+                text: "Try again";
+                primary: true;
+                clicked => {
+                    root.begin-preflight();
+                }
+            }
+            if !root.loading && !root.failed: Button {
+                accessible-label: "Refresh the read-only preflight review";
+                text: "Refresh review";
+                clicked => {
+                    root.begin-preflight();
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,9 @@
-import { Button, HorizontalBox, ListView, VerticalBox } from "std-widgets.slint";
+import {
+    Button,
+    HorizontalBox,
+    ListView,
+    VerticalBox,
+} from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ProviderRow } from "../models.slint";
@@ -7,23 +12,169 @@ import { CenteredPageRoot } from "../components/page-layouts.slint";
 export component ProvidersPage inherits CenteredPageRoot {
     in property <[ProviderRow]> providers;
     in property <bool> load-failed;
-    callback show-providers(); callback show-add-provider(); callback verify-saved-provider(string); callback request-provider-edit(string); callback request-provider-delete(string);
-    Text { text: "Providers"; color: Colors.text-primary; font-size: 32px; font-weight: 800; }
-    Text { text: "Provider credentials are kept in this device's protected storage."; color: Colors.text-secondary; wrap: word-wrap; }
-    if root.load-failed : VerticalBox { accessible-role: region; accessible-label: "Providers unavailable"; spacing: 8px;
-        Text { text: "Providers unavailable"; color: Colors.danger; font-size: 22px; font-weight: 700; }
-        Text { text: "SyncPak could not load providers. Check configuration storage and try again."; color: Colors.danger; wrap: word-wrap; }
-        Button { accessible-label: "Retry loading providers"; text: "Retry"; primary: true; clicked => { root.show-providers(); } }
+    callback show-providers();
+    callback show-add-provider();
+    callback verify-saved-provider(string);
+    callback request-provider-edit(string);
+    callback request-provider-delete(string);
+
+    Text {
+        text: "Providers";
+        color: Colors.text-primary;
+        font-size: 32px;
+        font-weight: 800;
     }
-    if !root.load-failed : VerticalBox { spacing: 12px;
-        Button { accessible-label: "Add a provider"; text: "Add provider"; height: Dimensions.control-height; primary: true; clicked => { root.show-add-provider(); } }
-        if root.providers.length == 0 : VerticalBox { spacing: 8px; Text { text: "No providers yet"; font-size: 22px; font-weight: 700; } Text { text: "Add credentials for Cloudflare R2, Backblaze B2, or AWS S3."; wrap: word-wrap; } }
-        if root.providers.length > 0 : ListView { accessible-label: "Configured providers"; height: 260px; vertical-scrollbar-policy: always-on;
-            for provider in root.providers : Rectangle { accessible-role: list-item; accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary; background: Colors.surface; border-color: Colors.border; border-width: 1px; border-radius: 8px; min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
-                VerticalBox { padding: 10px; spacing: 8px;
-                    VerticalBox { spacing: 2px; Text { text: provider.name; font-weight: 700; wrap: word-wrap; } Text { text: provider.kind + " · " + provider.verification; color: Colors.text-secondary; } Text { text: provider.connection-summary; color: Colors.text-secondary; wrap: word-wrap; } }
-                    if root.width < Dimensions.narrow-layout-breakpoint : VerticalBox { spacing: 8px; Button { accessible-label: "Verify provider " + provider.name; text: provider.verifying ? "Verifying…" : "Verify"; enabled: !provider.verifying; clicked => { root.verify-saved-provider(provider.id); } } Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } } Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } } }
-                    if root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox { spacing: 8px; Button { accessible-label: "Verify provider " + provider.name; text: provider.verifying ? "Verifying…" : "Verify"; enabled: !provider.verifying; clicked => { root.verify-saved-provider(provider.id); } } Button { accessible-label: "Edit provider " + provider.name; text: "Edit"; clicked => { root.request-provider-edit(provider.id); } } Button { accessible-label: "Delete provider " + provider.name; text: "Delete"; clicked => { root.request-provider-delete(provider.id); } } Rectangle { horizontal-stretch: 1; } }
+
+    Text {
+        text: "Provider credentials are kept in this device's protected storage.";
+        color: Colors.text-secondary;
+        wrap: word-wrap;
+    }
+
+    if root.load-failed: VerticalBox {
+        accessible-role: region;
+        accessible-label: "Providers unavailable";
+        spacing: 8px;
+        Text {
+            text: "Providers unavailable";
+            color: Colors.danger;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        Text {
+            text: "SyncPak could not load providers. Check configuration storage and try again.";
+            color: Colors.danger;
+            wrap: word-wrap;
+        }
+
+        Button {
+            accessible-label: "Retry loading providers";
+            text: "Retry";
+            primary: true;
+            clicked => {
+                root.show-providers();
+            }
+        }
+    }
+    if !root.load-failed: VerticalBox {
+        spacing: 12px;
+        Button {
+            accessible-label: "Add a provider";
+            text: "Add provider";
+            height: Dimensions.control-height;
+            primary: true;
+            clicked => {
+                root.show-add-provider();
+            }
+        }
+
+        if root.providers.length == 0: VerticalBox {
+            spacing: 8px;
+            Text {
+                text: "No providers yet";
+                font-size: 22px;
+                font-weight: 700;
+            }
+
+            Text {
+                text: "Add credentials for Cloudflare R2, Backblaze B2, or AWS S3.";
+                wrap: word-wrap;
+            }
+        }
+        if root.providers.length > 0: ListView {
+            accessible-label: "Configured providers";
+            height: 260px;
+            vertical-scrollbar-policy: always-on;
+            for provider in root.providers: Rectangle {
+                accessible-role: list-item;
+                accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
+                background: Colors.surface;
+                border-color: Colors.border;
+                border-width: 1px;
+                border-radius: 8px;
+                min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
+                VerticalBox {
+                    padding: 10px;
+                    spacing: 8px;
+                    VerticalBox {
+                        spacing: 2px;
+                        Text {
+                            text: provider.name;
+                            font-weight: 700;
+                            wrap: word-wrap;
+                        }
+
+                        Text {
+                            text: provider.kind + " · " + provider.verification;
+                            color: Colors.text-secondary;
+                        }
+
+                        Text {
+                            text: provider.connection-summary;
+                            color: Colors.text-secondary;
+                            wrap: word-wrap;
+                        }
+                    }
+
+                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalBox {
+                        spacing: 8px;
+                        Button {
+                            accessible-label: "Verify provider " + provider.name;
+                            text: provider.verifying ? "Verifying…" : "Verify";
+                            enabled: !provider.verifying;
+                            clicked => {
+                                root.verify-saved-provider(provider.id);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: "Edit provider " + provider.name;
+                            text: "Edit";
+                            clicked => {
+                                root.request-provider-edit(provider.id);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: "Delete provider " + provider.name;
+                            text: "Delete";
+                            clicked => {
+                                root.request-provider-delete(provider.id);
+                            }
+                        }
+                    }
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+                        spacing: 8px;
+                        Button {
+                            accessible-label: "Verify provider " + provider.name;
+                            text: provider.verifying ? "Verifying…" : "Verify";
+                            enabled: !provider.verifying;
+                            clicked => {
+                                root.verify-saved-provider(provider.id);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: "Edit provider " + provider.name;
+                            text: "Edit";
+                            clicked => {
+                                root.request-provider-edit(provider.id);
+                            }
+                        }
+
+                        Button {
+                            accessible-label: "Delete provider " + provider.name;
+                            text: "Delete";
+                            clicked => {
+                                root.request-provider-delete(provider.id);
+                            }
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                        }
+                    }
                 }
             }
         }

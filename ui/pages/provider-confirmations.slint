@@ -4,16 +4,74 @@ import { CenteredPageRoot } from "../components/page-layouts.slint";
 
 export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     in property <string> provider-name;
-    callback cancel(); callback save();
-    Text { text: "Save without verifying?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; }
-    Text { text: "This provider may not work until its credentials and access are verified."; wrap: word-wrap; }
-    VerticalBox { Button { accessible-label: "Continue editing provider " + root.provider-name; text: "Continue editing"; clicked => { root.cancel(); } } Button { accessible-label: "Save provider " + root.provider-name + " without verifying"; text: "Save " + root.provider-name + " without verifying"; primary: true; clicked => { root.save(); } } }
+    callback cancel();
+    callback save();
+
+    Text {
+        text: "Save without verifying?";
+        color: Colors.text-primary;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    Text {
+        text: "This provider may not work until its credentials and access are verified.";
+        wrap: word-wrap;
+    }
+
+    VerticalBox {
+        Button {
+            accessible-label: "Continue editing provider " + root.provider-name;
+            text: "Continue editing";
+            clicked => {
+                root.cancel();
+            }
+        }
+
+        Button {
+            accessible-label: "Save provider " + root.provider-name + " without verifying";
+            text: "Save " + root.provider-name + " without verifying";
+            primary: true;
+            clicked => {
+                root.save();
+            }
+        }
+    }
 }
 
 export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
     in property <string> provider-name;
-    callback cancel(); callback confirm();
-    Text { text: "Discard unsaved changes?"; color: Colors.text-primary; font-size: 28px; font-weight: 800; }
-    Text { text: "Your changes to this provider have not been saved."; wrap: word-wrap; }
-    VerticalBox { Button { accessible-label: "Continue editing provider " + root.provider-name; text: "Continue editing"; clicked => { root.cancel(); } } Button { accessible-label: "Discard changes to provider " + root.provider-name; text: "Discard changes"; primary: true; clicked => { root.confirm(); } } }
+    callback cancel();
+    callback confirm();
+
+    Text {
+        text: "Discard unsaved changes?";
+        color: Colors.text-primary;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    Text {
+        text: "Your changes to this provider have not been saved.";
+        wrap: word-wrap;
+    }
+
+    VerticalBox {
+        Button {
+            accessible-label: "Continue editing provider " + root.provider-name;
+            text: "Continue editing";
+            clicked => {
+                root.cancel();
+            }
+        }
+
+        Button {
+            accessible-label: "Discard changes to provider " + root.provider-name;
+            text: "Discard changes";
+            primary: true;
+            clicked => {
+                root.confirm();
+            }
+        }
+    }
 }
