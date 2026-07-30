@@ -1,4 +1,4 @@
-import { Button, ScrollView, VerticalBox } from "std-widgets.slint";
+import { Button, ScrollView } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
 
@@ -72,7 +72,7 @@ export component RunDirectionPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 132px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
                 Text {
@@ -127,7 +127,7 @@ export component RunDirectionPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 132px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
                 Text {
@@ -171,7 +171,7 @@ export component RunDirectionPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 132px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
                 Text {
@@ -212,7 +212,7 @@ export component RunDirectionPage inherits ScrollView {
             wrap: word-wrap;
         }
 
-        VerticalBox {
+        VerticalLayout {
             Button {
                 accessible-label: "Cancel run for " + root.connection-name;
                 text: "Cancel";

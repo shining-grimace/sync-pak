@@ -1,9 +1,7 @@
 import {
     Button,
-    HorizontalBox,
     ListView,
     ScrollView,
-    VerticalBox,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -39,7 +37,7 @@ export component ConnectionsPage inherits ScrollView {
             wrap: word-wrap;
         }
 
-        if root.connections-load-failed: VerticalBox {
+        if root.connections-load-failed: VerticalLayout {
             FocusScope {
                 width: 0px;
                 height: 0px;
@@ -76,9 +74,9 @@ export component ConnectionsPage inherits ScrollView {
                 }
             }
         }
-        if !root.connections-load-failed: VerticalBox {
+        if !root.connections-load-failed: VerticalLayout {
             spacing: 12px;
-            if root.providers-total == 0: VerticalBox {
+            if root.providers-total == 0: VerticalLayout {
                 FocusScope {
                     width: 0px;
                     height: 0px;
@@ -100,7 +98,7 @@ export component ConnectionsPage inherits ScrollView {
                     }
                 }
             }
-            if root.providers-total > 0: VerticalBox {
+            if root.providers-total > 0: VerticalLayout {
                 FocusScope {
                     width: 0px;
                     height: 0px;
@@ -122,7 +120,7 @@ export component ConnectionsPage inherits ScrollView {
                     }
                 }
             }
-            VerticalBox {
+            VerticalLayout {
                 accessible-role: region;
                 accessible-label: "Filter connections by mode";
                 spacing: 6px;
@@ -132,7 +130,7 @@ export component ConnectionsPage inherits ScrollView {
                     font-weight: 700;
                 }
 
-                HorizontalBox {
+                HorizontalLayout {
                     spacing: 6px;
                     Button {
                         accessible-label: root.connection-filter == 0 ? "All connections, selected" : "Show all connections";
@@ -153,7 +151,7 @@ export component ConnectionsPage inherits ScrollView {
                     }
                 }
 
-                HorizontalBox {
+                HorizontalLayout {
                     spacing: 6px;
                     Button {
                         accessible-label: root.connection-filter == 2 ? "Mirror connections, selected" : "Show mirror connections";
@@ -180,7 +178,7 @@ export component ConnectionsPage inherits ScrollView {
                 color: Colors.text-secondary;
                 wrap: word-wrap;
             }
-            if root.connections.length == 0: VerticalBox {
+            if root.connections.length == 0: VerticalLayout {
                 spacing: 8px;
                 Text {
                     text: root.connections-total == 0 ? "No connections yet" : "No matching connections";
@@ -220,10 +218,10 @@ export component ConnectionsPage inherits ScrollView {
                     border-width: 1px;
                     border-radius: 8px;
                     min-height: root.width < Dimensions.narrow-layout-breakpoint ? 250px : 98px;
-                    VerticalBox {
+                    VerticalLayout {
                         padding: 10px;
                         spacing: 8px;
-                        VerticalBox {
+                        VerticalLayout {
                             spacing: 3px;
                             Text {
                                 text: connection.name;
@@ -236,9 +234,9 @@ export component ConnectionsPage inherits ScrollView {
                                 color: Colors.text-secondary;
                             }
 
-                            if root.width < Dimensions.medium-layout-breakpoint: VerticalBox {
+                            if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
                                 spacing: 6px;
-                                VerticalBox {
+                                VerticalLayout {
                                     spacing: 2px;
                                     Text {
                                         text: "On this device";
@@ -260,7 +258,7 @@ export component ConnectionsPage inherits ScrollView {
                                     font-weight: 700;
                                 }
 
-                                VerticalBox {
+                                VerticalLayout {
                                     spacing: 2px;
                                     Text {
                                         text: "In " + connection.provider-name;
@@ -276,9 +274,9 @@ export component ConnectionsPage inherits ScrollView {
                                     }
                                 }
                             }
-                            if root.width >= Dimensions.medium-layout-breakpoint: HorizontalBox {
+                            if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                                 spacing: 8px;
-                                VerticalBox {
+                                VerticalLayout {
                                     horizontal-stretch: 1;
                                     spacing: 2px;
                                     Text {
@@ -302,7 +300,7 @@ export component ConnectionsPage inherits ScrollView {
                                     vertical-alignment: center;
                                 }
 
-                                VerticalBox {
+                                VerticalLayout {
                                     horizontal-stretch: 1;
                                     spacing: 2px;
                                     Text {
@@ -325,7 +323,7 @@ export component ConnectionsPage inherits ScrollView {
                             }
                         }
 
-                        if root.width < Dimensions.narrow-layout-breakpoint: VerticalBox {
+                        if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
                             spacing: 8px;
                             Button {
                                 accessible-label: "Run connection " + connection.name;
@@ -352,7 +350,7 @@ export component ConnectionsPage inherits ScrollView {
                                 }
                             }
                         }
-                        if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+                        if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
                             spacing: 8px;
                             Button {
                                 accessible-label: "Run connection " + connection.name;

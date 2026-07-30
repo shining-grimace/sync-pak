@@ -1,4 +1,4 @@
-import { Button, HorizontalBox, ListView, ScrollView, VerticalBox } from "std-widgets.slint";
+import { Button, ListView, ScrollView } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ActivityRow } from "../models.slint";
@@ -28,7 +28,7 @@ export component ActivityPage inherits ScrollView {
             color: Colors.text-secondary;
             wrap: word-wrap;
         }
-        if root.activity-clearable-count > 0 : VerticalBox {
+        if root.activity-clearable-count > 0 : VerticalLayout {
             spacing: 4px;
             FocusScope {
                 width: 0px;
@@ -62,7 +62,7 @@ export component ActivityPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 130px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 20px;
                 spacing: 8px;
                 alignment: center;
@@ -94,10 +94,10 @@ export component ActivityPage inherits ScrollView {
                 border-width: 1px;
                 border-radius: 8px;
                 min-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
-                VerticalBox {
+                VerticalLayout {
                     padding: 12px;
                     spacing: 8px;
-                    VerticalBox {
+                    VerticalLayout {
                         spacing: 2px;
                         Text {
                             text: activity.title + " · " + activity.status;
@@ -120,7 +120,7 @@ export component ActivityPage inherits ScrollView {
                             wrap: word-wrap;
                         }
                     }
-                    if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalBox {
+                    if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalLayout {
                         spacing: 8px;
                         if activity.can-view-result : Button {
                             accessible-label: "View result for " + activity.title;
@@ -151,7 +151,7 @@ export component ActivityPage inherits ScrollView {
                             }
                         }
                     }
-                    if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalBox {
+                    if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalLayout {
                         spacing: 8px;
                         if activity.can-view-result : Button {
                             accessible-label: "View result for " + activity.title;

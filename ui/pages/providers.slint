@@ -1,8 +1,6 @@
 import {
     Button,
-    HorizontalBox,
     ListView,
-    VerticalBox,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -31,7 +29,7 @@ export component ProvidersPage inherits CenteredPageRoot {
         wrap: word-wrap;
     }
 
-    if root.load-failed: VerticalBox {
+    if root.load-failed: VerticalLayout {
         accessible-role: region;
         accessible-label: "Providers unavailable";
         spacing: 8px;
@@ -57,7 +55,7 @@ export component ProvidersPage inherits CenteredPageRoot {
             }
         }
     }
-    if !root.load-failed: VerticalBox {
+    if !root.load-failed: VerticalLayout {
         spacing: 12px;
         Button {
             accessible-label: "Add a provider";
@@ -69,7 +67,7 @@ export component ProvidersPage inherits CenteredPageRoot {
             }
         }
 
-        if root.providers.length == 0: VerticalBox {
+        if root.providers.length == 0: VerticalLayout {
             spacing: 8px;
             Text {
                 text: "No providers yet";
@@ -94,10 +92,10 @@ export component ProvidersPage inherits CenteredPageRoot {
                 border-width: 1px;
                 border-radius: 8px;
                 min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
-                VerticalBox {
+                VerticalLayout {
                     padding: 10px;
                     spacing: 8px;
-                    VerticalBox {
+                    VerticalLayout {
                         spacing: 2px;
                         Text {
                             text: provider.name;
@@ -117,7 +115,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                         }
                     }
 
-                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalBox {
+                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
                         spacing: 8px;
                         Button {
                             accessible-label: "Verify provider " + provider.name;
@@ -144,7 +142,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                             }
                         }
                     }
-                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
                         spacing: 8px;
                         Button {
                             accessible-label: "Verify provider " + provider.name;

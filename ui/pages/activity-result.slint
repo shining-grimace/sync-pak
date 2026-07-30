@@ -1,8 +1,6 @@
 import {
     Button,
-    HorizontalBox,
     ListView,
-    VerticalBox,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -46,7 +44,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
-        if root.width < Dimensions.narrow-layout-breakpoint: VerticalBox {
+        if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
             padding: 12px;
             spacing: 4px;
             Text {
@@ -64,7 +62,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
                 font-weight: 700;
             }
         }
-        if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+        if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
             padding: 12px;
             spacing: 12px;
             Text {
@@ -89,7 +87,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
         color: Colors.text-secondary;
         wrap: word-wrap;
     }
-    if root.details.length > 0: VerticalBox {
+    if root.details.length > 0: VerticalLayout {
         spacing: 6px;
         Text {
             text: "Action outcomes";

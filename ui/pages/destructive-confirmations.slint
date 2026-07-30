@@ -1,4 +1,4 @@
-import { Button, ListView, VerticalBox } from "std-widgets.slint";
+import { Button, ListView } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 
@@ -24,7 +24,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: 108px;
-        VerticalBox {
+        VerticalLayout {
             padding: 12px;
             spacing: 5px;
             Text {
@@ -47,7 +47,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
         }
     }
 
-    if root.connections.length > 0: VerticalBox {
+    if root.connections.length > 0: VerticalLayout {
         spacing: 3px;
         Text {
             text: "Connections that will be deleted";
@@ -67,7 +67,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
             }
         }
     }
-    VerticalBox {
+    VerticalLayout {
         Button {
             accessible-label: "Keep provider " + root.provider-name;
             text: "Cancel";
@@ -107,7 +107,7 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: 94px;
-        VerticalBox {
+        VerticalLayout {
             padding: 12px;
             spacing: 5px;
             Text {
@@ -130,7 +130,7 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
         }
     }
 
-    VerticalBox {
+    VerticalLayout {
         Button {
             accessible-label: "Keep connection " + root.connection-name;
             text: "Cancel";
@@ -167,7 +167,7 @@ export component ActivityCancelPage inherits CenteredPageRoot {
         wrap: word-wrap;
     }
 
-    VerticalBox {
+    VerticalLayout {
         Button {
             accessible-label: "Keep " + root.activity-name + " running";
             text: "Keep running";

@@ -1,10 +1,8 @@
 import {
     Button,
     CheckBox,
-    HorizontalBox,
     ListView,
     ScrollView,
-    VerticalBox,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -61,7 +59,7 @@ export component PreflightPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 78px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
                 if root.direction != 2: Text {
@@ -121,7 +119,7 @@ export component PreflightPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 92px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 12px;
                 spacing: 5px;
                 Text {
@@ -138,13 +136,13 @@ export component PreflightPage inherits ScrollView {
                 }
             }
         }
-        if !root.loading && !root.failed: VerticalBox {
+        if !root.loading && !root.failed: VerticalLayout {
             spacing: 8px;
-            VerticalBox {
+            VerticalLayout {
                 accessible-role: region;
                 accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
                 spacing: 4px;
-                if root.width < Dimensions.medium-layout-breakpoint: VerticalBox {
+                if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
                     spacing: 3px;
                     Text {
                         text: root.additions;
@@ -170,7 +168,7 @@ export component PreflightPage inherits ScrollView {
                         wrap: word-wrap;
                     }
                 }
-                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalBox {
+                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                     spacing: 8px;
                     Text {
                         text: root.additions;
@@ -182,7 +180,7 @@ export component PreflightPage inherits ScrollView {
                         font-weight: 700;
                     }
                 }
-                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalBox {
+                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                     spacing: 8px;
                     Text {
                         text: root.deletions;
@@ -204,7 +202,7 @@ export component PreflightPage inherits ScrollView {
                 border-width: 1px;
                 border-radius: 8px;
                 min-height: 86px;
-                VerticalBox {
+                VerticalLayout {
                     padding: 12px;
                     spacing: 5px;
                     Text {
@@ -238,7 +236,7 @@ export component PreflightPage inherits ScrollView {
                 color: Colors.text-secondary;
                 wrap: word-wrap;
             }
-            if root.items.length > 0: VerticalBox {
+            if root.items.length > 0: VerticalLayout {
                 accessible-role: region;
                 accessible-label: "Filter planned file changes";
                 spacing: 6px;
@@ -248,7 +246,7 @@ export component PreflightPage inherits ScrollView {
                     font-weight: 700;
                 }
 
-                HorizontalBox {
+                HorizontalLayout {
                     spacing: 6px;
                     preflight-filter-all := Button {
                         accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
@@ -278,7 +276,7 @@ export component PreflightPage inherits ScrollView {
                     }
                 }
 
-                HorizontalBox {
+                HorizontalLayout {
                     spacing: 6px;
                     Button {
                         accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
@@ -314,7 +312,7 @@ export component PreflightPage inherits ScrollView {
                 accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
                 height: 180px;
                 vertical-scrollbar-policy: always-on;
-                for item in root.visible-items: VerticalBox {
+                for item in root.visible-items: VerticalLayout {
                     accessible-role: list-item;
                     accessible-label: item.status + ": " + item.path + ". " + item.detail;
                     spacing: 4px;
@@ -324,7 +322,7 @@ export component PreflightPage inherits ScrollView {
                         font-weight: 700;
                         wrap: word-wrap;
                     }
-                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
                         spacing: 8px;
                         Text {
                             text: item.status;
@@ -342,7 +340,7 @@ export component PreflightPage inherits ScrollView {
                         text: item.path;
                         wrap: word-wrap;
                     }
-                    VerticalBox {
+                    VerticalLayout {
                         spacing: 2px;
                         Text {
                             text: item.detail;
@@ -397,7 +395,7 @@ export component PreflightPage inherits ScrollView {
                 wrap: word-wrap;
             }
         }
-        VerticalBox {
+        VerticalLayout {
             if root.loading || root.failed || root.items.length == 0: FocusScope {
                 width: 0px;
                 height: 0px;

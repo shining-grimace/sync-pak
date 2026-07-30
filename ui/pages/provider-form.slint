@@ -1,10 +1,8 @@
 import {
     Button,
     ComboBox,
-    HorizontalBox,
     LineEdit,
     ScrollView,
-    VerticalBox,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -92,7 +90,7 @@ export component ProviderFormPage inherits ScrollView {
             enabled: !root.provider-verifying;
         }
 
-        if root.provider-form-kind == 0: VerticalBox {
+        if root.provider-form-kind == 0: VerticalLayout {
             spacing: 4px;
             Text {
                 text: "Account ID";
@@ -107,7 +105,7 @@ export component ProviderFormPage inherits ScrollView {
                 enabled: !root.provider-verifying;
             }
         }
-        if root.provider-form-kind != 0: VerticalBox {
+        if root.provider-form-kind != 0: VerticalLayout {
             spacing: 4px;
             Text {
                 text: "Region";
@@ -135,7 +133,7 @@ export component ProviderFormPage inherits ScrollView {
             enabled: !root.provider-verifying;
         }
 
-        if root.provider-verified-buckets.length > 0: VerticalBox {
+        if root.provider-verified-buckets.length > 0: VerticalLayout {
             spacing: 4px;
             Text {
                 text: "Verified available buckets";
@@ -185,7 +183,7 @@ export component ProviderFormPage inherits ScrollView {
             font-weight: 700;
         }
 
-        HorizontalBox {
+        HorizontalLayout {
             LineEdit {
                 accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
                 placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
@@ -220,7 +218,7 @@ export component ProviderFormPage inherits ScrollView {
             }
         }
 
-        if root.provider-advanced-expanded: VerticalBox {
+        if root.provider-advanced-expanded: VerticalLayout {
             spacing: 4px;
             Text {
                 text: "Custom endpoint";
@@ -265,7 +263,7 @@ export component ProviderFormPage inherits ScrollView {
             color: Colors.text-secondary;
             wrap: word-wrap;
         }
-        VerticalBox {
+        VerticalLayout {
             Button {
                 accessible-label: "Back to providers";
                 text: "Back";

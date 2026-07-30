@@ -3,7 +3,6 @@ import {
     ComboBox,
     LineEdit,
     ScrollView,
-    VerticalBox,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
@@ -48,7 +47,7 @@ export component ConnectionFormPage inherits ScrollView {
             wrap: word-wrap;
         }
 
-        VerticalBox {
+        VerticalLayout {
             accessible-role: region;
             accessible-label: "Connection identity and cloud destination";
             spacing: 6px;
@@ -101,7 +100,7 @@ export component ConnectionFormPage inherits ScrollView {
                 color: Colors.text-secondary;
                 wrap: word-wrap;
             }
-            if root.connection-providers-load-failed: VerticalBox {
+            if root.connection-providers-load-failed: VerticalLayout {
                 spacing: 6px;
                 Text {
                     accessible-live-region: assertive;
@@ -146,7 +145,7 @@ export component ConnectionFormPage inherits ScrollView {
                 color: Colors.text-secondary;
                 wrap: word-wrap;
             }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0: VerticalBox {
+            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0: VerticalLayout {
                 spacing: 4px;
                 Text {
                     text: "Buckets verified this session";
@@ -196,7 +195,7 @@ export component ConnectionFormPage inherits ScrollView {
             font-weight: 700;
         }
 
-        VerticalBox {
+        VerticalLayout {
             spacing: 6px;
             connection-local := LineEdit {
                 accessible-label: "Local folder";
@@ -250,7 +249,7 @@ export component ConnectionFormPage inherits ScrollView {
             color: Colors.text-secondary;
             wrap: word-wrap;
         }
-        if connection-mode.current-index == 2: VerticalBox {
+        if connection-mode.current-index == 2: VerticalLayout {
             spacing: 4px;
             Text {
                 text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting.";
@@ -275,7 +274,7 @@ export component ConnectionFormPage inherits ScrollView {
                 wrap: word-wrap;
             }
         }
-        VerticalBox {
+        VerticalLayout {
             Button {
                 accessible-label: "Back to connections";
                 text: "Back";

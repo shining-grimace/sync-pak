@@ -1,4 +1,4 @@
-import { Button, HorizontalBox, Palette, VerticalBox } from "std-widgets.slint";
+import { Button, Palette } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 import { Colors } from "colors.slint";
 import { WelcomePage } from "pages/welcome.slint";
@@ -309,7 +309,7 @@ export component AppWindow inherits Window {
             }
         }
 
-        VerticalBox {
+        VerticalLayout {
             x: 0px;
             y: 0px;
             width: parent.width;
@@ -318,7 +318,7 @@ export component AppWindow inherits Window {
             padding-left: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
             spacing: 16px;
 
-            if root.width >= Dimensions.medium-layout-breakpoint && root.width < Dimensions.desktop-layout-breakpoint: VerticalBox {
+            if root.width >= Dimensions.medium-layout-breakpoint && root.width < Dimensions.desktop-layout-breakpoint: VerticalLayout {
                 accessible-role: navigation;
                 accessible-label: "Primary navigation";
                 spacing: 6px;
@@ -330,7 +330,7 @@ export component AppWindow inherits Window {
                     letter-spacing: 2px;
                 }
 
-                HorizontalBox {
+                HorizontalLayout {
                     spacing: 6px;
                     Button {
                         accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
@@ -353,7 +353,7 @@ export component AppWindow inherits Window {
                     }
                 }
 
-                HorizontalBox {
+                HorizontalLayout {
                     spacing: 6px;
                     Button {
                         accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
@@ -389,7 +389,7 @@ export component AppWindow inherits Window {
                 border-width: 1px;
                 border-radius: 8px;
                 min-height: 58px;
-                VerticalBox {
+                VerticalLayout {
                     padding: 10px;
                     spacing: 4px;
                     Text {
@@ -423,7 +423,7 @@ export component AppWindow inherits Window {
                 border-width: 1px;
                 border-radius: 8px;
                 min-height: 48px;
-                VerticalBox {
+                VerticalLayout {
                     padding: 10px;
                     spacing: 4px;
                     Text {
@@ -447,10 +447,10 @@ export component AppWindow inherits Window {
                 background: Colors.border;
                 border-radius: 8px;
                 min-height: 62px;
-                VerticalBox {
+                VerticalLayout {
                     padding: 12px;
                     spacing: 8px;
-                    VerticalBox {
+                    VerticalLayout {
                         spacing: 2px;
                         Text {
                             text: root.active-activity-title;
@@ -466,7 +466,7 @@ export component AppWindow inherits Window {
                         }
                     }
 
-                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalBox {
+                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
                         spacing: 8px;
                         Button {
                             accessible-label: "View progress for " + root.active-activity-title;
@@ -484,7 +484,7 @@ export component AppWindow inherits Window {
                             }
                         }
                     }
-                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalBox {
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
                         spacing: 8px;
                         Button {
                             accessible-label: "View progress for " + root.active-activity-title;
@@ -837,10 +837,10 @@ export component AppWindow inherits Window {
                 border-width: 1px;
                 border-radius: 8px;
                 min-height: 88px;
-                VerticalBox {
+                VerticalLayout {
                     padding: 8px;
                     spacing: 6px;
-                    HorizontalBox {
+                    HorizontalLayout {
                         spacing: 6px;
                         Button {
                             accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
@@ -863,7 +863,7 @@ export component AppWindow inherits Window {
                         }
                     }
 
-                    HorizontalBox {
+                    HorizontalLayout {
                         spacing: 6px;
                         Button {
                             accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
@@ -900,7 +900,7 @@ export component AppWindow inherits Window {
             border-color: Colors.border;
             border-width: 1px;
             border-radius: 8px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 12px;
                 spacing: 8px;
                 Text {

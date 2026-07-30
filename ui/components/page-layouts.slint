@@ -1,23 +1,23 @@
-import { HorizontalBox, ScrollView, VerticalBox } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 
 export component PageRoot inherits ScrollView {
     vertical-scrollbar-policy: always-on;
 
-    VerticalBox {
+    VerticalLayout {
         width: parent.width - 12px;
         @children
     }
 }
 
-export component CenteredPageColumn inherits VerticalBox {
+export component CenteredPageColumn inherits VerticalLayout {
     in property <length> content-spacing: 12px;
 
-    HorizontalBox {
+    HorizontalLayout {
         alignment: center;
         vertical-stretch: 0;
 
-        VerticalBox {
+        VerticalLayout {
             preferred-width: Dimensions.welcome-content-max-width;
             max-width: Dimensions.welcome-content-max-width;
             horizontal-stretch: 1;

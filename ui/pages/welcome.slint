@@ -1,4 +1,4 @@
-import { Button, HorizontalBox, VerticalBox } from "std-widgets.slint";
+import { Button } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
@@ -9,7 +9,7 @@ export component WelcomePage inherits CenteredPageRoot {
     callback show-add-provider();
     callback show-privacy();
 
-    VerticalBox {
+    VerticalLayout {
         spacing: 14px;
         alignment: center;
         Text {
@@ -66,7 +66,7 @@ export component WelcomePage inherits CenteredPageRoot {
             border-radius: 12px;
             max-width: Dimensions.welcome-content-max-width;
             min-height: 106px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 14px;
                 spacing: 5px;
                 Text {
@@ -109,7 +109,7 @@ export component WelcomePage inherits CenteredPageRoot {
             border-radius: 12px;
             max-width: Dimensions.welcome-content-max-width;
             min-height: 122px;
-            VerticalBox {
+            VerticalLayout {
                 padding: 14px;
                 spacing: 6px;
                 Text {
@@ -127,7 +127,7 @@ export component WelcomePage inherits CenteredPageRoot {
                     wrap: word-wrap;
                 }
 
-                HorizontalBox {
+                HorizontalLayout {
                     alignment: center;
                     FocusScope {
                         width: 0px;
@@ -151,7 +151,7 @@ export component WelcomePage inherits CenteredPageRoot {
                 }
             }
         }
-        if !root.configuration-unavailable: HorizontalBox {
+        if !root.configuration-unavailable: HorizontalLayout {
             alignment: center;
             FocusScope {
                 width: 0px;
@@ -175,7 +175,7 @@ export component WelcomePage inherits CenteredPageRoot {
                 }
             }
         }
-        HorizontalBox {
+        HorizontalLayout {
             alignment: center;
             Button {
                 accessible-label: "Read how SyncPak protects your privacy";

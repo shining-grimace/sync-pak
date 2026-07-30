@@ -1,4 +1,4 @@
-import { Button, ComboBox, VerticalBox } from "std-widgets.slint";
+import { Button, ComboBox } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 
@@ -26,7 +26,7 @@ export component PrivacyPage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: 72px;
-        VerticalBox {
+        VerticalLayout {
             padding: 12px;
             spacing: 4px;
             Text {
@@ -50,7 +50,7 @@ export component PrivacyPage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: 72px;
-        VerticalBox {
+        VerticalLayout {
             padding: 12px;
             spacing: 4px;
             Text {
@@ -74,7 +74,7 @@ export component PrivacyPage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: 72px;
-        VerticalBox {
+        VerticalLayout {
             padding: 12px;
             spacing: 4px;
             Text {
@@ -98,7 +98,7 @@ export component PrivacyPage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: 72px;
-        VerticalBox {
+        VerticalLayout {
             padding: 12px;
             spacing: 4px;
             Text {
@@ -119,7 +119,7 @@ export component PrivacyPage inherits CenteredPageRoot {
         color: Colors.text-secondary;
     }
 
-    VerticalBox {
+    VerticalLayout {
         accessible-role: region;
         accessible-label: "Appearance";
         spacing: 6px;
@@ -146,7 +146,7 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
-    VerticalBox {
+    VerticalLayout {
         accessible-role: region;
         accessible-label: "Privacy and source links";
         spacing: 6px;

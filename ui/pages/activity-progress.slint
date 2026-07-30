@@ -1,4 +1,4 @@
-import { Button, VerticalBox } from "std-widgets.slint";
+import { Button } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 
@@ -40,7 +40,7 @@ export component ActivityProgressPage inherits CenteredPageRoot {
         border-width: 1px;
         border-radius: 8px;
         min-height: 150px;
-        VerticalBox {
+        VerticalLayout {
             padding: 12px;
             spacing: 6px;
             Text {
@@ -87,7 +87,7 @@ export component ActivityProgressPage inherits CenteredPageRoot {
         color: Colors.text-secondary;
         wrap: word-wrap;
     }
-    VerticalBox {
+    VerticalLayout {
         Button {
             accessible-label: "Minimize progress for " + root.title;
             text: "Minimize";
