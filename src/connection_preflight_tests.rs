@@ -61,6 +61,7 @@ fn request(direction: Direction) -> RunRequest {
             region: Some("ap-southeast-2".into()),
         },
         credential_reference: CredentialReference { provider_id },
+        verified: false,
     };
     let connection = ConnectionConfig {
         id: ConnectionId::new(),

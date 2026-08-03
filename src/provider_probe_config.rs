@@ -85,6 +85,7 @@ impl ProbeConfig {
                 endpoint: self.endpoint.clone(),
                 region: Some(self.region.clone()),
             },
+            verified: false,
         }
     }
 

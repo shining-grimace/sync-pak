@@ -103,6 +103,7 @@ pub(crate) fn refresh(
                         states,
                         buckets,
                         provider.id.as_str(),
+                        provider.verified,
                     )
                     .into(),
                     verifying: provider_list_verification_controller::is_checking(

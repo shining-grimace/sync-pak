@@ -50,7 +50,7 @@ export component ProviderFormPage inherits ScrollView {
         }
 
         if root.provider-form-id != "": DescriptionLabel {
-            text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values.";
+            text: "The access key ID is loaded from protected storage. Leave secret fields blank to keep their saved values; SyncPak never displays saved secrets.";
         }
         FocusScope {
             width: 0px;
@@ -170,7 +170,7 @@ export component ProviderFormPage inherits ScrollView {
         HorizontalLayout {
             LineEdit {
                 accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
-                placeholder-text: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
+                placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
                 text <=> root.provider-form-secret-key;
                 input-type: root.provider-secret-visible ? text : password;
                 horizontal-stretch: 1;
@@ -219,7 +219,7 @@ export component ProviderFormPage inherits ScrollView {
 
             LineEdit {
                 accessible-label: "Session token";
-                placeholder-text: "Optional temporary session token";
+                placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : "Optional temporary session token";
                 text <=> root.provider-form-session-token;
                 input-type: root.provider-secret-visible ? text : password;
                 enabled: !root.provider-verifying;

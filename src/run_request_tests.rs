@@ -20,6 +20,7 @@ fn config(mode: SyncMode) -> AppConfig {
             region: Some("ap-southeast-2".into()),
         },
         credential_reference: crate::configuration::CredentialReference { provider_id },
+        verified: false,
     };
     AppConfig {
         connections: vec![ConnectionConfig {

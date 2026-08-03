@@ -99,6 +99,7 @@ mod tests {
                     endpoint: None,
                     region: None,
                 },
+                verified: false,
             },
             direction: Direction::Upload,
         }

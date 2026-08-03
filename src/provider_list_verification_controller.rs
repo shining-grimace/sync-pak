@@ -70,13 +70,22 @@ fn await_verification(
             Ok(Ok(verification)) => {
                 states.borrow_mut().remove(&provider_id);
                 provider_bucket_cache::record(&buckets, &provider_id, verification.buckets.clone());
-                window.set_notice_message(
-                    format!(
-                        "Provider verified. {} buckets available.",
-                        verification.buckets.len()
-                    )
-                    .into(),
-                );
+                match configuration.record_provider_verification(&provider_id) {
+                    Ok(true) => window.set_notice_message(
+                        format!(
+                            "Provider verified. {} buckets available.",
+                            verification.buckets.len()
+                        )
+                        .into(),
+                    ),
+                    Ok(false) | Err(_) => diagnostics_controller::present(
+                        &window,
+                        &diagnostics,
+                        "Provider verified but its status could not be saved",
+                        "provider verification status save failed",
+                        "The provider is verified for this session, but SyncPak could not save that status.",
+                    ),
+                }
                 crate::provider_list_controller::refresh(
                     &weak,
                     &configuration,
@@ -136,12 +145,14 @@ pub(crate) fn status(
     states: &VerificationStates,
     buckets: &ProviderBucketCache,
     provider_id: &str,
+    previously_verified: bool,
 ) -> &'static str {
     match states.borrow().get(provider_id) {
         Some(VerificationState::Checking) => "Checking",
         None if provider_bucket_cache::buckets(buckets, provider_id).is_some() => {
             "Verified this session"
         }
+        None if previously_verified => "Previously verified",
         None => "Not verified",
     }
 }
@@ -159,17 +170,21 @@ mod tests {
     use crate::provider_bucket_cache::{ProviderBucketCache, record, remove};
 
     #[test]
-    fn reports_a_cached_listing_as_verified_until_it_is_invalidated() {
+    fn distinguishes_current_previous_and_absent_verification() {
         let states: VerificationStates = Default::default();
         let buckets: ProviderBucketCache = Default::default();
 
         record(&buckets, "provider", Vec::new());
         assert_eq!(
-            status(&states, &buckets, "provider"),
+            status(&states, &buckets, "provider", true),
             "Verified this session"
         );
 
         remove(&buckets, "provider");
-        assert_eq!(status(&states, &buckets, "provider"), "Not verified");
+        assert_eq!(
+            status(&states, &buckets, "provider", true),
+            "Previously verified"
+        );
+        assert_eq!(status(&states, &buckets, "provider", false), "Not verified");
     }
 }

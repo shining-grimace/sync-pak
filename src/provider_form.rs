@@ -61,7 +61,7 @@ fn form_signature(window: &AppWindow) -> String {
             window.get_provider_form_region(),
             window.get_provider_form_bucket(),
             window.get_provider_form_endpoint(),
-            !window.get_provider_form_access_key().is_empty(),
+            window.get_provider_form_access_key(),
             !window.get_provider_form_secret_key().is_empty(),
             !window.get_provider_form_session_token().is_empty(),
         )

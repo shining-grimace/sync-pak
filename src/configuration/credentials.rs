@@ -92,6 +92,7 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
             name: draft.name,
             kind: draft.kind,
             options: draft.options,
+            verified: draft.verified,
         };
         self.save(provider.clone(), secret)?;
         Ok(provider)
@@ -111,6 +112,7 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
             name: draft.name,
             kind: draft.kind,
             options: draft.options,
+            verified: draft.verified,
         };
         let config = self
             .configuration

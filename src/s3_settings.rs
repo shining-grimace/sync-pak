@@ -108,6 +108,7 @@ mod tests {
                 endpoint: endpoint.map(ToOwned::to_owned),
                 region: region.map(ToOwned::to_owned),
             },
+            verified: false,
         }
     }
 }

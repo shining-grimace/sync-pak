@@ -79,6 +79,7 @@ pub mod provider_conformance;
 mod provider_delete_controller;
 mod provider_form;
 mod provider_form_controller;
+mod provider_form_credentials;
 mod provider_list_controller;
 mod provider_list_verification_controller;
 pub mod provider_multipart_conformance;
@@ -101,6 +102,8 @@ mod run_direction_presentation;
 pub mod run_request;
 #[cfg(feature = "provider-s3")]
 mod s3_archive_operation;
+#[cfg(feature = "provider-s3")]
+mod s3_bucket;
 #[cfg(feature = "provider-s3")]
 mod s3_error;
 #[cfg(feature = "provider-s3")]

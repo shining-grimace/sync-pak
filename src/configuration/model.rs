@@ -112,6 +112,12 @@ pub struct ProviderConfig {
     pub kind: ProviderKind,
     pub options: ProviderOptions,
     pub credential_reference: CredentialReference,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub verified: bool,
+}
+
+fn is_false(value: &bool) -> bool {
+    !value
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]

@@ -5,8 +5,8 @@ use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 use crate::{
     AppWindow,
     configuration::{
-        ConfigStore, CredentialReference, ProviderConfig, ProviderCredentials, ProviderDraft,
-        ProviderId, ProviderRepository,
+        ConfigStore, CredentialReference, ProviderConfig, ProviderDraft, ProviderId,
+        ProviderRepository,
     },
     diagnostics_controller::{self, SharedDiagnosticLog},
     form_validation,
@@ -17,7 +17,7 @@ use crate::{
         begin_verification, clear_transient_state, invalidate_verification, is_dirty, mark_clean,
         provider_id, provider_kind, provider_kind_index, provider_options,
     },
-    provider_list_controller,
+    provider_form_credentials, provider_list_controller,
     provider_save_error::ProviderPersistenceError,
 };
 
@@ -48,21 +48,31 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
+    let verify_configuration = Rc::clone(configuration);
     let verify_diagnostics = Rc::clone(&diagnostics);
     window.on_verify_provider(move || {
         if let Some(window) = weak.upgrade() {
             window.set_provider_save_after_verification(false);
         }
-        verify(&weak, Rc::clone(&verify_diagnostics));
+        verify(
+            &weak,
+            Rc::clone(&verify_configuration),
+            Rc::clone(&verify_diagnostics),
+        );
     });
 
     let weak = window.as_weak();
+    let save_and_verify_configuration = Rc::clone(configuration);
     let save_and_verify_diagnostics = Rc::clone(&diagnostics);
     window.on_save_and_verify_provider(move || {
         if let Some(window) = weak.upgrade() {
             window.set_provider_save_after_verification(true);
         }
-        verify(&weak, Rc::clone(&save_and_verify_diagnostics));
+        verify(
+            &weak,
+            Rc::clone(&save_and_verify_configuration),
+            Rc::clone(&save_and_verify_diagnostics),
+        );
     });
 
     let weak = window.as_weak();
@@ -105,7 +115,11 @@ pub(crate) fn configure(
     window.on_request_provider_edit(move |id| edit(&weak, &edit_configuration, &diagnostics, id));
 }
 
-fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
+fn verify(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+) {
     let Some(window) = weak.upgrade() else { return };
     crate::provider_secret_reveal_controller::hide(&window);
     window.set_status_message(SharedString::default());
@@ -120,10 +134,37 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
     let endpoint = window.get_provider_form_endpoint();
     let access = window.get_provider_form_access_key();
     let secret = window.get_provider_form_secret_key();
-    if let Err(error) = form_validation::provider(
-        &window.get_provider_form_name(),
+    let session_token = window.get_provider_form_session_token();
+    let edit_id = window.get_provider_form_id();
+    let id = if edit_id.is_empty() {
+        ProviderId::new()
+    } else {
+        match provider_id(&configuration, edit_id.as_str()) {
+            Ok(id) => id,
+            Err(_) => {
+                window.set_provider_save_after_verification(false);
+                return;
+            }
+        }
+    };
+    let credentials = match provider_form_credentials::resolve(
+        &configuration,
+        (!edit_id.is_empty()).then_some(&id),
         &access,
         &secret,
+        &session_token,
+    ) {
+        Ok(credentials) => credentials,
+        Err(error) => {
+            window.set_provider_save_after_verification(false);
+            present_credential_load_error(&window, &diagnostics, &error);
+            return;
+        }
+    };
+    if let Err(error) = form_validation::provider(
+        &window.get_provider_form_name(),
+        &credentials.access_key_id,
+        &credentials.secret_access_key,
         kind,
         &account,
         &region,
@@ -134,19 +175,13 @@ fn verify(weak: &slint::Weak<AppWindow>, diagnostics: SharedDiagnosticLog) {
         window.set_status_message(error.into());
         return;
     }
-    let id = ProviderId::new();
     let provider = ProviderConfig {
         id: id.clone(),
         credential_reference: CredentialReference { provider_id: id },
         name: window.get_provider_form_name().to_string(),
         kind,
         options: provider_options(&account, &region, &bucket, &endpoint),
-    };
-    let credentials = ProviderCredentials {
-        access_key_id: access.to_string(),
-        secret_access_key: secret.to_string(),
-        session_token: (!window.get_provider_form_session_token().trim().is_empty())
-            .then(|| window.get_provider_form_session_token().to_string()),
+        verified: false,
     };
     window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
     window.set_provider_bucket_list_empty(false);
@@ -227,10 +262,37 @@ fn save(
     let default_bucket = window.get_provider_form_bucket();
     let endpoint = window.get_provider_form_endpoint();
     let session_token = window.get_provider_form_session_token();
-    if let Err(error) = form_validation::provider(
-        &name,
+    let edit_id = window.get_provider_form_id();
+    let edit_provider_id = if edit_id.is_empty() {
+        None
+    } else {
+        match provider_id(&configuration, edit_id.as_str()) {
+            Ok(id) => Some(id),
+            Err(_) => {
+                window.set_page(2);
+                window.set_status_message("The provider no longer exists.".into());
+                return;
+            }
+        }
+    };
+    let credentials = match provider_form_credentials::resolve(
+        &configuration,
+        edit_provider_id.as_ref(),
         &access_key_id,
         &secret_access_key,
+        &session_token,
+    ) {
+        Ok(credentials) => credentials,
+        Err(error) => {
+            window.set_page(2);
+            present_credential_load_error(&window, diagnostics, &error);
+            return;
+        }
+    };
+    if let Err(error) = form_validation::provider(
+        &name,
+        &credentials.access_key_id,
+        &credentials.secret_access_key,
         kind,
         &account_id,
         &region,
@@ -241,17 +303,16 @@ fn save(
         window.set_status_message(error.into());
         return;
     }
-    let credentials = ProviderCredentials {
-        access_key_id: access_key_id.to_string(),
-        secret_access_key: secret_access_key.to_string(),
-        session_token: (!session_token.trim().is_empty()).then(|| session_token.to_string()),
-    };
+    let verified = window.get_provider_save_after_verification()
+        || edit_provider_id
+            .as_ref()
+            .is_some_and(|id| !is_dirty(&window) && was_verified(&configuration, id));
     let draft = ProviderDraft {
         name: name.to_string(),
         kind,
         options: provider_options(&account_id, &region, &default_bucket, &endpoint),
+        verified,
     };
-    let edit_id = window.get_provider_form_id();
     let result = (|| -> Result<_, ProviderPersistenceError> {
         let store =
             PlatformCredentialStore::new().map_err(ProviderPersistenceError::ProtectedStore)?;
@@ -263,8 +324,9 @@ fn save(
         } else {
             repository
                 .update(
-                    &provider_id(&configuration, edit_id.as_str())
-                        .map_err(|_| ProviderPersistenceError::Other)?,
+                    edit_provider_id
+                        .as_ref()
+                        .ok_or(ProviderPersistenceError::Other)?,
                     draft,
                     &credentials,
                 )
@@ -329,6 +391,30 @@ fn verified_buckets(window: &AppWindow) -> Vec<String> {
         .collect()
 }
 
+fn was_verified(configuration: &ConfigStore, provider_id: &ProviderId) -> bool {
+    configuration.load().is_ok_and(|config| {
+        config
+            .providers
+            .iter()
+            .any(|provider| provider.id == *provider_id && provider.verified)
+    })
+}
+
+fn present_credential_load_error(
+    window: &AppWindow,
+    diagnostics: &SharedDiagnosticLog,
+    error: &ProviderPersistenceError,
+) {
+    let (_, technical_details, _) = error.save_presentation();
+    diagnostics_controller::present(
+        window,
+        diagnostics,
+        "Saved credentials could not be accessed",
+        technical_details,
+        "Unlock this device's protected credential storage, then try again.",
+    );
+}
+
 fn edit(
     weak: &slint::Weak<AppWindow>,
     configuration: &ConfigStore,
@@ -348,6 +434,13 @@ fn edit(
                 .ok_or_else(|| "The provider no longer exists.".to_owned())
         }) {
         Ok(provider) => {
+            let credentials = match provider_form_credentials::load(configuration, &provider.id) {
+                Ok(credentials) => credentials,
+                Err(error) => {
+                    present_credential_load_error(&window, diagnostics, &error);
+                    return;
+                }
+            };
             window.set_provider_form_id(provider.id.as_str().into());
             window.set_provider_form_name(provider.name.into());
             window.set_provider_form_kind(provider_kind_index(provider.kind));
@@ -359,6 +452,7 @@ fn edit(
                 provider.options.default_bucket.unwrap_or_default().into(),
             );
             window.set_provider_form_endpoint(provider.options.endpoint.unwrap_or_default().into());
+            window.set_provider_form_access_key(credentials.access_key_id.into());
             mark_clean(&window);
             window.set_status_message(SharedString::default());
             window.set_page(2);

@@ -108,6 +108,25 @@ fn loads_credentials_only_for_a_saved_provider() {
 }
 
 #[test]
+fn provider_verification_survives_a_restart_without_persisting_credentials() {
+    let path = test_path();
+    let store = ConfigStore::at(path.clone());
+    let secrets = MemoryCredentials::default();
+    let provider = ProviderRepository::new(&store, &secrets)
+        .create(provider_draft(), &secret())
+        .unwrap();
+
+    assert!(
+        store
+            .record_provider_verification(provider.id.as_str())
+            .unwrap()
+    );
+
+    let restarted = ConfigStore::at(path).load().unwrap();
+    assert!(restarted.providers[0].verified);
+}
+
+#[test]
 fn provider_and_connection_configuration_survive_a_restart() {
     let path = test_path();
     let store = ConfigStore::at(path.clone());
@@ -184,6 +203,7 @@ fn provider_draft() -> ProviderDraft {
             endpoint: None,
             region: Some("ap-southeast-2".to_owned()),
         },
+        verified: false,
     }
 }
 

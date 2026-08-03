@@ -17,6 +17,7 @@ fn provider(default_bucket: Option<&str>) -> ProviderConfig {
             endpoint: None,
             region: Some("ap-southeast-2".into()),
         },
+        verified: false,
     }
 }
 

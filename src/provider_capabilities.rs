@@ -79,6 +79,10 @@ impl std::error::Error for ProviderError {}
 
 pub type ProviderResult<T> = Result<T, ProviderError>;
 
+pub trait BucketAccessChecker {
+    fn check_bucket_access(&self, bucket: &str) -> impl Future<Output = ProviderResult<()>> + Send;
+}
+
 pub trait BucketLister {
     fn list_buckets(&self) -> impl Future<Output = ProviderResult<Vec<String>>> + Send;
 }
