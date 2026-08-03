@@ -3,6 +3,9 @@ import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ActivityRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 
 export component ActivityPage inherits ScrollView {
     in property <[ActivityRow]> activity-rows;
@@ -17,16 +20,11 @@ export component ActivityPage inherits ScrollView {
 
     CenteredPageColumn {
         width: parent.width - 12px;
-        Text {
+        HeadingLabel {
             text: "Activity";
-            color: Colors.text-primary;
-            font-size: 32px;
-            font-weight: 800;
         }
-        Text {
+        DescriptionLabel {
             text: "Queued and completed operations appear here until SyncPak exits.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
         if root.activity-clearable-count > 0 : VerticalLayout {
             spacing: 4px;
@@ -47,11 +45,9 @@ export component ActivityPage inherits ScrollView {
                     root.clear-completed-activity();
                 }
             }
-            Text {
+            DescriptionLabel {
                 text: "Removes " + root.activity-clearable-count +
                     (root.activity-clearable-count == 1 ? " completed, failed, or cancelled entry." : " completed, failed, or cancelled entries.");
-                color: Colors.text-secondary;
-                wrap: word-wrap;
             }
         }
         if root.activity-rows.length == 0 : Rectangle {
@@ -66,16 +62,12 @@ export component ActivityPage inherits ScrollView {
                 padding: 20px;
                 spacing: 8px;
                 alignment: center;
-                Text {
+                SectionHeadingLabel {
                     text: "No activity this time";
-                    font-size: 22px;
-                    font-weight: 700;
                     horizontal-alignment: center;
                 }
-                Text {
+                DescriptionLabel {
                     text: "Queued and completed operations will appear here until SyncPak exits.";
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                     horizontal-alignment: center;
                 }
             }
@@ -99,25 +91,17 @@ export component ActivityPage inherits ScrollView {
                     spacing: 8px;
                     VerticalLayout {
                         spacing: 2px;
-                        Text {
+                        SectionHeadingLabel {
                             text: activity.title + " · " + activity.status;
-                            font-weight: 700;
-                            wrap: word-wrap;
                         }
-                        Text {
+                        DescriptionLabel {
                             text: activity.detail;
-                            color: Colors.text-secondary;
-                            wrap: word-wrap;
                         }
-                        if activity.progress != "" : Text {
+                        if activity.progress != "" : DescriptionLabel {
                             text: "Progress: " + activity.progress;
-                            color: Colors.text-secondary;
-                            wrap: word-wrap;
                         }
-                        if activity.result != "" : Text {
+                        if activity.result != "" : DescriptionLabel {
                             text: "Result: " + activity.result;
-                            color: Colors.text-secondary;
-                            wrap: word-wrap;
                         }
                     }
                     if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalLayout {

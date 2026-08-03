@@ -31,6 +31,9 @@ import {
     ActivityRow,
     PreflightRow,
 } from "models.slint";
+import { DescriptionLabel } from "components/description-label.slint";
+import { ErrorLabel } from "components/error-label.slint";
+import { ErrorHeadingLabel } from "components/error-heading-label.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -392,17 +395,13 @@ export component AppWindow inherits Window {
                 VerticalLayout {
                     padding: 10px;
                     spacing: 4px;
-                    Text {
+                    ErrorHeadingLabel {
                         text: "Action needed";
-                        color: Colors.danger;
-                        font-weight: 700;
                     }
 
-                    Text {
+                    ErrorLabel {
                         accessible-live-region: assertive;
                         text: root.status-message;
-                        color: Colors.danger;
-                        wrap: word-wrap;
                     }
 
                     if root.diagnostic-entry-count > 0: Button {

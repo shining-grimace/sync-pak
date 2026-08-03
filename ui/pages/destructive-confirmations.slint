@@ -1,6 +1,10 @@
 import { Button, ListView } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
 
 export component ProviderDeletePage inherits CenteredPageRoot {
     in property <string> provider-name;
@@ -8,12 +12,8 @@ export component ProviderDeletePage inherits CenteredPageRoot {
     in property <[string]> connections;
     callback cancel();
     callback confirm();
-    Text {
+    HeadingLabel {
         text: "Delete " + root.provider-name + "?";
-        color: Colors.text-primary;
-        font-size: 28px;
-        font-weight: 800;
-        wrap: word-wrap;
     }
 
     Rectangle {
@@ -27,43 +27,34 @@ export component ProviderDeletePage inherits CenteredPageRoot {
         VerticalLayout {
             padding: 12px;
             spacing: 5px;
-            Text {
+            ErrorHeadingLabel {
                 text: "What will be deleted";
-                color: Colors.danger;
-                font-weight: 700;
             }
 
-            Text {
+            ErrorLabel {
                 text: "The protected credentials and " + root.connection-count + (root.connection-count == 1 ? " dependent connection will be removed from SyncPak." : " dependent connections will be removed from SyncPak.");
-                color: Colors.danger;
-                wrap: word-wrap;
             }
 
-            Text {
+            ErrorLabel {
                 text: "Local folders and cloud files are not deleted.";
-                color: Colors.danger;
-                wrap: word-wrap;
             }
         }
     }
 
     if root.connections.length > 0: VerticalLayout {
         spacing: 3px;
-        Text {
+        ErrorHeadingLabel {
             text: "Connections that will be deleted";
-            font-weight: 700;
         }
 
         ListView {
             accessible-label: "Connections that will be deleted";
             height: 180px;
             vertical-scrollbar-policy: always-on;
-            for connection-name in root.connections: Text {
+            for connection-name in root.connections: DescriptionLabel {
                 accessible-role: list-item;
                 accessible-label: connection-name;
                 text: "• " + connection-name;
-                color: Colors.text-secondary;
-                wrap: word-wrap;
             }
         }
     }
@@ -91,11 +82,8 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
     in property <string> connection-name;
     callback cancel();
     callback confirm();
-    Text {
+    HeadingLabel {
         text: "Delete " + root.connection-name + "?";
-        color: Colors.text-primary;
-        font-size: 28px;
-        font-weight: 800;
         wrap: word-wrap;
     }
 
@@ -110,22 +98,16 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
         VerticalLayout {
             padding: 12px;
             spacing: 5px;
-            Text {
+            ErrorHeadingLabel {
                 text: "What will be deleted";
-                color: Colors.danger;
-                font-weight: 700;
             }
 
-            Text {
+            ErrorLabel {
                 text: "This removes the connection from SyncPak.";
-                color: Colors.danger;
-                wrap: word-wrap;
             }
 
-            Text {
+            ErrorLabel {
                 text: "Its local folder and cloud files are not deleted.";
-                color: Colors.danger;
-                wrap: word-wrap;
             }
         }
     }
@@ -154,17 +136,13 @@ export component ActivityCancelPage inherits CenteredPageRoot {
     in property <string> activity-name;
     callback dismiss();
     callback confirm();
-    Text {
+    HeadingLabel {
         text: "Cancel " + root.activity-name + "?";
-        color: Colors.text-primary;
-        font-size: 28px;
-        font-weight: 800;
         wrap: word-wrap;
     }
 
-    Text {
+    DescriptionLabel {
         text: "Completed changes will not be undone. Work that has not started will be skipped.";
-        wrap: word-wrap;
     }
 
     VerticalLayout {

@@ -1,6 +1,9 @@
 import { Button, ComboBox } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
     in property <string> app-version;
@@ -11,11 +14,8 @@ export component PrivacyPage inherits CenteredPageRoot {
     callback show-diagnostics();
     callback show-welcome();
 
-    Text {
+    HeadingLabel {
         text: "Privacy & About";
-        color: Colors.text-primary;
-        font-size: 32px;
-        font-weight: 800;
     }
 
     Rectangle {
@@ -29,15 +29,12 @@ export component PrivacyPage inherits CenteredPageRoot {
         VerticalLayout {
             padding: 12px;
             spacing: 4px;
-            Text {
+            SectionHeadingLabel {
                 text: "Direct transfers";
-                font-size: 20px;
-                font-weight: 700;
             }
 
-            Text {
+            DescriptionLabel {
                 text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them.";
-                wrap: word-wrap;
             }
         }
     }
@@ -53,15 +50,12 @@ export component PrivacyPage inherits CenteredPageRoot {
         VerticalLayout {
             padding: 12px;
             spacing: 4px;
-            Text {
+            SectionHeadingLabel {
                 text: "Protected credentials";
-                font-size: 20px;
-                font-weight: 700;
             }
 
-            Text {
+            DescriptionLabel {
                 text: "Provider credentials are stored using this device's protected facilities and are retrieved only when SyncPak connects to that provider.";
-                wrap: word-wrap;
             }
         }
     }
@@ -77,15 +71,12 @@ export component PrivacyPage inherits CenteredPageRoot {
         VerticalLayout {
             padding: 12px;
             spacing: 4px;
-            Text {
+            SectionHeadingLabel {
                 text: "Data on this device";
-                font-size: 20px;
-                font-weight: 700;
             }
 
-            Text {
+            DescriptionLabel {
                 text: "Connection settings are stored locally. Activity is kept in memory and cleared when SyncPak exits.";
-                wrap: word-wrap;
             }
         }
     }
@@ -101,37 +92,30 @@ export component PrivacyPage inherits CenteredPageRoot {
         VerticalLayout {
             padding: 12px;
             spacing: 4px;
-            Text {
+            SectionHeadingLabel {
                 text: "File encryption";
-                font-size: 20px;
-                font-weight: 700;
             }
 
-            Text {
+            DescriptionLabel {
                 text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption.";
-                wrap: word-wrap;
             }
         }
     }
 
-    Text {
+    DescriptionLabel {
         text: "SyncPak " + root.app-version;
-        color: Colors.text-secondary;
     }
 
     VerticalLayout {
         accessible-role: region;
         accessible-label: "Appearance";
         spacing: 6px;
-        Text {
+        SectionHeadingLabel {
             text: "Appearance";
-            font-weight: 700;
         }
 
-        Text {
+        DescriptionLabel {
             text: "Choose whether SyncPak follows your system appearance or always uses a light or dark theme.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
 
         ComboBox {
@@ -150,9 +134,8 @@ export component PrivacyPage inherits CenteredPageRoot {
         accessible-role: region;
         accessible-label: "Privacy and source links";
         spacing: 6px;
-        Text {
+        SectionHeadingLabel {
             text: "Links";
-            font-weight: 700;
         }
 
         Button {
@@ -187,10 +170,8 @@ export component PrivacyPage inherits CenteredPageRoot {
             }
         }
 
-        Text {
+        DescriptionLabel {
             text: "SyncPak's privacy policy and open-source licence notices will be published before release.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
     }
 

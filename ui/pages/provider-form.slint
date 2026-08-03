@@ -7,6 +7,10 @@ import {
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
 
 export component ProviderFormPage inherits ScrollView {
     in-out property <string> provider-form-id;
@@ -36,23 +40,17 @@ export component ProviderFormPage inherits ScrollView {
     CenteredPageColumn {
         width: parent.width - 12px;
         content-spacing: 10px;
-        Text {
+        HeadingLabel {
             text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name;
-            color: Colors.text-primary;
-            font-size: 32px;
-            font-weight: 800;
             wrap: word-wrap;
         }
 
-        Text {
+        DescriptionLabel {
             text: "Credentials are saved in this device's protected storage only when you save this provider.";
-            wrap: word-wrap;
         }
 
-        if root.provider-form-id != "": Text {
+        if root.provider-form-id != "": DescriptionLabel {
             text: "To update this provider, enter its credentials again. SyncPak never displays saved secret values.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
         FocusScope {
             width: 0px;
@@ -65,9 +63,8 @@ export component ProviderFormPage inherits ScrollView {
             }
         }
 
-        Text {
+        SectionHeadingLabel {
             text: "Provider name";
-            font-weight: 700;
         }
 
         provider-name := LineEdit {
@@ -78,9 +75,8 @@ export component ProviderFormPage inherits ScrollView {
             enabled: !root.provider-verifying;
         }
 
-        Text {
+        SectionHeadingLabel {
             text: "Provider type";
-            font-weight: 700;
         }
 
         provider-kind := ComboBox {
@@ -92,9 +88,8 @@ export component ProviderFormPage inherits ScrollView {
 
         if root.provider-form-kind == 0: VerticalLayout {
             spacing: 4px;
-            Text {
+            SectionHeadingLabel {
                 text: "Account ID";
-                font-weight: 700;
             }
 
             LineEdit {
@@ -107,9 +102,8 @@ export component ProviderFormPage inherits ScrollView {
         }
         if root.provider-form-kind != 0: VerticalLayout {
             spacing: 4px;
-            Text {
+            SectionHeadingLabel {
                 text: "Region";
-                font-weight: 700;
             }
 
             LineEdit {
@@ -120,9 +114,8 @@ export component ProviderFormPage inherits ScrollView {
                 enabled: !root.provider-verifying;
             }
         }
-        Text {
+        SectionHeadingLabel {
             text: "Default bucket (optional)";
-            font-weight: 700;
         }
 
         LineEdit {
@@ -135,9 +128,8 @@ export component ProviderFormPage inherits ScrollView {
 
         if root.provider-verified-buckets.length > 0: VerticalLayout {
             spacing: 4px;
-            Text {
+            DescriptionLabel {
                 text: "Verified available buckets";
-                color: Colors.text-secondary;
             }
 
             ComboBox {
@@ -149,25 +141,18 @@ export component ProviderFormPage inherits ScrollView {
                 }
             }
         }
-        if !root.provider-verifying && root.provider-bucket-list-empty: Text {
+        if !root.provider-verifying && root.provider-bucket-list-empty: DescriptionLabel {
             text: "These credentials verified successfully, but no buckets were visible. Enter a bucket manually if its access is restricted.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
-        Text {
+        DescriptionLabel {
             text: "When set, new and edited connections using this provider use this bucket and cannot change it.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
 
-        if root.provider-form-kind == 1: Text {
+        if root.provider-form-kind == 1: DescriptionLabel {
             text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
-        Text {
+        SectionHeadingLabel {
             text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
-            font-weight: 700;
         }
 
         access-key := LineEdit {
@@ -178,9 +163,8 @@ export component ProviderFormPage inherits ScrollView {
             enabled: !root.provider-verifying;
         }
 
-        Text {
+        SectionHeadingLabel {
             text: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
-            font-weight: 700;
         }
 
         HorizontalLayout {
@@ -203,11 +187,9 @@ export component ProviderFormPage inherits ScrollView {
             }
         }
 
-        if root.provider-secret-visible: Text {
+        if root.provider-secret-visible: ErrorLabel {
             accessible-live-region: polite;
             text: "Make sure nobody else can see your screen. This value hides again in 15 seconds.";
-            color: Colors.danger;
-            wrap: word-wrap;
         }
         Button {
             accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings";
@@ -220,9 +202,8 @@ export component ProviderFormPage inherits ScrollView {
 
         if root.provider-advanced-expanded: VerticalLayout {
             spacing: 4px;
-            Text {
+            SectionHeadingLabel {
                 text: "Custom endpoint";
-                font-weight: 700;
             }
 
             LineEdit {
@@ -232,9 +213,8 @@ export component ProviderFormPage inherits ScrollView {
                 enabled: !root.provider-verifying;
             }
 
-            Text {
+            SectionHeadingLabel {
                 text: "Session token";
-                font-weight: 700;
             }
 
             LineEdit {
@@ -245,23 +225,17 @@ export component ProviderFormPage inherits ScrollView {
                 enabled: !root.provider-verifying;
             }
 
-            Text {
+            DescriptionLabel {
                 text: "Use this only when your provider issued a temporary session credential.";
-                color: Colors.text-secondary;
-                wrap: word-wrap;
             }
         }
-        Text {
+        DescriptionLabel {
             text: "Verify checks the credentials and lists available buckets without saving or changing cloud data.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
 
-        if root.provider-verifying: Text {
+        if root.provider-verifying: DescriptionLabel {
             accessible-live-region: polite;
             text: "Checking these settings without changing cloud data…";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
         VerticalLayout {
             Button {

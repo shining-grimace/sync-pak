@@ -1,22 +1,19 @@
 import { Button } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
 
 export component ConnectionDiscardConfirmationPage inherits CenteredPageRoot {
     in property <string> connection-name;
     callback cancel();
     callback confirm();
 
-    Text {
+    HeadingLabel {
         text: "Discard unsaved changes?";
-        color: Colors.text-primary;
-        font-size: 28px;
-        font-weight: 800;
     }
 
-    Text {
+    DescriptionLabel {
         text: "Your changes to this connection have not been saved.";
-        wrap: word-wrap;
     }
 
     VerticalLayout {

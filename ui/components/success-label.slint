@@ -1,0 +1,9 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+
+export component SuccessLabel inherits Text {
+    color: Colors.success;
+    font-size: Dimensions.text-size-description;
+    wrap: word-wrap;
+    horizontal-alignment: start;
+}

@@ -1,6 +1,9 @@
 import { Button } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
 
 export component ActivityProgressPage inherits CenteredPageRoot {
     in property <string> id;
@@ -15,22 +18,15 @@ export component ActivityProgressPage inherits CenteredPageRoot {
     callback dismiss();
     callback request-cancel(string, string);
 
-    Text {
+    HeadingLabel {
         text: "Progress: " + root.title;
-        color: Colors.text-primary;
-        font-size: 32px;
-        font-weight: 800;
-        wrap: word-wrap;
     }
-    Text {
+    SectionHeadingLabel {
         accessible-live-region: polite;
         text: root.phase;
-        font-weight: 700;
     }
-    Text {
+    DescriptionLabel {
         text: root.summary;
-        color: Colors.text-secondary;
-        wrap: word-wrap;
     }
     Rectangle {
         accessible-role: region;
@@ -43,9 +39,8 @@ export component ActivityProgressPage inherits CenteredPageRoot {
         VerticalLayout {
             padding: 12px;
             spacing: 6px;
-            Text {
+            SectionHeadingLabel {
                 text: "Overall progress";
-                font-weight: 700;
             }
             Rectangle {
                 background: Colors.progress-track;
@@ -58,34 +53,25 @@ export component ActivityProgressPage inherits CenteredPageRoot {
                     height: parent.height;
                 }
             }
-            Text {
+            DescriptionLabel {
                 text: root.percent + "% complete";
-                color: Colors.text-secondary;
-                wrap: word-wrap;
             }
-            Text {
+            DescriptionLabel {
                 text: root.items;
-                wrap: word-wrap;
             }
-            Text {
+            DescriptionLabel {
                 text: root.bytes;
-                wrap: word-wrap;
             }
-            Text {
+            SectionHeadingLabel {
                 text: "Current item";
-                color: Colors.text-secondary;
-                font-weight: 700;
             }
-            Text {
+            DescriptionLabel {
                 text: root.path;
-                wrap: word-wrap;
             }
         }
     }
-    Text {
+    DescriptionLabel {
         text: "Minimize leaves this operation running. You can return from Activity at any time.";
-        color: Colors.text-secondary;
-        wrap: word-wrap;
     }
     VerticalLayout {
         Button {

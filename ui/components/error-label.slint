@@ -1,0 +1,10 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+
+export component ErrorLabel inherits Text {
+    color: Colors.danger;
+    font-size: Dimensions.text-size-description;
+    font-weight: 400;
+    wrap: word-wrap;
+    horizontal-alignment: start;
+}

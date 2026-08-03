@@ -2,6 +2,11 @@ import { Button } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
 
 export component WelcomePage inherits CenteredPageRoot {
     in property <bool> configuration-unavailable;
@@ -12,21 +17,14 @@ export component WelcomePage inherits CenteredPageRoot {
     VerticalLayout {
         spacing: 14px;
         alignment: center;
-        Text {
+        HeadingLabel {
             text: "Your files, your cloud.";
-            color: Colors.text-primary;
-            font-size: 36px;
-            font-weight: 800;
             horizontal-alignment: center;
             wrap: word-wrap;
         }
 
-        Text {
+        DescriptionLabel {
             text: "SyncPak copies folders directly between this device and cloud providers you choose. SyncPak does not operate an intermediary file service.";
-            color: Colors.text-secondary;
-            font-size: 18px;
-            horizontal-alignment: center;
-            wrap: word-wrap;
             max-width: Dimensions.welcome-content-max-width;
         }
 
@@ -44,13 +42,8 @@ export component WelcomePage inherits CenteredPageRoot {
             border-radius: 12px;
             max-width: Dimensions.welcome-content-max-width;
             min-height: 92px;
-            Text {
+            DescriptionLabel {
                 text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider.";
-                color: Colors.border;
-                font-size: 16px;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                wrap: word-wrap;
                 x: 24px;
                 width: parent.width - 48px;
                 height: parent.height;
@@ -69,28 +62,20 @@ export component WelcomePage inherits CenteredPageRoot {
             VerticalLayout {
                 padding: 14px;
                 spacing: 5px;
-                Text {
+                SectionHeadingLabel {
                     text: "Choose how each connection behaves";
-                    font-weight: 700;
-                    horizontal-alignment: center;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Add-only — Copy new files without overwriting or deleting anything.";
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Mirror — Attempt to make a destination match its source after previewing destructive changes. Any issues are listed when the operation finishes.";
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Archive — Create timestamped ZIP archives and keep the number you choose.";
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
             }
         }
@@ -112,19 +97,12 @@ export component WelcomePage inherits CenteredPageRoot {
             VerticalLayout {
                 padding: 14px;
                 spacing: 6px;
-                Text {
+                ErrorHeadingLabel {
                     text: "Configuration storage is unavailable";
-                    color: Colors.danger;
-                    font-weight: 700;
-                    horizontal-alignment: center;
-                    wrap: word-wrap;
                 }
 
-                Text {
+                ErrorLabel {
                     text: "SyncPak cannot save providers or connections until its configuration storage is available.";
-                    color: Colors.danger;
-                    horizontal-alignment: center;
-                    wrap: word-wrap;
                 }
 
                 HorizontalLayout {

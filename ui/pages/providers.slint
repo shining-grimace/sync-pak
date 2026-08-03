@@ -6,6 +6,11 @@ import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ProviderRow } from "../models.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 
 export component ProvidersPage inherits CenteredPageRoot {
     in property <[ProviderRow]> providers;
@@ -16,34 +21,25 @@ export component ProvidersPage inherits CenteredPageRoot {
     callback request-provider-edit(string);
     callback request-provider-delete(string);
 
-    Text {
+    HeadingLabel {
         text: "Providers";
-        color: Colors.text-primary;
-        font-size: 32px;
-        font-weight: 800;
     }
 
-    Text {
+    DescriptionLabel {
         text: "Provider credentials are kept in this device's protected storage.";
-        color: Colors.text-secondary;
-        wrap: word-wrap;
     }
 
     if root.load-failed: VerticalLayout {
         accessible-role: region;
         accessible-label: "Providers unavailable";
         spacing: 8px;
-        Text {
+        ErrorHeadingLabel {
             text: "Providers unavailable";
             color: Colors.danger;
-            font-size: 22px;
-            font-weight: 700;
         }
 
-        Text {
+        ErrorLabel {
             text: "SyncPak could not load providers. Check configuration storage and try again.";
-            color: Colors.danger;
-            wrap: word-wrap;
         }
 
         Button {
@@ -69,15 +65,12 @@ export component ProvidersPage inherits CenteredPageRoot {
 
         if root.providers.length == 0: VerticalLayout {
             spacing: 8px;
-            Text {
+            SectionHeadingLabel {
                 text: "No providers yet";
-                font-size: 22px;
-                font-weight: 700;
             }
 
-            Text {
+            DescriptionLabel {
                 text: "Add credentials for Cloudflare R2, Backblaze B2, or AWS S3.";
-                wrap: word-wrap;
             }
         }
         if root.providers.length > 0: ListView {
@@ -97,21 +90,16 @@ export component ProvidersPage inherits CenteredPageRoot {
                     spacing: 8px;
                     VerticalLayout {
                         spacing: 2px;
-                        Text {
+                        SectionHeadingLabel {
                             text: provider.name;
-                            font-weight: 700;
-                            wrap: word-wrap;
                         }
 
-                        Text {
+                        DescriptionLabel {
                             text: provider.kind + " · " + provider.verification;
-                            color: Colors.text-secondary;
                         }
 
-                        Text {
+                        DescriptionLabel {
                             text: provider.connection-summary;
-                            color: Colors.text-secondary;
-                            wrap: word-wrap;
                         }
                     }
 

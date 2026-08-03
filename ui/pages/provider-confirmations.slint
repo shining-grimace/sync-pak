@@ -1,22 +1,19 @@
 import { Button } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
 
 export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     in property <string> provider-name;
     callback cancel();
     callback save();
 
-    Text {
+    HeadingLabel {
         text: "Save without verifying?";
-        color: Colors.text-primary;
-        font-size: 28px;
-        font-weight: 800;
     }
 
-    Text {
+    DescriptionLabel {
         text: "This provider may not work until its credentials and access are verified.";
-        wrap: word-wrap;
     }
 
     VerticalLayout {
@@ -44,16 +41,12 @@ export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
     callback cancel();
     callback confirm();
 
-    Text {
+    HeadingLabel {
         text: "Discard unsaved changes?";
-        color: Colors.text-primary;
-        font-size: 28px;
-        font-weight: 800;
     }
 
-    Text {
+    DescriptionLabel {
         text: "Your changes to this provider have not been saved.";
-        wrap: word-wrap;
     }
 
     VerticalLayout {

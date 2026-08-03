@@ -1,0 +1,10 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+
+export component ErrorHeadingLabel inherits Text {
+    color: Colors.danger;
+    font-size: Dimensions.text-size-section-header;
+    font-weight: 700;
+    wrap: word-wrap;
+    horizontal-alignment: start;
+}

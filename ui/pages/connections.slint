@@ -7,6 +7,11 @@ import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ConnectionRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
+import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 
 export component ConnectionsPage inherits ScrollView {
     in property <[ConnectionRow]> connections;
@@ -24,17 +29,12 @@ export component ConnectionsPage inherits ScrollView {
     vertical-scrollbar-policy: always-on;
     CenteredPageColumn {
         width: parent.width - 12px;
-        Text {
+        HeadingLabel {
             text: "Connections";
-            color: Colors.text-primary;
-            font-size: 32px;
-            font-weight: 800;
         }
 
-        Text {
+        DescriptionLabel {
             text: "A connection links a local folder with a folder in one cloud bucket.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
 
         if root.connections-load-failed: VerticalLayout {
@@ -52,17 +52,12 @@ export component ConnectionsPage inherits ScrollView {
             accessible-role: region;
             accessible-label: "Connections unavailable";
             spacing: 8px;
-            Text {
+            ErrorHeadingLabel {
                 text: "Connections unavailable";
-                color: Colors.danger;
-                font-size: 22px;
-                font-weight: 700;
             }
 
-            Text {
+            ErrorLabel {
                 text: "SyncPak could not load connections. Check configuration storage and try again.";
-                color: Colors.danger;
-                wrap: word-wrap;
             }
 
             connections-retry := Button {
@@ -124,10 +119,8 @@ export component ConnectionsPage inherits ScrollView {
                 accessible-role: region;
                 accessible-label: "Filter connections by mode";
                 spacing: 6px;
-                Text {
+                SectionHeadingLabel {
                     text: "Filter by mode";
-                    color: Colors.text-secondary;
-                    font-weight: 700;
                 }
 
                 HorizontalLayout {
@@ -173,30 +166,23 @@ export component ConnectionsPage inherits ScrollView {
                 }
             }
 
-            if root.connections-total > 0: Text {
+            if root.connections-total > 0: DescriptionLabel {
                 text: root.connections.length == root.connections-total ? "Showing all " + root.connections-total + (root.connections-total == 1 ? " connection." : " connections.") : "Showing " + root.connections.length + " of " + root.connections-total + " connections.";
-                color: Colors.text-secondary;
-                wrap: word-wrap;
             }
             if root.connections.length == 0: VerticalLayout {
                 spacing: 8px;
-                Text {
+                SectionHeadingLabel {
                     text: root.connections-total == 0 ? "No connections yet" : "No matching connections";
-                    font-size: 22px;
-                    font-weight: 700;
                 }
 
-                if root.connections-total == 0 && root.providers-total == 0: Text {
+                if root.connections-total == 0 && root.providers-total == 0: DescriptionLabel {
                     text: "Add a cloud provider, then create a connection to choose what to copy.";
-                    wrap: word-wrap;
                 }
-                if root.connections-total == 0 && root.providers-total > 0: Text {
+                if root.connections-total == 0 && root.providers-total > 0: DescriptionLabel {
                     text: "Create a connection to link a local folder with cloud storage.";
-                    wrap: word-wrap;
                 }
-                if root.connections-total > 0: Text {
+                if root.connections-total > 0: DescriptionLabel {
                     text: "Choose another filter or create a new connection.";
-                    wrap: word-wrap;
                 }
                 if root.connections-total > 0 && root.connection-filter != 0: Button {
                     accessible-label: "Remove the connection filter and show all connections";
@@ -223,13 +209,11 @@ export component ConnectionsPage inherits ScrollView {
                         spacing: 8px;
                         VerticalLayout {
                             spacing: 3px;
-                            Text {
+                            SectionHeadingLabel {
                                 text: connection.name;
-                                font-weight: 700;
-                                wrap: word-wrap;
                             }
 
-                            Text {
+                            DescriptionLabel {
                                 text: connection.detail;
                                 color: Colors.text-secondary;
                             }
@@ -238,39 +222,28 @@ export component ConnectionsPage inherits ScrollView {
                                 spacing: 6px;
                                 VerticalLayout {
                                     spacing: 2px;
-                                    Text {
+                                    DescriptionLabel {
                                         text: "On this device";
-                                        color: Colors.text-secondary;
-                                        font-weight: 700;
                                     }
 
-                                    Text {
+                                    DescriptionLabel {
                                         text: connection.local-path;
-                                        color: Colors.text-secondary;
-                                        wrap: word-wrap;
                                     }
                                 }
 
-                                Text {
+                                DescriptionLabel {
                                     accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders";
                                     text: connection.mode == 2 ? "↓ Archive destination" : "↕ Connected folders";
-                                    color: Colors.border;
-                                    font-weight: 700;
                                 }
 
                                 VerticalLayout {
                                     spacing: 2px;
-                                    Text {
+                                    DescriptionLabel {
                                         text: "In " + connection.provider-name;
-                                        color: Colors.text-secondary;
-                                        font-weight: 700;
-                                        wrap: word-wrap;
                                     }
 
-                                    Text {
+                                    DescriptionLabel {
                                         text: connection.remote-location;
-                                        color: Colors.text-secondary;
-                                        wrap: word-wrap;
                                     }
                                 }
                             }
@@ -279,47 +252,34 @@ export component ConnectionsPage inherits ScrollView {
                                 VerticalLayout {
                                     horizontal-stretch: 1;
                                     spacing: 2px;
-                                    Text {
+                                    DescriptionLabel {
                                         text: "On this device";
-                                        color: Colors.text-secondary;
-                                        font-weight: 700;
                                     }
 
-                                    Text {
+                                    DescriptionLabel {
                                         text: connection.local-path;
-                                        color: Colors.text-secondary;
-                                        wrap: word-wrap;
                                     }
                                 }
 
-                                Text {
+                                SectionHeadingLabel {
                                     accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders";
                                     text: connection.mode == 2 ? "▣" : "⇄";
-                                    color: Colors.border;
-                                    font-size: 22px;
-                                    vertical-alignment: center;
                                 }
 
                                 VerticalLayout {
                                     horizontal-stretch: 1;
                                     spacing: 2px;
-                                    Text {
+                                    DescriptionLabel {
                                         text: "In " + connection.provider-name;
-                                        color: Colors.text-secondary;
-                                        font-weight: 700;
-                                        wrap: word-wrap;
                                     }
 
-                                    Text {
+                                    DescriptionLabel {
                                         text: connection.remote-location;
-                                        color: Colors.text-secondary;
-                                        wrap: word-wrap;
                                     }
                                 }
                             }
-                            if connection.mode == 2: Text {
+                            if connection.mode == 2: DescriptionLabel {
                                 text: "Keeps the last " + connection.archive-retention + " archives";
-                                color: Colors.text-secondary;
                             }
                         }
 

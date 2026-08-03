@@ -8,6 +8,12 @@ import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { PreflightRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
+import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
+import { SuccessLabel } from "../components/success-label.slint";
 
 export component PreflightPage inherits ScrollView {
     in property <string> connection-name;
@@ -37,18 +43,13 @@ export component PreflightPage inherits ScrollView {
 
     CenteredPageColumn {
         width: parent.width - 12px;
-        Text {
+        HeadingLabel {
             text: root.failed ? "This operation cannot start" : (root.loading ? "Checking before anything changes" : (root.requires-mirror-confirmation ? "Review mirror changes" : "Ready to start"));
-            color: Colors.text-primary;
-            font-size: 32px;
-            font-weight: 800;
             wrap: word-wrap;
         }
 
-        Text {
+        DescriptionLabel {
             text: "Reviewing " + root.connection-name + " · " + root.connection-mode + " · " + (root.direction == 0 ? "Upload" : (root.direction == 1 ? "Download" : "Both ways"));
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
 
         Rectangle {
@@ -62,38 +63,27 @@ export component PreflightPage inherits ScrollView {
             VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
-                if root.direction != 2: Text {
+                if root.direction != 2: DescriptionLabel {
                     text: "Source: " + (root.direction == 0 ? root.local-endpoint : root.remote-endpoint);
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
-                if root.direction != 2: Text {
+                if root.direction != 2: DescriptionLabel {
                     text: "Destination: " + (root.direction == 0 ? root.remote-endpoint : root.local-endpoint);
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
-                if root.direction == 2: Text {
+                if root.direction == 2: DescriptionLabel {
                     text: "This device: " + root.local-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
-                if root.direction == 2: Text {
+                if root.direction == 2: DescriptionLabel {
                     text: "Cloud storage: " + root.remote-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
             }
         }
 
-        if root.loading: Text {
+        if root.loading: SectionHeadingLabel {
             accessible-live-region: polite;
             text: "Listing files…";
-            font-weight: 700;
         }
-        Text {
+        DescriptionLabel {
             text: "No files are changed during this check.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
 
         if root.loading: Rectangle {
@@ -102,9 +92,8 @@ export component PreflightPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 110px;
-            Text {
+            DescriptionLabel {
                 text: "Preflight will compare the endpoints above, then show additions, overwrites, deletions, and skipped files before anything starts.";
-                wrap: word-wrap;
                 x: 16px;
                 y: 16px;
                 width: parent.width - 32px;
@@ -122,17 +111,12 @@ export component PreflightPage inherits ScrollView {
             VerticalLayout {
                 padding: 12px;
                 spacing: 5px;
-                Text {
+                ErrorHeadingLabel {
                     text: "Resolve this issue, then run the connection again. No files were changed.";
-                    color: Colors.danger;
-                    font-weight: 700;
-                    wrap: word-wrap;
                 }
 
-                Text {
+                ErrorLabel {
                     text: root.failure-message;
-                    color: Colors.danger;
-                    wrap: word-wrap;
                 }
             }
         }
@@ -144,52 +128,40 @@ export component PreflightPage inherits ScrollView {
                 spacing: 4px;
                 if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
                     spacing: 3px;
-                    Text {
+                    DescriptionLabel {
                         text: root.additions;
-                        font-weight: 700;
-                        wrap: word-wrap;
                     }
 
-                    Text {
+                    DescriptionLabel {
                         text: root.overwrites;
-                        font-weight: 700;
-                        wrap: word-wrap;
                     }
 
-                    Text {
+                    DescriptionLabel {
                         text: root.deletions;
-                        font-weight: 700;
-                        wrap: word-wrap;
                     }
 
-                    Text {
+                    DescriptionLabel {
                         text: root.skipped;
-                        font-weight: 700;
-                        wrap: word-wrap;
                     }
                 }
                 if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                     spacing: 8px;
-                    Text {
+                    DescriptionLabel {
                         text: root.additions;
-                        font-weight: 700;
                     }
 
-                    Text {
+                    DescriptionLabel {
                         text: root.overwrites;
-                        font-weight: 700;
                     }
                 }
                 if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                     spacing: 8px;
-                    Text {
+                    DescriptionLabel {
                         text: root.deletions;
-                        font-weight: 700;
                     }
 
-                    Text {
+                    DescriptionLabel {
                         text: root.skipped;
-                        font-weight: 700;
                     }
                 }
             }
@@ -205,45 +177,33 @@ export component PreflightPage inherits ScrollView {
                 VerticalLayout {
                     padding: 12px;
                     spacing: 5px;
-                    Text {
+                    ErrorHeadingLabel {
                         text: "Destructive mirror changes";
-                        color: Colors.danger;
-                        font-weight: 700;
                     }
 
-                    Text {
+                    ErrorLabel {
                         accessible-live-region: assertive;
                         text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
-                        color: Colors.danger;
-                        wrap: word-wrap;
                     }
 
-                    Text {
+                    ErrorLabel {
                         text: root.overwrites + " · " + root.deletions;
-                        color: Colors.danger;
-                        wrap: word-wrap;
                     }
                 }
             }
-            if root.items.length == 0: Text {
+            if root.items.length == 0: SuccessLabel {
                 text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
-                color: Colors.success;
-                wrap: word-wrap;
             }
-            if root.items.length > 0: Text {
+            if root.items.length > 0: DescriptionLabel {
                 accessible-live-region: polite;
                 text: root.item-filter == 0 ? "Reviewing " + root.items.length + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
-                color: Colors.text-secondary;
-                wrap: word-wrap;
             }
             if root.items.length > 0: VerticalLayout {
                 accessible-role: region;
                 accessible-label: "Filter planned file changes";
                 spacing: 6px;
-                Text {
+                SectionHeadingLabel {
                     text: "Show planned changes";
-                    color: Colors.text-secondary;
-                    font-weight: 700;
                 }
 
                 HorizontalLayout {
@@ -316,36 +276,28 @@ export component PreflightPage inherits ScrollView {
                     accessible-role: list-item;
                     accessible-label: item.status + ": " + item.path + ". " + item.detail;
                     spacing: 4px;
-                    if root.width < Dimensions.narrow-layout-breakpoint: Text {
+                    if root.width < Dimensions.narrow-layout-breakpoint: SectionHeadingLabel {
                         text: item.status;
-                        color: Colors.text-secondary;
-                        font-weight: 700;
-                        wrap: word-wrap;
                     }
                     if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
                         spacing: 8px;
-                        Text {
+                        DescriptionLabel {
                             text: item.status;
                             width: 110px;
-                            color: Colors.text-secondary;
                         }
 
-                        Text {
+                        DescriptionLabel {
                             text: item.path;
                             horizontal-stretch: 1;
-                            wrap: word-wrap;
                         }
                     }
-                    if root.width < Dimensions.narrow-layout-breakpoint: Text {
+                    if root.width < Dimensions.narrow-layout-breakpoint: DescriptionLabel {
                         text: item.path;
-                        wrap: word-wrap;
                     }
                     VerticalLayout {
                         spacing: 2px;
-                        Text {
+                        DescriptionLabel {
                             text: item.detail;
-                            color: Colors.text-secondary;
-                            wrap: word-wrap;
                         }
                     }
                 }
@@ -358,10 +310,8 @@ export component PreflightPage inherits ScrollView {
                 border-width: 1px;
                 border-radius: 8px;
                 min-height: 74px;
-                Text {
+                DescriptionLabel {
                     text: root.item-filter == 1 ? "No new files are planned." : (root.item-filter == 2 ? "No overwrites are planned." : (root.item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                     x: 12px;
                     y: 12px;
                     width: parent.width - 24px;
@@ -373,11 +323,13 @@ export component PreflightPage inherits ScrollView {
                 text: "I understand that the listed destination files will be overwritten or deleted.";
                 checked <=> root.mirror-confirmed;
             }
-            if root.requires-mirror-confirmation: Text {
+            if root.requires-mirror-confirmation && root.mirror-confirmed: SuccessLabel {
                 accessible-live-region: polite;
-                text: root.mirror-confirmed ? "Destructive mirror changes acknowledged." : "Acknowledge the listed changes before this mirror can start.";
-                color: root.mirror-confirmed ? Colors.success : Colors.danger;
-                wrap: word-wrap;
+                text: "Destructive mirror changes acknowledged.";
+            }
+            if root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
+                accessible-live-region: polite;
+                text: "Acknowledge the listed changes before this mirror can start.";
             }
             Button {
                 accessible-label: root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action;
@@ -389,10 +341,8 @@ export component PreflightPage inherits ScrollView {
                 }
             }
 
-            if root.requires-mirror-confirmation && !root.mirror-confirmed: Text {
+            if root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
                 text: "Acknowledge the destructive changes above before starting.";
-                color: Colors.danger;
-                wrap: word-wrap;
             }
         }
         VerticalLayout {

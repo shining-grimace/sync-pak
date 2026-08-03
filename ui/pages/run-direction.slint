@@ -1,6 +1,9 @@
 import { Button, ScrollView } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { HeadingLabel } from "../components/heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 
 export component RunDirectionPage inherits ScrollView {
     in property <string> connection-name;
@@ -19,17 +22,13 @@ export component RunDirectionPage inherits ScrollView {
 
     CenteredPageColumn {
         width: parent.width - 12px;
-        Text {
+        HeadingLabel {
             text: "Run " + root.connection-name;
-            color: Colors.text-primary;
-            font-size: 32px;
-            font-weight: 800;
             wrap: word-wrap;
         }
 
-        Text {
+        DescriptionLabel {
             text: root.connection-mode + " connection";
-            color: Colors.text-secondary;
         }
 
         if root.direction == 0 && root.archive-upload-details != "": Rectangle {
@@ -38,10 +37,8 @@ export component RunDirectionPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 66px;
-            Text {
+            DescriptionLabel {
                 text: root.archive-upload-details;
-                color: Colors.text-secondary;
-                wrap: word-wrap;
                 x: 12px;
                 y: 12px;
                 width: parent.width - 24px;
@@ -54,10 +51,8 @@ export component RunDirectionPage inherits ScrollView {
             border-width: 1px;
             border-radius: 8px;
             min-height: 66px;
-            Text {
+            DescriptionLabel {
                 text: root.archive-download-details;
-                color: Colors.text-secondary;
-                wrap: word-wrap;
                 x: 12px;
                 y: 12px;
                 width: parent.width - 24px;
@@ -75,26 +70,20 @@ export component RunDirectionPage inherits ScrollView {
             VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
-                Text {
+                SectionHeadingLabel {
                     text: "Upload";
-                    font-weight: 700;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Use the local folder as the source and cloud storage as the destination.";
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Source: " + root.local-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Destination: " + root.remote-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
                 FocusScope {
@@ -130,26 +119,20 @@ export component RunDirectionPage inherits ScrollView {
             VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
-                Text {
+                SectionHeadingLabel {
                     text: "Download";
-                    font-weight: 700;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Use cloud storage as the source and the local folder as the destination.";
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Source: " + root.remote-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Destination: " + root.local-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
                 Button {
@@ -174,26 +157,20 @@ export component RunDirectionPage inherits ScrollView {
             VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
-                Text {
+                SectionHeadingLabel {
                     text: "Both ways";
-                    font-weight: 700;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Copy files found on only one side to the other. Changed files are skipped.";
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "This device: " + root.local-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
-                Text {
+                DescriptionLabel {
                     text: "Cloud storage: " + root.remote-endpoint;
-                    color: Colors.text-secondary;
-                    wrap: word-wrap;
                 }
 
                 Button {
@@ -206,10 +183,8 @@ export component RunDirectionPage inherits ScrollView {
                 }
             }
         }
-        Text {
+        DescriptionLabel {
             text: "Continue performs a read-only inventory and shows the complete plan before any files can change.";
-            color: Colors.text-secondary;
-            wrap: word-wrap;
         }
 
         VerticalLayout {
