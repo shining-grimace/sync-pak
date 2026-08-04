@@ -1,4 +1,4 @@
-import { Button, Palette } from "std-widgets.slint";
+import { Palette } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 import { Colors } from "colors.slint";
 import { WelcomePage } from "pages/welcome.slint";
@@ -35,6 +35,11 @@ import { DescriptionLabel } from "components/description-label.slint";
 import { ErrorLabel } from "components/error-label.slint";
 import { ErrorHeadingLabel } from "components/error-heading-label.slint";
 import { DangerCard, InfoCard, SuccessCard } from "components/cards.slint";
+import {
+    CardPrimaryActionButton,
+    CardSecondaryActionButton,
+    NavMenuButton,
+} from "components/action-buttons.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -342,20 +347,20 @@ export component AppWindow inherits Window {
 
                 HorizontalLayout {
                     spacing: 6px;
-                    Button {
+                    NavMenuButton {
                         accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
                         text: "Connections";
-                        primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
+                        selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
                         enabled: !root.confirmation-open && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(4);
                         }
                     }
 
-                    Button {
+                    NavMenuButton {
                         accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
                         text: "Providers";
-                        primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
                         enabled: !root.confirmation-open && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(1);
@@ -365,20 +370,20 @@ export component AppWindow inherits Window {
 
                 HorizontalLayout {
                     spacing: 6px;
-                    Button {
+                    NavMenuButton {
                         accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                         text: "Activity";
-                        primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
+                        selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
                         enabled: !root.confirmation-open && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(9);
                         }
                     }
 
-                    Button {
+                    NavMenuButton {
                         accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
                         text: "Privacy";
-                        primary: root.page == 3;
+                        selected: root.page == 3;
                         enabled: !root.confirmation-open;
                         clicked => {
                             root.request-navigation(3);
@@ -404,9 +409,9 @@ export component AppWindow inherits Window {
                     text: root.status-message;
                 }
 
-                if root.diagnostic-entry-count > 0: Button {
+                if root.diagnostic-entry-count > 0: CardPrimaryActionButton {
                     accessible-label: "View redacted diagnostics for this error";
-                    text: "View redacted diagnostics";
+                    text: "Diagnostics";
                     clicked => {
                         root.show-diagnostics();
                     }
@@ -453,15 +458,15 @@ export component AppWindow inherits Window {
 
                 if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
-                    Button {
+                    CardPrimaryActionButton {
                         accessible-label: "View progress for " + root.active-activity-title;
-                        text: "View progress";
+                        text: "View Progress";
                         clicked => {
                             root.show-activity-progress(root.active-activity-id);
                         }
                     }
 
-                    Button {
+                    CardSecondaryActionButton {
                         accessible-label: "Cancel " + root.active-activity-title;
                         text: "Cancel";
                         clicked => {
@@ -471,15 +476,15 @@ export component AppWindow inherits Window {
                 }
                 if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
                     spacing: Dimensions.card-element-spacing;
-                    Button {
+                    CardPrimaryActionButton {
                         accessible-label: "View progress for " + root.active-activity-title;
-                        text: "View progress";
+                        text: "View Progress";
                         clicked => {
                             root.show-activity-progress(root.active-activity-id);
                         }
                     }
 
-                    Button {
+                    CardSecondaryActionButton {
                         accessible-label: "Cancel " + root.active-activity-title;
                         text: "Cancel";
                         clicked => {
@@ -829,20 +834,20 @@ export component AppWindow inherits Window {
                 min-height: 88px;
                     HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        Button {
+                        NavMenuButton {
                             accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
                             text: "Connections";
-                            primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
+                            selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
                             enabled: !root.confirmation-open && !root.configuration-unavailable;
                             clicked => {
                                 root.request-navigation(4);
                             }
                         }
 
-                        Button {
+                        NavMenuButton {
                             accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
                             text: "Providers";
-                            primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                            selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
                             enabled: !root.confirmation-open && !root.configuration-unavailable;
                             clicked => {
                                 root.request-navigation(1);
@@ -852,20 +857,20 @@ export component AppWindow inherits Window {
 
                     HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        Button {
+                        NavMenuButton {
                             accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                             text: "Activity";
-                            primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
+                            selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
                             enabled: !root.confirmation-open && !root.configuration-unavailable;
                             clicked => {
                                 root.request-navigation(9);
                             }
                         }
 
-                        Button {
+                        NavMenuButton {
                             accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
                             text: "Privacy";
-                            primary: root.page == 3;
+                            selected: root.page == 3;
                             enabled: !root.confirmation-open;
                             clicked => {
                                 root.request-navigation(3);
@@ -890,40 +895,40 @@ export component AppWindow inherits Window {
                     letter-spacing: 2px;
                 }
 
-                Button {
+                NavMenuButton {
                     accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
                     text: "Connections";
-                    primary: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
+                    selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
                     enabled: !root.confirmation-open && !root.configuration-unavailable;
                     clicked => {
                         root.request-navigation(4);
                     }
                 }
 
-                Button {
+                NavMenuButton {
                     accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
                     text: "Providers";
-                    primary: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                    selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
                     enabled: !root.confirmation-open && !root.configuration-unavailable;
                     clicked => {
                         root.request-navigation(1);
                     }
                 }
 
-                Button {
+                NavMenuButton {
                     accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                     text: "Activity";
-                    primary: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
+                    selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
                     enabled: !root.confirmation-open && !root.configuration-unavailable;
                     clicked => {
                         root.request-navigation(9);
                     }
                 }
 
-                Button {
+                NavMenuButton {
                     accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
                     text: "Privacy";
-                    primary: root.page == 3;
+                    selected: root.page == 3;
                     enabled: !root.confirmation-open;
                     clicked => {
                         root.request-navigation(3);

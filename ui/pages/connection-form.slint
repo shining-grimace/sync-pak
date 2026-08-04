@@ -1,5 +1,4 @@
 import {
-    Button,
     ComboBox,
     LineEdit,
     ScrollView,
@@ -10,6 +9,7 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component ConnectionFormPage inherits ScrollView {
     in-out property <string> connection-form-id;
@@ -105,9 +105,9 @@ export component ConnectionFormPage inherits ScrollView {
                     text: "SyncPak could not load providers. Check configuration storage and try again.";
                 }
 
-                Button {
+                PrimaryActionButton {
                     accessible-label: "Retry loading providers for this connection";
-                    text: root.connection-providers-loading ? "Retrying…" : "Retry loading providers";
+                    text: root.connection-providers-loading ? "Retrying…" : "Retry Loading Providers";
                     enabled: !root.connection-providers-loading;
                     clicked => {
                         root.retry-connection-providers();
@@ -188,9 +188,9 @@ export component ConnectionFormPage inherits ScrollView {
                 text: "Selecting a folder lets SyncPak inventory and transfer files only for this connection. Your system may ask you to allow access to the folder you choose.";
             }
 
-            Button {
+            PrimaryActionButton {
                 accessible-label: root.folder-picker-open ? "Folder selection in progress" : "Select local folder";
-                text: root.folder-picker-open ? "Selecting folder…" : "Select folder";
+                text: root.folder-picker-open ? "Selecting Folder…" : "Select Folder";
                 enabled: !root.connection-verifying && !root.folder-picker-open;
                 clicked => {
                     root.select-local-folder();
@@ -246,7 +246,7 @@ export component ConnectionFormPage inherits ScrollView {
                 text: "Checking the local folder and cloud path without changing files…";
             }
 
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Back to connections";
                 text: "Back";
                 clicked => {
@@ -254,28 +254,27 @@ export component ConnectionFormPage inherits ScrollView {
                 }
             }
 
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Save connection " + root.connection-form-name + " without verifying";
-                text: "Save without verifying";
+                text: "Save Without Verifying";
                 enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
                 clicked => {
                     root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention);
                 }
             }
 
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Verify connection settings for " + root.connection-form-name;
-                text: "Verify settings";
+                text: "Verify Settings";
                 enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
                 clicked => {
                     root.verify-connection();
                 }
             }
 
-            Button {
+            PrimaryActionButton {
                 accessible-label: "Save and verify connection " + root.connection-form-name;
-                text: root.connection-verifying ? "Verifying…" : "Save and verify";
-                primary: true;
+                text: root.connection-verifying ? "Verifying…" : "Save and Verify";
                 enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
                 clicked => {
                     root.save-and-verify-connection();

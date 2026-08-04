@@ -1,5 +1,4 @@
 import {
-    Button,
     CheckBox,
     ListView,
     ScrollView,
@@ -14,6 +13,7 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
 import { DangerCard, InfoCard } from "../components/cards.slint";
+import { PrimaryActionButton, RadioButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component PreflightPage inherits ScrollView {
     in property <string> connection-name;
@@ -176,28 +176,28 @@ export component PreflightPage inherits ScrollView {
 
                 HorizontalLayout {
                     spacing: 6px;
-                    preflight-filter-all := Button {
+                    preflight-filter-all := RadioButton {
                         accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
                         text: "All";
-                        primary: root.item-filter == 0;
+                        selected: root.item-filter == 0;
                         clicked => {
                             root.set-item-filter(0);
                         }
                     }
 
-                    Button {
+                    RadioButton {
                         accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
                         text: "New";
-                        primary: root.item-filter == 1;
+                        selected: root.item-filter == 1;
                         clicked => {
                             root.set-item-filter(1);
                         }
                     }
 
-                    Button {
+                    RadioButton {
                         accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
                         text: "Overwrites";
-                        primary: root.item-filter == 2;
+                        selected: root.item-filter == 2;
                         clicked => {
                             root.set-item-filter(2);
                         }
@@ -206,19 +206,19 @@ export component PreflightPage inherits ScrollView {
 
                 HorizontalLayout {
                     spacing: 6px;
-                    Button {
+                    RadioButton {
                         accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
                         text: "Deletions";
-                        primary: root.item-filter == 3;
+                        selected: root.item-filter == 3;
                         clicked => {
                             root.set-item-filter(3);
                         }
                     }
 
-                    Button {
+                    RadioButton {
                         accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
                         text: "Warnings";
-                        primary: root.item-filter == 4;
+                        selected: root.item-filter == 4;
                         clicked => {
                             root.set-item-filter(4);
                         }
@@ -291,11 +291,10 @@ export component PreflightPage inherits ScrollView {
                 accessible-live-region: polite;
                 text: "Acknowledge the listed changes before this mirror can start.";
             }
-            Button {
+            PrimaryActionButton {
                 accessible-label: root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action;
                 text: root.start-action;
                 enabled: !root.loading && !root.failed && (!root.requires-mirror-confirmation || root.mirror-confirmed);
-                primary: true;
                 clicked => {
                     root.start-operation();
                 }
@@ -316,7 +315,7 @@ export component PreflightPage inherits ScrollView {
                     self.focus();
                 }
             }
-            preflight-back := Button {
+            preflight-back := SecondaryActionButton {
                 accessible-label: "Return to direction selection for " + root.connection-name;
                 text: "Back";
                 clicked => {
@@ -324,17 +323,16 @@ export component PreflightPage inherits ScrollView {
                 }
             }
 
-            if root.failed: Button {
+            if root.failed: PrimaryActionButton {
                 accessible-label: "Try the preflight check again";
-                text: "Try again";
-                primary: true;
+                text: "Try Again";
                 clicked => {
                     root.begin-preflight();
                 }
             }
-            if !root.loading && !root.failed: Button {
+            if !root.loading && !root.failed: SecondaryActionButton {
                 accessible-label: "Refresh the read-only preflight review";
-                text: "Refresh review";
+                text: "Refresh Review";
                 clicked => {
                     root.begin-preflight();
                 }

@@ -1,5 +1,4 @@
 import {
-    Button,
     ComboBox,
     LineEdit,
     ScrollView,
@@ -11,6 +10,7 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component ProviderFormPage inherits ScrollView {
     in-out property <string> provider-form-id;
@@ -177,7 +177,7 @@ export component ProviderFormPage inherits ScrollView {
                 enabled: !root.provider-verifying;
             }
 
-            Button {
+            SecondaryActionButton {
                 accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key");
                 text: root.provider-secret-visible ? "Hide" : "Reveal";
                 enabled: !root.provider-verifying;
@@ -191,9 +191,9 @@ export component ProviderFormPage inherits ScrollView {
             accessible-live-region: polite;
             text: "Make sure nobody else can see your screen. This value hides again in 15 seconds.";
         }
-        Button {
+        SecondaryActionButton {
             accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings";
-            text: root.provider-advanced-expanded ? "Hide advanced" : "Advanced";
+            text: root.provider-advanced-expanded ? "Hide Advanced" : "Advanced";
             enabled: !root.provider-verifying;
             clicked => {
                 root.provider-advanced-expanded = !root.provider-advanced-expanded;
@@ -238,7 +238,7 @@ export component ProviderFormPage inherits ScrollView {
             text: "Checking these settings without changing cloud data…";
         }
         VerticalLayout {
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Back to providers";
                 text: "Back";
                 clicked => {
@@ -246,28 +246,27 @@ export component ProviderFormPage inherits ScrollView {
                 }
             }
 
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Save " + root.provider-form-name + " without verifying";
-                text: "Save without verifying";
+                text: "Save Without Verifying";
                 enabled: !root.provider-verifying;
                 clicked => {
                     root.request-save-provider();
                 }
             }
 
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Verify settings for " + root.provider-form-name;
-                text: "Verify settings";
+                text: "Verify Settings";
                 enabled: !root.provider-verifying;
                 clicked => {
                     root.verify-provider();
                 }
             }
 
-            Button {
+            PrimaryActionButton {
                 accessible-label: "Save and verify " + root.provider-form-name;
-                text: root.provider-verifying ? "Verifying…" : "Save and verify";
-                primary: true;
+                text: root.provider-verifying ? "Verifying…" : "Save and Verify";
                 enabled: !root.provider-verifying;
                 clicked => {
                     root.save-and-verify-provider();

@@ -1,9 +1,10 @@
-import { Button, ScrollView } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
+import { PrimaryActionButton, RadioButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component RunDirectionPage inherits ScrollView {
     in property <string> connection-name;
@@ -74,10 +75,10 @@ export component RunDirectionPage inherits ScrollView {
                     }
                 }
 
-                choose-upload := Button {
+                choose-upload := RadioButton {
                     accessible-label: root.direction == 0 ? "Upload direction, selected" : "Choose upload direction";
-                    text: "Choose upload";
-                    primary: root.direction == 0;
+                    text: "Choose Upload";
+                    selected: root.direction == 0;
                     clicked => {
                         root.choose-direction(0);
                     }
@@ -104,10 +105,10 @@ export component RunDirectionPage inherits ScrollView {
                     text: "Destination: " + root.local-endpoint;
                 }
 
-                Button {
+                RadioButton {
                     accessible-label: root.direction == 1 ? "Download direction, selected" : "Choose download direction";
-                    text: "Choose download";
-                    primary: root.direction == 1;
+                    text: "Choose Download";
+                    selected: root.direction == 1;
                     clicked => {
                         root.choose-direction(1);
                     }
@@ -134,10 +135,10 @@ export component RunDirectionPage inherits ScrollView {
                     text: "Cloud storage: " + root.remote-endpoint;
                 }
 
-                Button {
+                RadioButton {
                     accessible-label: root.direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction";
-                    text: "Choose both ways";
-                    primary: root.direction == 2;
+                    text: "Choose Both Ways";
+                    selected: root.direction == 2;
                     clicked => {
                         root.choose-direction(2);
                     }
@@ -148,7 +149,7 @@ export component RunDirectionPage inherits ScrollView {
         }
 
         VerticalLayout {
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Cancel run for " + root.connection-name;
                 text: "Cancel";
                 clicked => {
@@ -156,10 +157,9 @@ export component RunDirectionPage inherits ScrollView {
                 }
             }
 
-            Button {
+            PrimaryActionButton {
                 accessible-label: "Continue to preflight for " + root.connection-name;
-                text: "Continue to preflight";
-                primary: true;
+                text: "Continue to Preflight";
                 clicked => {
                     root.begin-preflight();
                 }

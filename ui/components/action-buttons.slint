@@ -1,0 +1,159 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+
+component ActionButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> enabled: true;
+    in property <bool> emphasized: false;
+    in property <brush> fill-color;
+    in property <brush> outline-color;
+    in property <brush> label-color;
+    in property <length> button-width;
+    in property <bool> fixed-width: false;
+    callback clicked();
+
+    min-width: root.fixed-width ? root.button-width : 0px;
+    preferred-width: root.button-width;
+    max-width: root.button-width;
+    height: Dimensions.button-height;
+    horizontal-stretch: 0;
+    vertical-stretch: 0;
+    forward-focus: button-focus;
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text;
+    accessible-action-default => {
+        button-touch.clicked();
+    }
+    background: root.fill-color;
+    border-color: root.outline-color;
+    border-width: 1px;
+    border-radius: Dimensions.button-border-radius;
+    opacity: !root.enabled ? 0.45 : (button-touch.pressed ? 0.7 : (button-touch.has-hover ? 0.85 : 1));
+
+    Text {
+        text: root.text;
+        color: root.label-color;
+        font-size: Dimensions.text-size-description;
+        font-weight: root.emphasized ? 700 : 500;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+
+    button-touch := TouchArea {
+        enabled: root.enabled;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    button-focus := FocusScope {
+        x: 0px;
+        width: 0px;
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if event.text == Key.Space || event.text == "\n" {
+                button-touch.clicked();
+                return accept;
+            }
+            return reject;
+        }
+    }
+
+    if button-focus.has-focus && root.enabled: Rectangle {
+        border-color: root.label-color;
+        border-width: 2px;
+        border-radius: Dimensions.button-border-radius;
+    }
+}
+
+export component NavMenuButton inherits ActionButton {
+    in property <bool> selected: false;
+
+    button-width: Dimensions.action-button-preferred-width;
+    emphasized: root.selected;
+    fill-color: Colors.text-primary;
+    outline-color: Colors.text-primary;
+    label-color: Colors.surface;
+}
+
+export component RadioButton inherits ActionButton {
+    in property <bool> selected: false;
+
+    button-width: Dimensions.radio-button-preferred-width;
+    emphasized: root.selected;
+    fill-color: root.selected ? Colors.text-primary : Colors.surface;
+    outline-color: Colors.text-primary;
+    label-color: root.selected ? Colors.surface : Colors.text-primary;
+    accessible-role: radio-button;
+    accessible-checkable: true;
+    accessible-checked: root.selected;
+}
+
+export component CardPrimaryActionButton inherits ActionButton {
+    button-width: Dimensions.card-action-button-width;
+    fixed-width: true;
+    emphasized: true;
+    fill-color: Colors.text-primary;
+    outline-color: Colors.text-primary;
+    label-color: Colors.surface;
+}
+
+export component CardSecondaryActionButton inherits ActionButton {
+    button-width: Dimensions.card-action-button-width;
+    fixed-width: true;
+    fill-color: Colors.surface;
+    outline-color: Colors.text-primary;
+    label-color: Colors.text-primary;
+}
+
+component PageActionButton inherits HorizontalLayout {
+    in property <string> text;
+    in property <bool> enabled: true;
+    in property <bool> emphasized: false;
+    in property <brush> fill-color;
+    in property <brush> outline-color;
+    in property <brush> label-color;
+    callback clicked();
+
+    height: Dimensions.button-height;
+    horizontal-stretch: 1;
+    vertical-stretch: 0;
+    alignment: center;
+    forward-focus: page-action;
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text;
+    accessible-action-default => {
+        page-action.clicked();
+    }
+
+    page-action := ActionButton {
+        accessible-role: none;
+        text: root.text;
+        enabled: root.enabled;
+        button-width: Dimensions.action-button-preferred-width;
+        fixed-width: true;
+        emphasized: root.emphasized;
+        fill-color: root.fill-color;
+        outline-color: root.outline-color;
+        label-color: root.label-color;
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+export component PrimaryActionButton inherits PageActionButton {
+    emphasized: true;
+    fill-color: Colors.text-primary;
+    outline-color: Colors.text-primary;
+    label-color: Colors.surface;
+}
+
+export component SecondaryActionButton inherits PageActionButton {
+    fill-color: Colors.surface;
+    outline-color: Colors.text-primary;
+    label-color: Colors.text-primary;
+}

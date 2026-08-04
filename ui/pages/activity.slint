@@ -1,4 +1,4 @@
-import { Button, ListView, ScrollView } from "std-widgets.slint";
+import { ListView, ScrollView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ActivityRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
@@ -6,6 +6,11 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
+import {
+    CardPrimaryActionButton,
+    CardSecondaryActionButton,
+    PrimaryActionButton,
+} from "../components/action-buttons.slint";
 
 export component ActivityPage inherits ScrollView {
     in property <[ActivityRow]> activity-rows;
@@ -38,9 +43,9 @@ export component ActivityPage inherits ScrollView {
                     self.focus();
                 }
             }
-            clear-completed-activity := Button {
+            clear-completed-activity := PrimaryActionButton {
                 accessible-label: "Clear " + root.activity-clearable-count + " completed activity entries";
-                text: root.activity-clearable-count == 1 ? "Clear completed entry" : "Clear completed entries";
+                text: root.activity-clearable-count == 1 ? "Clear Completed Entry" : "Clear Completed Entries";
                 clicked => {
                     root.clear-completed-activity();
                 }
@@ -96,28 +101,28 @@ export component ActivityPage inherits ScrollView {
                     }
                     if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        if activity.can-view-result : Button {
+                        if activity.can-view-result : CardPrimaryActionButton {
                             accessible-label: "View result for " + activity.title;
-                            text: "View result";
+                            text: "View Result";
                             clicked => {
                                 root.show-activity-result(activity.id);
                             }
                         }
-                        if activity.can-cancel : Button {
+                        if activity.can-cancel : CardPrimaryActionButton {
                             accessible-label: "View progress for " + activity.title;
-                            text: "View progress";
+                            text: "View Progress";
                             clicked => {
                                 root.show-activity-progress(activity.id);
                             }
                         }
-                        if activity.can-cancel : Button {
+                        if activity.can-cancel : CardSecondaryActionButton {
                             accessible-label: "Cancel " + activity.title;
                             text: "Cancel";
                             clicked => {
                                 root.request-cancel-activity(activity.id, activity.title);
                             }
                         }
-                        if activity.can-remove : Button {
+                        if activity.can-remove : CardSecondaryActionButton {
                             accessible-label: "Remove " + activity.title;
                             text: "Remove";
                             clicked => {
@@ -127,28 +132,28 @@ export component ActivityPage inherits ScrollView {
                     }
                     if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        if activity.can-view-result : Button {
+                        if activity.can-view-result : CardPrimaryActionButton {
                             accessible-label: "View result for " + activity.title;
-                            text: "View result";
+                            text: "View Result";
                             clicked => {
                                 root.show-activity-result(activity.id);
                             }
                         }
-                        if activity.can-cancel : Button {
+                        if activity.can-cancel : CardPrimaryActionButton {
                             accessible-label: "View progress for " + activity.title;
-                            text: "View progress";
+                            text: "View Progress";
                             clicked => {
                                 root.show-activity-progress(activity.id);
                             }
                         }
-                        if activity.can-cancel : Button {
+                        if activity.can-cancel : CardSecondaryActionButton {
                             accessible-label: "Cancel " + activity.title;
                             text: "Cancel";
                             clicked => {
                                 root.request-cancel-activity(activity.id, activity.title);
                             }
                         }
-                        if activity.can-remove : Button {
+                        if activity.can-remove : CardSecondaryActionButton {
                             accessible-label: "Remove " + activity.title;
                             text: "Remove";
                             clicked => {

@@ -1,4 +1,3 @@
-import { Button } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
@@ -7,6 +6,11 @@ import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { DangerCard, InfoCard } from "../components/cards.slint";
+import {
+    CardPrimaryActionButton,
+    PrimaryActionButton,
+    SecondaryActionButton,
+} from "../components/action-buttons.slint";
 
 export component WelcomePage inherits CenteredPageRoot {
     in property <bool> configuration-unavailable;
@@ -96,10 +100,9 @@ export component WelcomePage inherits CenteredPageRoot {
                     }
                 }
 
-                retry-configuration := Button {
+                retry-configuration := CardPrimaryActionButton {
                     accessible-label: "Retry opening configuration storage";
                     text: "Retry";
-                    primary: true;
                     clicked => {
                         root.retry-configuration();
                     }
@@ -119,12 +122,9 @@ export component WelcomePage inherits CenteredPageRoot {
                 }
             }
 
-            welcome-add-provider := Button {
+            welcome-add-provider := PrimaryActionButton {
                 accessible-label: "Add your first provider";
-                text: "Add your first provider";
-                primary: true;
-                preferred-width: Dimensions.welcome-action-max-width;
-                max-width: Dimensions.welcome-action-max-width;
+                text: "Add Your First Provider";
                 clicked => {
                     root.show-add-provider();
                 }
@@ -132,11 +132,9 @@ export component WelcomePage inherits CenteredPageRoot {
         }
         HorizontalLayout {
             alignment: center;
-            Button {
+            SecondaryActionButton {
                 accessible-label: "Read how SyncPak protects your privacy";
-                text: "Read how SyncPak protects your privacy";
-                preferred-width: Dimensions.welcome-action-max-width;
-                max-width: Dimensions.welcome-action-max-width;
+                text: "Read How SyncPak Protects Your Privacy";
                 clicked => {
                     root.show-privacy();
                 }

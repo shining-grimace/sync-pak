@@ -116,12 +116,12 @@ fn count_with_size(item_count: usize, singular: &str, plural: &str, byte_size: u
 
 fn start_action(plan: &TransferPlan) -> &'static str {
     match plan.mode() {
-        SyncMode::Archive => "Create archive",
-        SyncMode::Mirror => "Start mirror",
+        SyncMode::Archive => "Create Archive",
+        SyncMode::Mirror => "Start Mirror",
         SyncMode::AddOnly => match plan.direction() {
-            Direction::Upload => "Start upload",
-            Direction::Download => "Start download",
-            Direction::BothWays => "Start both ways",
+            Direction::Upload => "Start Upload",
+            Direction::Download => "Start Download",
+            Direction::BothWays => "Start Both Ways",
         },
     }
 }

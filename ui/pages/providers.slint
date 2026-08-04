@@ -1,5 +1,4 @@
 import {
-    Button,
     ListView,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
@@ -12,6 +11,11 @@ import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { InfoCard } from "../components/cards.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import {
+    CardPrimaryActionButton,
+    CardSecondaryActionButton,
+    PrimaryActionButton,
+} from "../components/action-buttons.slint";
 
 export component ProvidersPage inherits CenteredPageRoot {
     in property <[ProviderRow]> providers;
@@ -43,10 +47,9 @@ export component ProvidersPage inherits CenteredPageRoot {
             text: "SyncPak could not load providers. Check configuration storage and try again.";
         }
 
-        Button {
+        PrimaryActionButton {
             accessible-label: "Retry loading providers";
             text: "Retry";
-            primary: true;
             clicked => {
                 root.show-providers();
             }
@@ -54,11 +57,9 @@ export component ProvidersPage inherits CenteredPageRoot {
     }
     if !root.load-failed: VerticalLayout {
         spacing: 12px;
-        Button {
+        PrimaryActionButton {
             accessible-label: "Add a provider";
-            text: "Add provider";
-            height: Dimensions.control-height;
-            primary: true;
+            text: "Add Provider";
             clicked => {
                 root.show-add-provider();
             }
@@ -101,7 +102,7 @@ export component ProvidersPage inherits CenteredPageRoot {
 
                     if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        Button {
+                        CardPrimaryActionButton {
                             accessible-label: "Verify provider " + provider.name;
                             text: provider.verifying ? "Verifying…" : "Verify";
                             enabled: !provider.verifying;
@@ -110,7 +111,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                             }
                         }
 
-                        Button {
+                        CardSecondaryActionButton {
                             accessible-label: "Edit provider " + provider.name;
                             text: "Edit";
                             clicked => {
@@ -118,7 +119,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                             }
                         }
 
-                        Button {
+                        CardSecondaryActionButton {
                             accessible-label: "Delete provider " + provider.name;
                             text: "Delete";
                             clicked => {
@@ -128,7 +129,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                     }
                     if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        Button {
+                        CardPrimaryActionButton {
                             accessible-label: "Verify provider " + provider.name;
                             text: provider.verifying ? "Verifying…" : "Verify";
                             enabled: !provider.verifying;
@@ -137,7 +138,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                             }
                         }
 
-                        Button {
+                        CardSecondaryActionButton {
                             accessible-label: "Edit provider " + provider.name;
                             text: "Edit";
                             clicked => {
@@ -145,7 +146,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                             }
                         }
 
-                        Button {
+                        CardSecondaryActionButton {
                             accessible-label: "Delete provider " + provider.name;
                             text: "Delete";
                             clicked => {

@@ -1,13 +1,11 @@
-import {
-    Button,
-    ListView,
-} from "std-widgets.slint";
+import { ListView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component ActivityResultPage inherits CenteredPageRoot {
     in property <string> title;
@@ -87,17 +85,16 @@ export component ActivityResultPage inherits CenteredPageRoot {
             }
         }
     }
-    if root.can-retry: Button {
+    if root.can-retry: PrimaryActionButton {
         accessible-label: "Retry " + root.title + " with a new preflight review";
-        text: "Retry with a new preflight";
-        primary: true;
+        text: "Retry with a New Preflight";
         clicked => {
             root.retry();
         }
     }
-    Button {
+    SecondaryActionButton {
         accessible-label: "Return to activity";
-        text: "Back to activity";
+        text: "Back to Activity";
         clicked => {
             root.dismiss();
         }

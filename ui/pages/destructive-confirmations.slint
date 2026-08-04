@@ -1,4 +1,4 @@
-import { Button, ListView } from "std-widgets.slint";
+import { ListView } from "std-widgets.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
@@ -6,6 +6,7 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { DangerCard } from "../components/cards.slint";
 import { Dimensions } from "../dimensions.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component ProviderDeletePage inherits CenteredPageRoot {
     in property <string> provider-name;
@@ -55,7 +56,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
         }
     }
     VerticalLayout {
-        Button {
+        SecondaryActionButton {
             accessible-label: "Keep provider " + root.provider-name;
             text: "Cancel";
             clicked => {
@@ -63,10 +64,9 @@ export component ProviderDeletePage inherits CenteredPageRoot {
             }
         }
 
-        Button {
+        PrimaryActionButton {
             accessible-label: "Delete provider " + root.provider-name;
-            text: "Delete " + root.provider-name + " and " + root.connection-count + (root.connection-count == 1 ? " connection" : " connections");
-            primary: true;
+            text: "Delete " + root.provider-name + " and " + root.connection-count + (root.connection-count == 1 ? " Connection" : " Connections");
             clicked => {
                 root.confirm();
             }
@@ -104,7 +104,7 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
     }
 
     VerticalLayout {
-        Button {
+        SecondaryActionButton {
             accessible-label: "Keep connection " + root.connection-name;
             text: "Cancel";
             clicked => {
@@ -112,10 +112,9 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
             }
         }
 
-        Button {
+        PrimaryActionButton {
             accessible-label: "Delete connection " + root.connection-name;
             text: "Delete " + root.connection-name;
-            primary: true;
             clicked => {
                 root.confirm();
             }
@@ -137,18 +136,17 @@ export component ActivityCancelPage inherits CenteredPageRoot {
     }
 
     VerticalLayout {
-        Button {
+        SecondaryActionButton {
             accessible-label: "Keep " + root.activity-name + " running";
-            text: "Keep running";
+            text: "Keep Running";
             clicked => {
                 root.dismiss();
             }
         }
 
-        Button {
+        PrimaryActionButton {
             accessible-label: "Cancel operation " + root.activity-name;
             text: "Cancel " + root.activity-name;
-            primary: true;
             clicked => {
                 root.confirm();
             }

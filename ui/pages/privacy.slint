@@ -1,9 +1,10 @@
-import { Button, ComboBox } from "std-widgets.slint";
+import { ComboBox } from "std-widgets.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
     in property <string> app-version;
@@ -106,33 +107,33 @@ export component PrivacyPage inherits CenteredPageRoot {
             text: "Links";
         }
 
-        Button {
+        SecondaryActionButton {
             accessible-label: "Open SyncPak source code in your browser";
-            text: "Source code";
+            text: "Source Code";
             clicked => {
                 Platform.open-url("https://github.com/shining-grimace/sync-pak");
             }
         }
 
-        Button {
+        SecondaryActionButton {
             accessible-label: "Open Cloudflare privacy policy in your browser";
-            text: "Cloudflare privacy policy";
+            text: "Cloudflare Privacy Policy";
             clicked => {
                 Platform.open-url("https://www.cloudflare.com/privacypolicy/");
             }
         }
 
-        Button {
+        SecondaryActionButton {
             accessible-label: "Open Backblaze privacy policy in your browser";
-            text: "Backblaze privacy policy";
+            text: "Backblaze Privacy Policy";
             clicked => {
                 Platform.open-url("https://www.backblaze.com/company/policies/privacy.html");
             }
         }
 
-        Button {
+        SecondaryActionButton {
             accessible-label: "Open Amazon privacy notice in your browser";
-            text: "AWS privacy notice";
+            text: "AWS Privacy Notice";
             clicked => {
                 Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010");
             }
@@ -143,15 +144,15 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
-    Button {
+    PrimaryActionButton {
         accessible-label: "View redacted diagnostics with credentials excluded";
-        text: "View redacted diagnostics";
+        text: "View Redacted Diagnostics";
         clicked => {
             root.show-diagnostics();
         }
     }
 
-    Button {
+    SecondaryActionButton {
         accessible-label: "Back to welcome";
         text: "Back";
         clicked => {

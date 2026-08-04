@@ -1,5 +1,4 @@
 import {
-    Button,
     ListView,
     ScrollView,
 } from "std-widgets.slint";
@@ -13,6 +12,12 @@ import { InfoCard } from "../components/cards.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import {
+    CardPrimaryActionButton,
+    CardSecondaryActionButton,
+    PrimaryActionButton,
+    RadioButton,
+} from "../components/action-buttons.slint";
 
 export component ConnectionsPage inherits ScrollView {
     in property <[ConnectionRow]> connections;
@@ -62,10 +67,9 @@ export component ConnectionsPage inherits ScrollView {
                 text: "SyncPak could not load connections. Check configuration storage and try again.";
             }
 
-            connections-retry := Button {
+            connections-retry := PrimaryActionButton {
                 accessible-label: "Retry loading connections";
                 text: "Retry";
-                primary: true;
                 clicked => {
                     root.show-connections();
                 }
@@ -85,11 +89,9 @@ export component ConnectionsPage inherits ScrollView {
                     }
                 }
 
-                connection-add-provider := Button {
+                connection-add-provider := PrimaryActionButton {
                     accessible-label: "Add a provider before creating a connection";
-                    text: "Add provider";
-                    height: Dimensions.control-height;
-                    primary: true;
+                    text: "Add Provider";
                     clicked => {
                         root.show-add-provider();
                     }
@@ -107,11 +109,9 @@ export component ConnectionsPage inherits ScrollView {
                     }
                 }
 
-                connection-new := Button {
+                connection-new := PrimaryActionButton {
                     accessible-label: "Create a new connection";
-                    text: "New connection";
-                    height: Dimensions.control-height;
-                    primary: true;
+                    text: "New Connection";
                     clicked => {
                         root.show-add-connection();
                     }
@@ -127,19 +127,19 @@ export component ConnectionsPage inherits ScrollView {
 
                 HorizontalLayout {
                     spacing: 6px;
-                    Button {
+                    RadioButton {
                         accessible-label: root.connection-filter == 0 ? "All connections, selected" : "Show all connections";
                         text: "All";
-                        primary: root.connection-filter == 0;
+                        selected: root.connection-filter == 0;
                         clicked => {
                             root.set-connection-filter(0);
                         }
                     }
 
-                    Button {
+                    RadioButton {
                         accessible-label: root.connection-filter == 1 ? "Add-only connections, selected" : "Show add-only connections";
                         text: "Add-only";
-                        primary: root.connection-filter == 1;
+                        selected: root.connection-filter == 1;
                         clicked => {
                             root.set-connection-filter(1);
                         }
@@ -148,19 +148,19 @@ export component ConnectionsPage inherits ScrollView {
 
                 HorizontalLayout {
                     spacing: 6px;
-                    Button {
+                    RadioButton {
                         accessible-label: root.connection-filter == 2 ? "Mirror connections, selected" : "Show mirror connections";
                         text: "Mirror";
-                        primary: root.connection-filter == 2;
+                        selected: root.connection-filter == 2;
                         clicked => {
                             root.set-connection-filter(2);
                         }
                     }
 
-                    Button {
+                    RadioButton {
                         accessible-label: root.connection-filter == 3 ? "Archive connections, selected" : "Show archive connections";
                         text: "Archive";
-                        primary: root.connection-filter == 3;
+                        selected: root.connection-filter == 3;
                         clicked => {
                             root.set-connection-filter(3);
                         }
@@ -186,10 +186,9 @@ export component ConnectionsPage inherits ScrollView {
                 if root.connections-total > 0: DescriptionLabel {
                     text: "Choose another filter or create a new connection.";
                 }
-                if root.connections-total > 0 && root.connection-filter != 0: Button {
+                if root.connections-total > 0 && root.connection-filter != 0: PrimaryActionButton {
                     accessible-label: "Remove the connection filter and show all connections";
-                    text: "Show all connections";
-                    primary: true;
+                    text: "Show All Connections";
                     clicked => {
                         root.set-connection-filter(0);
                     }
@@ -201,7 +200,7 @@ export component ConnectionsPage inherits ScrollView {
                 for connection in root.connections: InfoCard {
                     accessible-role: list-item;
                     accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
-                    min-height: root.width < Dimensions.narrow-layout-breakpoint ? 300px : 98px;
+                    min-height: root.width < Dimensions.medium-layout-breakpoint ? 300px : 98px;
                     VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
                         VerticalLayout {
@@ -280,18 +279,17 @@ export component ConnectionsPage inherits ScrollView {
                             }
                         }
 
-                        if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
+                        if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
                             spacing: Dimensions.card-element-spacing;
-                            Button {
+                            CardPrimaryActionButton {
                                 accessible-label: "Run connection " + connection.name;
                                 text: "Run";
-                                primary: true;
                                 clicked => {
                                     root.request-run-connection(connection.id);
                                 }
                             }
 
-                            Button {
+                            CardSecondaryActionButton {
                                 accessible-label: "Verify connection " + connection.name;
                                 text: connection.verifying ? "Verifying…" : "Verify";
                                 enabled: !connection.verifying;
@@ -300,7 +298,7 @@ export component ConnectionsPage inherits ScrollView {
                                 }
                             }
 
-                            Button {
+                            CardSecondaryActionButton {
                                 accessible-label: "Edit connection " + connection.name;
                                 text: "Edit";
                                 clicked => {
@@ -308,7 +306,7 @@ export component ConnectionsPage inherits ScrollView {
                                 }
                             }
 
-                            Button {
+                            CardSecondaryActionButton {
                                 accessible-label: "Delete connection " + connection.name;
                                 text: "Delete";
                                 clicked => {
@@ -316,18 +314,17 @@ export component ConnectionsPage inherits ScrollView {
                                 }
                             }
                         }
-                        if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
+                        if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                             spacing: Dimensions.card-element-spacing;
-                            Button {
+                            CardPrimaryActionButton {
                                 accessible-label: "Run connection " + connection.name;
                                 text: "Run";
-                                primary: true;
                                 clicked => {
                                     root.request-run-connection(connection.id);
                                 }
                             }
 
-                            Button {
+                            CardSecondaryActionButton {
                                 accessible-label: "Verify connection " + connection.name;
                                 text: connection.verifying ? "Verifying…" : "Verify";
                                 enabled: !connection.verifying;
@@ -336,7 +333,7 @@ export component ConnectionsPage inherits ScrollView {
                                 }
                             }
 
-                            Button {
+                            CardSecondaryActionButton {
                                 accessible-label: "Edit connection " + connection.name;
                                 text: "Edit";
                                 clicked => {
@@ -344,7 +341,7 @@ export component ConnectionsPage inherits ScrollView {
                                 }
                             }
 
-                            Button {
+                            CardSecondaryActionButton {
                                 accessible-label: "Delete connection " + connection.name;
                                 text: "Delete";
                                 clicked => {

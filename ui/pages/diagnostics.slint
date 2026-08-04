@@ -1,10 +1,11 @@
-import { Button, CheckBox, TextEdit } from "std-widgets.slint";
+import { CheckBox, TextEdit } from "std-widgets.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
 import { InfoCard } from "../components/cards.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component DiagnosticsPage inherits CenteredPageRoot {
     in property <string> diagnostic-text;
@@ -54,9 +55,9 @@ export component DiagnosticsPage inherits CenteredPageRoot {
         }
     }
 
-    Button {
+    PrimaryActionButton {
         accessible-label: root.include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
-        text: root.include-paths ? "Copy report with paths" : "Copy redacted report";
+        text: root.include-paths ? "Copy Report with Paths" : "Copy Redacted Report";
         clicked => {
             report.select-all();
             report.copy();
@@ -68,7 +69,7 @@ export component DiagnosticsPage inherits CenteredPageRoot {
         accessible-live-region: polite;
         text: root.copy-status;
     }
-    Button {
+    SecondaryActionButton {
         accessible-label: "Return to the previous screen";
         text: "Back";
         clicked => {

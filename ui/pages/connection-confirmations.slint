@@ -1,7 +1,7 @@
-import { Button } from "std-widgets.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component ConnectionDiscardConfirmationPage inherits CenteredPageRoot {
     in property <string> connection-name;
@@ -17,18 +17,17 @@ export component ConnectionDiscardConfirmationPage inherits CenteredPageRoot {
     }
 
     VerticalLayout {
-        Button {
+        SecondaryActionButton {
             accessible-label: "Continue editing connection " + root.connection-name;
-            text: "Continue editing";
+            text: "Continue Editing";
             clicked => {
                 root.cancel();
             }
         }
 
-        Button {
+        PrimaryActionButton {
             accessible-label: "Discard changes to connection " + root.connection-name;
-            text: "Discard " + root.connection-name + " changes";
-            primary: true;
+            text: "Discard " + root.connection-name + " Changes";
             clicked => {
                 root.confirm();
             }

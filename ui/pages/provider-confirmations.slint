@@ -1,7 +1,7 @@
-import { Button } from "std-widgets.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     in property <string> provider-name;
@@ -17,18 +17,17 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     }
 
     VerticalLayout {
-        Button {
+        SecondaryActionButton {
             accessible-label: "Continue editing provider " + root.provider-name;
-            text: "Continue editing";
+            text: "Continue Editing";
             clicked => {
                 root.cancel();
             }
         }
 
-        Button {
+        PrimaryActionButton {
             accessible-label: "Save provider " + root.provider-name + " without verifying";
-            text: "Save " + root.provider-name + " without verifying";
-            primary: true;
+            text: "Save " + root.provider-name + " Without Verifying";
             clicked => {
                 root.save();
             }
@@ -50,18 +49,17 @@ export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
     }
 
     VerticalLayout {
-        Button {
+        SecondaryActionButton {
             accessible-label: "Continue editing provider " + root.provider-name;
-            text: "Continue editing";
+            text: "Continue Editing";
             clicked => {
                 root.cancel();
             }
         }
 
-        Button {
+        PrimaryActionButton {
             accessible-label: "Discard changes to provider " + root.provider-name;
-            text: "Discard changes";
-            primary: true;
+            text: "Discard Changes";
             clicked => {
                 root.confirm();
             }
