@@ -10,6 +10,7 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
+import { InfoCard } from "../components/cards.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 
 export component ProvidersPage inherits CenteredPageRoot {
@@ -77,19 +78,14 @@ export component ProvidersPage inherits CenteredPageRoot {
             accessible-label: "Configured providers";
             height: 260px;
             vertical-scrollbar-policy: always-on;
-            for provider in root.providers: Rectangle {
+            for provider in root.providers: InfoCard {
                 accessible-role: list-item;
                 accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
-                background: Colors.surface;
-                border-color: Colors.border;
-                border-width: 1px;
-                border-radius: 8px;
                 min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
                 VerticalLayout {
-                    padding: 10px;
-                    spacing: 8px;
+                    spacing: Dimensions.card-element-spacing;
                     VerticalLayout {
-                        spacing: 2px;
+                        spacing: Dimensions.card-element-spacing;
                         SectionHeadingLabel {
                             text: provider.name;
                         }
@@ -104,7 +100,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                     }
 
                     if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
-                        spacing: 8px;
+                        spacing: Dimensions.card-element-spacing;
                         Button {
                             accessible-label: "Verify provider " + provider.name;
                             text: provider.verifying ? "Verifying…" : "Verify";
@@ -131,7 +127,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                         }
                     }
                     if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
-                        spacing: 8px;
+                        spacing: Dimensions.card-element-spacing;
                         Button {
                             accessible-label: "Verify provider " + provider.name;
                             text: provider.verifying ? "Verifying…" : "Verify";

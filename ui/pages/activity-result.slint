@@ -2,12 +2,12 @@ import {
     Button,
     ListView,
 } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
+import { InfoCard } from "../components/cards.slint";
 
 export component ActivityResultPage inherits CenteredPageRoot {
     in property <string> title;
@@ -33,17 +33,12 @@ export component ActivityResultPage inherits CenteredPageRoot {
         text: root.summary;
     }
 
-    Rectangle {
+    InfoCard {
         accessible-role: region;
         accessible-label: "Outcome totals: " + root.completed + " completed, " + root.incomplete + " incomplete, " + root.not-started + " not started";
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
         if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
-            padding: 12px;
-            spacing: 4px;
+            spacing: Dimensions.card-element-spacing;
             DescriptionLabel {
                 text: root.completed + " completed";
             }
@@ -57,8 +52,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
             }
         }
         if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
-            padding: 12px;
-            spacing: 12px;
+            spacing: Dimensions.card-element-spacing;
             DescriptionLabel {
                 text: root.completed + " completed";
             }

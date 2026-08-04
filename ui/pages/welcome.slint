@@ -1,5 +1,4 @@
 import { Button } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
@@ -7,6 +6,7 @@ import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
+import { DangerCard, InfoCard } from "../components/cards.slint";
 
 export component WelcomePage inherits CenteredPageRoot {
     in property <bool> configuration-unavailable;
@@ -33,50 +33,35 @@ export component WelcomePage inherits CenteredPageRoot {
             background: transparent;
         }
 
-        Rectangle {
+        InfoCard {
             accessible-role: region;
             accessible-label: "Protected credentials";
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 2px;
-            border-radius: 12px;
             max-width: Dimensions.welcome-content-max-width;
             min-height: 92px;
             DescriptionLabel {
                 text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider.";
-                x: 24px;
-                width: parent.width - 48px;
-                height: parent.height;
             }
         }
 
-        Rectangle {
+        InfoCard {
             accessible-role: region;
             accessible-label: "Choose how each connection behaves";
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 12px;
             max-width: Dimensions.welcome-content-max-width;
             min-height: 106px;
-            VerticalLayout {
-                padding: 14px;
-                spacing: 5px;
-                SectionHeadingLabel {
-                    text: "Choose how each connection behaves";
-                }
+            SectionHeadingLabel {
+                text: "Choose how each connection behaves";
+            }
 
-                DescriptionLabel {
-                    text: "Add-only — Copy new files without overwriting or deleting anything.";
-                }
+            DescriptionLabel {
+                text: "Add-only — Copy new files without overwriting or deleting anything.";
+            }
 
-                DescriptionLabel {
-                    text: "Mirror — Attempt to make a destination match its source after previewing destructive changes. Any issues are listed when the operation finishes.";
-                }
+            DescriptionLabel {
+                text: "Mirror — Attempt to make a destination match its source after previewing destructive changes. Any issues are listed when the operation finishes.";
+            }
 
-                DescriptionLabel {
-                    text: "Archive — Create timestamped ZIP archives and keep the number you choose.";
-                }
+            DescriptionLabel {
+                text: "Archive — Create timestamped ZIP archives and keep the number you choose.";
             }
         }
 
@@ -85,46 +70,38 @@ export component WelcomePage inherits CenteredPageRoot {
             background: transparent;
         }
 
-        if root.configuration-unavailable: Rectangle {
+        if root.configuration-unavailable: DangerCard {
             accessible-role: region;
             accessible-label: "Configuration storage unavailable";
-            background: Colors.danger-surface;
-            border-color: Colors.danger;
-            border-width: 1px;
-            border-radius: 12px;
             max-width: Dimensions.welcome-content-max-width;
             min-height: 122px;
-            VerticalLayout {
-                padding: 14px;
-                spacing: 6px;
-                ErrorHeadingLabel {
-                    text: "Configuration storage is unavailable";
-                }
+            ErrorHeadingLabel {
+                text: "Configuration storage is unavailable";
+            }
 
-                ErrorLabel {
-                    text: "SyncPak cannot save providers or connections until its configuration storage is available.";
-                }
+            ErrorLabel {
+                text: "SyncPak cannot save providers or connections until its configuration storage is available.";
+            }
 
-                HorizontalLayout {
-                    alignment: center;
-                    FocusScope {
-                        width: 0px;
-                        height: 0px;
-                        focus-on-click: false;
-                        focus-on-tab-navigation: false;
-                        forward-focus: retry-configuration;
-                        init => {
-                            self.focus();
-                        }
+            HorizontalLayout {
+                alignment: center;
+                FocusScope {
+                    width: 0px;
+                    height: 0px;
+                    focus-on-click: false;
+                    focus-on-tab-navigation: false;
+                    forward-focus: retry-configuration;
+                    init => {
+                        self.focus();
                     }
+                }
 
-                    retry-configuration := Button {
-                        accessible-label: "Retry opening configuration storage";
-                        text: "Retry";
-                        primary: true;
-                        clicked => {
-                            root.retry-configuration();
-                        }
+                retry-configuration := Button {
+                    accessible-label: "Retry opening configuration storage";
+                    text: "Retry";
+                    primary: true;
+                    clicked => {
+                        root.retry-configuration();
                     }
                 }
             }

@@ -9,6 +9,7 @@ import { ConnectionRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
+import { InfoCard } from "../components/cards.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
@@ -197,19 +198,14 @@ export component ConnectionsPage inherits ScrollView {
             if root.connections.length > 0: ListView {
                 height: 280px;
                 vertical-scrollbar-policy: always-on;
-                for connection in root.connections: Rectangle {
+                for connection in root.connections: InfoCard {
                     accessible-role: list-item;
                     accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
-                    background: Colors.surface;
-                    border-color: Colors.border;
-                    border-width: 1px;
-                    border-radius: 8px;
                     min-height: root.width < Dimensions.narrow-layout-breakpoint ? 300px : 98px;
                     VerticalLayout {
-                        padding: 10px;
-                        spacing: 8px;
+                        spacing: Dimensions.card-element-spacing;
                         VerticalLayout {
-                            spacing: 3px;
+                            spacing: Dimensions.card-element-spacing;
                             SectionHeadingLabel {
                                 text: connection.name;
                             }
@@ -220,9 +216,9 @@ export component ConnectionsPage inherits ScrollView {
                             }
 
                             if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
-                                spacing: 6px;
+                                spacing: Dimensions.card-element-spacing;
                                 VerticalLayout {
-                                    spacing: 2px;
+                                    spacing: Dimensions.card-element-spacing;
                                     DescriptionLabel {
                                         text: "On this device";
                                     }
@@ -238,7 +234,7 @@ export component ConnectionsPage inherits ScrollView {
                                 }
 
                                 VerticalLayout {
-                                    spacing: 2px;
+                                    spacing: Dimensions.card-element-spacing;
                                     DescriptionLabel {
                                         text: "In " + connection.provider-name;
                                     }
@@ -249,10 +245,10 @@ export component ConnectionsPage inherits ScrollView {
                                 }
                             }
                             if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
-                                spacing: 8px;
+                                spacing: Dimensions.card-element-spacing;
                                 VerticalLayout {
                                     horizontal-stretch: 1;
-                                    spacing: 2px;
+                                    spacing: Dimensions.card-element-spacing;
                                     DescriptionLabel {
                                         text: "On this device";
                                     }
@@ -269,7 +265,7 @@ export component ConnectionsPage inherits ScrollView {
 
                                 VerticalLayout {
                                     horizontal-stretch: 1;
-                                    spacing: 2px;
+                                    spacing: Dimensions.card-element-spacing;
                                     DescriptionLabel {
                                         text: "In " + connection.provider-name;
                                     }
@@ -285,7 +281,7 @@ export component ConnectionsPage inherits ScrollView {
                         }
 
                         if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
-                            spacing: 8px;
+                            spacing: Dimensions.card-element-spacing;
                             Button {
                                 accessible-label: "Run connection " + connection.name;
                                 text: "Run";
@@ -321,7 +317,7 @@ export component ConnectionsPage inherits ScrollView {
                             }
                         }
                         if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
-                            spacing: 8px;
+                            spacing: Dimensions.card-element-spacing;
                             Button {
                                 accessible-label: "Run connection " + connection.name;
                                 text: "Run";

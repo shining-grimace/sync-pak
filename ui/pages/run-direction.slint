@@ -1,9 +1,9 @@
 import { Button, ScrollView } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { InfoCard } from "../components/cards.slint";
 
 export component RunDirectionPage inherits ScrollView {
     in property <string> connection-name;
@@ -31,45 +31,22 @@ export component RunDirectionPage inherits ScrollView {
             text: root.connection-mode + " connection";
         }
 
-        if root.direction == 0 && root.archive-upload-details != "": Rectangle {
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 8px;
+        if root.direction == 0 && root.archive-upload-details != "": InfoCard {
             min-height: 66px;
             DescriptionLabel {
                 text: root.archive-upload-details;
-                x: 12px;
-                y: 12px;
-                width: parent.width - 24px;
-                height: parent.height - 24px;
             }
         }
-        if root.direction == 1 && root.archive-download-details != "": Rectangle {
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 8px;
+        if root.direction == 1 && root.archive-download-details != "": InfoCard {
             min-height: 66px;
             DescriptionLabel {
                 text: root.archive-download-details;
-                x: 12px;
-                y: 12px;
-                width: parent.width - 24px;
-                height: parent.height - 24px;
             }
         }
-        Rectangle {
+        InfoCard {
             accessible-role: region;
             accessible-label: "Upload direction. Source: " + root.local-endpoint + ". Destination: " + root.remote-endpoint;
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 8px;
             min-height: 132px;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 4px;
                 SectionHeadingLabel {
                     text: "Upload";
                 }
@@ -105,20 +82,12 @@ export component RunDirectionPage inherits ScrollView {
                         root.choose-direction(0);
                     }
                 }
-            }
         }
 
-        Rectangle {
+        InfoCard {
             accessible-role: region;
             accessible-label: "Download direction. Source: " + root.remote-endpoint + ". Destination: " + root.local-endpoint;
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 8px;
             min-height: 132px;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 4px;
                 SectionHeadingLabel {
                     text: "Download";
                 }
@@ -143,20 +112,12 @@ export component RunDirectionPage inherits ScrollView {
                         root.choose-direction(1);
                     }
                 }
-            }
         }
 
-        if root.allows-both-ways: Rectangle {
+        if root.allows-both-ways: InfoCard {
             accessible-role: region;
             accessible-label: "Both ways direction between " + root.local-endpoint + " and " + root.remote-endpoint;
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 8px;
             min-height: 132px;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 4px;
                 SectionHeadingLabel {
                     text: "Both ways";
                 }
@@ -181,7 +142,6 @@ export component RunDirectionPage inherits ScrollView {
                         root.choose-direction(2);
                     }
                 }
-            }
         }
         DescriptionLabel {
             text: "Continue performs a read-only inventory and shows the complete plan before any files can change.";

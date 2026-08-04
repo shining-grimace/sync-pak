@@ -1,9 +1,9 @@
 import { Button, ComboBox } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
+import { InfoCard } from "../components/cards.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
     in property <string> app-version;
@@ -18,87 +18,55 @@ export component PrivacyPage inherits CenteredPageRoot {
         text: "Privacy & About";
     }
 
-    Rectangle {
+    InfoCard {
         accessible-role: region;
         accessible-label: "Direct transfers";
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: 72px;
-        VerticalLayout {
-            padding: 12px;
-            spacing: 4px;
-            SectionHeadingLabel {
-                text: "Direct transfers";
-            }
+        SectionHeadingLabel {
+            text: "Direct transfers";
+        }
 
-            DescriptionLabel {
-                text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them.";
-            }
+        DescriptionLabel {
+            text: "Your files move directly between this device and the cloud provider you configured. SyncPak does not receive or host them.";
         }
     }
 
-    Rectangle {
+    InfoCard {
         accessible-role: region;
         accessible-label: "Protected credentials";
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: 72px;
-        VerticalLayout {
-            padding: 12px;
-            spacing: 4px;
-            SectionHeadingLabel {
-                text: "Protected credentials";
-            }
+        SectionHeadingLabel {
+            text: "Protected credentials";
+        }
 
-            DescriptionLabel {
-                text: "Provider credentials are stored using this device's protected facilities and are retrieved only when SyncPak connects to that provider.";
-            }
+        DescriptionLabel {
+            text: "Provider credentials are stored using this device's protected facilities and are retrieved only when SyncPak connects to that provider.";
         }
     }
 
-    Rectangle {
+    InfoCard {
         accessible-role: region;
         accessible-label: "Data on this device";
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: 72px;
-        VerticalLayout {
-            padding: 12px;
-            spacing: 4px;
-            SectionHeadingLabel {
-                text: "Data on this device";
-            }
+        SectionHeadingLabel {
+            text: "Data on this device";
+        }
 
-            DescriptionLabel {
-                text: "Connection settings are stored locally. Activity is kept in memory and cleared when SyncPak exits.";
-            }
+        DescriptionLabel {
+            text: "Connection settings are stored locally. Activity is kept in memory and cleared when SyncPak exits.";
         }
     }
 
-    Rectangle {
+    InfoCard {
         accessible-role: region;
         accessible-label: "File encryption";
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: 72px;
-        VerticalLayout {
-            padding: 12px;
-            spacing: 4px;
-            SectionHeadingLabel {
-                text: "File encryption";
-            }
+        SectionHeadingLabel {
+            text: "File encryption";
+        }
 
-            DescriptionLabel {
-                text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption.";
-            }
+        DescriptionLabel {
+            text: "SyncPak does not encrypt file contents before transfer. Your provider and HTTPS connection may provide other forms of encryption.";
         }
     }
 

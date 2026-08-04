@@ -1,11 +1,11 @@
 import { Button, ListView, ScrollView } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ActivityRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { InfoCard } from "../components/cards.slint";
 
 export component ActivityPage inherits ScrollView {
     in property <[ActivityRow]> activity-rows;
@@ -50,17 +50,12 @@ export component ActivityPage inherits ScrollView {
                     (root.activity-clearable-count == 1 ? " completed, failed, or cancelled entry." : " completed, failed, or cancelled entries.");
             }
         }
-        if root.activity-rows.length == 0 : Rectangle {
+        if root.activity-rows.length == 0 : InfoCard {
             accessible-role: region;
             accessible-label: "No activity this time";
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 8px;
             min-height: 130px;
             VerticalLayout {
-                padding: 20px;
-                spacing: 8px;
+                spacing: Dimensions.card-element-spacing;
                 alignment: center;
                 SectionHeadingLabel {
                     text: "No activity this time";
@@ -76,21 +71,16 @@ export component ActivityPage inherits ScrollView {
             accessible-label: "Current activity";
             height: 240px;
             vertical-scrollbar-policy: always-on;
-            for activity in root.activity-rows : Rectangle {
+            for activity in root.activity-rows : InfoCard {
                 accessible-role: list-item;
                 accessible-label: activity.title + ". " + activity.status + ". " + activity.detail +
                     (activity.progress != "" ? ". Progress: " + activity.progress : "") +
                     (activity.result != "" ? ". Result: " + activity.result : "");
-                background: Colors.surface;
-                border-color: Colors.border;
-                border-width: 1px;
-                border-radius: 8px;
                 min-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
                 VerticalLayout {
-                    padding: 12px;
-                    spacing: 8px;
+                    spacing: Dimensions.card-element-spacing;
                     VerticalLayout {
-                        spacing: 2px;
+                        spacing: Dimensions.card-element-spacing;
                         SectionHeadingLabel {
                             text: activity.title + " · " + activity.status;
                         }
@@ -105,7 +95,7 @@ export component ActivityPage inherits ScrollView {
                         }
                     }
                     if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalLayout {
-                        spacing: 8px;
+                        spacing: Dimensions.card-element-spacing;
                         if activity.can-view-result : Button {
                             accessible-label: "View result for " + activity.title;
                             text: "View result";
@@ -136,7 +126,7 @@ export component ActivityPage inherits ScrollView {
                         }
                     }
                     if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalLayout {
-                        spacing: 8px;
+                        spacing: Dimensions.card-element-spacing;
                         if activity.can-view-result : Button {
                             accessible-label: "View result for " + activity.title;
                             text: "View result";

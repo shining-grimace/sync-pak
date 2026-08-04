@@ -1,10 +1,11 @@
 import { Button, ListView } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
+import { DangerCard } from "../components/cards.slint";
+import { Dimensions } from "../dimensions.slint";
 
 export component ProviderDeletePage inherits CenteredPageRoot {
     in property <string> provider-name;
@@ -16,17 +17,12 @@ export component ProviderDeletePage inherits CenteredPageRoot {
         text: "Delete " + root.provider-name + "?";
     }
 
-    Rectangle {
+    DangerCard {
         accessible-role: region;
         accessible-label: "Provider deletion consequences";
-        background: Colors.danger-surface;
-        border-color: Colors.danger;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: 108px;
         VerticalLayout {
-            padding: 12px;
-            spacing: 5px;
+            spacing: Dimensions.card-element-spacing;
             ErrorHeadingLabel {
                 text: "What will be deleted";
             }
@@ -87,17 +83,12 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
         wrap: word-wrap;
     }
 
-    Rectangle {
+    DangerCard {
         accessible-role: region;
         accessible-label: "Connection deletion consequences";
-        background: Colors.danger-surface;
-        border-color: Colors.danger;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: 94px;
         VerticalLayout {
-            padding: 12px;
-            spacing: 5px;
+            spacing: Dimensions.card-element-spacing;
             ErrorHeadingLabel {
                 text: "What will be deleted";
             }

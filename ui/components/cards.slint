@@ -1,0 +1,33 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+
+component Card inherits Rectangle {
+    in property <brush> outline-color;
+    in property <brush> fill-color;
+
+    background: root.fill-color;
+    border-color: root.outline-color;
+    border-width: 1px;
+    border-radius: Dimensions.card-border-radius;
+
+    VerticalLayout {
+        padding: Dimensions.card-padding;
+        spacing: Dimensions.card-element-spacing;
+        @children
+    }
+}
+
+export component DangerCard inherits Card {
+    outline-color: Colors.danger;
+    fill-color: Colors.danger-surface;
+}
+
+export component SuccessCard inherits Card {
+    outline-color: Colors.success;
+    fill-color: Colors.success-surface;
+}
+
+export component InfoCard inherits Card {
+    outline-color: Colors.text-secondary;
+    fill-color: Colors.surface;
+}

@@ -34,6 +34,7 @@ import {
 import { DescriptionLabel } from "components/description-label.slint";
 import { ErrorLabel } from "components/error-label.slint";
 import { ErrorHeadingLabel } from "components/error-heading-label.slint";
+import { DangerCard, InfoCard, SuccessCard } from "components/cards.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -390,121 +391,99 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.status-message != "": Rectangle {
+            if root.status-message != "": DangerCard {
                 accessible-role: region;
                 accessible-label: "Action needed";
-                background: Colors.danger-surface;
-                border-color: Colors.danger;
-                border-width: 1px;
-                border-radius: 8px;
                 min-height: 58px;
-                VerticalLayout {
-                    padding: 10px;
-                    spacing: 4px;
-                    ErrorHeadingLabel {
-                        text: "Action needed";
-                    }
+                ErrorHeadingLabel {
+                    text: "Action needed";
+                }
 
-                    ErrorLabel {
-                        accessible-live-region: assertive;
-                        text: root.status-message;
-                    }
+                ErrorLabel {
+                    accessible-live-region: assertive;
+                    text: root.status-message;
+                }
 
-                    if root.diagnostic-entry-count > 0: Button {
-                        accessible-label: "View redacted diagnostics for this error";
-                        text: "View redacted diagnostics";
-                        clicked => {
-                            root.show-diagnostics();
-                        }
+                if root.diagnostic-entry-count > 0: Button {
+                    accessible-label: "View redacted diagnostics for this error";
+                    text: "View redacted diagnostics";
+                    clicked => {
+                        root.show-diagnostics();
                     }
                 }
             }
 
-            if root.notice-message != "": Rectangle {
+            if root.notice-message != "": SuccessCard {
                 accessible-role: region;
                 accessible-label: "Update";
-                background: Colors.success-surface;
-                border-color: Colors.success;
-                border-width: 1px;
-                border-radius: 8px;
                 min-height: 48px;
+                Text {
+                    text: "Update";
+                    color: Colors.success;
+                    font-weight: 700;
+                }
+
+                Text {
+                    accessible-live-region: polite;
+                    text: root.notice-message;
+                    color: Colors.success;
+                    wrap: word-wrap;
+                }
+            }
+
+            if root.active-activity-id != "" && !root.confirmation-open: InfoCard {
+                accessible-role: region;
+                accessible-label: "Active operation " + root.active-activity-title;
+                min-height: 62px;
                 VerticalLayout {
-                    padding: 10px;
-                    spacing: 4px;
+                    spacing: Dimensions.card-element-spacing;
                     Text {
-                        text: "Update";
-                        color: Colors.success;
+                        text: root.active-activity-title;
+                        color: Colors.text-primary;
                         font-weight: 700;
+                        wrap: word-wrap;
                     }
 
                     Text {
-                        accessible-live-region: polite;
-                        text: root.notice-message;
-                        color: Colors.success;
+                        text: root.active-activity-progress;
+                        color: Colors.text-secondary;
                         wrap: word-wrap;
                     }
                 }
-            }
 
-            if root.active-activity-id != "" && !root.confirmation-open: Rectangle {
-                accessible-role: region;
-                accessible-label: "Active operation " + root.active-activity-title;
-                background: Colors.border;
-                border-radius: 8px;
-                min-height: 62px;
-                VerticalLayout {
-                    padding: 12px;
-                    spacing: 8px;
-                    VerticalLayout {
-                        spacing: 2px;
-                        Text {
-                            text: root.active-activity-title;
-                            color: Colors.surface;
-                            font-weight: 700;
-                            wrap: word-wrap;
-                        }
-
-                        Text {
-                            text: root.active-activity-progress;
-                            color: Colors.surface;
-                            wrap: word-wrap;
+                if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
+                    spacing: Dimensions.card-element-spacing;
+                    Button {
+                        accessible-label: "View progress for " + root.active-activity-title;
+                        text: "View progress";
+                        clicked => {
+                            root.show-activity-progress(root.active-activity-id);
                         }
                     }
 
-                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
-                        spacing: 8px;
-                        Button {
-                            accessible-label: "View progress for " + root.active-activity-title;
-                            text: "View progress";
-                            clicked => {
-                                root.show-activity-progress(root.active-activity-id);
-                            }
-                        }
-
-                        Button {
-                            accessible-label: "Cancel " + root.active-activity-title;
-                            text: "Cancel";
-                            clicked => {
-                                root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
-                            }
+                    Button {
+                        accessible-label: "Cancel " + root.active-activity-title;
+                        text: "Cancel";
+                        clicked => {
+                            root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
                         }
                     }
-                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
-                        spacing: 8px;
-                        Button {
-                            accessible-label: "View progress for " + root.active-activity-title;
-                            text: "View progress";
-                            clicked => {
-                                root.show-activity-progress(root.active-activity-id);
-                            }
+                }
+                if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
+                    spacing: Dimensions.card-element-spacing;
+                    Button {
+                        accessible-label: "View progress for " + root.active-activity-title;
+                        text: "View progress";
+                        clicked => {
+                            root.show-activity-progress(root.active-activity-id);
                         }
+                    }
 
-                        Button {
-                            accessible-label: "Cancel " + root.active-activity-title;
-                            text: "Cancel";
-                            clicked => {
-                                root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
-                            }
+                    Button {
+                        accessible-label: "Cancel " + root.active-activity-title;
+                        text: "Cancel";
+                        clicked => {
+                            root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
                         }
                     }
                 }
@@ -844,19 +823,12 @@ export component AppWindow inherits Window {
                     root.begin-preflight();
                 }
             }
-            if root.width < Dimensions.medium-layout-breakpoint: Rectangle {
+            if root.width < Dimensions.medium-layout-breakpoint: InfoCard {
                 accessible-role: navigation;
                 accessible-label: "Primary navigation";
-                background: Colors.surface;
-                border-color: Colors.border;
-                border-width: 1px;
-                border-radius: 8px;
                 min-height: 88px;
-                VerticalLayout {
-                    padding: 8px;
-                    spacing: 6px;
                     HorizontalLayout {
-                        spacing: 6px;
+                        spacing: Dimensions.card-element-spacing;
                         Button {
                             accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
                             text: "Connections";
@@ -879,7 +851,7 @@ export component AppWindow inherits Window {
                     }
 
                     HorizontalLayout {
-                        spacing: 6px;
+                        spacing: Dimensions.card-element-spacing;
                         Button {
                             accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                             text: "Activity";
@@ -900,24 +872,16 @@ export component AppWindow inherits Window {
                             }
                         }
                     }
-                }
             }
         }
 
-        if root.width >= Dimensions.desktop-layout-breakpoint: Rectangle {
+        if root.width >= Dimensions.desktop-layout-breakpoint: InfoCard {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
             x: 16px;
             y: 16px;
             width: 144px;
             height: root.height - 32px;
-            background: Colors.surface;
-            border-color: Colors.border;
-            border-width: 1px;
-            border-radius: 8px;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 8px;
                 Text {
                     text: "SYNCPAK";
                     color: Colors.border;
@@ -966,9 +930,8 @@ export component AppWindow inherits Window {
                     }
                 }
 
-                Rectangle {
-                    vertical-stretch: 1;
-                }
+            Rectangle {
+                vertical-stretch: 1;
             }
         }
     }

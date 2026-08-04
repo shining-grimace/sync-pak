@@ -4,6 +4,7 @@ import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
+import { InfoCard } from "../components/cards.slint";
 
 export component ActivityProgressPage inherits CenteredPageRoot {
     in property <string> id;
@@ -28,46 +29,38 @@ export component ActivityProgressPage inherits CenteredPageRoot {
     DescriptionLabel {
         text: root.summary;
     }
-    Rectangle {
+    InfoCard {
         accessible-role: region;
         accessible-label: "Overall progress: " + root.percent + " percent. " + root.items + ". " + root.bytes;
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
         min-height: 150px;
-        VerticalLayout {
-            padding: 12px;
-            spacing: 6px;
-            SectionHeadingLabel {
-                text: "Overall progress";
-            }
+        SectionHeadingLabel {
+            text: "Overall progress";
+        }
+        Rectangle {
+            background: Colors.progress-track;
+            border-radius: 6px;
+            height: 12px;
             Rectangle {
-                background: Colors.progress-track;
+                background: Colors.success;
                 border-radius: 6px;
-                height: 12px;
-                Rectangle {
-                    background: Colors.success;
-                    border-radius: 6px;
-                    width: parent.width * root.fraction;
-                    height: parent.height;
-                }
+                width: parent.width * root.fraction;
+                height: parent.height;
             }
-            DescriptionLabel {
-                text: root.percent + "% complete";
-            }
-            DescriptionLabel {
-                text: root.items;
-            }
-            DescriptionLabel {
-                text: root.bytes;
-            }
-            SectionHeadingLabel {
-                text: "Current item";
-            }
-            DescriptionLabel {
-                text: root.path;
-            }
+        }
+        DescriptionLabel {
+            text: root.percent + "% complete";
+        }
+        DescriptionLabel {
+            text: root.items;
+        }
+        DescriptionLabel {
+            text: root.bytes;
+        }
+        SectionHeadingLabel {
+            text: "Current item";
+        }
+        DescriptionLabel {
+            text: root.path;
         }
     }
     DescriptionLabel {

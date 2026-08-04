@@ -1,10 +1,10 @@
 import { Button, CheckBox, TextEdit } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
+import { InfoCard } from "../components/cards.slint";
 
 export component DiagnosticsPage inherits CenteredPageRoot {
     in property <string> diagnostic-text;
@@ -44,17 +44,9 @@ export component DiagnosticsPage inherits CenteredPageRoot {
         text: "Use Copy report, or select the report and use your system copy shortcut.";
     }
 
-    Rectangle {
-        background: Colors.surface;
-        border-color: Colors.border;
-        border-width: 1px;
-        border-radius: 8px;
+    InfoCard {
         min-height: 220px;
         report := TextEdit {
-            x: 12px;
-            y: 12px;
-            width: parent.width - 24px;
-            height: parent.height - 24px;
             accessible-label: "Redacted diagnostics report. Select text and use your system copy shortcut to copy it.";
             text: root.diagnostic-text;
             read-only: true;
