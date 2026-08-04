@@ -48,12 +48,18 @@ impl OperationExecutor for Executor {
     fn execute(
         &self,
         entry: &QueueEntry,
-        _: &dyn crate::transfer_progress::TransferProgressObserver,
+        observer: &dyn crate::transfer_progress::TransferProgressObserver,
     ) -> Result<crate::execution::ExecutionResult, crate::CapabilityError> {
         self.0
             .lock()
             .unwrap()
             .push(entry.plan.connection_id.clone());
+        observer.on_progress(&crate::transfer_progress::TransferProgress {
+            state: crate::execution::ExecutionState::Completed,
+            completed_actions: 0,
+            total_actions: 0,
+            current_action: None,
+        });
         Ok(ExecutionProgress::new([]).finish())
     }
 
@@ -106,7 +112,7 @@ fn snapshot(name: &str) -> ActivitySnapshot {
 }
 
 #[test]
-fn worker_completes_operations_in_submission_order() {
+fn worker_reports_progress_and_completes_operations_in_submission_order() {
     let executor = std::sync::Arc::new(Executor(Mutex::new(Vec::new())));
     let queue = BackgroundQueue::new(std::sync::Arc::clone(&executor));
     queue.enqueue(

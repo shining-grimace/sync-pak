@@ -29,11 +29,13 @@ pub(crate) fn start<E: OperationExecutor + Send + Sync + 'static>(
                 .lock()
                 .expect("active connection mutex poisoned") =
                 Some(entry.plan.connection_id.clone());
+            // Progress callbacks update the queue, so execution must not hold its mutex.
+            let result = execute(&*executor, background.as_deref(), &entry, &shared);
             let (queue, _) = &*shared;
-            let _ = queue.lock().expect("queue mutex poisoned").finish(
-                entry.operation_id,
-                execute(&*executor, background.as_deref(), &entry, &shared),
-            );
+            let _ = queue
+                .lock()
+                .expect("queue mutex poisoned")
+                .finish(entry.operation_id, result);
             *active_connection
                 .lock()
                 .expect("active connection mutex poisoned") = None;
