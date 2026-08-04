@@ -73,8 +73,8 @@ export component NavMenuButton inherits ActionButton {
 
     button-width: Dimensions.action-button-preferred-width;
     emphasized: root.selected;
-    fill-color: Colors.text-primary;
-    outline-color: Colors.text-primary;
+    fill-color: Colors.primary;
+    outline-color: Colors.primary;
     label-color: Colors.surface;
 }
 
@@ -83,9 +83,9 @@ export component RadioButton inherits ActionButton {
 
     button-width: Dimensions.radio-button-preferred-width;
     emphasized: root.selected;
-    fill-color: root.selected ? Colors.text-primary : Colors.surface;
-    outline-color: Colors.text-primary;
-    label-color: root.selected ? Colors.surface : Colors.text-primary;
+    fill-color: root.selected ? Colors.primary : Colors.surface;
+    outline-color: Colors.primary;
+    label-color: root.selected ? Colors.surface : Colors.primary;
     accessible-role: radio-button;
     accessible-checkable: true;
     accessible-checked: root.selected;
@@ -95,8 +95,8 @@ export component CardPrimaryActionButton inherits ActionButton {
     button-width: Dimensions.card-action-button-width;
     fixed-width: true;
     emphasized: true;
-    fill-color: Colors.text-primary;
-    outline-color: Colors.text-primary;
+    fill-color: Colors.primary;
+    outline-color: Colors.primary;
     label-color: Colors.surface;
 }
 
@@ -104,8 +104,8 @@ export component CardSecondaryActionButton inherits ActionButton {
     button-width: Dimensions.card-action-button-width;
     fixed-width: true;
     fill-color: Colors.surface;
-    outline-color: Colors.text-primary;
-    label-color: Colors.text-primary;
+    outline-color: Colors.primary;
+    label-color: Colors.primary;
 }
 
 component PageActionButton inherits HorizontalLayout {
@@ -147,13 +147,13 @@ component PageActionButton inherits HorizontalLayout {
 
 export component PrimaryActionButton inherits PageActionButton {
     emphasized: true;
-    fill-color: Colors.text-primary;
-    outline-color: Colors.text-primary;
+    fill-color: Colors.primary;
+    outline-color: Colors.primary;
     label-color: Colors.surface;
 }
 
 export component SecondaryActionButton inherits PageActionButton {
     fill-color: Colors.surface;
-    outline-color: Colors.text-primary;
-    label-color: Colors.text-primary;
+    outline-color: Colors.primary;
+    label-color: Colors.primary;
 }
