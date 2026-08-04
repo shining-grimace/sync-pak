@@ -92,11 +92,10 @@ pub(crate) fn configure(
             crate::appearance_controller::configure(&window, &configuration, config.appearance);
             record_temporary_cleanup_failures(&config, &diagnostics);
             if config.welcome_completed {
-                crate::provider_list_controller::show(
+                crate::connection_list_controller::show(
                     &window.as_weak(),
                     configuration,
                     diagnostics,
-                    provider_buckets,
                 )
             }
         }
