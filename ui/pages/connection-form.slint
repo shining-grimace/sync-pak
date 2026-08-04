@@ -27,10 +27,13 @@ export component ConnectionFormPage inherits ScrollView {
     in property <bool> connection-providers-loading;
     in property <bool> connection-providers-load-failed;
     in property <bool> folder-picker-open;
+    in property <bool> connection-verifying;
     callback select-local-folder();
     callback select-connection-provider(int);
     callback retry-connection-providers();
     callback save-connection(string, int, string, string, string, int, string);
+    callback verify-connection();
+    callback save-and-verify-connection();
     callback request-discard-connection();
 
     vertical-scrollbar-policy: always-on;
@@ -70,6 +73,7 @@ export component ConnectionFormPage inherits ScrollView {
                 accessible-label: "Connection name";
                 placeholder-text: "For example, Photos backup";
                 text <=> root.connection-form-name;
+                enabled: !root.connection-verifying;
             }
 
             DescriptionLabel {
@@ -83,7 +87,7 @@ export component ConnectionFormPage inherits ScrollView {
             connection-provider := ComboBox {
                 accessible-label: root.connection-providers-loading ? "Loading providers" : (root.connection-providers-load-failed ? "Providers unavailable" : (root.provider-names.length == 0 ? "Provider; add a provider first" : "Provider"));
                 model: root.provider-names;
-                enabled: !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
                 current-index <=> root.connection-form-provider;
                 selected => {
                     root.select-connection-provider(self.current-index);
@@ -121,7 +125,7 @@ export component ConnectionFormPage inherits ScrollView {
                 accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket";
                 placeholder-text: "Bucket name";
                 text <=> root.connection-form-bucket;
-                enabled: !root.folder-picker-open && connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "";
+                enabled: !root.connection-verifying && !root.folder-picker-open && connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "";
             }
 
             if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket == root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
@@ -139,7 +143,7 @@ export component ConnectionFormPage inherits ScrollView {
                 ComboBox {
                     accessible-label: "Buckets verified this session";
                     model: root.connection-verified-buckets;
-                    enabled: !root.folder-picker-open;
+                    enabled: !root.connection-verifying && !root.folder-picker-open;
                     selected => {
                         root.connection-form-bucket = root.connection-verified-buckets[self.current-index];
                     }
@@ -159,7 +163,7 @@ export component ConnectionFormPage inherits ScrollView {
                 accessible-label: "Remote folder";
                 placeholder-text: "Leave empty for the bucket root";
                 text <=> root.connection-form-remote;
-                enabled: !root.folder-picker-open;
+                enabled: !root.connection-verifying && !root.folder-picker-open;
             }
 
             DescriptionLabel {
@@ -177,7 +181,7 @@ export component ConnectionFormPage inherits ScrollView {
                 accessible-label: "Local folder";
                 placeholder-text: "Full local folder path";
                 text <=> root.connection-form-local;
-                enabled: !root.folder-picker-open;
+                enabled: !root.connection-verifying && !root.folder-picker-open;
             }
 
             DescriptionLabel {
@@ -187,7 +191,7 @@ export component ConnectionFormPage inherits ScrollView {
             Button {
                 accessible-label: root.folder-picker-open ? "Folder selection in progress" : "Select local folder";
                 text: root.folder-picker-open ? "Selecting folder…" : "Select folder";
-                enabled: !root.folder-picker-open;
+                enabled: !root.connection-verifying && !root.folder-picker-open;
                 clicked => {
                     root.select-local-folder();
                 }
@@ -207,7 +211,7 @@ export component ConnectionFormPage inherits ScrollView {
             accessible-label: "Mode";
             model: ["Add-only", "Mirror", "Archive"];
             current-index <=> root.connection-form-mode;
-            enabled: !root.folder-picker-open;
+            enabled: !root.connection-verifying && !root.folder-picker-open;
         }
 
         if connection-mode.current-index == 0: DescriptionLabel {
@@ -229,7 +233,7 @@ export component ConnectionFormPage inherits ScrollView {
             connection-retention := LineEdit {
                 accessible-label: "Keep last N archives";
                 text <=> root.connection-form-retention;
-                enabled: !root.folder-picker-open;
+                enabled: !root.connection-verifying && !root.folder-picker-open;
             }
 
             DescriptionLabel {
@@ -237,6 +241,11 @@ export component ConnectionFormPage inherits ScrollView {
             }
         }
         VerticalLayout {
+            if root.connection-verifying: DescriptionLabel {
+                accessible-live-region: polite;
+                text: "Checking the local folder and cloud path without changing files…";
+            }
+
             Button {
                 accessible-label: "Back to connections";
                 text: "Back";
@@ -246,12 +255,30 @@ export component ConnectionFormPage inherits ScrollView {
             }
 
             Button {
-                accessible-label: root.folder-picker-open ? "Save connection unavailable while folder selection is in progress" : "Save connection " + root.connection-form-name + " without transferring files";
-                text: "Save connection";
-                primary: true;
-                enabled: !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+                accessible-label: "Save connection " + root.connection-form-name + " without verifying";
+                text: "Save without verifying";
+                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
                 clicked => {
                     root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention);
+                }
+            }
+
+            Button {
+                accessible-label: "Verify connection settings for " + root.connection-form-name;
+                text: "Verify settings";
+                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+                clicked => {
+                    root.verify-connection();
+                }
+            }
+
+            Button {
+                accessible-label: "Save and verify connection " + root.connection-form-name;
+                text: root.connection-verifying ? "Verifying…" : "Save and verify";
+                primary: true;
+                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+                clicked => {
+                    root.save-and-verify-connection();
                 }
             }
         }

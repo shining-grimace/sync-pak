@@ -62,6 +62,7 @@ mod tests {
             local_path: "/pictures".into(),
             mode: SyncMode::Mirror,
             keep_last_archives: None,
+            verified: false,
         };
 
         let snapshot = ActivitySnapshot::from_connection(&connection, "R2", Direction::Upload);

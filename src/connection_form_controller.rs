@@ -5,8 +5,10 @@ use slint::{ComponentHandle, SharedString};
 use crate::{
     AppWindow,
     configuration::{ConfigStore, ConnectionRepository},
-    connection_form_data::{clear_transient_state, draft, existing_id, is_dirty},
-    connection_form_state, connection_list_controller,
+    connection_form_data::{
+        clear_transient_state, draft, existing_id, invalidate_verification, is_dirty, was_verified,
+    },
+    connection_form_state, connection_form_verify_controller, connection_list_controller,
     diagnostics_controller::{self, SharedDiagnosticLog},
     form_validation,
     provider_bucket_cache::ProviderBucketCache,
@@ -18,6 +20,7 @@ pub(crate) fn configure(
     diagnostics: SharedDiagnosticLog,
     buckets: ProviderBucketCache,
 ) {
+    connection_form_verify_controller::configure(window, configuration, Rc::clone(&diagnostics));
     let weak = window.as_weak();
     let add_configuration = Rc::clone(configuration);
     let add_diagnostics = Rc::clone(&diagnostics);
@@ -114,6 +117,7 @@ pub(crate) fn configure(
 
 fn request_discard(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
+    invalidate_verification(&window);
     if window.get_pending_navigation_page() < 0 {
         window.set_pending_navigation_page(4);
     }
@@ -147,10 +151,12 @@ fn save(
         mode_index,
         &retention,
     ) {
+        window.set_connection_save_after_verification(false);
         window.set_status_message(error.into());
         return;
     }
     let edit_id = window.get_connection_form_id();
+    let form_changed = is_dirty(&window);
     let result = draft(
         &configuration,
         name,
@@ -161,8 +167,10 @@ fn save(
         mode_index,
         retention,
     )
-    .and_then(|draft| {
+    .and_then(|mut draft| {
         let repository = ConnectionRepository::new(&configuration);
+        draft.verified = window.get_connection_save_after_verification()
+            || (!form_changed && was_verified(&configuration, edit_id.as_str()));
         if edit_id.is_empty() {
             repository.create(draft).map_err(|error| error.to_string())
         } else {
@@ -177,12 +185,15 @@ fn save(
             connection_list_controller::show(weak, configuration, diagnostics);
             window.set_notice_message("Connection saved.".into());
         }
-        Err(_) => diagnostics_controller::present(
-            &window,
-            &diagnostics,
-            "Connection could not be saved",
-            "connection save failed",
-            "SyncPak could not save this connection. Check configuration storage and try again.",
-        ),
+        Err(_) => {
+            window.set_connection_save_after_verification(false);
+            diagnostics_controller::present(
+                &window,
+                &diagnostics,
+                "Connection could not be saved",
+                "connection save failed",
+                "SyncPak could not save this connection. Check configuration storage and try again.",
+            )
+        }
     }
 }

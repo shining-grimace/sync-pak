@@ -66,6 +66,7 @@ fn provider_deletion_removes_dependent_connections_and_credentials() {
             local_path: "/photos".to_owned(),
             mode: SyncMode::AddOnly,
             keep_last_archives: None,
+            verified: false,
         })
         .unwrap();
 
@@ -143,6 +144,7 @@ fn provider_and_connection_configuration_survive_a_restart() {
             local_path: "/photos".to_owned(),
             mode: SyncMode::AddOnly,
             keep_last_archives: None,
+            verified: false,
         })
         .unwrap();
 
@@ -150,6 +152,35 @@ fn provider_and_connection_configuration_survive_a_restart() {
 
     assert_eq!(restarted.providers, vec![provider]);
     assert_eq!(restarted.connections, vec![connection]);
+}
+
+#[test]
+fn connection_verification_survives_a_restart() {
+    let path = test_path();
+    let store = ConfigStore::at(path.clone());
+    let secrets = MemoryCredentials::default();
+    let provider = ProviderRepository::new(&store, &secrets)
+        .create(provider_draft(), &secret())
+        .unwrap();
+    let connection = ConnectionRepository::new(&store)
+        .create(ConnectionDraft {
+            name: "Photos".to_owned(),
+            provider_id: provider.id,
+            bucket: "backup".to_owned(),
+            remote_path: String::new(),
+            local_path: "/photos".to_owned(),
+            mode: SyncMode::AddOnly,
+            keep_last_archives: None,
+            verified: false,
+        })
+        .unwrap();
+
+    assert!(
+        store
+            .record_connection_verification(connection.id.as_str())
+            .unwrap()
+    );
+    assert!(ConfigStore::at(path).load().unwrap().connections[0].verified);
 }
 
 #[test]

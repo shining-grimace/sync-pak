@@ -65,7 +65,7 @@ pub fn inventory_from_objects(
     Inventory::new(entries.into_values()).map_err(RemoteInventoryError::Inventory)
 }
 
-fn normalize_prefix(prefix: &str) -> Result<String, RemoteInventoryError> {
+pub(crate) fn normalize_prefix(prefix: &str) -> Result<String, RemoteInventoryError> {
     if prefix.is_empty() {
         return Ok(String::new());
     }

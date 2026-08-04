@@ -230,6 +230,7 @@ mod tests {
                 local_path: "/local".into(),
                 mode: SyncMode::AddOnly,
                 keep_last_archives: None,
+                verified: false,
             },
             "provider",
             Direction::Upload,

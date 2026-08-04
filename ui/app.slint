@@ -141,6 +141,9 @@ export component AppWindow inherits Window {
     in-out property <int> connection-form-mode;
     in-out property <string> connection-form-retention: "1";
     in-out property <string> connection-form-original;
+    in-out property <bool> connection-verifying: false;
+    in-out property <int> connection-verification-generation: 0;
+    in-out property <bool> connection-save-after-verification: false;
     in-out property <bool> folder-picker-open: false;
     in-out property <string> run-connection-id;
     in-out property <string> run-connection-name;
@@ -205,6 +208,8 @@ export component AppWindow inherits Window {
     callback confirm-discard-provider();
     callback cancel-discard-provider();
     callback save-connection(string, int, string, string, string, int, string);
+    callback verify-connection();
+    callback save-and-verify-connection();
     callback request-discard-connection();
     callback confirm-discard-connection();
     callback cancel-discard-connection();
@@ -220,6 +225,7 @@ export component AppWindow inherits Window {
     callback show-activity-progress(string);
     callback dismiss-activity-progress();
     callback request-run-connection(string);
+    callback verify-saved-connection(string);
     callback choose-run-direction(int);
     callback begin-preflight();
     callback start-preflight-operation();
@@ -611,6 +617,9 @@ export component AppWindow inherits Window {
                 request-run-connection(id) => {
                     root.request-run-connection(id);
                 }
+                verify-saved-connection(id) => {
+                    root.verify-saved-connection(id);
+                }
                 request-connection-edit(id) => {
                     root.request-connection-edit(id);
                 }
@@ -635,6 +644,7 @@ export component AppWindow inherits Window {
                 connection-providers-loading: root.connection-providers-loading;
                 connection-providers-load-failed: root.connection-providers-load-failed;
                 folder-picker-open: root.folder-picker-open;
+                connection-verifying: root.connection-verifying;
                 select-local-folder => {
                     root.select-local-folder();
                 }
@@ -646,6 +656,12 @@ export component AppWindow inherits Window {
                 }
                 save-connection(name, provider, bucket, remote, local, mode, retention) => {
                     root.save-connection(name, provider, bucket, remote, local, mode, retention);
+                }
+                verify-connection => {
+                    root.verify-connection();
+                }
+                save-and-verify-connection => {
+                    root.save-and-verify-connection();
                 }
                 request-discard-connection => {
                     root.request-discard-connection();

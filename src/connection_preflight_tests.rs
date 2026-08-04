@@ -72,6 +72,7 @@ fn request(direction: Direction) -> RunRequest {
         local_path: "/photos".into(),
         mode: SyncMode::AddOnly,
         keep_last_archives: None,
+        verified: false,
     };
     RunRequest::from_config(
         &AppConfig {

@@ -95,6 +95,14 @@ pub trait ObjectLister {
     ) -> impl Future<Output = ProviderResult<Vec<RemoteObject>>> + Send;
 }
 
+pub trait ObjectPrefixChecker {
+    fn prefix_exists(
+        &self,
+        bucket: &str,
+        prefix: &str,
+    ) -> impl Future<Output = ProviderResult<bool>> + Send;
+}
+
 pub trait ObjectReader {
     fn read(&self, bucket: &str, key: &str)
     -> impl Future<Output = ProviderResult<Vec<u8>>> + Send;

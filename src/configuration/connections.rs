@@ -77,3 +77,22 @@ impl<'a> ConnectionRepository<'a> {
             .map_err(ConnectionError::Configuration)
     }
 }
+
+impl ConfigStore {
+    pub(crate) fn record_connection_verification(
+        &self,
+        connection_id: &str,
+    ) -> Result<bool, ConfigurationError> {
+        let mut config = self.load()?;
+        let Some(connection) = config
+            .connections
+            .iter_mut()
+            .find(|connection| connection.id.as_str() == connection_id)
+        else {
+            return Ok(false);
+        };
+        connection.verified = true;
+        self.save(&config)?;
+        Ok(true)
+    }
+}

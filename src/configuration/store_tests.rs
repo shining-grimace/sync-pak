@@ -44,12 +44,12 @@ fn rejects_an_older_schema() {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(
         &path,
-        r#"{"schema_version":1,"welcome_completed":false,"providers":[],"connections":[]}"#,
+        r#"{"schema_version":3,"welcome_completed":false,"appearance":"system","providers":[],"connections":[]}"#,
     )
     .unwrap();
 
     assert!(ConfigStore::at(path).load().is_err());
-    assert_eq!(CURRENT_SCHEMA_VERSION, 3);
+    assert_eq!(CURRENT_SCHEMA_VERSION, 4);
 }
 
 #[test]

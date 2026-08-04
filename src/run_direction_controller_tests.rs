@@ -15,6 +15,7 @@ fn archive_connection() -> ConnectionConfig {
         local_path: "/photos".into(),
         mode: SyncMode::Archive,
         keep_last_archives: Some(3),
+        verified: false,
     }
 }
 

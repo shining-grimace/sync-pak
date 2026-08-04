@@ -24,6 +24,7 @@ export component ConnectionsPage inherits ScrollView {
     callback show-add-connection();
     callback set-connection-filter(int);
     callback request-run-connection(string);
+    callback verify-saved-connection(string);
     callback request-connection-edit(string);
     callback request-connection-delete(string);
     vertical-scrollbar-policy: always-on;
@@ -198,12 +199,12 @@ export component ConnectionsPage inherits ScrollView {
                 vertical-scrollbar-policy: always-on;
                 for connection in root.connections: Rectangle {
                     accessible-role: list-item;
-                    accessible-label: connection.name + ". " + connection.detail + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
+                    accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
                     background: Colors.surface;
                     border-color: Colors.border;
                     border-width: 1px;
                     border-radius: 8px;
-                    min-height: root.width < Dimensions.narrow-layout-breakpoint ? 250px : 98px;
+                    min-height: root.width < Dimensions.narrow-layout-breakpoint ? 300px : 98px;
                     VerticalLayout {
                         padding: 10px;
                         spacing: 8px;
@@ -214,7 +215,7 @@ export component ConnectionsPage inherits ScrollView {
                             }
 
                             DescriptionLabel {
-                                text: connection.detail;
+                                text: connection.detail + " · " + connection.verification;
                                 color: Colors.text-secondary;
                             }
 
@@ -295,6 +296,15 @@ export component ConnectionsPage inherits ScrollView {
                             }
 
                             Button {
+                                accessible-label: "Verify connection " + connection.name;
+                                text: connection.verifying ? "Verifying…" : "Verify";
+                                enabled: !connection.verifying;
+                                clicked => {
+                                    root.verify-saved-connection(connection.id);
+                                }
+                            }
+
+                            Button {
                                 accessible-label: "Edit connection " + connection.name;
                                 text: "Edit";
                                 clicked => {
@@ -318,6 +328,15 @@ export component ConnectionsPage inherits ScrollView {
                                 primary: true;
                                 clicked => {
                                     root.request-run-connection(connection.id);
+                                }
+                            }
+
+                            Button {
+                                accessible-label: "Verify connection " + connection.name;
+                                text: connection.verifying ? "Verifying…" : "Verify";
+                                enabled: !connection.verifying;
+                                clicked => {
+                                    root.verify-saved-connection(connection.id);
                                 }
                             }
 

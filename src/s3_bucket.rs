@@ -1,5 +1,7 @@
 use crate::{
-    provider_capabilities::{BucketAccessChecker, BucketLister, ProviderResult},
+    provider_capabilities::{
+        BucketAccessChecker, BucketLister, ObjectPrefixChecker, ProviderResult,
+    },
     s3_error::provider_error,
     s3_transport::S3Transport,
 };
@@ -30,5 +32,20 @@ impl BucketLister for S3Transport {
             .iter()
             .filter_map(|bucket| bucket.name().map(ToOwned::to_owned))
             .collect())
+    }
+}
+
+impl ObjectPrefixChecker for S3Transport {
+    async fn prefix_exists(&self, bucket: &str, prefix: &str) -> ProviderResult<bool> {
+        let response = self
+            .client
+            .list_objects_v2()
+            .bucket(bucket)
+            .prefix(prefix)
+            .max_keys(1)
+            .send()
+            .await
+            .map_err(provider_error)?;
+        Ok(prefix.is_empty() || !response.contents().is_empty())
     }
 }

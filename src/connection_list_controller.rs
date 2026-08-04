@@ -5,6 +5,7 @@ use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use crate::{
     AppWindow, ConnectionRow,
     configuration::{ConfigStore, SyncMode},
+    connection_list_verification_controller::{self, SessionVerifications, VerificationStates},
     diagnostics_controller::{self, SharedDiagnosticLog},
 };
 
@@ -13,27 +14,55 @@ pub(crate) fn configure(
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
 ) {
+    let states: VerificationStates = Default::default();
+    let sessions: SessionVerifications = Default::default();
     let weak = window.as_weak();
     let show_configuration = Rc::clone(configuration);
     let show_diagnostics = Rc::clone(&diagnostics);
+    let show_states = Rc::clone(&states);
+    let show_sessions = Rc::clone(&sessions);
     window.on_show_connections(move || {
         if let Some(window) = weak.upgrade() {
             window.set_connection_filter(0);
         }
-        show(
+        show_with_states(
             &weak,
             Rc::clone(&show_configuration),
             Rc::clone(&show_diagnostics),
+            Rc::clone(&show_states),
+            Rc::clone(&show_sessions),
         )
     });
 
     let weak = window.as_weak();
-    let configuration = Rc::clone(configuration);
+    let filter_configuration = Rc::clone(configuration);
+    let filter_diagnostics = Rc::clone(&diagnostics);
+    let filter_states = Rc::clone(&states);
+    let filter_sessions = Rc::clone(&sessions);
     window.on_set_connection_filter(move |filter| {
         if let Some(window) = weak.upgrade() {
             window.set_connection_filter(filter.clamp(0, 3));
         }
-        refresh(&weak, &configuration, &diagnostics);
+        refresh(
+            &weak,
+            &filter_configuration,
+            &filter_diagnostics,
+            &filter_states,
+            &filter_sessions,
+        );
+    });
+
+    let weak = window.as_weak();
+    let verify_configuration = Rc::clone(configuration);
+    window.on_verify_saved_connection(move |id| {
+        connection_list_verification_controller::verify(
+            &weak,
+            Rc::clone(&verify_configuration),
+            Rc::clone(&diagnostics),
+            Rc::clone(&states),
+            Rc::clone(&sessions),
+            id.to_string(),
+        );
     });
 }
 
@@ -42,20 +71,38 @@ pub(crate) fn show(
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
 ) {
+    show_with_states(
+        weak,
+        configuration,
+        diagnostics,
+        Default::default(),
+        Default::default(),
+    );
+}
+
+fn show_with_states(
+    weak: &slint::Weak<AppWindow>,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+    states: VerificationStates,
+    sessions: SessionVerifications,
+) {
     let Some(window) = weak.upgrade() else { return };
     window.set_status_message(SharedString::default());
     window.set_notice_message(SharedString::default());
     window.set_page(4);
     let weak = weak.clone();
     slint::Timer::single_shot(Duration::ZERO, move || {
-        refresh(&weak, &configuration, &diagnostics)
+        refresh(&weak, &configuration, &diagnostics, &states, &sessions)
     });
 }
 
-fn refresh(
+pub(crate) fn refresh(
     weak: &slint::Weak<AppWindow>,
     configuration: &ConfigStore,
     diagnostics: &SharedDiagnosticLog,
+    states: &VerificationStates,
+    sessions: &SessionVerifications,
 ) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
@@ -79,6 +126,17 @@ fn refresh(
                         id: connection.id.as_str().into(),
                         name: connection.name.clone().into(),
                         detail: mode_name(connection.mode).into(),
+                        verification: connection_list_verification_controller::status(
+                            states,
+                            sessions,
+                            connection.id.as_str(),
+                            connection.verified,
+                        )
+                        .into(),
+                        verifying: connection_list_verification_controller::is_checking(
+                            states,
+                            connection.id.as_str(),
+                        ),
                         mode: mode_index(connection.mode),
                         local_path: connection.local_path.clone().into(),
                         provider_name: provider.into(),

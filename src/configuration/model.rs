@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use super::validation::ValidationErrors;
 
-pub const CURRENT_SCHEMA_VERSION: u32 = 3;
+pub const CURRENT_SCHEMA_VERSION: u32 = 4;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -112,12 +112,7 @@ pub struct ProviderConfig {
     pub kind: ProviderKind,
     pub options: ProviderOptions,
     pub credential_reference: CredentialReference,
-    #[serde(default, skip_serializing_if = "is_false")]
     pub verified: bool,
-}
-
-fn is_false(value: &bool) -> bool {
-    !value
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -151,6 +146,7 @@ pub struct ConnectionConfig {
     pub mode: SyncMode,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_last_archives: Option<u32>,
+    pub verified: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -162,6 +158,7 @@ pub struct ConnectionDraft {
     pub local_path: String,
     pub mode: SyncMode,
     pub keep_last_archives: Option<u32>,
+    pub verified: bool,
 }
 
 impl ConnectionDraft {
@@ -175,6 +172,7 @@ impl ConnectionDraft {
             local_path: self.local_path,
             mode: self.mode,
             keep_last_archives: self.keep_last_archives,
+            verified: self.verified,
         }
     }
 }

@@ -10,6 +10,7 @@ use crate::{
 };
 
 pub(crate) fn reset(window: &AppWindow) {
+    invalidate_verification(window);
     window.set_connection_form_id(SharedString::default());
     window.set_connection_form_name(SharedString::default());
     window.set_connection_form_provider(0);
@@ -21,6 +22,29 @@ pub(crate) fn reset(window: &AppWindow) {
     set_verified_buckets(window, None);
     window.set_connection_providers_loading(false);
     mark_clean(window);
+}
+
+pub(crate) fn begin_verification(window: &AppWindow) -> i32 {
+    let generation = window
+        .get_connection_verification_generation()
+        .wrapping_add(1);
+    window.set_connection_verification_generation(generation);
+    window.set_connection_verifying(true);
+    generation
+}
+
+pub(crate) fn invalidate_verification(window: &AppWindow) {
+    window.set_connection_verification_generation(
+        window
+            .get_connection_verification_generation()
+            .wrapping_add(1),
+    );
+    window.set_connection_verifying(false);
+    window.set_connection_save_after_verification(false);
+}
+
+pub(crate) fn is_current_verification(expected: i32, current: i32) -> bool {
+    expected == current
 }
 
 /// Removes the current connection draft and any session-only bucket listing.
@@ -64,6 +88,15 @@ pub(crate) fn mark_clean(window: &AppWindow) {
 
 pub(crate) fn is_dirty(window: &AppWindow) -> bool {
     window.get_connection_form_original() != form_signature(window).as_str()
+}
+
+pub(crate) fn was_verified(configuration: &ConfigStore, connection_id: &str) -> bool {
+    configuration.load().is_ok_and(|config| {
+        config
+            .connections
+            .iter()
+            .any(|connection| connection.id.as_str() == connection_id && connection.verified)
+    })
 }
 
 fn form_signature(window: &AppWindow) -> String {
@@ -145,6 +178,7 @@ pub(crate) fn draft(
         local_path: local_path.to_string(),
         mode,
         keep_last_archives,
+        verified: false,
     })
 }
 

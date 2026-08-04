@@ -87,6 +87,7 @@ mod tests {
                 local_path: "/photos".into(),
                 mode: SyncMode::Mirror,
                 keep_last_archives: None,
+                verified: false,
             },
             provider: ProviderConfig {
                 id: provider_id.clone(),

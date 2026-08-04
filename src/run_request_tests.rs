@@ -32,6 +32,7 @@ fn config(mode: SyncMode) -> AppConfig {
             local_path: "/photos".into(),
             mode,
             keep_last_archives: None,
+            verified: false,
         }],
         providers: vec![provider],
         ..Default::default()

@@ -19,6 +19,7 @@ fn snapshot() -> ActivitySnapshot {
             local_path: "/pictures".into(),
             mode: SyncMode::AddOnly,
             keep_last_archives: None,
+            verified: false,
         },
         "R2",
         Direction::Upload,

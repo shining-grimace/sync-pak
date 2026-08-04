@@ -8,6 +8,7 @@ use crate::{
     AppWindow,
     configuration::{ConfigStore, ProviderRepository},
     diagnostics_controller::{self, SharedDiagnosticLog},
+    inventory_endpoint::{EndpointInventoryError, EndpointPreflightError},
     platform::PlatformCredentialStore,
     preflight::{CaseSensitivity, Preflight},
     run_request::RunRequest,
@@ -48,7 +49,7 @@ fn collect(
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-        .map_err(|_| PreflightFailure::Inventory)?;
+        .map_err(|_| PreflightFailure::Planning)?;
     runtime
         .block_on(collect_s3_connection_preflight(
             &request,
@@ -124,7 +125,9 @@ fn is_active(window: &AppWindow, connection_id: &str, generation: i32) -> bool {
 enum PreflightFailure {
     Credentials,
     Provider,
-    Inventory,
+    LocalInventory,
+    RemoteInventory,
+    Planning,
 }
 
 impl From<S3PreflightError> for PreflightFailure {
@@ -132,7 +135,15 @@ impl From<S3PreflightError> for PreflightFailure {
         match error {
             S3PreflightError::Credentials(_) => Self::Credentials,
             S3PreflightError::Provider(_) => Self::Provider,
-            S3PreflightError::Inventory(_) => Self::Inventory,
+            S3PreflightError::Inventory(
+                EndpointPreflightError::SourceInventory(EndpointInventoryError::Local(_))
+                | EndpointPreflightError::DestinationInventory(EndpointInventoryError::Local(_)),
+            ) => Self::LocalInventory,
+            S3PreflightError::Inventory(
+                EndpointPreflightError::SourceInventory(EndpointInventoryError::Remote(_))
+                | EndpointPreflightError::DestinationInventory(EndpointInventoryError::Remote(_)),
+            ) => Self::RemoteInventory,
+            S3PreflightError::Inventory(EndpointPreflightError::Preflight(_)) => Self::Planning,
         }
     }
 }
@@ -142,7 +153,9 @@ impl PreflightFailure {
         match self {
             Self::Credentials => "saved credential access failed",
             Self::Provider => "provider inventory failed",
-            Self::Inventory => "local or remote inventory failed",
+            Self::LocalInventory => "local folder inventory failed",
+            Self::RemoteInventory => "cloud path inventory failed",
+            Self::Planning => "connection preflight planning failed",
         }
     }
     fn message(self) -> &'static str {
@@ -153,8 +166,14 @@ impl PreflightFailure {
             Self::Provider => {
                 "SyncPak could not reach this provider. Check its credentials, bucket, and network connection."
             }
-            Self::Inventory => {
-                "SyncPak could not inventory this connection. Check the local folder and bucket, then try again."
+            Self::LocalInventory => {
+                "SyncPak could not read the configured local folder. Check that it exists and that SyncPak has permission to access it."
+            }
+            Self::RemoteInventory => {
+                "SyncPak could not read the configured cloud bucket or remote folder. Check that the cloud path exists and that the provider credentials can access it."
+            }
+            Self::Planning => {
+                "SyncPak read both paths but could not prepare this operation. Review the connection settings, then try again."
             }
         }
     }
@@ -169,3 +188,7 @@ fn local_case_sensitivity() -> CaseSensitivity {
 fn local_case_sensitivity() -> CaseSensitivity {
     CaseSensitivity::Sensitive
 }
+
+#[cfg(test)]
+#[path = "s3_preflight_controller_tests.rs"]
+mod tests;
