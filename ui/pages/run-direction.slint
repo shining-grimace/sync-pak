@@ -5,6 +5,7 @@ import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
 import { PrimaryActionButton, RadioButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
 export component RunDirectionPage inherits ScrollView {
     in property <string> connection-name;
@@ -148,7 +149,7 @@ export component RunDirectionPage inherits ScrollView {
             text: "Continue performs a read-only inventory and shows the complete plan before any files can change.";
         }
 
-        VerticalLayout {
+        ActionGroup {
             SecondaryActionButton {
                 accessible-label: "Cancel run for " + root.connection-name;
                 text: "Cancel";

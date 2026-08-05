@@ -1,6 +1,3 @@
-import {
-    ListView,
-} from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ProviderRow } from "../models.slint";
@@ -16,6 +13,7 @@ import {
     CardSecondaryActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
+import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ProvidersPage inherits CenteredPageRoot {
     in property <[ProviderRow]> providers;
@@ -79,11 +77,12 @@ export component ProvidersPage inherits CenteredPageRoot {
             accessible-label: "Configured providers";
             height: 260px;
             vertical-scrollbar-policy: always-on;
-            for provider in root.providers: InfoCard {
-                accessible-role: list-item;
-                accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
-                min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
-                VerticalLayout {
+            for provider in root.providers: ListItem {
+                InfoCard {
+                    accessible-role: list-item;
+                    accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
+                    min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
+                    VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
                     VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
@@ -157,6 +156,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                         Rectangle {
                             horizontal-stretch: 1;
                         }
+                    }
                     }
                 }
             }

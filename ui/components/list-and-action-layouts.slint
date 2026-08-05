@@ -1,0 +1,23 @@
+import { ScrollView } from "std-widgets.slint";
+import { Dimensions } from "../dimensions.slint";
+
+export component ListView inherits ScrollView {
+    accessible-role: list;
+    accessible-orientation: Orientation.vertical;
+
+    VerticalLayout {
+        width: parent.width;
+        spacing: Dimensions.element-gap;
+        @children
+    }
+}
+
+export component ListItem inherits VerticalLayout {
+    padding-bottom: Dimensions.element-gap;
+    @children
+}
+
+export component ActionGroup inherits VerticalLayout {
+    spacing: Dimensions.element-gap;
+    @children
+}

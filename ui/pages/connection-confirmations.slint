@@ -2,6 +2,7 @@ import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
 export component ConnectionDiscardConfirmationPage inherits CenteredPageRoot {
     in property <string> connection-name;
@@ -16,7 +17,7 @@ export component ConnectionDiscardConfirmationPage inherits CenteredPageRoot {
         text: "Your changes to this connection have not been saved.";
     }
 
-    VerticalLayout {
+    ActionGroup {
         SecondaryActionButton {
             accessible-label: "Continue editing connection " + root.connection-name;
             text: "Continue Editing";

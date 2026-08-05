@@ -1,4 +1,4 @@
-import { ListView, ScrollView } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ActivityRow } from "../models.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
@@ -11,6 +11,7 @@ import {
     CardSecondaryActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
+import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ActivityPage inherits ScrollView {
     in property <[ActivityRow]> activity-rows;
@@ -76,92 +77,94 @@ export component ActivityPage inherits ScrollView {
             accessible-label: "Current activity";
             height: 240px;
             vertical-scrollbar-policy: always-on;
-            for activity in root.activity-rows : InfoCard {
-                accessible-role: list-item;
-                accessible-label: activity.title + ". " + activity.status + ". " + activity.detail +
-                    (activity.progress != "" ? ". Progress: " + activity.progress : "") +
-                    (activity.result != "" ? ". Result: " + activity.result : "");
-                min-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
-                VerticalLayout {
-                    spacing: Dimensions.card-element-spacing;
+            for activity in root.activity-rows : ListItem {
+                InfoCard {
+                    accessible-role: list-item;
+                    accessible-label: activity.title + ". " + activity.status + ". " + activity.detail +
+                        (activity.progress != "" ? ". Progress: " + activity.progress : "") +
+                        (activity.result != "" ? ". Result: " + activity.result : "");
+                    min-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
                     VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        SectionHeadingLabel {
-                            text: activity.title + " · " + activity.status;
-                        }
-                        DescriptionLabel {
-                            text: activity.detail;
-                        }
-                        if activity.progress != "" : DescriptionLabel {
-                            text: "Progress: " + activity.progress;
-                        }
-                        if activity.result != "" : DescriptionLabel {
-                            text: "Result: " + activity.result;
-                        }
-                    }
-                    if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalLayout {
-                        spacing: Dimensions.card-element-spacing;
-                        if activity.can-view-result : CardPrimaryActionButton {
-                            accessible-label: "View result for " + activity.title;
-                            text: "View Result";
-                            clicked => {
-                                root.show-activity-result(activity.id);
+                        VerticalLayout {
+                            spacing: Dimensions.card-element-spacing;
+                            SectionHeadingLabel {
+                                text: activity.title + " · " + activity.status;
+                            }
+                            DescriptionLabel {
+                                text: activity.detail;
+                            }
+                            if activity.progress != "" : DescriptionLabel {
+                                text: "Progress: " + activity.progress;
+                            }
+                            if activity.result != "" : DescriptionLabel {
+                                text: "Result: " + activity.result;
                             }
                         }
-                        if activity.can-cancel : CardPrimaryActionButton {
-                            accessible-label: "View progress for " + activity.title;
-                            text: "View Progress";
-                            clicked => {
-                                root.show-activity-progress(activity.id);
+                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalLayout {
+                            spacing: Dimensions.card-element-spacing;
+                            if activity.can-view-result : CardPrimaryActionButton {
+                                accessible-label: "View result for " + activity.title;
+                                text: "View Result";
+                                clicked => {
+                                    root.show-activity-result(activity.id);
+                                }
+                            }
+                            if activity.can-cancel : CardPrimaryActionButton {
+                                accessible-label: "View progress for " + activity.title;
+                                text: "View Progress";
+                                clicked => {
+                                    root.show-activity-progress(activity.id);
+                                }
+                            }
+                            if activity.can-cancel : CardSecondaryActionButton {
+                                accessible-label: "Cancel " + activity.title;
+                                text: "Cancel";
+                                clicked => {
+                                    root.request-cancel-activity(activity.id, activity.title);
+                                }
+                            }
+                            if activity.can-remove : CardSecondaryActionButton {
+                                accessible-label: "Remove " + activity.title;
+                                text: "Remove";
+                                clicked => {
+                                    root.remove-queued-activity(activity.id);
+                                }
                             }
                         }
-                        if activity.can-cancel : CardSecondaryActionButton {
-                            accessible-label: "Cancel " + activity.title;
-                            text: "Cancel";
-                            clicked => {
-                                root.request-cancel-activity(activity.id, activity.title);
+                        if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalLayout {
+                            spacing: Dimensions.card-element-spacing;
+                            if activity.can-view-result : CardPrimaryActionButton {
+                                accessible-label: "View result for " + activity.title;
+                                text: "View Result";
+                                clicked => {
+                                    root.show-activity-result(activity.id);
+                                }
                             }
-                        }
-                        if activity.can-remove : CardSecondaryActionButton {
-                            accessible-label: "Remove " + activity.title;
-                            text: "Remove";
-                            clicked => {
-                                root.remove-queued-activity(activity.id);
+                            if activity.can-cancel : CardPrimaryActionButton {
+                                accessible-label: "View progress for " + activity.title;
+                                text: "View Progress";
+                                clicked => {
+                                    root.show-activity-progress(activity.id);
+                                }
                             }
-                        }
-                    }
-                    if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalLayout {
-                        spacing: Dimensions.card-element-spacing;
-                        if activity.can-view-result : CardPrimaryActionButton {
-                            accessible-label: "View result for " + activity.title;
-                            text: "View Result";
-                            clicked => {
-                                root.show-activity-result(activity.id);
+                            if activity.can-cancel : CardSecondaryActionButton {
+                                accessible-label: "Cancel " + activity.title;
+                                text: "Cancel";
+                                clicked => {
+                                    root.request-cancel-activity(activity.id, activity.title);
+                                }
                             }
-                        }
-                        if activity.can-cancel : CardPrimaryActionButton {
-                            accessible-label: "View progress for " + activity.title;
-                            text: "View Progress";
-                            clicked => {
-                                root.show-activity-progress(activity.id);
+                            if activity.can-remove : CardSecondaryActionButton {
+                                accessible-label: "Remove " + activity.title;
+                                text: "Remove";
+                                clicked => {
+                                    root.remove-queued-activity(activity.id);
+                                }
                             }
-                        }
-                        if activity.can-cancel : CardSecondaryActionButton {
-                            accessible-label: "Cancel " + activity.title;
-                            text: "Cancel";
-                            clicked => {
-                                root.request-cancel-activity(activity.id, activity.title);
+                            Rectangle {
+                                horizontal-stretch: 1;
                             }
-                        }
-                        if activity.can-remove : CardSecondaryActionButton {
-                            accessible-label: "Remove " + activity.title;
-                            text: "Remove";
-                            clicked => {
-                                root.remove-queued-activity(activity.id);
-                            }
-                        }
-                        Rectangle {
-                            horizontal-stretch: 1;
                         }
                     }
                 }

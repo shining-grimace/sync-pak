@@ -5,6 +5,7 @@ import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
 export component ActivityProgressPage inherits CenteredPageRoot {
     in property <string> id;
@@ -66,7 +67,7 @@ export component ActivityProgressPage inherits CenteredPageRoot {
     DescriptionLabel {
         text: "Minimize leaves this operation running. You can return from Activity at any time.";
     }
-    VerticalLayout {
+    ActionGroup {
         SecondaryActionButton {
             accessible-label: "Minimize progress for " + root.title;
             text: "Minimize";

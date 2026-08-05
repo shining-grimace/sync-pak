@@ -11,6 +11,7 @@ import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
 export component ProviderFormPage inherits ScrollView {
     in-out property <string> provider-form-id;
@@ -168,6 +169,7 @@ export component ProviderFormPage inherits ScrollView {
         }
 
         HorizontalLayout {
+            spacing: Dimensions.element-gap;
             LineEdit {
                 accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
                 placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
@@ -237,7 +239,7 @@ export component ProviderFormPage inherits ScrollView {
             accessible-live-region: polite;
             text: "Checking these settings without changing cloud data…";
         }
-        VerticalLayout {
+        ActionGroup {
             SecondaryActionButton {
                 accessible-label: "Back to providers";
                 text: "Back";

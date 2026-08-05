@@ -1,4 +1,3 @@
-import { ListView } from "std-widgets.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
@@ -7,6 +6,7 @@ import { DescriptionLabel } from "../components/description-label.slint";
 import { DangerCard } from "../components/cards.slint";
 import { Dimensions } from "../dimensions.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ActionGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ProviderDeletePage inherits CenteredPageRoot {
     in property <string> provider-name;
@@ -48,14 +48,16 @@ export component ProviderDeletePage inherits CenteredPageRoot {
             accessible-label: "Connections that will be deleted";
             height: 180px;
             vertical-scrollbar-policy: always-on;
-            for connection-name in root.connections: DescriptionLabel {
-                accessible-role: list-item;
-                accessible-label: connection-name;
-                text: "• " + connection-name;
+            for connection-name in root.connections: ListItem {
+                DescriptionLabel {
+                    accessible-role: list-item;
+                    accessible-label: connection-name;
+                    text: "• " + connection-name;
+                }
             }
         }
     }
-    VerticalLayout {
+    ActionGroup {
         SecondaryActionButton {
             accessible-label: "Keep provider " + root.provider-name;
             text: "Cancel";
@@ -103,7 +105,7 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
         }
     }
 
-    VerticalLayout {
+    ActionGroup {
         SecondaryActionButton {
             accessible-label: "Keep connection " + root.connection-name;
             text: "Cancel";
@@ -135,7 +137,7 @@ export component ActivityCancelPage inherits CenteredPageRoot {
         text: "Completed changes will not be undone. Work that has not started will be skipped.";
     }
 
-    VerticalLayout {
+    ActionGroup {
         SecondaryActionButton {
             accessible-label: "Keep " + root.activity-name + " running";
             text: "Keep Running";

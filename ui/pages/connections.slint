@@ -1,5 +1,4 @@
 import {
-    ListView,
     ScrollView,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
@@ -18,6 +17,7 @@ import {
     PrimaryActionButton,
     RadioButton,
 } from "../components/action-buttons.slint";
+import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ConnectionsPage inherits ScrollView {
     in property <[ConnectionRow]> connections;
@@ -197,11 +197,12 @@ export component ConnectionsPage inherits ScrollView {
             if root.connections.length > 0: ListView {
                 height: 280px;
                 vertical-scrollbar-policy: always-on;
-                for connection in root.connections: InfoCard {
-                    accessible-role: list-item;
-                    accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
-                    min-height: root.width < Dimensions.medium-layout-breakpoint ? 300px : 98px;
-                    VerticalLayout {
+                for connection in root.connections: ListItem {
+                    InfoCard {
+                        accessible-role: list-item;
+                        accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
+                        min-height: root.width < Dimensions.medium-layout-breakpoint ? 300px : 98px;
+                        VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
                         VerticalLayout {
                             spacing: Dimensions.card-element-spacing;
@@ -352,6 +353,7 @@ export component ConnectionsPage inherits ScrollView {
                             Rectangle {
                                 horizontal-stretch: 1;
                             }
+                        }
                         }
                     }
                 }

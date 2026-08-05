@@ -1,6 +1,5 @@
 import {
     CheckBox,
-    ListView,
     ScrollView,
 } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -14,6 +13,7 @@ import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
 import { DangerCard, InfoCard } from "../components/cards.slint";
 import { PrimaryActionButton, RadioButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ActionGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component PreflightPage inherits ScrollView {
     in property <string> connection-name;
@@ -240,7 +240,7 @@ export component PreflightPage inherits ScrollView {
                 accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
                 height: 180px;
                 vertical-scrollbar-policy: always-on;
-                for item in root.visible-items: VerticalLayout {
+                for item in root.visible-items: ListItem {
                     accessible-role: list-item;
                     accessible-label: item.status + ": " + item.path + ". " + item.detail;
                     spacing: 4px;
@@ -304,7 +304,7 @@ export component PreflightPage inherits ScrollView {
                 text: "Acknowledge the destructive changes above before starting.";
             }
         }
-        VerticalLayout {
+        ActionGroup {
             if root.loading || root.failed || root.items.length == 0: FocusScope {
                 width: 0px;
                 height: 0px;
