@@ -39,7 +39,7 @@ export component PreflightPage inherits CenteredPageRoot {
     callback begin-preflight();
 
     HeadingLabel {
-        text: root.failed ? "This operation cannot start" : (root.loading ? "Checking before anything changes" : (root.requires-mirror-confirmation ? "Review mirror changes" : "Ready to start"));
+        text: root.failed ? "This Operation Cannot Start" : (root.loading ? "Checking Before Anything Changes" : (root.requires-mirror-confirmation ? "Review Mirror Changes" : "Ready to Start"));
         wrap: word-wrap;
     }
 
