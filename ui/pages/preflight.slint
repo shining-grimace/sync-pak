@@ -37,6 +37,7 @@ export component PreflightPage inherits CenteredPageRoot {
     callback set-item-filter(int);
     callback return-to-direction();
     callback begin-preflight();
+    fill-height: true;
 
     HeadingLabel {
         text: root.failed ? "This Operation Cannot Start" : (root.loading ? "Checking Before Anything Changes" : (root.requires-mirror-confirmation ? "Review Mirror Changes" : "Ready to Start"));
@@ -92,10 +93,12 @@ export component PreflightPage inherits CenteredPageRoot {
         }
     }
     if !root.loading && !root.failed: VerticalLayout {
+        vertical-stretch: 1;
         spacing: 8px;
         VerticalLayout {
             accessible-role: region;
             accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
+            vertical-stretch: 0;
             spacing: 4px;
             if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
                 spacing: 3px;
@@ -161,81 +164,85 @@ export component PreflightPage inherits CenteredPageRoot {
             accessible-live-region: polite;
             text: root.item-filter == 0 ? "Reviewing " + root.items.length + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
         }
-        if root.items.length > 0: VerticalLayout {
-            accessible-role: region;
-            accessible-label: "Filter planned file changes";
-            spacing: 6px;
-            SectionHeadingLabel {
-                text: "Show planned changes";
-            }
-
-            HorizontalLayout {
+        VerticalLayout {
+            vertical-stretch: 0;
+            if root.items.length > 0: VerticalLayout {
+                accessible-role: region;
+                accessible-label: "Filter planned file changes";
                 spacing: 6px;
-                preflight-filter-all := RadioButton {
-                    accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
-                    text: "All";
-                    selected: root.item-filter == 0;
-                    clicked => {
-                        root.set-item-filter(0);
+                SectionHeadingLabel {
+                    text: "Show planned changes";
+                }
+
+                HorizontalLayout {
+                    spacing: 6px;
+                    preflight-filter-all := RadioButton {
+                        accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
+                        text: "All";
+                        selected: root.item-filter == 0;
+                        clicked => {
+                            root.set-item-filter(0);
+                        }
+                    }
+
+                    RadioButton {
+                        accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
+                        text: "New";
+                        selected: root.item-filter == 1;
+                        clicked => {
+                            root.set-item-filter(1);
+                        }
+                    }
+
+                    RadioButton {
+                        accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
+                        text: "Overwrites";
+                        selected: root.item-filter == 2;
+                        clicked => {
+                            root.set-item-filter(2);
+                        }
                     }
                 }
 
-                RadioButton {
-                    accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
-                    text: "New";
-                    selected: root.item-filter == 1;
-                    clicked => {
-                        root.set-item-filter(1);
+                HorizontalLayout {
+                    spacing: 6px;
+                    RadioButton {
+                        accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
+                        text: "Deletions";
+                        selected: root.item-filter == 3;
+                        clicked => {
+                            root.set-item-filter(3);
+                        }
+                    }
+
+                    RadioButton {
+                        accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
+                        text: "Warnings";
+                        selected: root.item-filter == 4;
+                        clicked => {
+                            root.set-item-filter(4);
+                        }
                     }
                 }
 
-                RadioButton {
-                    accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
-                    text: "Overwrites";
-                    selected: root.item-filter == 2;
-                    clicked => {
-                        root.set-item-filter(2);
+                FocusScope {
+                    width: 0px;
+                    height: 0px;
+                    focus-on-click: false;
+                    focus-on-tab-navigation: false;
+                    forward-focus: preflight-filter-all;
+                    init => {
+                        self.focus();
                     }
-                }
-            }
-
-            HorizontalLayout {
-                spacing: 6px;
-                RadioButton {
-                    accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
-                    text: "Deletions";
-                    selected: root.item-filter == 3;
-                    clicked => {
-                        root.set-item-filter(3);
-                    }
-                }
-
-                RadioButton {
-                    accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
-                    text: "Warnings";
-                    selected: root.item-filter == 4;
-                    clicked => {
-                        root.set-item-filter(4);
-                    }
-                }
-            }
-
-            FocusScope {
-                width: 0px;
-                height: 0px;
-                focus-on-click: false;
-                focus-on-tab-navigation: false;
-                forward-focus: preflight-filter-all;
-                init => {
-                    self.focus();
                 }
             }
         }
         if root.visible-items.length > 0: ListView {
             accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
-            height: 180px;
+            vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;
             for item in root.visible-items: ListItem {
+                width: parent.width;
                 accessible-role: list-item;
                 accessible-label: item.status + ": " + item.path + ". " + item.detail;
                 spacing: 4px;

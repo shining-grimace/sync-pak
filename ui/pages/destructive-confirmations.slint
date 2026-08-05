@@ -49,6 +49,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
             height: 180px;
             vertical-scrollbar-policy: always-on;
             for connection-name in root.connections: ListItem {
+                width: parent.width;
                 DescriptionLabel {
                     accessible-role: list-item;
                     accessible-label: connection-name;

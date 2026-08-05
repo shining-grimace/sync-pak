@@ -1,17 +1,7 @@
-import { ScrollView } from "std-widgets.slint";
+import { ListView as StandardListView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 
-export component ListView inherits ScrollView {
-    accessible-role: list;
-    accessible-orientation: Orientation.vertical;
-
-    VerticalLayout {
-        width: parent.width;
-        alignment: start;
-        spacing: Dimensions.element-gap;
-        @children
-    }
-}
+export { StandardListView as ListView }
 
 export component ListItem inherits VerticalLayout {
     vertical-stretch: 0;

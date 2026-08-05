@@ -195,6 +195,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
             vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;
             for connection in root.connections: ListItem {
+                width: parent.width;
                 InfoCard {
                     accessible-role: list-item;
                     accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;

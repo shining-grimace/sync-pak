@@ -80,6 +80,7 @@ export component ProvidersPage inherits CenteredPageRoot {
             vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;
             for provider in root.providers: ListItem {
+                width: parent.width;
                 InfoCard {
                     accessible-role: list-item;
                     accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
