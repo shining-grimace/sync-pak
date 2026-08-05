@@ -18,126 +18,121 @@ export component WelcomePage inherits CenteredPageRoot {
     callback show-add-provider();
     callback show-privacy();
 
-    VerticalLayout {
-        spacing: 14px;
-        alignment: center;
-        HeadingLabel {
-            text: "Your files, your cloud.";
-            horizontal-alignment: center;
-            wrap: word-wrap;
+    HeadingLabel {
+        text: "Your files, your cloud.";
+        wrap: word-wrap;
+    }
+
+    DescriptionLabel {
+        text: "SyncPak copies folders directly between this device and cloud providers you choose. SyncPak does not operate an intermediary file service.";
+        max-width: Dimensions.welcome-content-max-width;
+    }
+
+    Rectangle {
+        height: 16px;
+        background: transparent;
+    }
+
+    InfoCard {
+        accessible-role: region;
+        accessible-label: "Protected credentials";
+        max-width: Dimensions.welcome-content-max-width;
+        min-height: 92px;
+        DescriptionLabel {
+            text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider.";
+        }
+    }
+
+    InfoCard {
+        accessible-role: region;
+        accessible-label: "Choose how each connection behaves";
+        max-width: Dimensions.welcome-content-max-width;
+        min-height: 106px;
+        SectionHeadingLabel {
+            text: "Choose how each connection behaves";
         }
 
         DescriptionLabel {
-            text: "SyncPak copies folders directly between this device and cloud providers you choose. SyncPak does not operate an intermediary file service.";
-            max-width: Dimensions.welcome-content-max-width;
+            text: "Add-only — Copy new files without overwriting or deleting anything.";
         }
 
-        Rectangle {
-            height: 16px;
-            background: transparent;
+        DescriptionLabel {
+            text: "Mirror — Attempt to make a destination match its source after previewing destructive changes. Any issues are listed when the operation finishes.";
         }
 
-        InfoCard {
-            accessible-role: region;
-            accessible-label: "Protected credentials";
-            max-width: Dimensions.welcome-content-max-width;
-            min-height: 92px;
-            DescriptionLabel {
-                text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider.";
-            }
+        DescriptionLabel {
+            text: "Archive — Create timestamped ZIP archives and keep the number you choose.";
+        }
+    }
+
+    Rectangle {
+        height: 16px;
+        background: transparent;
+    }
+
+    if root.configuration-unavailable: DangerCard {
+        accessible-role: region;
+        accessible-label: "Configuration storage unavailable";
+        max-width: Dimensions.welcome-content-max-width;
+        min-height: 122px;
+        ErrorHeadingLabel {
+            text: "Configuration storage is unavailable";
         }
 
-        InfoCard {
-            accessible-role: region;
-            accessible-label: "Choose how each connection behaves";
-            max-width: Dimensions.welcome-content-max-width;
-            min-height: 106px;
-            SectionHeadingLabel {
-                text: "Choose how each connection behaves";
-            }
-
-            DescriptionLabel {
-                text: "Add-only — Copy new files without overwriting or deleting anything.";
-            }
-
-            DescriptionLabel {
-                text: "Mirror — Attempt to make a destination match its source after previewing destructive changes. Any issues are listed when the operation finishes.";
-            }
-
-            DescriptionLabel {
-                text: "Archive — Create timestamped ZIP archives and keep the number you choose.";
-            }
+        ErrorLabel {
+            text: "SyncPak cannot save providers or connections until its configuration storage is available.";
         }
 
-        Rectangle {
-            height: 16px;
-            background: transparent;
-        }
-
-        if root.configuration-unavailable: DangerCard {
-            accessible-role: region;
-            accessible-label: "Configuration storage unavailable";
-            max-width: Dimensions.welcome-content-max-width;
-            min-height: 122px;
-            ErrorHeadingLabel {
-                text: "Configuration storage is unavailable";
-            }
-
-            ErrorLabel {
-                text: "SyncPak cannot save providers or connections until its configuration storage is available.";
-            }
-
-            HorizontalLayout {
-                alignment: center;
-                FocusScope {
-                    width: 0px;
-                    height: 0px;
-                    focus-on-click: false;
-                    focus-on-tab-navigation: false;
-                    forward-focus: retry-configuration;
-                    init => {
-                        self.focus();
-                    }
-                }
-
-                retry-configuration := CardPrimaryActionButton {
-                    accessible-label: "Retry opening configuration storage";
-                    text: "Retry";
-                    clicked => {
-                        root.retry-configuration();
-                    }
-                }
-            }
-        }
-        if !root.configuration-unavailable: HorizontalLayout {
+        HorizontalLayout {
             alignment: center;
             FocusScope {
                 width: 0px;
                 height: 0px;
                 focus-on-click: false;
                 focus-on-tab-navigation: false;
-                forward-focus: welcome-add-provider;
+                forward-focus: retry-configuration;
                 init => {
                     self.focus();
                 }
             }
 
-            welcome-add-provider := PrimaryActionButton {
-                accessible-label: "Add your first provider";
-                text: "Add Your First Provider";
+            retry-configuration := CardPrimaryActionButton {
+                accessible-label: "Retry opening configuration storage";
+                text: "Retry";
                 clicked => {
-                    root.show-add-provider();
+                    root.retry-configuration();
                 }
             }
         }
-        HorizontalLayout {
-            alignment: center;
-            SecondaryActionButton {
-                accessible-label: "Read how SyncPak protects your privacy";
-                text: "Read How SyncPak Protects Your Privacy";
-                clicked => {
-                    root.show-privacy();
-                }
+    }
+    if !root.configuration-unavailable: HorizontalLayout {
+        alignment: center;
+        FocusScope {
+            width: 0px;
+            height: 0px;
+            focus-on-click: false;
+            focus-on-tab-navigation: false;
+            forward-focus: welcome-add-provider;
+            init => {
+                self.focus();
+            }
+        }
+
+        welcome-add-provider := PrimaryActionButton {
+            accessible-label: "Add your first provider";
+            text: "Add Your First Provider";
+            clicked => {
+                root.show-add-provider();
+            }
+        }
+    }
+    HorizontalLayout {
+        alignment: center;
+        SecondaryActionButton {
+            accessible-label: "Read how SyncPak protects your privacy";
+            text: "Read How SyncPak Protects Your Privacy";
+            clicked => {
+                root.show-privacy();
             }
         }
     }

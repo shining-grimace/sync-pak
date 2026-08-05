@@ -1,10 +1,9 @@
 import {
     ComboBox,
     LineEdit,
-    ScrollView,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
-import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
@@ -12,7 +11,7 @@ import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
-export component ConnectionFormPage inherits ScrollView {
+export component ConnectionFormPage inherits CenteredPageRoot {
     in-out property <string> connection-form-id;
     in-out property <string> connection-form-name;
     in-out property <int> connection-form-provider;
@@ -37,249 +36,243 @@ export component ConnectionFormPage inherits ScrollView {
     callback save-and-verify-connection();
     callback request-discard-connection();
 
-    vertical-scrollbar-policy: always-on;
+    HeadingLabel {
+        text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name;
+        wrap: word-wrap;
+    }
 
-    CenteredPageColumn {
-        width: parent.width - 12px;
-        content-spacing: 10px;
-        HeadingLabel {
-            text: root.connection-form-id == "" ? "New connection" : "Edit " + root.connection-form-name;
-            wrap: word-wrap;
+    DescriptionLabel {
+        text: "Save only stores this connection. It does not transfer files.";
+    }
+
+    VerticalLayout {
+        accessible-role: region;
+        accessible-label: "Connection identity and cloud destination";
+        spacing: 6px;
+        FocusScope {
+            width: 0px;
+            height: 0px;
+            focus-on-click: false;
+            focus-on-tab-navigation: false;
+            forward-focus: connection-name;
+            init => {
+                self.focus();
+            }
+        }
+
+        SectionHeadingLabel {
+            text: "Connection name";
+        }
+
+        connection-name := LineEdit {
+            accessible-label: "Connection name";
+            placeholder-text: "For example, Photos backup";
+            text <=> root.connection-form-name;
+            enabled: !root.connection-verifying;
         }
 
         DescriptionLabel {
-            text: "Save only stores this connection. It does not transfer files.";
-        }
-
-        VerticalLayout {
-            accessible-role: region;
-            accessible-label: "Connection identity and cloud destination";
-            spacing: 6px;
-            FocusScope {
-                width: 0px;
-                height: 0px;
-                focus-on-click: false;
-                focus-on-tab-navigation: false;
-                forward-focus: connection-name;
-                init => {
-                    self.focus();
-                }
-            }
-
-            SectionHeadingLabel {
-                text: "Connection name";
-            }
-
-            connection-name := LineEdit {
-                accessible-label: "Connection name";
-                placeholder-text: "For example, Photos backup";
-                text <=> root.connection-form-name;
-                enabled: !root.connection-verifying;
-            }
-
-            DescriptionLabel {
-                text: "Used in the connection list and archive filenames.";
-            }
-
-            SectionHeadingLabel {
-                text: "Provider";
-            }
-
-            connection-provider := ComboBox {
-                accessible-label: root.connection-providers-loading ? "Loading providers" : (root.connection-providers-load-failed ? "Providers unavailable" : (root.provider-names.length == 0 ? "Provider; add a provider first" : "Provider"));
-                model: root.provider-names;
-                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
-                current-index <=> root.connection-form-provider;
-                selected => {
-                    root.select-connection-provider(self.current-index);
-                }
-            }
-
-            if root.connection-providers-loading: DescriptionLabel {
-                accessible-live-region: polite;
-                text: "Loading providers…";
-            }
-            if root.connection-providers-load-failed: VerticalLayout {
-                spacing: 6px;
-                ErrorLabel {
-                    accessible-live-region: assertive;
-                    text: "SyncPak could not load providers. Check configuration storage and try again.";
-                }
-
-                PrimaryActionButton {
-                    accessible-label: "Retry loading providers for this connection";
-                    text: root.connection-providers-loading ? "Retrying…" : "Retry Loading Providers";
-                    enabled: !root.connection-providers-loading;
-                    clicked => {
-                        root.retry-connection-providers();
-                    }
-                }
-            }
-            if !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length == 0: ErrorLabel {
-                text: "Add a provider before creating a connection.";
-            }
-            SectionHeadingLabel {
-                text: "Bucket";
-            }
-
-            connection-bucket := LineEdit {
-                accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket";
-                placeholder-text: "Bucket name";
-                text <=> root.connection-form-bucket;
-                enabled: !root.connection-verifying && !root.folder-picker-open && connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "";
-            }
-
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket == root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
-                text: "This provider locks connections to its default bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket != root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
-                text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider's current default bucket.";
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0: VerticalLayout {
-                spacing: 4px;
-                DescriptionLabel {
-                    text: "Buckets verified this session";
-                }
-
-                ComboBox {
-                    accessible-label: "Buckets verified this session";
-                    model: root.connection-verified-buckets;
-                    enabled: !root.connection-verifying && !root.folder-picker-open;
-                    selected => {
-                        root.connection-form-bucket = root.connection-verified-buckets[self.current-index];
-                    }
-                }
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length == 0: DescriptionLabel {
-                text: "These credentials were verified, but no buckets were visible. Enter the bucket name manually if access is restricted.";
-            }
-            if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && !root.connection-bucket-list-checked: DescriptionLabel {
-                text: "Enter the bucket name manually, or verify this provider to select buckets visible to its current credentials.";
-            }
-            SectionHeadingLabel {
-                text: "Remote folder";
-            }
-
-            connection-remote := LineEdit {
-                accessible-label: "Remote folder";
-                placeholder-text: "Leave empty for the bucket root";
-                text <=> root.connection-form-remote;
-                enabled: !root.connection-verifying && !root.folder-picker-open;
-            }
-
-            DescriptionLabel {
-                text: "Leave empty to use the root of the bucket.";
-            }
+            text: "Used in the connection list and archive filenames.";
         }
 
         SectionHeadingLabel {
-            text: "Local folder";
+            text: "Provider";
         }
 
-        VerticalLayout {
-            spacing: 6px;
-            connection-local := LineEdit {
-                accessible-label: "Local folder";
-                placeholder-text: "Full local folder path";
-                text <=> root.connection-form-local;
-                enabled: !root.connection-verifying && !root.folder-picker-open;
+        connection-provider := ComboBox {
+            accessible-label: root.connection-providers-loading ? "Loading providers" : (root.connection-providers-load-failed ? "Providers unavailable" : (root.provider-names.length == 0 ? "Provider; add a provider first" : "Provider"));
+            model: root.provider-names;
+            enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+            current-index <=> root.connection-form-provider;
+            selected => {
+                root.select-connection-provider(self.current-index);
             }
+        }
 
-            DescriptionLabel {
-                text: "Selecting a folder lets SyncPak inventory and transfer files only for this connection. Your system may ask you to allow access to the folder you choose.";
+        if root.connection-providers-loading: DescriptionLabel {
+            accessible-live-region: polite;
+            text: "Loading providers…";
+        }
+        if root.connection-providers-load-failed: VerticalLayout {
+            spacing: 6px;
+            ErrorLabel {
+                accessible-live-region: assertive;
+                text: "SyncPak could not load providers. Check configuration storage and try again.";
             }
 
             PrimaryActionButton {
-                accessible-label: root.folder-picker-open ? "Folder selection in progress" : "Select local folder";
-                text: root.folder-picker-open ? "Selecting Folder…" : "Select Folder";
-                enabled: !root.connection-verifying && !root.folder-picker-open;
+                accessible-label: "Retry loading providers for this connection";
+                text: root.connection-providers-loading ? "Retrying…" : "Retry Loading Providers";
+                enabled: !root.connection-providers-loading;
                 clicked => {
-                    root.select-local-folder();
+                    root.retry-connection-providers();
                 }
             }
+        }
+        if !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length == 0: ErrorLabel {
+            text: "Add a provider before creating a connection.";
+        }
+        SectionHeadingLabel {
+            text: "Bucket";
+        }
 
-            if root.folder-picker-open: DescriptionLabel {
-                accessible-live-region: polite;
-                text: "Waiting for folder selection…";
+        connection-bucket := LineEdit {
+            accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket";
+            placeholder-text: "Bucket name";
+            text <=> root.connection-form-bucket;
+            enabled: !root.connection-verifying && !root.folder-picker-open && connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "";
+        }
+
+        if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket == root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
+            text: "This provider locks connections to its default bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
+        }
+        if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket != root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
+            text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider's current default bucket.";
+        }
+        if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0: VerticalLayout {
+            spacing: 4px;
+            DescriptionLabel {
+                text: "Buckets verified this session";
+            }
+
+            ComboBox {
+                accessible-label: "Buckets verified this session";
+                model: root.connection-verified-buckets;
+                enabled: !root.connection-verifying && !root.folder-picker-open;
+                selected => {
+                    root.connection-form-bucket = root.connection-verified-buckets[self.current-index];
+                }
             }
         }
-
+        if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length == 0: DescriptionLabel {
+            text: "These credentials were verified, but no buckets were visible. Enter the bucket name manually if access is restricted.";
+        }
+        if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && !root.connection-bucket-list-checked: DescriptionLabel {
+            text: "Enter the bucket name manually, or verify this provider to select buckets visible to its current credentials.";
+        }
         SectionHeadingLabel {
-            text: "Mode";
+            text: "Remote folder";
         }
 
-        connection-mode := ComboBox {
-            accessible-label: "Mode";
-            model: ["Add-only", "Mirror", "Archive"];
-            current-index <=> root.connection-form-mode;
+        connection-remote := LineEdit {
+            accessible-label: "Remote folder";
+            placeholder-text: "Leave empty for the bucket root";
+            text <=> root.connection-form-remote;
             enabled: !root.connection-verifying && !root.folder-picker-open;
         }
 
-        if connection-mode.current-index == 0: DescriptionLabel {
-            text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
+        DescriptionLabel {
+            text: "Leave empty to use the root of the bucket.";
         }
-        if connection-mode.current-index == 1: DescriptionLabel {
-            text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts. Any files or metadata that cannot be matched are listed when the operation finishes.";
+    }
+
+    SectionHeadingLabel {
+        text: "Local folder";
+    }
+
+    VerticalLayout {
+        spacing: 6px;
+        connection-local := LineEdit {
+            accessible-label: "Local folder";
+            placeholder-text: "Full local folder path";
+            text <=> root.connection-form-local;
+            enabled: !root.connection-verifying && !root.folder-picker-open;
         }
-        if connection-mode.current-index == 2: VerticalLayout {
-            spacing: 4px;
-            DescriptionLabel {
-                text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting.";
-            }
 
-            SectionHeadingLabel {
-                text: "Keep last N archives";
-            }
+        DescriptionLabel {
+            text: "Selecting a folder lets SyncPak inventory and transfer files only for this connection. Your system may ask you to allow access to the folder you choose.";
+        }
 
-            connection-retention := LineEdit {
-                accessible-label: "Keep last N archives";
-                text <=> root.connection-form-retention;
-                enabled: !root.connection-verifying && !root.folder-picker-open;
-            }
-
-            DescriptionLabel {
-                text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain.";
+        PrimaryActionButton {
+            accessible-label: root.folder-picker-open ? "Folder selection in progress" : "Select local folder";
+            text: root.folder-picker-open ? "Selecting Folder…" : "Select Folder";
+            enabled: !root.connection-verifying && !root.folder-picker-open;
+            clicked => {
+                root.select-local-folder();
             }
         }
-        ActionGroup {
-            if root.connection-verifying: DescriptionLabel {
-                accessible-live-region: polite;
-                text: "Checking the local folder and cloud path without changing files…";
-            }
 
-            SecondaryActionButton {
-                accessible-label: "Back to connections";
-                text: "Back";
-                clicked => {
-                    root.request-discard-connection();
-                }
-            }
+        if root.folder-picker-open: DescriptionLabel {
+            accessible-live-region: polite;
+            text: "Waiting for folder selection…";
+        }
+    }
 
-            SecondaryActionButton {
-                accessible-label: "Save connection " + root.connection-form-name + " without verifying";
-                text: "Save Without Verifying";
-                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
-                clicked => {
-                    root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention);
-                }
-            }
+    SectionHeadingLabel {
+        text: "Mode";
+    }
 
-            SecondaryActionButton {
-                accessible-label: "Verify connection settings for " + root.connection-form-name;
-                text: "Verify Settings";
-                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
-                clicked => {
-                    root.verify-connection();
-                }
-            }
+    connection-mode := ComboBox {
+        accessible-label: "Mode";
+        model: ["Add-only", "Mirror", "Archive"];
+        current-index <=> root.connection-form-mode;
+        enabled: !root.connection-verifying && !root.folder-picker-open;
+    }
 
-            PrimaryActionButton {
-                accessible-label: "Save and verify connection " + root.connection-form-name;
-                text: root.connection-verifying ? "Verifying…" : "Save and Verify";
-                enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
-                clicked => {
-                    root.save-and-verify-connection();
-                }
+    if connection-mode.current-index == 0: DescriptionLabel {
+        text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
+    }
+    if connection-mode.current-index == 1: DescriptionLabel {
+        text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts. Any files or metadata that cannot be matched are listed when the operation finishes.";
+    }
+    if connection-mode.current-index == 2: VerticalLayout {
+        spacing: 4px;
+        DescriptionLabel {
+            text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting.";
+        }
+
+        SectionHeadingLabel {
+            text: "Keep last N archives";
+        }
+
+        connection-retention := LineEdit {
+            accessible-label: "Keep last N archives";
+            text <=> root.connection-form-retention;
+            enabled: !root.connection-verifying && !root.folder-picker-open;
+        }
+
+        DescriptionLabel {
+            text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain.";
+        }
+    }
+    ActionGroup {
+        if root.connection-verifying: DescriptionLabel {
+            accessible-live-region: polite;
+            text: "Checking the local folder and cloud path without changing files…";
+        }
+
+        SecondaryActionButton {
+            accessible-label: "Back to connections";
+            text: "Back";
+            clicked => {
+                root.request-discard-connection();
+            }
+        }
+
+        SecondaryActionButton {
+            accessible-label: "Save connection " + root.connection-form-name + " without verifying";
+            text: "Save Without Verifying";
+            enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+            clicked => {
+                root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention);
+            }
+        }
+
+        SecondaryActionButton {
+            accessible-label: "Verify connection settings for " + root.connection-form-name;
+            text: "Verify Settings";
+            enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+            clicked => {
+                root.verify-connection();
+            }
+        }
+
+        PrimaryActionButton {
+            accessible-label: "Save and verify connection " + root.connection-form-name;
+            text: root.connection-verifying ? "Verifying…" : "Save and Verify";
+            enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
+            clicked => {
+                root.save-and-verify-connection();
             }
         }
     }

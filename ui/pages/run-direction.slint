@@ -1,5 +1,4 @@
-import { ScrollView } from "std-widgets.slint";
-import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
@@ -7,7 +6,7 @@ import { InfoCard } from "../components/cards.slint";
 import { PrimaryActionButton, RadioButton, SecondaryActionButton } from "../components/action-buttons.slint";
 import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
-export component RunDirectionPage inherits ScrollView {
+export component RunDirectionPage inherits CenteredPageRoot {
     in property <string> connection-name;
     in property <string> connection-mode;
     in property <string> local-endpoint;
@@ -20,150 +19,145 @@ export component RunDirectionPage inherits ScrollView {
     callback cancel();
     callback begin-preflight();
 
-    vertical-scrollbar-policy: always-on;
+    HeadingLabel {
+        text: "Run " + root.connection-name;
+        wrap: word-wrap;
+    }
 
-    CenteredPageColumn {
-        width: parent.width - 12px;
-        HeadingLabel {
-            text: "Run " + root.connection-name;
-            wrap: word-wrap;
-        }
+    DescriptionLabel {
+        text: root.connection-mode + " connection";
+    }
 
+    if root.direction == 0 && root.archive-upload-details != "": InfoCard {
+        min-height: 66px;
         DescriptionLabel {
-            text: root.connection-mode + " connection";
+            text: root.archive-upload-details;
         }
-
-        if root.direction == 0 && root.archive-upload-details != "": InfoCard {
-            min-height: 66px;
-            DescriptionLabel {
-                text: root.archive-upload-details;
-            }
-        }
-        if root.direction == 1 && root.archive-download-details != "": InfoCard {
-            min-height: 66px;
-            DescriptionLabel {
-                text: root.archive-download-details;
-            }
-        }
-        InfoCard {
-            accessible-role: region;
-            accessible-label: "Upload direction. Source: " + root.local-endpoint + ". Destination: " + root.remote-endpoint;
-            min-height: 132px;
-                SectionHeadingLabel {
-                    text: "Upload";
-                }
-
-                DescriptionLabel {
-                    text: "Use the local folder as the source and cloud storage as the destination.";
-                }
-
-                DescriptionLabel {
-                    text: "Source: " + root.local-endpoint;
-                }
-
-                DescriptionLabel {
-                    text: "Destination: " + root.remote-endpoint;
-                }
-
-                FocusScope {
-                    width: 0px;
-                    height: 0px;
-                    focus-on-click: false;
-                    focus-on-tab-navigation: false;
-                    forward-focus: choose-upload;
-                    init => {
-                        self.focus();
-                    }
-                }
-
-                choose-upload := RadioButton {
-                    accessible-label: root.direction == 0 ? "Upload direction, selected" : "Choose upload direction";
-                    text: "Choose Upload";
-                    selected: root.direction == 0;
-                    clicked => {
-                        root.choose-direction(0);
-                    }
-                }
-        }
-
-        InfoCard {
-            accessible-role: region;
-            accessible-label: "Download direction. Source: " + root.remote-endpoint + ". Destination: " + root.local-endpoint;
-            min-height: 132px;
-                SectionHeadingLabel {
-                    text: "Download";
-                }
-
-                DescriptionLabel {
-                    text: "Use cloud storage as the source and the local folder as the destination.";
-                }
-
-                DescriptionLabel {
-                    text: "Source: " + root.remote-endpoint;
-                }
-
-                DescriptionLabel {
-                    text: "Destination: " + root.local-endpoint;
-                }
-
-                RadioButton {
-                    accessible-label: root.direction == 1 ? "Download direction, selected" : "Choose download direction";
-                    text: "Choose Download";
-                    selected: root.direction == 1;
-                    clicked => {
-                        root.choose-direction(1);
-                    }
-                }
-        }
-
-        if root.allows-both-ways: InfoCard {
-            accessible-role: region;
-            accessible-label: "Both ways direction between " + root.local-endpoint + " and " + root.remote-endpoint;
-            min-height: 132px;
-                SectionHeadingLabel {
-                    text: "Both ways";
-                }
-
-                DescriptionLabel {
-                    text: "Copy files found on only one side to the other. Changed files are skipped.";
-                }
-
-                DescriptionLabel {
-                    text: "This device: " + root.local-endpoint;
-                }
-
-                DescriptionLabel {
-                    text: "Cloud storage: " + root.remote-endpoint;
-                }
-
-                RadioButton {
-                    accessible-label: root.direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction";
-                    text: "Choose Both Ways";
-                    selected: root.direction == 2;
-                    clicked => {
-                        root.choose-direction(2);
-                    }
-                }
-        }
+    }
+    if root.direction == 1 && root.archive-download-details != "": InfoCard {
+        min-height: 66px;
         DescriptionLabel {
-            text: "Continue performs a read-only inventory and shows the complete plan before any files can change.";
+            text: root.archive-download-details;
         }
+    }
+    InfoCard {
+        accessible-role: region;
+        accessible-label: "Upload direction. Source: " + root.local-endpoint + ". Destination: " + root.remote-endpoint;
+        min-height: 132px;
+            SectionHeadingLabel {
+                text: "Upload";
+            }
 
-        ActionGroup {
-            SecondaryActionButton {
-                accessible-label: "Cancel run for " + root.connection-name;
-                text: "Cancel";
-                clicked => {
-                    root.cancel();
+            DescriptionLabel {
+                text: "Use the local folder as the source and cloud storage as the destination.";
+            }
+
+            DescriptionLabel {
+                text: "Source: " + root.local-endpoint;
+            }
+
+            DescriptionLabel {
+                text: "Destination: " + root.remote-endpoint;
+            }
+
+            FocusScope {
+                width: 0px;
+                height: 0px;
+                focus-on-click: false;
+                focus-on-tab-navigation: false;
+                forward-focus: choose-upload;
+                init => {
+                    self.focus();
                 }
             }
 
-            PrimaryActionButton {
-                accessible-label: "Continue to preflight for " + root.connection-name;
-                text: "Continue to Preflight";
+            choose-upload := RadioButton {
+                accessible-label: root.direction == 0 ? "Upload direction, selected" : "Choose upload direction";
+                text: "Choose Upload";
+                selected: root.direction == 0;
                 clicked => {
-                    root.begin-preflight();
+                    root.choose-direction(0);
                 }
+            }
+    }
+
+    InfoCard {
+        accessible-role: region;
+        accessible-label: "Download direction. Source: " + root.remote-endpoint + ". Destination: " + root.local-endpoint;
+        min-height: 132px;
+            SectionHeadingLabel {
+                text: "Download";
+            }
+
+            DescriptionLabel {
+                text: "Use cloud storage as the source and the local folder as the destination.";
+            }
+
+            DescriptionLabel {
+                text: "Source: " + root.remote-endpoint;
+            }
+
+            DescriptionLabel {
+                text: "Destination: " + root.local-endpoint;
+            }
+
+            RadioButton {
+                accessible-label: root.direction == 1 ? "Download direction, selected" : "Choose download direction";
+                text: "Choose Download";
+                selected: root.direction == 1;
+                clicked => {
+                    root.choose-direction(1);
+                }
+            }
+    }
+
+    if root.allows-both-ways: InfoCard {
+        accessible-role: region;
+        accessible-label: "Both ways direction between " + root.local-endpoint + " and " + root.remote-endpoint;
+        min-height: 132px;
+            SectionHeadingLabel {
+                text: "Both ways";
+            }
+
+            DescriptionLabel {
+                text: "Copy files found on only one side to the other. Changed files are skipped.";
+            }
+
+            DescriptionLabel {
+                text: "This device: " + root.local-endpoint;
+            }
+
+            DescriptionLabel {
+                text: "Cloud storage: " + root.remote-endpoint;
+            }
+
+            RadioButton {
+                accessible-label: root.direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction";
+                text: "Choose Both Ways";
+                selected: root.direction == 2;
+                clicked => {
+                    root.choose-direction(2);
+                }
+            }
+    }
+    DescriptionLabel {
+        text: "Continue performs a read-only inventory and shows the complete plan before any files can change.";
+    }
+
+    ActionGroup {
+        SecondaryActionButton {
+            accessible-label: "Cancel run for " + root.connection-name;
+            text: "Cancel";
+            clicked => {
+                root.cancel();
+            }
+        }
+
+        PrimaryActionButton {
+            accessible-label: "Continue to preflight for " + root.connection-name;
+            text: "Continue to Preflight";
+            clicked => {
+                root.begin-preflight();
             }
         }
     }

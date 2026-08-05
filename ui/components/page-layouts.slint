@@ -11,7 +11,6 @@ export component PageRoot inherits ScrollView {
 }
 
 export component CenteredPageColumn inherits VerticalLayout {
-    in property <length> content-spacing: 12px;
     in property <bool> fill-height;
 
     HorizontalLayout {
@@ -23,7 +22,7 @@ export component CenteredPageColumn inherits VerticalLayout {
             max-width: Dimensions.welcome-content-max-width;
             alignment: root.fill-height ? stretch : start;
             horizontal-stretch: 1;
-            spacing: root.content-spacing;
+            spacing: Dimensions.content-spacing;
             @children
         }
     }

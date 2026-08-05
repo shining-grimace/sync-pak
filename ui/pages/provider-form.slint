@@ -1,11 +1,10 @@
 import {
     ComboBox,
     LineEdit,
-    ScrollView,
 } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
-import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
@@ -13,7 +12,7 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
-export component ProviderFormPage inherits ScrollView {
+export component ProviderFormPage inherits CenteredPageRoot {
     in-out property <string> provider-form-id;
     in-out property <string> provider-form-name;
     in-out property <int> provider-form-kind;
@@ -36,243 +35,237 @@ export component ProviderFormPage inherits ScrollView {
     callback save-and-verify-provider();
 
     vertical-stretch: 1;
-    vertical-scrollbar-policy: always-on;
+    HeadingLabel {
+        text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name;
+        wrap: word-wrap;
+    }
 
-    CenteredPageColumn {
-        width: parent.width - 12px;
-        content-spacing: 10px;
-        HeadingLabel {
-            text: root.provider-form-id == "" ? "Add provider" : "Edit " + root.provider-form-name;
-            wrap: word-wrap;
-        }
+    DescriptionLabel {
+        text: "Credentials are saved in this device's protected storage only when you save this provider.";
+    }
 
-        DescriptionLabel {
-            text: "Credentials are saved in this device's protected storage only when you save this provider.";
+    if root.provider-form-id != "": DescriptionLabel {
+        text: "The access key ID is loaded from protected storage. Leave secret fields blank to keep their saved values; SyncPak never displays saved secrets.";
+    }
+    FocusScope {
+        width: 0px;
+        height: 0px;
+        focus-on-click: false;
+        focus-on-tab-navigation: false;
+        forward-focus: provider-name;
+        init => {
+            self.focus();
         }
+    }
 
-        if root.provider-form-id != "": DescriptionLabel {
-            text: "The access key ID is loaded from protected storage. Leave secret fields blank to keep their saved values; SyncPak never displays saved secrets.";
-        }
-        FocusScope {
-            width: 0px;
-            height: 0px;
-            focus-on-click: false;
-            focus-on-tab-navigation: false;
-            forward-focus: provider-name;
-            init => {
-                self.focus();
-            }
-        }
+    SectionHeadingLabel {
+        text: "Provider name";
+    }
 
+    provider-name := LineEdit {
+        height: Dimensions.control-height;
+        accessible-label: "Provider name";
+        placeholder-text: "For example, Personal S3";
+        text <=> root.provider-form-name;
+        enabled: !root.provider-verifying;
+    }
+
+    SectionHeadingLabel {
+        text: "Provider type";
+    }
+
+    provider-kind := ComboBox {
+        accessible-label: "Provider type";
+        model: ["Cloudflare R2", "Backblaze B2", "AWS S3"];
+        current-index <=> root.provider-form-kind;
+        enabled: !root.provider-verifying;
+    }
+
+    if root.provider-form-kind == 0: VerticalLayout {
+        spacing: 4px;
         SectionHeadingLabel {
-            text: "Provider name";
-        }
-
-        provider-name := LineEdit {
-            height: Dimensions.control-height;
-            accessible-label: "Provider name";
-            placeholder-text: "For example, Personal S3";
-            text <=> root.provider-form-name;
-            enabled: !root.provider-verifying;
-        }
-
-        SectionHeadingLabel {
-            text: "Provider type";
-        }
-
-        provider-kind := ComboBox {
-            accessible-label: "Provider type";
-            model: ["Cloudflare R2", "Backblaze B2", "AWS S3"];
-            current-index <=> root.provider-form-kind;
-            enabled: !root.provider-verifying;
-        }
-
-        if root.provider-form-kind == 0: VerticalLayout {
-            spacing: 4px;
-            SectionHeadingLabel {
-                text: "Account ID";
-            }
-
-            LineEdit {
-                height: Dimensions.control-height;
-                accessible-label: "Cloudflare account ID";
-                placeholder-text: "Cloudflare account ID";
-                text <=> root.provider-form-account-id;
-                enabled: !root.provider-verifying;
-            }
-        }
-        if root.provider-form-kind != 0: VerticalLayout {
-            spacing: 4px;
-            SectionHeadingLabel {
-                text: "Region";
-            }
-
-            LineEdit {
-                height: Dimensions.control-height;
-                accessible-label: "Region";
-                placeholder-text: "For example, ap-southeast-2";
-                text <=> root.provider-form-region;
-                enabled: !root.provider-verifying;
-            }
-        }
-        SectionHeadingLabel {
-            text: "Default bucket (optional)";
+            text: "Account ID";
         }
 
         LineEdit {
             height: Dimensions.control-height;
-            accessible-label: "Default bucket";
-            placeholder-text: "Used and locked for connections that select this provider";
-            text <=> root.provider-form-bucket;
+            accessible-label: "Cloudflare account ID";
+            placeholder-text: "Cloudflare account ID";
+            text <=> root.provider-form-account-id;
             enabled: !root.provider-verifying;
         }
-
-        if root.provider-verified-buckets.length > 0: VerticalLayout {
-            spacing: 4px;
-            DescriptionLabel {
-                text: "Verified available buckets";
-            }
-
-            ComboBox {
-                accessible-label: "Verified available buckets";
-                model: root.provider-verified-buckets;
-                enabled: !root.provider-verifying;
-                selected => {
-                    root.provider-form-bucket = root.provider-verified-buckets[self.current-index];
-                }
-            }
-        }
-        if !root.provider-verifying && root.provider-bucket-list-empty: DescriptionLabel {
-            text: "These credentials verified successfully, but no buckets were visible. Enter a bucket manually if its access is restricted.";
-        }
-        DescriptionLabel {
-            text: "When set, new and edited connections using this provider use this bucket and cannot change it.";
-        }
-
-        if root.provider-form-kind == 1: DescriptionLabel {
-            text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced.";
-        }
+    }
+    if root.provider-form-kind != 0: VerticalLayout {
+        spacing: 4px;
         SectionHeadingLabel {
-            text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
+            text: "Region";
         }
 
-        access-key := LineEdit {
+        LineEdit {
             height: Dimensions.control-height;
-            accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
-            placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
-            text <=> root.provider-form-access-key;
+            accessible-label: "Region";
+            placeholder-text: "For example, ap-southeast-2";
+            text <=> root.provider-form-region;
+            enabled: !root.provider-verifying;
+        }
+    }
+    SectionHeadingLabel {
+        text: "Default bucket (optional)";
+    }
+
+    LineEdit {
+        height: Dimensions.control-height;
+        accessible-label: "Default bucket";
+        placeholder-text: "Used and locked for connections that select this provider";
+        text <=> root.provider-form-bucket;
+        enabled: !root.provider-verifying;
+    }
+
+    if root.provider-verified-buckets.length > 0: VerticalLayout {
+        spacing: 4px;
+        DescriptionLabel {
+            text: "Verified available buckets";
+        }
+
+        ComboBox {
+            accessible-label: "Verified available buckets";
+            model: root.provider-verified-buckets;
+            enabled: !root.provider-verifying;
+            selected => {
+                root.provider-form-bucket = root.provider-verified-buckets[self.current-index];
+            }
+        }
+    }
+    if !root.provider-verifying && root.provider-bucket-list-empty: DescriptionLabel {
+        text: "These credentials verified successfully, but no buckets were visible. Enter a bucket manually if its access is restricted.";
+    }
+    DescriptionLabel {
+        text: "When set, new and edited connections using this provider use this bucket and cannot change it.";
+    }
+
+    if root.provider-form-kind == 1: DescriptionLabel {
+        text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced.";
+    }
+    SectionHeadingLabel {
+        text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
+    }
+
+    access-key := LineEdit {
+        height: Dimensions.control-height;
+        accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
+        placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
+        text <=> root.provider-form-access-key;
+        enabled: !root.provider-verifying;
+    }
+
+    SectionHeadingLabel {
+        text: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
+    }
+
+    HorizontalLayout {
+        spacing: Dimensions.element-gap;
+        LineEdit {
+            accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
+            placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
+            text <=> root.provider-form-secret-key;
+            input-type: root.provider-secret-visible ? text : password;
+            horizontal-stretch: 1;
             enabled: !root.provider-verifying;
         }
 
-        SectionHeadingLabel {
-            text: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
-        }
-
-        HorizontalLayout {
-            spacing: Dimensions.element-gap;
-            LineEdit {
-                accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
-                placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
-                text <=> root.provider-form-secret-key;
-                input-type: root.provider-secret-visible ? text : password;
-                horizontal-stretch: 1;
-                enabled: !root.provider-verifying;
-            }
-
-            SecondaryActionButton {
-                accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key");
-                text: root.provider-secret-visible ? "Hide" : "Reveal";
-                enabled: !root.provider-verifying;
-                clicked => {
-                    root.toggle-provider-secret-visibility();
-                }
-            }
-        }
-
-        if root.provider-secret-visible: ErrorLabel {
-            accessible-live-region: polite;
-            text: "Make sure nobody else can see your screen. This value hides again in 15 seconds.";
-        }
         SecondaryActionButton {
-            accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings";
-            text: root.provider-advanced-expanded ? "Hide Advanced" : "Advanced";
+            accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key");
+            text: root.provider-secret-visible ? "Hide" : "Reveal";
             enabled: !root.provider-verifying;
             clicked => {
-                root.provider-advanced-expanded = !root.provider-advanced-expanded;
+                root.toggle-provider-secret-visibility();
             }
         }
+    }
 
-        if root.provider-advanced-expanded: VerticalLayout {
-            spacing: 4px;
-            SectionHeadingLabel {
-                text: "Custom endpoint";
-            }
-
-            LineEdit {
-                accessible-label: "Custom endpoint";
-                placeholder-text: "Optional S3-compatible endpoint";
-                text <=> root.provider-form-endpoint;
-                enabled: !root.provider-verifying;
-            }
-
-            SectionHeadingLabel {
-                text: "Session token";
-            }
-
-            LineEdit {
-                accessible-label: "Session token";
-                placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : "Optional temporary session token";
-                text <=> root.provider-form-session-token;
-                input-type: root.provider-secret-visible ? text : password;
-                enabled: !root.provider-verifying;
-            }
-
-            DescriptionLabel {
-                text: "Use this only when your provider issued a temporary session credential.";
-            }
+    if root.provider-secret-visible: ErrorLabel {
+        accessible-live-region: polite;
+        text: "Make sure nobody else can see your screen. This value hides again in 15 seconds.";
+    }
+    SecondaryActionButton {
+        accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings";
+        text: root.provider-advanced-expanded ? "Hide Advanced" : "Advanced";
+        enabled: !root.provider-verifying;
+        clicked => {
+            root.provider-advanced-expanded = !root.provider-advanced-expanded;
         }
+    }
+
+    if root.provider-advanced-expanded: VerticalLayout {
+        spacing: 4px;
+        SectionHeadingLabel {
+            text: "Custom endpoint";
+        }
+
+        LineEdit {
+            accessible-label: "Custom endpoint";
+            placeholder-text: "Optional S3-compatible endpoint";
+            text <=> root.provider-form-endpoint;
+            enabled: !root.provider-verifying;
+        }
+
+        SectionHeadingLabel {
+            text: "Session token";
+        }
+
+        LineEdit {
+            accessible-label: "Session token";
+            placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : "Optional temporary session token";
+            text <=> root.provider-form-session-token;
+            input-type: root.provider-secret-visible ? text : password;
+            enabled: !root.provider-verifying;
+        }
+
         DescriptionLabel {
-            text: "Verify checks the credentials and lists available buckets without saving or changing cloud data.";
+            text: "Use this only when your provider issued a temporary session credential.";
+        }
+    }
+    DescriptionLabel {
+        text: "Verify checks the credentials and lists available buckets without saving or changing cloud data.";
+    }
+
+    if root.provider-verifying: DescriptionLabel {
+        accessible-live-region: polite;
+        text: "Checking these settings without changing cloud data…";
+    }
+    ActionGroup {
+        SecondaryActionButton {
+            accessible-label: "Back to providers";
+            text: "Back";
+            clicked => {
+                root.request-discard-provider();
+            }
         }
 
-        if root.provider-verifying: DescriptionLabel {
-            accessible-live-region: polite;
-            text: "Checking these settings without changing cloud data…";
+        SecondaryActionButton {
+            accessible-label: "Save " + root.provider-form-name + " without verifying";
+            text: "Save Without Verifying";
+            enabled: !root.provider-verifying;
+            clicked => {
+                root.request-save-provider();
+            }
         }
-        ActionGroup {
-            SecondaryActionButton {
-                accessible-label: "Back to providers";
-                text: "Back";
-                clicked => {
-                    root.request-discard-provider();
-                }
-            }
 
-            SecondaryActionButton {
-                accessible-label: "Save " + root.provider-form-name + " without verifying";
-                text: "Save Without Verifying";
-                enabled: !root.provider-verifying;
-                clicked => {
-                    root.request-save-provider();
-                }
+        SecondaryActionButton {
+            accessible-label: "Verify settings for " + root.provider-form-name;
+            text: "Verify Settings";
+            enabled: !root.provider-verifying;
+            clicked => {
+                root.verify-provider();
             }
+        }
 
-            SecondaryActionButton {
-                accessible-label: "Verify settings for " + root.provider-form-name;
-                text: "Verify Settings";
-                enabled: !root.provider-verifying;
-                clicked => {
-                    root.verify-provider();
-                }
-            }
-
-            PrimaryActionButton {
-                accessible-label: "Save and verify " + root.provider-form-name;
-                text: root.provider-verifying ? "Verifying…" : "Save and Verify";
-                enabled: !root.provider-verifying;
-                clicked => {
-                    root.save-and-verify-provider();
-                }
+        PrimaryActionButton {
+            accessible-label: "Save and verify " + root.provider-form-name;
+            text: root.provider-verifying ? "Verifying…" : "Save and Verify";
+            enabled: !root.provider-verifying;
+            clicked => {
+                root.save-and-verify-provider();
             }
         }
     }
