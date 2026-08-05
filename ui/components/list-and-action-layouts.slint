@@ -1,7 +1,9 @@
 import { ListView as StandardListView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 
-export { StandardListView as ListView }
+export component ListView inherits StandardListView {
+    mouse-drag-pan-enabled: true;
+}
 
 export component ListItem inherits VerticalLayout {
     vertical-stretch: 0;

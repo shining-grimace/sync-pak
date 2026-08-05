@@ -331,7 +331,10 @@ export component AppWindow inherits Window {
             width: parent.width;
             height: parent.height;
             padding: 16px;
-            padding-left: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
+            padding-top: 16px + root.safe-area-insets.top;
+            padding-right: 16px + root.safe-area-insets.right;
+            padding-bottom: 16px + root.safe-area-insets.bottom;
+            padding-left: (root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px) + root.safe-area-insets.left;
             spacing: 16px;
 
             if root.width >= Dimensions.medium-layout-breakpoint && root.width < Dimensions.desktop-layout-breakpoint: VerticalLayout {

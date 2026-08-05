@@ -2,8 +2,10 @@ import { ScrollView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 
 export component PageRoot inherits ScrollView {
+    viewport-width: root.visible-width;
     vertical-scrollbar-policy: always-on;
     horizontal-scrollbar-policy: always-off;
+    mouse-drag-pan-enabled: true;
 }
 
 export component CenteredPageColumn inherits VerticalLayout {
@@ -14,8 +16,8 @@ export component CenteredPageColumn inherits VerticalLayout {
         vertical-stretch: root.fill-height ? 1 : 0;
 
         VerticalLayout {
-            preferred-width: Dimensions.welcome-content-max-width;
-            max-width: Dimensions.welcome-content-max-width;
+            preferred-width: min(parent.width, Dimensions.welcome-content-max-width);
+            max-width: min(parent.width, Dimensions.welcome-content-max-width);
             alignment: root.fill-height ? stretch : start;
             horizontal-stretch: 1;
             spacing: Dimensions.content-spacing;
