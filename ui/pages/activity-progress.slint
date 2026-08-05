@@ -77,7 +77,7 @@ export component ActivityProgressPage inherits CenteredPageRoot {
         }
         PrimaryActionButton {
             accessible-label: "Cancel " + root.title;
-            text: "Cancel Operation";
+            text: "Cancel";
             clicked => {
                 root.request-cancel(root.id, root.title);
             }

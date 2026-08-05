@@ -20,7 +20,7 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     ActionGroup {
         SecondaryActionButton {
             accessible-label: "Continue editing provider " + root.provider-name;
-            text: "Continue Editing";
+            text: "Keep Editing";
             clicked => {
                 root.cancel();
             }
@@ -28,7 +28,7 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Save provider " + root.provider-name + " without verifying";
-            text: "Save " + root.provider-name + " Without Verifying";
+            text: "Save Unverified";
             clicked => {
                 root.save();
             }
@@ -52,7 +52,7 @@ export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
     ActionGroup {
         SecondaryActionButton {
             accessible-label: "Continue editing provider " + root.provider-name;
-            text: "Continue Editing";
+            text: "Keep Editing";
             clicked => {
                 root.cancel();
             }

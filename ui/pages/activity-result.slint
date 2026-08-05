@@ -89,14 +89,14 @@ export component ActivityResultPage inherits CenteredPageRoot {
     }
     if root.can-retry: PrimaryActionButton {
         accessible-label: "Retry " + root.title + " with a new preflight review";
-        text: "Retry with a New Preflight";
+        text: "Retry Run";
         clicked => {
             root.retry();
         }
     }
     SecondaryActionButton {
         accessible-label: "Return to activity";
-        text: "Back to Activity";
+        text: "Activity";
         clicked => {
             root.dismiss();
         }

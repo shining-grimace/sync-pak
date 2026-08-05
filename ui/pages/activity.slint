@@ -41,7 +41,7 @@ export component ActivityPage inherits CenteredPageRoot {
         }
         clear-completed-activity := PrimaryActionButton {
             accessible-label: "Clear " + root.activity-clearable-count + " completed activity entries";
-            text: root.activity-clearable-count == 1 ? "Clear Completed Entry" : "Clear Completed Entries";
+            text: "Clear Completed";
             clicked => {
                 root.clear-completed-activity();
             }

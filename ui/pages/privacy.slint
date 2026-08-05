@@ -117,7 +117,7 @@ export component PrivacyPage inherits CenteredPageRoot {
 
         SecondaryActionButton {
             accessible-label: "Open Cloudflare privacy policy in your browser";
-            text: "Cloudflare Privacy Policy";
+            text: "Cloudflare Policy";
             clicked => {
                 Platform.open-url("https://www.cloudflare.com/privacypolicy/");
             }
@@ -125,7 +125,7 @@ export component PrivacyPage inherits CenteredPageRoot {
 
         SecondaryActionButton {
             accessible-label: "Open Backblaze privacy policy in your browser";
-            text: "Backblaze Privacy Policy";
+            text: "Backblaze Policy";
             clicked => {
                 Platform.open-url("https://www.backblaze.com/company/policies/privacy.html");
             }
@@ -133,7 +133,7 @@ export component PrivacyPage inherits CenteredPageRoot {
 
         SecondaryActionButton {
             accessible-label: "Open Amazon privacy notice in your browser";
-            text: "AWS Privacy Notice";
+            text: "AWS Privacy";
             clicked => {
                 Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010");
             }
@@ -146,7 +146,7 @@ export component PrivacyPage inherits CenteredPageRoot {
 
     PrimaryActionButton {
         accessible-label: "View redacted diagnostics with credentials excluded";
-        text: "View Redacted Diagnostics";
+        text: "View Diagnostics";
         clicked => {
             root.show-diagnostics();
         }

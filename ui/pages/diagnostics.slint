@@ -57,7 +57,7 @@ export component DiagnosticsPage inherits CenteredPageRoot {
 
     PrimaryActionButton {
         accessible-label: root.include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
-        text: root.include-paths ? "Copy Report with Paths" : "Copy Redacted Report";
+        text: root.include-paths ? "Copy with Paths" : "Copy Report";
         clicked => {
             report.select-all();
             report.copy();

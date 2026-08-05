@@ -20,7 +20,7 @@ export component ConnectionDiscardConfirmationPage inherits CenteredPageRoot {
     ActionGroup {
         SecondaryActionButton {
             accessible-label: "Continue editing connection " + root.connection-name;
-            text: "Continue Editing";
+            text: "Keep Editing";
             clicked => {
                 root.cancel();
             }
@@ -28,7 +28,7 @@ export component ConnectionDiscardConfirmationPage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Discard changes to connection " + root.connection-name;
-            text: "Discard " + root.connection-name + " Changes";
+            text: "Discard Changes";
             clicked => {
                 root.confirm();
             }

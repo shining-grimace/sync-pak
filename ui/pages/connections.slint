@@ -185,7 +185,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
             }
             if root.connections-total > 0 && root.connection-filter != 0: PrimaryActionButton {
                 accessible-label: "Remove the connection filter and show all connections";
-                text: "Show All Connections";
+                text: "Show All";
                 clicked => {
                     root.set-connection-filter(0);
                 }

@@ -102,7 +102,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
 
             PrimaryActionButton {
                 accessible-label: "Retry loading providers for this connection";
-                text: root.connection-providers-loading ? "Retrying…" : "Retry Loading Providers";
+                text: root.connection-providers-loading ? "Retrying…" : "Retry Providers";
                 enabled: !root.connection-providers-loading;
                 clicked => {
                     root.retry-connection-providers();
@@ -251,7 +251,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
 
         SecondaryActionButton {
             accessible-label: "Save connection " + root.connection-form-name + " without verifying";
-            text: "Save Without Verifying";
+            text: "Save Unverified";
             enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
             clicked => {
                 root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention);
@@ -260,7 +260,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
 
         SecondaryActionButton {
             accessible-label: "Verify connection settings for " + root.connection-form-name;
-            text: "Verify Settings";
+            text: "Verify";
             enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
             clicked => {
                 root.verify-connection();
@@ -269,7 +269,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Save and verify connection " + root.connection-form-name;
-            text: root.connection-verifying ? "Verifying…" : "Save and Verify";
+            text: root.connection-verifying ? "Verifying…" : "Save & Verify";
             enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
             clicked => {
                 root.save-and-verify-connection();

@@ -244,7 +244,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
 
         SecondaryActionButton {
             accessible-label: "Save " + root.provider-form-name + " without verifying";
-            text: "Save Without Verifying";
+            text: "Save Unverified";
             enabled: !root.provider-verifying;
             clicked => {
                 root.request-save-provider();
@@ -253,7 +253,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
 
         SecondaryActionButton {
             accessible-label: "Verify settings for " + root.provider-form-name;
-            text: "Verify Settings";
+            text: "Verify";
             enabled: !root.provider-verifying;
             clicked => {
                 root.verify-provider();
@@ -262,7 +262,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Save and verify " + root.provider-form-name;
-            text: root.provider-verifying ? "Verifying…" : "Save and Verify";
+            text: root.provider-verifying ? "Verifying…" : "Save & Verify";
             enabled: !root.provider-verifying;
             clicked => {
                 root.save-and-verify-provider();

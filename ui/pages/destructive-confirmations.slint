@@ -68,7 +68,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Delete provider " + root.provider-name;
-            text: "Delete " + root.provider-name + " and " + root.connection-count + (root.connection-count == 1 ? " Connection" : " Connections");
+            text: "Delete Provider";
             clicked => {
                 root.confirm();
             }
@@ -116,7 +116,7 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Delete connection " + root.connection-name;
-            text: "Delete " + root.connection-name;
+            text: "Delete Connection";
             clicked => {
                 root.confirm();
             }
@@ -148,7 +148,7 @@ export component ActivityCancelPage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Cancel operation " + root.activity-name;
-            text: "Cancel " + root.activity-name;
+            text: "Cancel Operation";
             clicked => {
                 root.confirm();
             }
