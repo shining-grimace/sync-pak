@@ -110,6 +110,7 @@ export component AppWindow inherits Window {
     in-out property <int> diagnostic-entry-count: 0;
     in-out property <string> diagnostic-copy-status;
     in-out property <int> diagnostic-return-page: 3;
+    in-out property <bool> privacy-can-return-to-welcome: false;
     private property <bool> confirmation-open: page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.provider-save-confirmation || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
     in-out property <string> pending-provider-id;
     in-out property <string> pending-provider-name;
@@ -666,6 +667,7 @@ export component AppWindow inherits Window {
                 app-version: root.app-version;
                 appearance-preference <=> root.appearance-preference;
                 configuration-unavailable: root.configuration-unavailable;
+                can-return-to-welcome: root.privacy-can-return-to-welcome;
                 apply-appearance-preference => {
                     root.apply-appearance-preference();
                 }

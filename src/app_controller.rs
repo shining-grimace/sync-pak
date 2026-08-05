@@ -16,7 +16,7 @@ fn configure_navigation(window: &AppWindow) {
     let weak = window.as_weak();
     window.on_show_welcome(move || set_page(&weak, 0));
     let weak = window.as_weak();
-    window.on_show_privacy(move || set_page(&weak, 3));
+    window.on_show_privacy(move || show_privacy(&weak));
     let weak = window.as_weak();
     window.on_show_activity(move || set_page(&weak, 9));
 
@@ -25,6 +25,14 @@ fn configure_navigation(window: &AppWindow) {
 
     let weak = window.as_weak();
     window.on_complete_pending_navigation(move || complete_pending_navigation(&weak));
+}
+
+fn show_privacy(weak: &slint::Weak<AppWindow>) {
+    let Some(window) = weak.upgrade() else { return };
+    let can_return_to_welcome = window.get_page() == 0
+        || (window.get_page() == 3 && window.get_privacy_can_return_to_welcome());
+    window.set_privacy_can_return_to_welcome(can_return_to_welcome);
+    set_page(weak, 3);
 }
 
 fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {

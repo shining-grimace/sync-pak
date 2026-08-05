@@ -10,6 +10,7 @@ export component PrivacyPage inherits CenteredPageRoot {
     in property <string> app-version;
     in-out property <int> appearance-preference;
     in property <bool> configuration-unavailable;
+    in property <bool> can-return-to-welcome;
     callback apply-appearance-preference();
     callback change-appearance-preference(int);
     callback show-diagnostics();
@@ -152,7 +153,7 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
-    SecondaryActionButton {
+    if root.can-return-to-welcome: SecondaryActionButton {
         accessible-label: "Back to welcome";
         text: "Back";
         clicked => {
