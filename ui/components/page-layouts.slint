@@ -3,11 +3,7 @@ import { Dimensions } from "../dimensions.slint";
 
 export component PageRoot inherits ScrollView {
     vertical-scrollbar-policy: always-on;
-
-    VerticalLayout {
-        width: parent.width - 12px;
-        @children
-    }
+    horizontal-scrollbar-policy: always-off;
 }
 
 export component CenteredPageColumn inherits VerticalLayout {
@@ -32,8 +28,7 @@ export component CenteredPageRoot inherits PageRoot {
     in property <bool> fill-height;
 
     CenteredPageColumn {
-        width: parent.width;
-        min-height: root.fill-height ? root.height : 0px;
+        width: root.visible-width;
         fill-height: root.fill-height;
         @children
     }
