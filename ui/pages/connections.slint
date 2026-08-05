@@ -36,6 +36,8 @@ export component ConnectionsPage inherits ScrollView {
     vertical-scrollbar-policy: always-on;
     CenteredPageColumn {
         width: parent.width - 12px;
+        min-height: parent.height;
+        fill-height: true;
         HeadingLabel {
             text: "Connections";
         }
@@ -76,6 +78,7 @@ export component ConnectionsPage inherits ScrollView {
             }
         }
         if !root.connections-load-failed: VerticalLayout {
+            vertical-stretch: 1;
             spacing: 12px;
             if root.providers-total == 0: VerticalLayout {
                 FocusScope {
@@ -195,7 +198,7 @@ export component ConnectionsPage inherits ScrollView {
                 }
             }
             if root.connections.length > 0: ListView {
-                height: 280px;
+                vertical-stretch: 1;
                 vertical-scrollbar-policy: always-on;
                 for connection in root.connections: ListItem {
                     InfoCard {

@@ -7,12 +7,14 @@ export component ListView inherits ScrollView {
 
     VerticalLayout {
         width: parent.width;
+        alignment: start;
         spacing: Dimensions.element-gap;
         @children
     }
 }
 
 export component ListItem inherits VerticalLayout {
+    vertical-stretch: 0;
     padding-bottom: Dimensions.element-gap;
     @children
 }
