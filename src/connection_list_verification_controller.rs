@@ -32,6 +32,10 @@ pub(crate) fn verify(
     if states.borrow().contains_key(&connection_id) {
         return;
     }
+    if let Some(window) = weak.upgrade() {
+        window.set_status_message(Default::default());
+        window.set_notice_message(Default::default());
+    }
     states
         .borrow_mut()
         .insert(connection_id.clone(), VerificationState::Checking);

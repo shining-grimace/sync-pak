@@ -152,7 +152,6 @@ pub(crate) fn refresh(
                     }
                 });
             window.set_connections(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
-            window.set_status_message(SharedString::default());
         }
         Err(_) => {
             window.set_connections_load_failed(true);
