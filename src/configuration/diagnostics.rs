@@ -2,8 +2,8 @@ use std::path::Path;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StructuredError {
-    summary: &'static str,
-    technical_details: &'static str,
+    summary: String,
+    technical_details: String,
     affected_path: Option<String>,
 }
 
@@ -11,7 +11,16 @@ impl StructuredError {
     /// Both labels are static so provider credentials cannot enter diagnostics by interpolation.
     pub fn new(summary: &'static str, technical_details: &'static str) -> Self {
         Self {
-            summary,
+            summary: summary.to_owned(),
+            technical_details: technical_details.to_owned(),
+            affected_path: None,
+        }
+    }
+
+    /// Records details that the caller has already removed credentials and private values from.
+    pub(crate) fn with_safe_details(summary: &'static str, technical_details: String) -> Self {
+        Self {
+            summary: summary.to_owned(),
             technical_details,
             affected_path: None,
         }
@@ -97,6 +106,21 @@ mod tests {
                 .report()
                 .redacted_text(false)
                 .contains("No errors have been recorded")
+        );
+    }
+
+    #[test]
+    fn safely_prepared_details_are_preserved() {
+        let mut log = DiagnosticLog::default();
+        log.record(StructuredError::with_safe_details(
+            "Provider failed",
+            "dependency panicked: failure mode".to_owned(),
+        ));
+
+        assert!(
+            log.report()
+                .redacted_text(false)
+                .contains("dependency panicked: failure mode")
         );
     }
 }

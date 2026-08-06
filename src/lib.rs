@@ -89,6 +89,7 @@ mod provider_form_credentials;
 mod provider_list_controller;
 mod provider_list_verification_controller;
 pub mod provider_multipart_conformance;
+#[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
 mod provider_network_access;
 #[cfg(feature = "provider-probes")]
 pub mod provider_probe;
@@ -97,7 +98,10 @@ mod provider_probe_config;
 mod provider_save_error;
 mod provider_secret_reveal_controller;
 pub mod provider_verification;
+#[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
 mod provider_verification_failure;
+#[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
+mod provider_verification_panic;
 pub mod queue;
 pub mod queue_progress_observer;
 pub mod queue_retry_observer;
@@ -161,17 +165,28 @@ pub fn run() -> Result<(), slint::PlatformError> {
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub fn android_main(app: slint::android::AndroidApp) {
-    android_folder_picker::initialize(app.clone())
-        .expect("the Android folder picker should initialize");
-    android_foreground_execution::initialize(app.clone())
-        .expect("Android foreground execution should initialize");
-    android_network_access::initialize(app.clone())
-        .expect("Android network access checks should initialize");
-    slint::android::init(app).expect("the Android backend should initialize");
+    if let Err(error) = android_folder_picker::initialize(app.clone()) {
+        eprintln!("Android folder picker initialization failed: {error}");
+        return;
+    }
+    if let Err(error) = android_foreground_execution::initialize(app.clone()) {
+        eprintln!("Android foreground execution initialization failed: {error}");
+        return;
+    }
+    if let Err(error) = android_network_access::initialize(app.clone()) {
+        eprintln!("Android network access check initialization failed: {error}");
+        return;
+    }
+    if let Err(error) = slint::android::init(app) {
+        eprintln!("Android UI backend initialization failed: {error}");
+        return;
+    }
     #[cfg(feature = "feasibility-probes")]
     {
         android_foreground_execution::schedule_probe();
         android_folder_picker::schedule_probe();
     }
-    run().expect("the SyncPak UI should run");
+    if let Err(error) = run() {
+        eprintln!("SyncPak UI failed: {error}");
+    }
 }

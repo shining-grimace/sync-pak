@@ -40,6 +40,21 @@ pub(crate) fn present(
     window.set_status_message(message.into());
 }
 
+pub(crate) fn present_with_safe_details(
+    window: &AppWindow,
+    log: &SharedDiagnosticLog,
+    summary: &'static str,
+    technical_details: String,
+    message: &'static str,
+) {
+    record(
+        log,
+        StructuredError::with_safe_details(summary, technical_details),
+    );
+    window.set_diagnostic_entry_count(log.borrow().report().errors.len() as i32);
+    window.set_status_message(message.into());
+}
+
 fn show(weak: &slint::Weak<AppWindow>, log: &SharedDiagnosticLog) {
     refresh(weak, log, false);
     if let Some(window) = weak.upgrade() {

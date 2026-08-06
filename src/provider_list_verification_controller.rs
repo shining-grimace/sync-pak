@@ -1,3 +1,5 @@
+#![deny(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
+
 use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::mpsc, time::Duration};
 
 use crate::{
@@ -6,6 +8,7 @@ use crate::{
     diagnostics_controller::{self, SharedDiagnosticLog},
     provider_bucket_cache::{self, ProviderBucketCache},
     provider_verification::ProviderVerification,
+    provider_verification_failure::VerificationFailure as ProviderFailure,
     saved_provider_verification::{self, VerificationFailure},
 };
 
@@ -38,12 +41,20 @@ pub(crate) fn verify(
     let (sender, receiver) = mpsc::sync_channel(1);
     let configuration_path = configuration.path().to_path_buf();
     let awaiting_id = provider_id.clone();
-    std::thread::spawn(move || {
-        let _ = sender.send(saved_provider_verification::verify(
-            configuration_path,
-            provider_id,
-        ));
-    });
+    let worker_sender = sender.clone();
+    let worker = std::thread::Builder::new()
+        .name("saved-provider-verification".to_owned())
+        .spawn(move || {
+            let _ = worker_sender.send(saved_provider_verification::verify(
+                configuration_path,
+                provider_id,
+            ));
+        });
+    if worker.is_err() {
+        let _ = sender.send(Err(VerificationFailure::Provider(
+            ProviderFailure::WorkerStart,
+        )));
+    }
     await_verification(
         weak.clone(),
         configuration,
@@ -100,11 +111,11 @@ fn await_verification(
             }
             Ok(Err(failure)) => {
                 states.borrow_mut().remove(&provider_id);
-                diagnostics_controller::present(
+                diagnostics_controller::present_with_safe_details(
                     &window,
                     &diagnostics,
                     "Provider could not be verified",
-                    failure.diagnostic(),
+                    failure.diagnostic().to_owned(),
                     failure.message(),
                 );
                 crate::provider_list_controller::refresh(
@@ -169,26 +180,5 @@ pub(crate) fn is_checking(states: &VerificationStates, provider_id: &str) -> boo
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{VerificationStates, status};
-    use crate::provider_bucket_cache::{ProviderBucketCache, record, remove};
-
-    #[test]
-    fn distinguishes_current_previous_and_absent_verification() {
-        let states: VerificationStates = Default::default();
-        let buckets: ProviderBucketCache = Default::default();
-
-        record(&buckets, "provider", Vec::new());
-        assert_eq!(
-            status(&states, &buckets, "provider", true),
-            "Verified this session"
-        );
-
-        remove(&buckets, "provider");
-        assert_eq!(
-            status(&states, &buckets, "provider", true),
-            "Previously verified"
-        );
-        assert_eq!(status(&states, &buckets, "provider", false), "Not verified");
-    }
-}
+#[path = "provider_list_verification_controller_tests.rs"]
+mod tests;

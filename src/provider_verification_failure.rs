@@ -1,8 +1,9 @@
-use std::any::Any;
+use crate::{
+    provider_capabilities::ProviderError, provider_network_access::NetworkAccessFailure,
+    provider_verification_panic::VerificationPanic,
+};
 
-use crate::{provider_capabilities::ProviderError, provider_network_access::NetworkAccessFailure};
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum VerificationFailure {
     Authentication,
     BucketNotVisible,
@@ -12,11 +13,11 @@ pub(crate) enum VerificationFailure {
     NetworkPermission,
     PermissionDenied,
     RuntimeInitialization,
-    SecureConnectionInitialization,
     Unavailable,
     UnexpectedResponse,
     Unsupported,
-    WorkerPanicked,
+    WorkerPanicked(VerificationPanic),
+    WorkerStart,
     WorkerStopped,
 }
 
@@ -45,30 +46,7 @@ impl From<NetworkAccessFailure> for VerificationFailure {
 }
 
 impl VerificationFailure {
-    pub(crate) fn from_panic(payload: &(dyn Any + Send)) -> Self {
-        let message = payload
-            .downcast_ref::<&str>()
-            .copied()
-            .or_else(|| payload.downcast_ref::<String>().map(String::as_str));
-        let Some(message) = message.map(str::to_ascii_lowercase) else {
-            return Self::WorkerPanicked;
-        };
-        if message.contains("cryptoprovider")
-            || message.contains("crypto provider")
-            || message.contains("rustls")
-        {
-            Self::SecureConnectionInitialization
-        } else if message.contains("tokio")
-            || message.contains("runtime")
-            || message.contains("reactor")
-        {
-            Self::RuntimeInitialization
-        } else {
-            Self::WorkerPanicked
-        }
-    }
-
-    pub(crate) fn diagnostic(self) -> &'static str {
+    pub(crate) fn diagnostic(&self) -> &str {
         match self {
             Self::Authentication => "provider rejected credentials",
             Self::BucketNotVisible => "configured bucket is not visible",
@@ -78,18 +56,16 @@ impl VerificationFailure {
             Self::NetworkPermission => "Android INTERNET permission is missing",
             Self::PermissionDenied => "provider denied bucket listing",
             Self::RuntimeInitialization => "provider runtime initialization failed",
-            Self::SecureConnectionInitialization => {
-                "secure provider connection initialization failed"
-            }
             Self::Unavailable => "provider could not be reached",
             Self::UnexpectedResponse => "provider returned an unclassified response",
             Self::Unsupported => "provider does not support the verification request",
-            Self::WorkerPanicked => "provider verification worker panicked",
+            Self::WorkerPanicked(failure) => failure.technical_details(),
+            Self::WorkerStart => "provider verification worker could not be started",
             Self::WorkerStopped => "provider verification worker stopped without a result",
         }
     }
 
-    pub(crate) fn message(self) -> &'static str {
+    pub(crate) fn message(&self) -> &'static str {
         match self {
             Self::Authentication => {
                 "The provider rejected these credentials. Check the access key, secret, and session token."
@@ -115,9 +91,6 @@ impl VerificationFailure {
             Self::RuntimeInitialization => {
                 "SyncPak could not initialise the provider verification runtime on this device. Open Diagnostics and report this error."
             }
-            Self::SecureConnectionInitialization => {
-                "SyncPak could not initialise secure provider connections on this device. Open Diagnostics and report this error."
-            }
             Self::Unavailable => {
                 "SyncPak could not reach this provider. Check the device network connection and the provider endpoint."
             }
@@ -127,8 +100,9 @@ impl VerificationFailure {
             Self::Unsupported => {
                 "This provider does not support the request SyncPak uses for verification. Check the provider type and S3-compatible endpoint."
             }
-            Self::WorkerPanicked => {
-                "Provider verification stopped because its background task failed. Open Diagnostics and report this error."
+            Self::WorkerPanicked(failure) => failure.message(),
+            Self::WorkerStart => {
+                "SyncPak could not start provider verification on this device. Open Diagnostics and report this error."
             }
             Self::WorkerStopped => {
                 "Provider verification stopped before returning a result. Open Diagnostics and report this error."
@@ -170,20 +144,6 @@ mod tests {
             VerificationFailure::NetworkPermission
                 .message()
                 .contains("not allowed to access the internet")
-        );
-    }
-
-    #[test]
-    fn classifies_known_runtime_panics_without_exposing_the_payload() {
-        let tls = "no process-level CryptoProvider available";
-        let runtime = String::from("Tokio reactor is unavailable");
-        assert_eq!(
-            VerificationFailure::from_panic(&tls),
-            VerificationFailure::SecureConnectionInitialization
-        );
-        assert_eq!(
-            VerificationFailure::from_panic(&runtime),
-            VerificationFailure::RuntimeInitialization
         );
     }
 }

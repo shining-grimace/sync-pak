@@ -45,7 +45,7 @@ fn verify_provider(
 }
 
 #[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub(crate) enum VerificationFailure {
     Credentials,
     Provider(ProviderFailure),
@@ -53,7 +53,7 @@ pub(crate) enum VerificationFailure {
 }
 
 impl VerificationFailure {
-    pub(crate) fn diagnostic(self) -> &'static str {
+    pub(crate) fn diagnostic(&self) -> &str {
         match self {
             Self::Credentials => "saved credential access failed",
             Self::Provider(failure) => failure.diagnostic(),
@@ -61,7 +61,7 @@ impl VerificationFailure {
         }
     }
 
-    pub(crate) fn message(self) -> &'static str {
+    pub(crate) fn message(&self) -> &'static str {
         match self {
             Self::Credentials => {
                 "SyncPak could not access the saved credentials. Unlock protected storage, then try again."

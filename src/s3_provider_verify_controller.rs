@@ -1,3 +1,5 @@
+#![deny(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
+
 use std::{sync::mpsc, time::Duration};
 
 use slint::{ModelRc, VecModel};
@@ -18,10 +20,16 @@ pub(crate) fn start(
     generation: i32,
 ) {
     let (sender, receiver) = mpsc::sync_channel(1);
-    std::thread::spawn(move || {
-        let result = crate::s3_provider_verification_worker::verify(&provider, credentials);
-        let _ = sender.send(result);
-    });
+    let worker_sender = sender.clone();
+    let worker = std::thread::Builder::new()
+        .name("provider-verification".to_owned())
+        .spawn(move || {
+            let result = crate::s3_provider_verification_worker::verify(&provider, credentials);
+            let _ = worker_sender.send(result);
+        });
+    if worker.is_err() {
+        let _ = sender.send(Err(VerificationFailure::WorkerStart));
+    }
     poll(weak, receiver, diagnostics, generation);
 }
 
@@ -69,11 +77,11 @@ fn poll(
             Ok(Err(failure)) => {
                 window.set_provider_verifying(false);
                 window.set_provider_save_after_verification(false);
-                diagnostics_controller::present(
+                diagnostics_controller::present_with_safe_details(
                     &window,
                     &diagnostics,
                     "Provider could not be verified",
-                    failure.diagnostic(),
+                    failure.diagnostic().to_owned(),
                     failure.message(),
                 );
             }
