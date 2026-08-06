@@ -403,7 +403,7 @@ export component AppWindow inherits Window {
             if root.status-message != "": DangerCard {
                 accessible-role: region;
                 accessible-label: "Action needed";
-                min-height: 58px;
+                baseline-height: 58px;
                 ErrorHeadingLabel {
                     text: "Action needed";
                 }
@@ -425,7 +425,7 @@ export component AppWindow inherits Window {
             if root.notice-message != "": SuccessCard {
                 accessible-role: region;
                 accessible-label: "Update";
-                min-height: 48px;
+                baseline-height: 48px;
                 Text {
                     text: "Update";
                     color: Colors.success;
@@ -443,7 +443,7 @@ export component AppWindow inherits Window {
             if root.active-activity-id != "" && !root.confirmation-open: InfoCard {
                 accessible-role: region;
                 accessible-label: "Active operation " + root.active-activity-title;
-                min-height: 62px;
+                baseline-height: 62px;
                 VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
                     Text {
@@ -836,7 +836,7 @@ export component AppWindow inherits Window {
             if root.width < Dimensions.medium-layout-breakpoint: InfoCard {
                 accessible-role: navigation;
                 accessible-label: "Primary navigation";
-                min-height: 88px;
+                baseline-height: 88px;
                     HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
                         NavMenuButton {

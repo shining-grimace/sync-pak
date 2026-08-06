@@ -1,7 +1,4 @@
-import {
-    ComboBox,
-    LineEdit,
-} from "std-widgets.slint";
+import { LineEdit } from "std-widgets.slint";
 import { Colors } from "../colors.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
@@ -10,6 +7,7 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 import { ActionGroup } from "../components/list-and-action-layouts.slint";
+import { ComboBox } from "../components/form-controls.slint";
 
 export component ConnectionFormPage inherits CenteredPageRoot {
     in-out property <string> connection-form-id;

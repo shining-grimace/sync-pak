@@ -29,14 +29,14 @@ export component RunDirectionPage inherits CenteredPageRoot {
     }
 
     if root.direction == 0 && root.archive-upload-details != "": InfoCard {
-        min-height: 66px;
+        baseline-height: 66px;
         vertical-stretch: 0;
         DescriptionLabel {
             text: root.archive-upload-details;
         }
     }
     if root.direction == 1 && root.archive-download-details != "": InfoCard {
-        min-height: 66px;
+        baseline-height: 66px;
         vertical-stretch: 0;
         DescriptionLabel {
             text: root.archive-download-details;
@@ -45,7 +45,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: "Upload direction. Source: " + root.local-endpoint + ". Destination: " + root.remote-endpoint;
-        min-height: 132px;
+        baseline-height: 132px;
         vertical-stretch: 0;
             SectionHeadingLabel {
                 text: "Upload";
@@ -87,7 +87,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: "Download direction. Source: " + root.remote-endpoint + ". Destination: " + root.local-endpoint;
-        min-height: 132px;
+        baseline-height: 132px;
         vertical-stretch: 0;
             SectionHeadingLabel {
                 text: "Download";
@@ -119,7 +119,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
         visible: root.allows-both-ways;
         accessible-role: region;
         accessible-label: "Both ways direction between " + root.local-endpoint + " and " + root.remote-endpoint;
-        min-height: 132px;
+        baseline-height: 132px;
         vertical-stretch: 0;
             SectionHeadingLabel {
                 text: "Both ways";

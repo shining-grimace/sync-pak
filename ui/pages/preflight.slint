@@ -51,7 +51,7 @@ export component PreflightPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: root.direction == 2 ? "Comparing both sides: " + root.local-endpoint + " and " + root.remote-endpoint : "Comparing source " + (root.direction == 0 ? root.local-endpoint : root.remote-endpoint) + " with destination " + (root.direction == 0 ? root.remote-endpoint : root.local-endpoint);
-        min-height: 78px;
+        baseline-height: 78px;
             if root.direction != 2: DescriptionLabel {
                 text: "Source: " + (root.direction == 0 ? root.local-endpoint : root.remote-endpoint);
             }
@@ -75,7 +75,7 @@ export component PreflightPage inherits CenteredPageRoot {
     }
 
     if root.loading: InfoCard {
-        min-height: 110px;
+        baseline-height: 110px;
         DescriptionLabel {
             text: "Preflight will compare the endpoints above, then show additions, overwrites, deletions, and skipped files before anything starts.";
         }
@@ -83,7 +83,7 @@ export component PreflightPage inherits CenteredPageRoot {
     if root.failed: DangerCard {
         accessible-role: region;
         accessible-label: "Preflight could not start";
-        min-height: 92px;
+        baseline-height: 92px;
         ErrorHeadingLabel {
             text: "Resolve this issue, then run the connection again. No files were changed.";
         }
@@ -143,7 +143,7 @@ export component PreflightPage inherits CenteredPageRoot {
         if root.requires-mirror-confirmation: DangerCard {
             accessible-role: region;
             accessible-label: "Destructive mirror changes";
-            min-height: 86px;
+            baseline-height: 86px;
             ErrorHeadingLabel {
                 text: "Destructive mirror changes";
             }
@@ -275,7 +275,7 @@ export component PreflightPage inherits CenteredPageRoot {
         if root.items.length > 0 && root.visible-items.length == 0: InfoCard {
             accessible-role: region;
             accessible-label: "No entries in the selected planned change category";
-            min-height: 74px;
+            baseline-height: 74px;
             DescriptionLabel {
                 text: root.item-filter == 1 ? "No new files are planned." : (root.item-filter == 2 ? "No overwrites are planned." : (root.item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
             }

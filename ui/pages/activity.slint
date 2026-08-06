@@ -54,7 +54,7 @@ export component ActivityPage inherits CenteredPageRoot {
     if root.activity-rows.length == 0 : InfoCard {
         accessible-role: region;
         accessible-label: "No activity this time";
-        min-height: 130px;
+        baseline-height: 130px;
         VerticalLayout {
             spacing: Dimensions.card-element-spacing;
             alignment: center;
@@ -79,7 +79,7 @@ export component ActivityPage inherits CenteredPageRoot {
                 accessible-label: activity.title + ". " + activity.status + ". " + activity.detail +
                     (activity.progress != "" ? ". Progress: " + activity.progress : "") +
                     (activity.result != "" ? ". Result: " + activity.result : "");
-                min-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
+                baseline-height: root.width < Dimensions.narrow-layout-breakpoint ? 166px : 86px;
                 VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
                     VerticalLayout {

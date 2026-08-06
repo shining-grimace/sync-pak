@@ -1,5 +1,5 @@
-import { ComboBox } from "std-widgets.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { ComboBox } from "../components/form-controls.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
@@ -23,7 +23,7 @@ export component PrivacyPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: "Direct transfers";
-        min-height: 72px;
+        baseline-height: 72px;
         SectionHeadingLabel {
             text: "Direct transfers";
         }
@@ -36,7 +36,7 @@ export component PrivacyPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: "Protected credentials";
-        min-height: 72px;
+        baseline-height: 72px;
         SectionHeadingLabel {
             text: "Protected credentials";
         }
@@ -49,7 +49,7 @@ export component PrivacyPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: "Data on this device";
-        min-height: 72px;
+        baseline-height: 72px;
         SectionHeadingLabel {
             text: "Data on this device";
         }
@@ -62,7 +62,7 @@ export component PrivacyPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: "File encryption";
-        min-height: 72px;
+        baseline-height: 72px;
         SectionHeadingLabel {
             text: "File encryption";
         }

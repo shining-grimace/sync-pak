@@ -13,7 +13,7 @@ import {
     CardSecondaryActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
-import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
+import { ContentGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ProvidersPage inherits CenteredPageRoot {
     in property <[ProviderRow]> providers;
@@ -65,7 +65,7 @@ export component ProvidersPage inherits CenteredPageRoot {
             }
         }
 
-        if root.providers.length == 0: VerticalLayout {
+        if root.providers.length == 0: ContentGroup {
             spacing: 8px;
             SectionHeadingLabel {
                 text: "No providers yet";
@@ -84,7 +84,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                 InfoCard {
                     accessible-role: list-item;
                     accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
-                    min-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
+                    baseline-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
                     VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
                     VerticalLayout {

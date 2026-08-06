@@ -14,7 +14,7 @@ import {
     PrimaryActionButton,
     RadioButton,
 } from "../components/action-buttons.slint";
-import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
+import { ContentGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ConnectionsPage inherits CenteredPageRoot {
     in property <[ConnectionRow]> connections;
@@ -114,7 +114,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                 }
             }
         }
-        VerticalLayout {
+        ContentGroup {
             accessible-role: region;
             accessible-label: "Filter connections by mode";
             spacing: 6px;
@@ -168,7 +168,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
         if root.connections-total > 0: DescriptionLabel {
             text: root.connections.length == root.connections-total ? "Showing all " + root.connections-total + (root.connections-total == 1 ? " connection." : " connections.") : "Showing " + root.connections.length + " of " + root.connections-total + " connections.";
         }
-        if root.connections.length == 0: VerticalLayout {
+        if root.connections.length == 0: ContentGroup {
             spacing: 8px;
             SectionHeadingLabel {
                 text: root.connections-total == 0 ? "No connections yet" : "No matching connections";
@@ -199,7 +199,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                 InfoCard {
                     accessible-role: list-item;
                     accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
-                    min-height: root.width < Dimensions.medium-layout-breakpoint ? 300px : 98px;
+                    baseline-height: root.width < Dimensions.medium-layout-breakpoint ? 300px : 98px;
                     VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
                     VerticalLayout {

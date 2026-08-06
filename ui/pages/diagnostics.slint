@@ -46,7 +46,7 @@ export component DiagnosticsPage inherits CenteredPageRoot {
     }
 
     InfoCard {
-        min-height: 220px;
+        baseline-height: 220px;
         report := TextEdit {
             accessible-label: "Redacted diagnostics report. Select text and use your system copy shortcut to copy it.";
             text: root.diagnostic-text;

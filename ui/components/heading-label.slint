@@ -2,6 +2,10 @@ import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 
 export component HeadingLabel inherits Text {
+    min-width: 0px;
+    max-height: self.preferred-height;
+    horizontal-stretch: 1;
+    vertical-stretch: 0;
     color: Colors.primary;
     font-size: Dimensions.text-size-heading;
     font-weight: 800;

@@ -16,6 +16,7 @@ export component CenteredPageColumn inherits VerticalLayout {
         vertical-stretch: root.fill-height ? 1 : 0;
 
         VerticalLayout {
+            min-width: 0px;
             preferred-width: min(parent.width, Dimensions.welcome-content-max-width);
             max-width: min(parent.width, Dimensions.welcome-content-max-width);
             alignment: root.fill-height ? stretch : start;

@@ -15,3 +15,9 @@ export component ActionGroup inherits VerticalLayout {
     spacing: Dimensions.element-gap;
     @children
 }
+
+export component ContentGroup inherits VerticalLayout {
+    max-height: self.preferred-height;
+    vertical-stretch: 0;
+    @children
+}

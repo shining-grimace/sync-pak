@@ -34,7 +34,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
     InfoCard {
         accessible-role: region;
         accessible-label: "Outcome totals: " + root.completed + " completed, " + root.incomplete + " incomplete, " + root.not-started + " not started";
-        min-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
+        baseline-height: root.width < Dimensions.narrow-layout-breakpoint ? 126px : 68px;
         if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
             spacing: Dimensions.card-element-spacing;
             DescriptionLabel {
