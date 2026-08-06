@@ -4,6 +4,7 @@ use crate::{
     configuration::{ConfigStore, ProviderRepository},
     platform::PlatformCredentialStore,
     provider_verification::ProviderVerification,
+    provider_verification_failure::VerificationFailure as ProviderFailure,
 };
 
 /// Verifies a saved provider using credentials that remain in protected storage.
@@ -31,16 +32,8 @@ fn verify_provider(
     provider: crate::configuration::ProviderConfig,
     credentials: crate::configuration::ProviderCredentials,
 ) -> Result<ProviderVerification, VerificationFailure> {
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .map_err(|_| VerificationFailure::Unexpected)?;
-    runtime
-        .block_on(crate::s3_provider_verification::verify_s3_provider(
-            &provider,
-            credentials,
-        ))
-        .map_err(VerificationFailure::from)
+    crate::s3_provider_verification_worker::verify(&provider, credentials)
+        .map_err(VerificationFailure::Provider)
 }
 
 #[cfg(not(feature = "provider-s3"))]
@@ -48,41 +41,22 @@ fn verify_provider(
     _: crate::configuration::ProviderConfig,
     _: crate::configuration::ProviderCredentials,
 ) -> Result<ProviderVerification, VerificationFailure> {
-    Err(VerificationFailure::Unavailable)
+    Err(VerificationFailure::Provider(ProviderFailure::Unavailable))
 }
 
 #[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
 #[derive(Clone, Copy)]
 pub(crate) enum VerificationFailure {
     Credentials,
-    Authentication,
-    BucketNotVisible,
-    PermissionDenied,
-    Unavailable,
+    Provider(ProviderFailure),
     Unexpected,
-}
-
-#[cfg(feature = "provider-s3")]
-impl From<crate::provider_capabilities::ProviderError> for VerificationFailure {
-    fn from(error: crate::provider_capabilities::ProviderError) -> Self {
-        match error {
-            crate::provider_capabilities::ProviderError::Authentication => Self::Authentication,
-            crate::provider_capabilities::ProviderError::NotFound => Self::BucketNotVisible,
-            crate::provider_capabilities::ProviderError::PermissionDenied => Self::PermissionDenied,
-            crate::provider_capabilities::ProviderError::Unavailable => Self::Unavailable,
-            _ => Self::Unexpected,
-        }
-    }
 }
 
 impl VerificationFailure {
     pub(crate) fn diagnostic(self) -> &'static str {
         match self {
             Self::Credentials => "saved credential access failed",
-            Self::Authentication => "provider rejected saved credentials",
-            Self::BucketNotVisible => "configured bucket is not visible",
-            Self::PermissionDenied => "provider denied bucket listing",
-            Self::Unavailable => "provider could not be reached",
+            Self::Provider(failure) => failure.diagnostic(),
             Self::Unexpected => "saved provider verification failed",
         }
     }
@@ -92,19 +66,10 @@ impl VerificationFailure {
             Self::Credentials => {
                 "SyncPak could not access the saved credentials. Unlock protected storage, then try again."
             }
-            Self::Authentication => {
-                "The provider rejected the saved credentials. Update them, then try again."
+            Self::Provider(failure) => failure.message(),
+            Self::Unexpected => {
+                "SyncPak could not load this provider for verification. Open Diagnostics for details."
             }
-            Self::BucketNotVisible => {
-                "The configured default bucket is not visible to these credentials. Update the bucket or its access, then try again."
-            }
-            Self::PermissionDenied => {
-                "These credentials cannot list buckets. Enter a default bucket manually if the provider grants access only to that bucket."
-            }
-            Self::Unavailable => {
-                "SyncPak could not reach this provider. Check your network connection and try again."
-            }
-            Self::Unexpected => "SyncPak could not verify this provider. Try again.",
         }
     }
 }
@@ -122,15 +87,15 @@ mod tests {
                 .contains("protected storage")
         );
         assert_eq!(
-            VerificationFailure::from(ProviderError::Authentication).diagnostic(),
-            "provider rejected saved credentials"
+            VerificationFailure::Provider(ProviderError::Authentication.into()).diagnostic(),
+            "provider rejected credentials"
         );
         assert_eq!(
-            VerificationFailure::from(ProviderError::NotFound).diagnostic(),
+            VerificationFailure::Provider(ProviderError::NotFound.into()).diagnostic(),
             "configured bucket is not visible"
         );
         assert_eq!(
-            VerificationFailure::from(ProviderError::PermissionDenied).diagnostic(),
+            VerificationFailure::Provider(ProviderError::PermissionDenied.into()).diagnostic(),
             "provider denied bucket listing"
         );
     }

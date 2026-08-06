@@ -118,7 +118,7 @@ fn await_verification(
                     &diagnostics,
                     "Provider could not be verified",
                     "saved provider verification worker stopped",
-                    "SyncPak could not complete provider verification. Try again.",
+                    "Provider verification stopped before returning a result. Open Diagnostics and report this error.",
                 );
                 crate::provider_list_controller::refresh(
                     &weak,

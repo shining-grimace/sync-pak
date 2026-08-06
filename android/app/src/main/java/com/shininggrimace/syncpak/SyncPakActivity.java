@@ -1,7 +1,9 @@
 package com.shininggrimace.syncpak;
 
+import android.Manifest;
 import android.app.NativeActivity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 public final class SyncPakActivity extends NativeActivity {
@@ -26,6 +28,11 @@ public final class SyncPakActivity extends NativeActivity {
 
     public void stopSyncExecution() {
         stopService(new Intent(this, SyncExecutionService.class));
+    }
+
+    public boolean hasInternetPermission() {
+        return checkSelfPermission(Manifest.permission.INTERNET)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override

@@ -9,6 +9,8 @@ pub mod add_only_execution;
 mod android_folder_picker;
 #[cfg(target_os = "android")]
 mod android_foreground_execution;
+#[cfg(target_os = "android")]
+mod android_network_access;
 mod app_controller;
 mod appearance_controller;
 pub mod archive_create;
@@ -87,6 +89,7 @@ mod provider_form_credentials;
 mod provider_list_controller;
 mod provider_list_verification_controller;
 pub mod provider_multipart_conformance;
+mod provider_network_access;
 #[cfg(feature = "provider-probes")]
 pub mod provider_probe;
 #[cfg(feature = "provider-probes")]
@@ -94,6 +97,7 @@ mod provider_probe_config;
 mod provider_save_error;
 mod provider_secret_reveal_controller;
 pub mod provider_verification;
+mod provider_verification_failure;
 pub mod queue;
 pub mod queue_progress_observer;
 pub mod queue_retry_observer;
@@ -120,6 +124,8 @@ pub mod s3_preflight;
 mod s3_preflight_controller;
 #[cfg(feature = "provider-s3")]
 pub mod s3_provider_verification;
+#[cfg(feature = "provider-s3")]
+mod s3_provider_verification_worker;
 #[cfg(feature = "provider-s3")]
 mod s3_provider_verify_controller;
 #[cfg(feature = "provider-s3")]
@@ -159,6 +165,8 @@ pub fn android_main(app: slint::android::AndroidApp) {
         .expect("the Android folder picker should initialize");
     android_foreground_execution::initialize(app.clone())
         .expect("Android foreground execution should initialize");
+    android_network_access::initialize(app.clone())
+        .expect("Android network access checks should initialize");
     slint::android::init(app).expect("the Android backend should initialize");
     #[cfg(feature = "feasibility-probes")]
     {
