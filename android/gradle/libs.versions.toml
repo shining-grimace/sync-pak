@@ -1,5 +1,11 @@
 [versions]
 androidGradlePlugin = "9.3.1"
+kotlinxSerialization = "1.11.0"
+tlsVerifier = "0.1.1" # Match version from Cargo.lock
+
+[libraries]
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+rustls-platform-verifier = { group = "rustls", name = "rustls-platform-verifier", version.ref = "tlsVerifier" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
