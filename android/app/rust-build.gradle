@@ -1,0 +1,72 @@
+import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Exec
+
+def generatedLibrariesRoot = layout.buildDirectory.dir("generated/rust-libs").get().asFile.absolutePath
+android.sourceSets.main.jniLibs.srcDir(generatedLibrariesRoot)
+
+def repositoryRoot = rootProject.projectDir.parentFile
+def rustTarget = "aarch64-linux-android"
+def rustLibrary = new File(repositoryRoot, "target/${rustTarget}/debug/libsync_pak.so")
+def generatedLibraries = layout.buildDirectory.dir("generated/rust-libs/arm64-v8a")
+def androidSdkDirectory = androidComponents.sdkComponents.sdkDirectory
+
+def buildRustDebug = tasks.register("buildRustDebug", Exec) {
+    workingDir(repositoryRoot)
+    def cargoArguments = [
+        "cargo", "build", "--locked", "--lib", "--target", rustTarget,
+    ]
+    if (providers.gradleProperty("feasibilityProbes").orNull == "true") {
+        cargoArguments += ["--features", "feasibility-probes"]
+    }
+    commandLine(cargoArguments)
+
+    doFirst {
+        def sdkRoot = androidSdkDirectory.get().asFile.absolutePath
+        def ndkRoot = System.getenv("ANDROID_NDK_HOME")
+            ?: System.getenv("ANDROID_NDK_ROOT")
+            ?: new File(sdkRoot, "ndk").listFiles()
+                ?.findAll { it.directory }
+                ?.max { it.name }
+                ?.absolutePath
+        if (ndkRoot == null) {
+            throw new GradleException("No side-by-side Android NDK installation was found")
+        }
+        def osName = System.getProperty("os.name").toLowerCase()
+        def host = osName.contains("mac")
+            ? "darwin-x86_64"
+            : osName.contains("win") ? "windows-x86_64" : "linux-x86_64"
+        def commandSuffix = osName.contains("win") ? ".cmd" : ""
+        def binarySuffix = osName.contains("win") ? ".exe" : ""
+        def toolchain = "${ndkRoot}/toolchains/llvm/prebuilt/${host}/bin"
+        def linker = "${toolchain}/aarch64-linux-android30-clang${commandSuffix}"
+        def cxx = "${toolchain}/aarch64-linux-android30-clang++${commandSuffix}"
+        def ar = "${toolchain}/llvm-ar${binarySuffix}"
+        def javaHome = System.getProperty("java.home")
+        def path = [
+            toolchain,
+            new File(javaHome, "bin").absolutePath,
+            System.getenv("PATH") ?: "",
+        ].findAll { !it.empty }.join(File.pathSeparator)
+        environment("JAVA_HOME", javaHome)
+        environment("ANDROID_HOME", sdkRoot)
+        environment("ANDROID_SDK_ROOT", sdkRoot)
+        environment("ANDROID_PLATFORM", "android-36.1")
+        environment("CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER", linker)
+        environment("CC_aarch64_linux_android", linker)
+        environment("CXX_aarch64_linux_android", cxx)
+        environment("AR_aarch64_linux_android", ar)
+        environment("PATH", path)
+    }
+}
+
+def stageRustDebug = tasks.register("stageRustDebug", Copy) {
+    dependsOn(buildRustDebug)
+    from(rustLibrary)
+    into(generatedLibraries)
+}
+
+tasks.configureEach {
+    if (name == "mergeDebugJniLibFolders" || name == "mergeDebugNativeLibs") {
+        dependsOn(stageRustDebug)
+    }
+}
