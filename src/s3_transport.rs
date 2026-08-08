@@ -34,6 +34,10 @@ impl S3Transport {
         let mut loader = aws_config::defaults(BehaviorVersion::latest())
             .credentials_provider(credentials)
             .region(Region::new(settings.region));
+        #[cfg(target_os = "android")]
+        {
+            loader = loader.http_client(crate::android_s3_http_client::build()?);
+        }
         if let Some(endpoint) = settings.endpoint {
             loader = loader.endpoint_url(endpoint);
         }

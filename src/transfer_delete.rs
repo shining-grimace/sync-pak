@@ -68,7 +68,7 @@ pub async fn delete_remote_with_retry_and_cancellation<T: ObjectDeleter, S: Retr
         match provider.delete(bucket, &prefix.resolve(relative)).await {
             Ok(()) => return Ok(()),
             Err(error) => {
-                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
+                match policy.delay_after_failure(completed_attempts, &error, None, jitter_seed) {
                     Some(retry) => {
                         sleeper.sleep(retry.delay).await;
                         cancellation

@@ -9,19 +9,19 @@ fn retries_unavailable_requests_at_most_four_times_in_total() {
 
     assert_eq!(
         policy
-            .delay_after_failure(1, ProviderError::Unavailable, None, 0)
+            .delay_after_failure(1, &ProviderError::Unavailable, None, 0)
             .unwrap()
             .next_attempt,
         2
     );
     assert!(
         policy
-            .delay_after_failure(3, ProviderError::Unavailable, None, 0)
+            .delay_after_failure(3, &ProviderError::Unavailable, None, 0)
             .is_some()
     );
     assert!(
         policy
-            .delay_after_failure(4, ProviderError::Unavailable, None, 0)
+            .delay_after_failure(4, &ProviderError::Unavailable, None, 0)
             .is_none()
     );
 }
@@ -35,7 +35,7 @@ fn never_retries_deterministic_or_credential_failures() {
         ProviderError::PermissionDenied,
         ProviderError::NotFound,
     ] {
-        assert!(policy.delay_after_failure(1, error, None, 0).is_none());
+        assert!(policy.delay_after_failure(1, &error, None, 0).is_none());
     }
 }
 
@@ -46,7 +46,7 @@ fn honors_provider_delays_and_varies_the_local_backoff() {
         policy
             .delay_after_failure(
                 1,
-                ProviderError::Unavailable,
+                &ProviderError::Unavailable,
                 Some(Duration::from_secs(9)),
                 0
             )
@@ -56,11 +56,11 @@ fn honors_provider_delays_and_varies_the_local_backoff() {
     );
     assert_ne!(
         policy
-            .delay_after_failure(2, ProviderError::Unavailable, None, 1)
+            .delay_after_failure(2, &ProviderError::Unavailable, None, 1)
             .unwrap()
             .delay,
         policy
-            .delay_after_failure(2, ProviderError::Unavailable, None, 2)
+            .delay_after_failure(2, &ProviderError::Unavailable, None, 2)
             .unwrap()
             .delay
     );

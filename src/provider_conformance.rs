@@ -47,7 +47,7 @@ impl std::fmt::Display for ConformancePhase {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ConformanceError {
     pub phase: ConformancePhase,
     pub provider_error: ProviderError,

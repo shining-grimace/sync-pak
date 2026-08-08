@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum ConnectionVerificationError {
     LocalFolderMissing,
     LocalPathNotDirectory,

@@ -5,6 +5,9 @@
 
 use std::future::Future;
 
+pub use crate::provider_error::{ProviderCertificateError, ProviderError, ProviderTransportError};
+pub use crate::safe_transport_detail::SafeTransportDetail;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ObjectMetadata {
     pub byte_size: u64,
@@ -45,37 +48,6 @@ pub struct MultipartUploadRequest {
     pub content_type: Option<String>,
     pub source_modified_unix_seconds: Option<i64>,
 }
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ProviderError {
-    Authentication,
-    ClockSkew,
-    InvalidRequest,
-    NotFound,
-    PermissionDenied,
-    Unavailable,
-    Unsupported,
-    Unexpected,
-}
-
-impl std::fmt::Display for ProviderError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(match self {
-            Self::Authentication => "The provider rejected the saved credentials.",
-            Self::ClockSkew => {
-                "This device's clock differs too much from the provider. Enable automatic date and time, then retry."
-            }
-            Self::InvalidRequest => "The provider request is not valid.",
-            Self::NotFound => "The requested provider resource was not found.",
-            Self::PermissionDenied => "The provider did not allow this operation.",
-            Self::Unavailable => "The provider could not be reached.",
-            Self::Unsupported => "The provider does not support this operation.",
-            Self::Unexpected => "The provider could not complete the operation.",
-        })
-    }
-}
-
-impl std::error::Error for ProviderError {}
 
 pub type ProviderResult<T> = Result<T, ProviderError>;
 

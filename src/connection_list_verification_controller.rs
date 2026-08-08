@@ -106,11 +106,11 @@ fn poll(
             }
             Ok(Err(failure)) => {
                 states.borrow_mut().remove(&connection_id);
-                diagnostics_controller::present(
+                diagnostics_controller::present_with_safe_details(
                     &window,
                     &diagnostics,
                     "Connection could not be verified",
-                    failure.diagnostic(),
+                    failure.diagnostic().into_owned(),
                     failure.message(),
                 );
                 refresh(&weak, &configuration, &diagnostics, &states, &sessions);

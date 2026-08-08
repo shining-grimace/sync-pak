@@ -5,6 +5,11 @@ plugins {
     id("com.android.application")
 }
 
+dependencies {
+    // Keep this aligned with rustls-platform-verifier-android in Cargo.lock.
+    implementation(libs.rustls.platform.verifier)
+}
+
 android {
     namespace = "com.shininggrimace.syncpak"
     compileSdk {
@@ -35,7 +40,7 @@ android {
     )
 }
 
-val repositoryRoot = rootProject.projectDir.parentFile
+val repositoryRoot: File = rootProject.projectDir.parentFile!!
 val rustTarget = "aarch64-linux-android"
 val rustLibrary = repositoryRoot.resolve("target/$rustTarget/debug/libsync_pak.so")
 val generatedLibraries = layout.buildDirectory.dir("generated/rust-libs/arm64-v8a")
@@ -77,7 +82,7 @@ val buildRustDebug by tasks.registering(Exec::class) {
             toolchain,
             File(javaHome, "bin").absolutePath,
             System.getenv("PATH").orEmpty(),
-        ).filter(String::isNotEmpty).joinToString(File.pathSeparator)
+        ).asSequence().filter(String::isNotEmpty).joinToString(File.pathSeparator)
         environment("JAVA_HOME", javaHome)
         environment("ANDROID_HOME", sdkRoot)
         environment("ANDROID_SDK_ROOT", sdkRoot)

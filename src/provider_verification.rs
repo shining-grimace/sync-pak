@@ -45,7 +45,7 @@ mod tests {
 
     impl BucketAccessChecker for Provider {
         async fn check_bucket_access(&self, _: &str) -> ProviderResult<()> {
-            self.bucket_access
+            self.bucket_access.clone()
         }
     }
 

@@ -5,12 +5,24 @@ mod activity_progress_controller;
 mod activity_result_controller;
 pub mod activity_snapshot;
 pub mod add_only_execution;
+#[cfg(all(target_os = "android", feature = "provider-s3"))]
+mod android_certificate_verifier;
+#[cfg(all(target_os = "android", feature = "provider-s3"))]
+mod android_connector_error;
+#[cfg(all(target_os = "android", feature = "provider-s3"))]
+mod android_dns_resolver;
 #[cfg(target_os = "android")]
 mod android_folder_picker;
 #[cfg(target_os = "android")]
 mod android_foreground_execution;
+#[cfg(all(target_os = "android", feature = "provider-s3"))]
+mod android_http_timeout;
 #[cfg(target_os = "android")]
 mod android_network_access;
+#[cfg(all(target_os = "android", feature = "provider-s3"))]
+mod android_s3_http_client;
+#[cfg(all(target_os = "android", feature = "provider-s3"))]
+mod android_server_certificate_verifier;
 mod app_controller;
 mod appearance_controller;
 pub mod archive_create;
@@ -46,6 +58,8 @@ mod connection_verification_worker;
 pub mod destructive_confirmation;
 mod diagnostics_controller;
 pub mod download;
+#[cfg(all(feature = "provider-s3", any(target_os = "android", test)))]
+mod endpoint_resolution_error;
 pub mod execution;
 #[cfg(test)]
 mod feasibility;
@@ -82,7 +96,9 @@ pub mod preflight_review;
 mod provider_bucket_cache;
 pub mod provider_capabilities;
 pub mod provider_conformance;
+mod provider_connectivity_failure;
 mod provider_delete_controller;
+mod provider_error;
 mod provider_form;
 mod provider_form_controller;
 mod provider_form_credentials;
@@ -134,11 +150,16 @@ mod s3_provider_verification_worker;
 mod s3_provider_verify_controller;
 #[cfg(feature = "provider-s3")]
 mod s3_settings;
+#[cfg(all(target_os = "android", feature = "provider-s3"))]
+mod s3_tls_error;
 #[cfg(feature = "provider-s3")]
 pub mod s3_transport;
 #[cfg(feature = "provider-s3")]
 mod s3_writer;
+mod safe_transport_detail;
 mod saved_provider_verification;
+#[cfg(all(feature = "provider-s3", any(target_os = "android", test)))]
+mod secure_connection_error;
 pub mod temporary_cleanup;
 pub mod transfer_delete;
 pub mod transfer_execution;
@@ -168,6 +189,12 @@ pub fn android_main(app: slint::android::AndroidApp) {
     if let Err(error) = android_folder_picker::initialize(app.clone()) {
         eprintln!("Android folder picker initialization failed: {error}");
         return;
+    }
+    #[cfg(feature = "provider-s3")]
+    {
+        if let Err(error) = android_certificate_verifier::initialize(&app) {
+            eprintln!("Android certificate verifier initialization failed: {error}");
+        }
     }
     if let Err(error) = android_foreground_execution::initialize(app.clone()) {
         eprintln!("Android foreground execution initialization failed: {error}");

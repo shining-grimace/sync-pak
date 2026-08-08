@@ -11,7 +11,19 @@ crate-type = ["cdylib", "rlib"]
 default = ["provider-s3"]
 feasibility-probes = []
 provider-probes = ["provider-s3", "dep:tokio"]
-provider-s3 = ["dep:aws-config", "dep:aws-sdk-s3", "dep:tokio"]
+provider-s3 = [
+    "dep:aws-config",
+    "dep:aws-sdk-s3",
+    "dep:aws-smithy-runtime-api",
+    "dep:aws-smithy-types",
+    "dep:hyper",
+    "dep:hyper-rustls",
+    "dep:hyper-util",
+    "dep:rustls",
+    "dep:rustls-platform-verifier",
+    "dep:tokio",
+    "dep:tower-service",
+]
 
 [dependencies]
 aws-config = { version = "=1.9.0", default-features = false, features = ["rt-tokio", "rustls"], optional = true }
@@ -41,8 +53,16 @@ slint = { version = "=1.17.1", default-features = false, features = ["backend-wi
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-native-keyring-store = "=1.0.0"
+aws-smithy-runtime-api = { version = "=1.13.0", features = ["client", "http-1x"], optional = true }
+aws-smithy-types = { version = "=1.6.1", features = ["http-body-1-x"], optional = true }
+hyper = { version = "=1.10.1", default-features = false, features = ["client", "http1", "http2"], optional = true }
+hyper-rustls = { version = "=0.27.9", default-features = false, features = ["http1", "http2", "tls12"], optional = true }
+hyper-util = { version = "=0.1.20", default-features = false, features = ["client-legacy", "http1", "http2", "tokio"], optional = true }
 jni = "=0.22.4"
+rustls = { version = "=0.23.42", default-features = false, features = ["aws_lc_rs", "std", "tls12"], optional = true }
+rustls-platform-verifier = { version = "=0.7.0", optional = true }
 slint = { version = "=1.17.1", default-features = false, features = ["backend-android-activity-06", "renderer-femtovg"] }
+tower-service = { version = "=0.3.3", optional = true }
 
 [build-dependencies]
 slint-build = "=1.17.1"

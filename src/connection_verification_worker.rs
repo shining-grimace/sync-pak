@@ -1,9 +1,10 @@
-use std::path::PathBuf;
+use std::{borrow::Cow, path::PathBuf};
 
 use crate::{
     configuration::{ConfigStore, ConnectionDraft},
     connection_verification::{ConnectionVerificationError, verify_local_folder},
     provider_capabilities::ProviderError,
+    provider_connectivity_failure::ProviderConnectivityFailure,
 };
 
 #[cfg(feature = "provider-s3")]
@@ -88,7 +89,7 @@ fn verify_remote(_: PathBuf, _: ConnectionDraft) -> Result<(), VerificationFailu
 }
 
 #[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum VerificationFailure {
     Credentials,
     LocalFolderMissing,
@@ -98,6 +99,7 @@ pub(crate) enum VerificationFailure {
     InvalidRemotePath,
     ProviderMissing,
     Authentication,
+    Connectivity(ProviderConnectivityFailure),
     PermissionDenied,
     Unavailable,
     Unexpected,
@@ -120,8 +122,10 @@ impl From<ProviderError> for VerificationFailure {
     fn from(error: ProviderError) -> Self {
         match error {
             ProviderError::Authentication => Self::Authentication,
+            ProviderError::Certificate(error) => Self::Connectivity(error.into()),
             ProviderError::NotFound => Self::RemoteFolderMissing,
             ProviderError::PermissionDenied => Self::PermissionDenied,
+            ProviderError::Transport(error) => Self::Connectivity(error.into()),
             ProviderError::Unavailable => Self::Unavailable,
             _ => Self::Unexpected,
         }
@@ -129,7 +133,7 @@ impl From<ProviderError> for VerificationFailure {
 }
 
 impl VerificationFailure {
-    pub(crate) fn diagnostic(self) -> &'static str {
+    pub(crate) fn diagnostic(&self) -> Cow<'static, str> {
         match self {
             Self::Credentials => "saved credential access failed",
             Self::LocalFolderMissing => "local folder does not exist",
@@ -139,13 +143,15 @@ impl VerificationFailure {
             Self::InvalidRemotePath => "remote folder path is invalid",
             Self::ProviderMissing => "connection provider is missing",
             Self::Authentication => "provider rejected saved credentials",
+            Self::Connectivity(failure) => return failure.diagnostic(),
             Self::PermissionDenied => "provider denied access to the configured cloud path",
-            Self::Unavailable => "provider could not be reached",
+            Self::Unavailable => "provider reported that its service is unavailable",
             Self::Unexpected => "connection verification failed",
         }
+        .into()
     }
 
-    pub(crate) fn message(self) -> &'static str {
+    pub(crate) fn message(&self) -> &'static str {
         match self {
             Self::Credentials => {
                 "SyncPak could not access the saved provider credentials. Unlock protected storage, then try again."
@@ -171,11 +177,12 @@ impl VerificationFailure {
             Self::Authentication => {
                 "The provider rejected its saved credentials. Update and verify the provider, then try again."
             }
+            Self::Connectivity(failure) => failure.message(),
             Self::PermissionDenied => {
                 "The provider credentials cannot access the configured cloud bucket or remote folder."
             }
             Self::Unavailable => {
-                "SyncPak could not reach the provider. Check the network connection, then try again."
+                "The provider responded that its service is temporarily unavailable. The endpoint was reached; this does not indicate invalid connection settings."
             }
             Self::Unexpected => {
                 "SyncPak could not verify this connection. Check its settings and try again."

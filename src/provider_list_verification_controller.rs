@@ -115,7 +115,7 @@ fn await_verification(
                     &window,
                     &diagnostics,
                     "Provider could not be verified",
-                    failure.diagnostic().to_owned(),
+                    failure.diagnostic().into_owned(),
                     failure.message(),
                 );
                 crate::provider_list_controller::refresh(

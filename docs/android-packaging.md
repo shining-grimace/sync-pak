@@ -30,6 +30,15 @@ starts the foreground-service probe and opens the system picker shortly after st
 logs only capability outcomes and never logs the returned URI. Normal builds do not start
 the probes or expose feasibility controls in the application UI.
 
+## TLS certificate verification
+
+Provider HTTPS connections use Android's system trust manager through
+`rustls-platform-verifier`. Gradle locates the verifier's packaged Android component from
+Cargo metadata and includes its AAR automatically; it is not downloaded independently from a
+remote Maven repository. Rust initializes the verifier with the activity and application class
+loader before provider networking can start. The AWS S3 client then uses an Android-only
+Hyper/Rustls connector, while desktop builds retain their native certificate configuration.
+
 ## Folder selection
 
 The Slint backend is hosted by `SyncPakActivity`, a small `NativeActivity` subclass. Its

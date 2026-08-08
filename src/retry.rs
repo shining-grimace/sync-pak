@@ -27,11 +27,11 @@ impl RetryPolicy {
     pub fn delay_after_failure(
         &self,
         completed_attempts: u8,
-        error: ProviderError,
+        error: &ProviderError,
         provider_delay: Option<Duration>,
         jitter_seed: u64,
     ) -> Option<RetryDelay> {
-        if completed_attempts >= self.max_attempts || error != ProviderError::Unavailable {
+        if completed_attempts >= self.max_attempts || !error.is_retryable() {
             return None;
         }
         let delay = provider_delay

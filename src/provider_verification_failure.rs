@@ -1,6 +1,9 @@
+use std::borrow::Cow;
+
 use crate::{
-    provider_capabilities::ProviderError, provider_network_access::NetworkAccessFailure,
-    provider_verification_panic::VerificationPanic,
+    provider_capabilities::ProviderError,
+    provider_connectivity_failure::ProviderConnectivityFailure,
+    provider_network_access::NetworkAccessFailure, provider_verification_panic::VerificationPanic,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -8,6 +11,7 @@ pub(crate) enum VerificationFailure {
     Authentication,
     BucketNotVisible,
     ClockSkew,
+    Connectivity(ProviderConnectivityFailure),
     InvalidSettings,
     NetworkInspection,
     NetworkPermission,
@@ -25,10 +29,12 @@ impl From<ProviderError> for VerificationFailure {
     fn from(error: ProviderError) -> Self {
         match error {
             ProviderError::Authentication => Self::Authentication,
+            ProviderError::Certificate(error) => Self::Connectivity(error.into()),
             ProviderError::ClockSkew => Self::ClockSkew,
             ProviderError::InvalidRequest => Self::InvalidSettings,
             ProviderError::NotFound => Self::BucketNotVisible,
             ProviderError::PermissionDenied => Self::PermissionDenied,
+            ProviderError::Transport(error) => Self::Connectivity(error.into()),
             ProviderError::Unavailable => Self::Unavailable,
             ProviderError::Unsupported => Self::Unsupported,
             ProviderError::Unexpected => Self::UnexpectedResponse,
@@ -46,23 +52,25 @@ impl From<NetworkAccessFailure> for VerificationFailure {
 }
 
 impl VerificationFailure {
-    pub(crate) fn diagnostic(&self) -> &str {
+    pub(crate) fn diagnostic(&self) -> Cow<'_, str> {
         match self {
             Self::Authentication => "provider rejected credentials",
             Self::BucketNotVisible => "configured bucket is not visible",
             Self::ClockSkew => "device clock differs from provider",
+            Self::Connectivity(failure) => return failure.diagnostic(),
             Self::InvalidSettings => "provider settings produced an invalid request",
             Self::NetworkInspection => "Android network permission check failed",
             Self::NetworkPermission => "Android INTERNET permission is missing",
             Self::PermissionDenied => "provider denied bucket listing",
             Self::RuntimeInitialization => "provider runtime initialization failed",
-            Self::Unavailable => "provider could not be reached",
+            Self::Unavailable => "provider reported that its service is unavailable",
             Self::UnexpectedResponse => "provider returned an unclassified response",
             Self::Unsupported => "provider does not support the verification request",
             Self::WorkerPanicked(failure) => failure.technical_details(),
             Self::WorkerStart => "provider verification worker could not be started",
             Self::WorkerStopped => "provider verification worker stopped without a result",
         }
+        .into()
     }
 
     pub(crate) fn message(&self) -> &'static str {
@@ -76,6 +84,7 @@ impl VerificationFailure {
             Self::ClockSkew => {
                 "Your device clock differs too much from this provider. Enable automatic date and time before verifying again."
             }
+            Self::Connectivity(failure) => failure.message(),
             Self::InvalidSettings => {
                 "SyncPak could not build a valid provider request. Check the account ID, region, endpoint, and bucket name."
             }
@@ -92,7 +101,7 @@ impl VerificationFailure {
                 "SyncPak could not initialise the provider verification runtime on this device. Open Diagnostics and report this error."
             }
             Self::Unavailable => {
-                "SyncPak could not reach this provider. Check the device network connection and the provider endpoint."
+                "The provider responded that its service is temporarily unavailable. The endpoint was reached; this does not indicate invalid credentials or settings."
             }
             Self::UnexpectedResponse => {
                 "The provider returned a response SyncPak could not classify. Open Diagnostics for details."
@@ -115,7 +124,9 @@ impl VerificationFailure {
 mod tests {
     use super::VerificationFailure;
     use crate::{
-        provider_capabilities::ProviderError, provider_network_access::NetworkAccessFailure,
+        provider_capabilities::{ProviderError, ProviderTransportError},
+        provider_connectivity_failure::ProviderConnectivityFailure,
+        provider_network_access::NetworkAccessFailure,
     };
 
     #[test]
@@ -131,6 +142,14 @@ mod tests {
         assert_eq!(
             VerificationFailure::from(ProviderError::Unexpected),
             VerificationFailure::UnexpectedResponse
+        );
+        assert_eq!(
+            VerificationFailure::from(ProviderError::Transport(
+                ProviderTransportError::EndpointUnresolved
+            )),
+            VerificationFailure::Connectivity(ProviderConnectivityFailure::Transport(
+                ProviderTransportError::EndpointUnresolved
+            ))
         );
     }
 

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{borrow::Cow, path::PathBuf};
 
 use crate::{
     configuration::{ConfigStore, ProviderRepository},
@@ -53,12 +53,13 @@ pub(crate) enum VerificationFailure {
 }
 
 impl VerificationFailure {
-    pub(crate) fn diagnostic(&self) -> &str {
+    pub(crate) fn diagnostic(&self) -> Cow<'_, str> {
         match self {
             Self::Credentials => "saved credential access failed",
-            Self::Provider(failure) => failure.diagnostic(),
+            Self::Provider(failure) => return failure.diagnostic(),
             Self::Unexpected => "saved provider verification failed",
         }
+        .into()
     }
 
     pub(crate) fn message(&self) -> &'static str {

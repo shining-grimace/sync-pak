@@ -48,7 +48,7 @@ pub async fn download_to_path_with_retry_and_cancellation_and_observer<
                 return atomic_write(destination, &contents).map_err(DownloadError::Local);
             }
             Err(error) => {
-                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
+                match policy.delay_after_failure(completed_attempts, &error, None, jitter_seed) {
                     Some(retry) => {
                         observer.on_retry(retry);
                         sleeper.sleep(retry.delay).await;

@@ -49,7 +49,7 @@ pub async fn upload_from_path_with_retry_and_cancellation_and_observer<
         {
             Ok(()) => return Ok(()),
             Err(error) => {
-                match policy.delay_after_failure(completed_attempts, error, None, jitter_seed) {
+                match policy.delay_after_failure(completed_attempts, &error, None, jitter_seed) {
                     Some(retry) => {
                         observer.on_retry(retry);
                         sleeper.sleep(retry.delay).await;

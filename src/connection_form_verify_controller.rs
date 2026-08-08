@@ -137,11 +137,11 @@ fn verified(window: &AppWindow) {
 fn failed(window: &AppWindow, diagnostics: &SharedDiagnosticLog, failure: VerificationFailure) {
     window.set_connection_verifying(false);
     window.set_connection_save_after_verification(false);
-    diagnostics_controller::present(
+    diagnostics_controller::present_with_safe_details(
         window,
         diagnostics,
         "Connection could not be verified",
-        failure.diagnostic(),
+        failure.diagnostic().into_owned(),
         failure.message(),
     );
 }

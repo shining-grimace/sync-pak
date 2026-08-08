@@ -81,18 +81,18 @@ fn poll(
                     &window,
                     &diagnostics,
                     "Provider could not be verified",
-                    failure.diagnostic().to_owned(),
+                    failure.diagnostic().into_owned(),
                     failure.message(),
                 );
             }
             Err(mpsc::TryRecvError::Disconnected) => {
                 window.set_provider_verifying(false);
                 window.set_provider_save_after_verification(false);
-                diagnostics_controller::present(
+                diagnostics_controller::present_with_safe_details(
                     &window,
                     &diagnostics,
                     "Provider could not be verified",
-                    VerificationFailure::WorkerStopped.diagnostic(),
+                    VerificationFailure::WorkerStopped.diagnostic().into_owned(),
                     VerificationFailure::WorkerStopped.message(),
                 );
             }
