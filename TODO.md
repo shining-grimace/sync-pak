@@ -1,5 +1,5 @@
 
-- The preflight screen has a massive gap between the file summary and the back button
+- UI spacing (typically 8px) should be a dimension
 - There should probably be text input limits on things like Connection Name
 - On Android, the cursor inside the focuses text input leaves its boundary when the page is scrolled
 - The Rust crate needs to be modularised better

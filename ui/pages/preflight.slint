@@ -92,218 +92,223 @@ export component PreflightPage inherits CenteredPageRoot {
             text: root.failure-message;
         }
     }
-    if !root.loading && !root.failed: VerticalLayout {
+    if !root.loading && !root.failed: Rectangle {
+        min-height: review-layout.min-height;
+        preferred-height: review-layout.preferred-height;
+        max-height: review-layout.max-height;
         vertical-stretch: 1;
-        spacing: 8px;
-        VerticalLayout {
-            accessible-role: region;
-            accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
-            vertical-stretch: 0;
-            spacing: 4px;
-            if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
-                spacing: 3px;
-                DescriptionLabel {
-                    text: root.additions;
-                }
-
-                DescriptionLabel {
-                    text: root.overwrites;
-                }
-
-                DescriptionLabel {
-                    text: root.deletions;
-                }
-
-                DescriptionLabel {
-                    text: root.skipped;
-                }
-            }
-            if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
-                spacing: 8px;
-                DescriptionLabel {
-                    text: root.additions;
-                }
-
-                DescriptionLabel {
-                    text: root.overwrites;
-                }
-            }
-            if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
-                spacing: 8px;
-                DescriptionLabel {
-                    text: root.deletions;
-                }
-
-                DescriptionLabel {
-                    text: root.skipped;
-                }
-            }
-        }
-
-        if root.requires-mirror-confirmation: DangerCard {
-            accessible-role: region;
-            accessible-label: "Destructive mirror changes";
-            baseline-height: 86px;
-            ErrorHeadingLabel {
-                text: "Destructive mirror changes";
-            }
-
-            ErrorLabel {
-                accessible-live-region: assertive;
-                text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
-            }
-
-            ErrorLabel {
-                text: root.overwrites + " · " + root.deletions;
-            }
-        }
-        if root.items.length == 0: SuccessLabel {
-            text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
-        }
-        if root.items.length > 0: DescriptionLabel {
-            accessible-live-region: polite;
-            text: root.item-filter == 0 ? "Reviewing " + root.items.length + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
-        }
-        VerticalLayout {
-            vertical-stretch: 0;
-            if root.items.length > 0: VerticalLayout {
+        review-layout := VerticalLayout {
+            spacing: 8px;
+            VerticalLayout {
                 accessible-role: region;
-                accessible-label: "Filter planned file changes";
-                spacing: 6px;
-                SectionHeadingLabel {
-                    text: "Show planned changes";
-                }
-
-                HorizontalLayout {
-                    spacing: 6px;
-                    preflight-filter-all := RadioButton {
-                        accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
-                        text: "All";
-                        selected: root.item-filter == 0;
-                        clicked => {
-                            root.set-item-filter(0);
-                        }
-                    }
-
-                    RadioButton {
-                        accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
-                        text: "New";
-                        selected: root.item-filter == 1;
-                        clicked => {
-                            root.set-item-filter(1);
-                        }
-                    }
-
-                    RadioButton {
-                        accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
-                        text: "Overwrites";
-                        selected: root.item-filter == 2;
-                        clicked => {
-                            root.set-item-filter(2);
-                        }
-                    }
-                }
-
-                HorizontalLayout {
-                    spacing: 6px;
-                    RadioButton {
-                        accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
-                        text: "Deletions";
-                        selected: root.item-filter == 3;
-                        clicked => {
-                            root.set-item-filter(3);
-                        }
-                    }
-
-                    RadioButton {
-                        accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
-                        text: "Warnings";
-                        selected: root.item-filter == 4;
-                        clicked => {
-                            root.set-item-filter(4);
-                        }
-                    }
-                }
-
-                FocusScope {
-                    width: 0px;
-                    height: 0px;
-                    focus-on-click: false;
-                    focus-on-tab-navigation: false;
-                    forward-focus: preflight-filter-all;
-                    init => {
-                        self.focus();
-                    }
-                }
-            }
-        }
-        if root.visible-items.length > 0: ListView {
-            accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
-            vertical-stretch: 1;
-            vertical-scrollbar-policy: always-on;
-            for item in root.visible-items: ListItem {
-                width: parent.width;
-                accessible-role: list-item;
-                accessible-label: item.status + ": " + item.path + ". " + item.detail;
+                accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
+                vertical-stretch: 0;
                 spacing: 4px;
-                if root.width < Dimensions.narrow-layout-breakpoint: SectionHeadingLabel {
-                    text: item.status;
+                if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
+                    spacing: 3px;
+                    DescriptionLabel {
+                        text: root.additions;
+                    }
+
+                    DescriptionLabel {
+                        text: root.overwrites;
+                    }
+
+                    DescriptionLabel {
+                        text: root.deletions;
+                    }
+
+                    DescriptionLabel {
+                        text: root.skipped;
+                    }
                 }
-                if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
+                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                     spacing: 8px;
                     DescriptionLabel {
+                        text: root.additions;
+                    }
+
+                    DescriptionLabel {
+                        text: root.overwrites;
+                    }
+                }
+                if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
+                    spacing: 8px;
+                    DescriptionLabel {
+                        text: root.deletions;
+                    }
+
+                    DescriptionLabel {
+                        text: root.skipped;
+                    }
+                }
+            }
+
+            if root.requires-mirror-confirmation: DangerCard {
+                accessible-role: region;
+                accessible-label: "Destructive mirror changes";
+                baseline-height: 86px;
+                ErrorHeadingLabel {
+                    text: "Destructive mirror changes";
+                }
+
+                ErrorLabel {
+                    accessible-live-region: assertive;
+                    text: "SyncPak will attempt to make the destination match the source. Review every overwrite and deletion before continuing.";
+                }
+
+                ErrorLabel {
+                    text: root.overwrites + " · " + root.deletions;
+                }
+            }
+            if root.items.length == 0: SuccessLabel {
+                text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
+            }
+            if root.items.length > 0: DescriptionLabel {
+                accessible-live-region: polite;
+                text: root.item-filter == 0 ? "Reviewing " + root.items.length + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
+            }
+            VerticalLayout {
+                vertical-stretch: 0;
+                if root.items.length > 0: VerticalLayout {
+                    accessible-role: region;
+                    accessible-label: "Filter planned file changes";
+                    spacing: 6px;
+                    SectionHeadingLabel {
+                        text: "Show planned changes";
+                    }
+
+                    HorizontalLayout {
+                        spacing: 6px;
+                        preflight-filter-all := RadioButton {
+                            accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
+                            text: "All";
+                            selected: root.item-filter == 0;
+                            clicked => {
+                                root.set-item-filter(0);
+                            }
+                        }
+
+                        RadioButton {
+                            accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
+                            text: "New";
+                            selected: root.item-filter == 1;
+                            clicked => {
+                                root.set-item-filter(1);
+                            }
+                        }
+
+                        RadioButton {
+                            accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
+                            text: "Overwrites";
+                            selected: root.item-filter == 2;
+                            clicked => {
+                                root.set-item-filter(2);
+                            }
+                        }
+                    }
+
+                    HorizontalLayout {
+                        spacing: 6px;
+                        RadioButton {
+                            accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
+                            text: "Deletions";
+                            selected: root.item-filter == 3;
+                            clicked => {
+                                root.set-item-filter(3);
+                            }
+                        }
+
+                        RadioButton {
+                            accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
+                            text: "Warnings";
+                            selected: root.item-filter == 4;
+                            clicked => {
+                                root.set-item-filter(4);
+                            }
+                        }
+                    }
+
+                    FocusScope {
+                        width: 0px;
+                        height: 0px;
+                        focus-on-click: false;
+                        focus-on-tab-navigation: false;
+                        forward-focus: preflight-filter-all;
+                        init => {
+                            self.focus();
+                        }
+                    }
+                }
+            }
+            if root.visible-items.length > 0: ListView {
+                accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
+                vertical-stretch: 1;
+                vertical-scrollbar-policy: always-on;
+                for item in root.visible-items: ListItem {
+                    width: parent.width;
+                    accessible-role: list-item;
+                    accessible-label: item.status + ": " + item.path + ". " + item.detail;
+                    spacing: 4px;
+                    if root.width < Dimensions.narrow-layout-breakpoint: SectionHeadingLabel {
                         text: item.status;
-                        width: 110px;
                     }
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
+                        spacing: 8px;
+                        DescriptionLabel {
+                            text: item.status;
+                            width: 110px;
+                        }
 
-                    DescriptionLabel {
+                        DescriptionLabel {
+                            text: item.path;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    if root.width < Dimensions.narrow-layout-breakpoint: DescriptionLabel {
                         text: item.path;
-                        horizontal-stretch: 1;
                     }
-                }
-                if root.width < Dimensions.narrow-layout-breakpoint: DescriptionLabel {
-                    text: item.path;
-                }
-                VerticalLayout {
-                    spacing: 2px;
-                    DescriptionLabel {
-                        text: item.detail;
+                    VerticalLayout {
+                        spacing: 2px;
+                        DescriptionLabel {
+                            text: item.detail;
+                        }
                     }
                 }
             }
-        }
-        if root.items.length > 0 && root.visible-items.length == 0: InfoCard {
-            accessible-role: region;
-            accessible-label: "No entries in the selected planned change category";
-            baseline-height: 74px;
-            DescriptionLabel {
-                text: root.item-filter == 1 ? "No new files are planned." : (root.item-filter == 2 ? "No overwrites are planned." : (root.item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
+            if root.items.length > 0 && root.visible-items.length == 0: InfoCard {
+                accessible-role: region;
+                accessible-label: "No entries in the selected planned change category";
+                baseline-height: 74px;
+                DescriptionLabel {
+                    text: root.item-filter == 1 ? "No new files are planned." : (root.item-filter == 2 ? "No overwrites are planned." : (root.item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
+                }
             }
-        }
-        if root.requires-mirror-confirmation: CheckBox {
-            accessible-label: "Acknowledge the listed overwrites and deletions";
-            text: "I understand that the listed destination files will be overwritten or deleted.";
-            checked <=> root.mirror-confirmed;
-        }
-        if root.requires-mirror-confirmation && root.mirror-confirmed: SuccessLabel {
-            accessible-live-region: polite;
-            text: "Destructive mirror changes acknowledged.";
-        }
-        if root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
-            accessible-live-region: polite;
-            text: "Acknowledge the listed changes before this mirror can start.";
-        }
-        PrimaryActionButton {
-            accessible-label: root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action;
-            text: root.start-action;
-            enabled: !root.loading && !root.failed && (!root.requires-mirror-confirmation || root.mirror-confirmed);
-            clicked => {
-                root.start-operation();
+            if root.requires-mirror-confirmation: CheckBox {
+                accessible-label: "Acknowledge the listed overwrites and deletions";
+                text: "I understand that the listed destination files will be overwritten or deleted.";
+                checked <=> root.mirror-confirmed;
             }
-        }
+            if root.requires-mirror-confirmation && root.mirror-confirmed: SuccessLabel {
+                accessible-live-region: polite;
+                text: "Destructive mirror changes acknowledged.";
+            }
+            if root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
+                accessible-live-region: polite;
+                text: "Acknowledge the listed changes before this mirror can start.";
+            }
+            PrimaryActionButton {
+                accessible-label: root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action;
+                text: root.start-action;
+                enabled: !root.loading && !root.failed && (!root.requires-mirror-confirmation || root.mirror-confirmed);
+                clicked => {
+                    root.start-operation();
+                }
+            }
 
-        if root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
-            text: "Acknowledge the destructive changes above before starting.";
+            if root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
+                text: "Acknowledge the destructive changes above before starting.";
+            }
         }
     }
     ActionGroup {
