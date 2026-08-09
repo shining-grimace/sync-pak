@@ -1,7 +1,12 @@
-import { ComboBox as StandardComboBox } from "std-widgets.slint";
+import { ComboBox as StandardComboBox, LineEdit as StandardLineEdit } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 
 export component ComboBox inherits StandardComboBox {
-    height: Dimensions.button-height;
+    height: Dimensions.control-height;
+    vertical-stretch: 0;
+}
+
+export component LineEdit inherits StandardLineEdit {
+    height: Dimensions.control-height;
     vertical-stretch: 0;
 }

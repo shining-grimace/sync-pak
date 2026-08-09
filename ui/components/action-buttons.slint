@@ -15,7 +15,7 @@ component ActionButton inherits Rectangle {
     min-width: root.fixed-width ? root.button-width : 0px;
     preferred-width: root.button-width;
     max-width: root.button-width;
-    height: Dimensions.button-height;
+    height: Dimensions.control-height;
     horizontal-stretch: 0;
     vertical-stretch: 0;
     forward-focus: button-focus;
@@ -117,7 +117,7 @@ component PageActionButton inherits HorizontalLayout {
     in property <brush> label-color;
     callback clicked();
 
-    height: Dimensions.button-height;
+    height: Dimensions.control-height;
     horizontal-stretch: 1;
     vertical-stretch: 0;
     alignment: center;
