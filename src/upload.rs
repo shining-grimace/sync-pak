@@ -7,7 +7,10 @@ use crate::{
     cancellation::CancellationToken,
     provider_capabilities::{ObjectWriteMetadata, ObjectWriter, ProviderError},
     retry::{NoopRetryObserver, RetryObserver, RetryPolicy, RetrySleeper},
+    upload_contents::upload_contents_with_retry_and_cancellation_and_observer,
 };
+
+pub use crate::upload_contents::upload_contents_with_retry_and_cancellation;
 
 pub async fn upload_from_path<T: ObjectWriter>(
     provider: &T,
@@ -39,27 +42,19 @@ pub async fn upload_from_path_with_retry_and_cancellation_and_observer<
     observer: &O,
 ) -> Result<(), UploadError> {
     let (contents, write_metadata) = read_upload_source(source)?;
-    let mut completed_attempts = 0;
-    loop {
-        cancellation.check().map_err(|_| UploadError::Cancelled)?;
-        completed_attempts += 1;
-        match provider
-            .write_with_metadata(bucket, key, &contents, &write_metadata)
-            .await
-        {
-            Ok(()) => return Ok(()),
-            Err(error) => {
-                match policy.delay_after_failure(completed_attempts, &error, None, jitter_seed) {
-                    Some(retry) => {
-                        observer.on_retry(retry);
-                        sleeper.sleep(retry.delay).await;
-                        cancellation.check().map_err(|_| UploadError::Cancelled)?;
-                    }
-                    None => return Err(UploadError::Provider(error)),
-                }
-            }
-        }
-    }
+    upload_contents_with_retry_and_cancellation_and_observer(
+        provider,
+        bucket,
+        key,
+        &contents,
+        &write_metadata,
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+        observer,
+    )
+    .await
 }
 
 pub async fn upload_from_path_with_retry<T: ObjectWriter, S: RetrySleeper>(

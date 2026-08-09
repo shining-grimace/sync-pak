@@ -38,6 +38,56 @@ pub async fn download_to_path_with_retry_and_cancellation_and_observer<
     cancellation: &CancellationToken,
     observer: &O,
 ) -> Result<(), DownloadError> {
+    let contents = download_contents_with_retry_and_cancellation_and_observer(
+        provider,
+        bucket,
+        key,
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+        observer,
+    )
+    .await?;
+    atomic_write(destination, &contents).map_err(DownloadError::Local)
+}
+
+pub async fn download_contents_with_retry_and_cancellation<T: ObjectReader, S: RetrySleeper>(
+    provider: &T,
+    bucket: &str,
+    key: &str,
+    policy: &RetryPolicy,
+    sleeper: &S,
+    jitter_seed: u64,
+    cancellation: &CancellationToken,
+) -> Result<Vec<u8>, DownloadError> {
+    download_contents_with_retry_and_cancellation_and_observer(
+        provider,
+        bucket,
+        key,
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+        &NoopRetryObserver,
+    )
+    .await
+}
+
+async fn download_contents_with_retry_and_cancellation_and_observer<
+    T: ObjectReader,
+    S: RetrySleeper,
+    O: RetryObserver,
+>(
+    provider: &T,
+    bucket: &str,
+    key: &str,
+    policy: &RetryPolicy,
+    sleeper: &S,
+    jitter_seed: u64,
+    cancellation: &CancellationToken,
+    observer: &O,
+) -> Result<Vec<u8>, DownloadError> {
     let mut completed_attempts = 0;
     loop {
         cancellation.check().map_err(|_| DownloadError::Cancelled)?;
@@ -45,7 +95,7 @@ pub async fn download_to_path_with_retry_and_cancellation_and_observer<
         match provider.read(bucket, key).await {
             Ok(contents) => {
                 cancellation.check().map_err(|_| DownloadError::Cancelled)?;
-                return atomic_write(destination, &contents).map_err(DownloadError::Local);
+                return Ok(contents);
             }
             Err(error) => {
                 match policy.delay_after_failure(completed_attempts, &error, None, jitter_seed) {

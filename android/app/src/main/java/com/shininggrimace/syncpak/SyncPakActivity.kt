@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 
 class SyncPakActivity : NativeActivity() {
+    private val documentTrees by lazy { DocumentTreeAccess(this) }
+
     fun pickFolder() {
         runOnUiThread {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
@@ -30,6 +32,23 @@ class SyncPakActivity : NativeActivity() {
 
     fun hasInternetPermission(): Boolean =
         checkSelfPermission(Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED
+
+    fun verifyFolder(uri: String): Int = documentTrees.verify(uri)
+
+    fun inventoryFolder(uri: String): String? = documentTrees.inventory(uri)
+
+    fun folderEntryMetadata(uri: String, path: String): String? =
+        documentTrees.metadata(uri, path)
+
+    fun openFolderFileForRead(uri: String, path: String): Int =
+        documentTrees.openForRead(uri, path)
+
+    fun openFolderFileForWrite(uri: String, path: String): Int =
+        documentTrees.openForWrite(uri, path)
+
+    fun createFolderPath(uri: String, path: String): Int = documentTrees.createDirectories(uri, path)
+
+    fun deleteFolderEntry(uri: String, path: String): Int = documentTrees.delete(uri, path)
 
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -56,6 +75,10 @@ class SyncPakActivity : NativeActivity() {
 
     companion object {
         private const val PICK_FOLDER_REQUEST = 4101
+
+        init {
+            System.loadLibrary("sync_pak")
+        }
 
         @JvmStatic
         private external fun nativeFolderPicked(uri: String)

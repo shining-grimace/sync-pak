@@ -12,6 +12,12 @@ mod android_connector_error;
 #[cfg(all(target_os = "android", feature = "provider-s3"))]
 mod android_dns_resolver;
 #[cfg(target_os = "android")]
+mod android_document_file;
+#[cfg(target_os = "android")]
+mod android_document_tree;
+#[cfg(target_os = "android")]
+mod android_document_tree_model;
+#[cfg(target_os = "android")]
 mod android_folder_picker;
 #[cfg(target_os = "android")]
 mod android_foreground_execution;
@@ -74,9 +80,12 @@ pub mod local_inventory;
 pub mod local_remote_transfer;
 mod local_remote_transfer_capabilities;
 mod local_remote_transfer_download;
+mod local_remote_transfer_upload;
+mod local_transfer_root;
 pub mod mirror_execution;
 mod mirror_execution_error;
 pub mod multipart_file_upload;
+mod multipart_file_upload_error;
 pub mod multipart_upload;
 pub mod notifications;
 mod onboarding;
@@ -166,6 +175,7 @@ pub mod transfer_execution;
 pub mod transfer_paths;
 pub mod transfer_progress;
 pub mod upload;
+mod upload_contents;
 pub mod upload_strategy;
 
 pub use capabilities::CapabilityError;
@@ -186,6 +196,10 @@ pub fn run() -> Result<(), slint::PlatformError> {
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub fn android_main(app: slint::android::AndroidApp) {
+    if let Err(error) = android_document_tree::initialize(app.clone()) {
+        eprintln!("Android document-tree access initialization failed: {error}");
+        return;
+    }
     if let Err(error) = android_folder_picker::initialize(app.clone()) {
         eprintln!("Android folder picker initialization failed: {error}");
         return;

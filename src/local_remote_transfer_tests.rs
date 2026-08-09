@@ -15,7 +15,7 @@ use crate::{
     inventory::RelativePath,
     provider_capabilities::{
         MultipartUpload, MultipartUploadRequest, MultipartUploader, ObjectDeleter, ObjectReader,
-        ObjectWriteMetadata, ObjectWriter, ProviderResult, UploadedPart,
+        ObjectWriteMetadata, ObjectWriter, ProviderError, ProviderResult, UploadedPart,
     },
     retry::{RetryPolicy, RetrySleeper},
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
@@ -27,6 +27,7 @@ struct Provider {
     writes: Mutex<Vec<(String, Vec<u8>)>>,
     multipart_keys: Mutex<Vec<String>>,
     deletes: Mutex<Vec<String>>,
+    missing_reads: Mutex<Vec<String>>,
 }
 
 impl ObjectWriter for Provider {
@@ -50,8 +51,18 @@ impl ObjectWriter for Provider {
 }
 
 impl ObjectReader for Provider {
-    async fn read(&self, _: &str, _: &str) -> ProviderResult<Vec<u8>> {
-        Ok(b"remote".to_vec())
+    async fn read(&self, _: &str, key: &str) -> ProviderResult<Vec<u8>> {
+        if self
+            .missing_reads
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|missing| missing == key)
+        {
+            Err(ProviderError::NotFound)
+        } else {
+            Ok(b"remote".to_vec())
+        }
     }
 }
 
@@ -161,6 +172,27 @@ fn uploads_a_relative_local_file_to_its_prefixed_key() {
 }
 
 #[test]
+fn uploads_an_empty_directory_as_a_prefixed_marker() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir_all(root.join("empty")).unwrap();
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+
+    block_on(transfer(&provider, &root, &policy).upload_auto(
+        &RelativePath::new("empty").unwrap(),
+        &CancellationToken::default(),
+        1,
+    ))
+    .unwrap();
+
+    assert_eq!(
+        provider.writes.lock().unwrap().as_slice(),
+        [("sync/empty/".into(), Vec::new())]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
 fn downloads_a_relative_key_to_its_local_root() {
     let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
     std::fs::create_dir(&root).unwrap();
@@ -178,6 +210,29 @@ fn downloads_a_relative_key_to_its_local_root() {
         std::fs::read(root.join("folder/photo.jpg")).unwrap(),
         b"remote"
     );
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn downloads_a_directory_marker_to_the_local_root() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let provider = Provider::default();
+    provider
+        .missing_reads
+        .lock()
+        .unwrap()
+        .push("sync/empty".into());
+    let policy = RetryPolicy::default();
+
+    block_on(transfer(&provider, &root, &policy).download(
+        &RelativePath::new("empty").unwrap(),
+        &CancellationToken::default(),
+        1,
+    ))
+    .unwrap();
+
+    assert!(root.join("empty").is_dir());
     std::fs::remove_dir_all(&root).unwrap();
 }
 

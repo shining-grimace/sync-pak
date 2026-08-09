@@ -61,8 +61,9 @@ fn write_file(
     archive
         .start_file(entry.path.as_str(), options(0o100644))
         .map_err(ArchiveCreateError::Zip)?;
-    let mut source =
-        fs::File::open(source_root.resolve(&entry.path)).map_err(ArchiveCreateError::Local)?;
+    let mut source = source_root
+        .open_read(&entry.path)
+        .map_err(ArchiveCreateError::Local)?;
     let mut buffer = [0; 64 * 1024];
     loop {
         cancellation

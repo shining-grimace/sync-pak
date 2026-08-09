@@ -1,8 +1,9 @@
-use std::{fs, io};
+use std::io;
 
 use crate::{
     provider_capabilities::{ObjectPrefixChecker, ProviderError},
     remote_inventory::normalize_prefix,
+    transfer_paths::LocalTransferRoot,
 };
 
 #[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
@@ -17,9 +18,11 @@ pub(crate) enum ConnectionVerificationError {
 }
 
 pub(crate) fn verify_local_folder(path: &str) -> Result<(), ConnectionVerificationError> {
-    match fs::metadata(path) {
-        Ok(metadata) if metadata.is_dir() => Ok(()),
-        Ok(_) => Err(ConnectionVerificationError::LocalPathNotDirectory),
+    match LocalTransferRoot::from_config(path).verify() {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotADirectory => {
+            Err(ConnectionVerificationError::LocalPathNotDirectory)
+        }
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             Err(ConnectionVerificationError::LocalFolderMissing)
         }

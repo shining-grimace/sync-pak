@@ -19,7 +19,7 @@ release.
 | Protected credential storage | Secret Service adapter and test-only probe implemented; Flatpak runtime probe pending | Keystore-backed adapter and test-only probe implemented; packaged run pending | Credential Manager adapter and test-only probe implemented; packaged run pending |
 | Background execution | Not applicable | `dataSync` foreground-service probe packaged; physical-device run pending | Not applicable |
 | Desktop notification | Adapter and developer-only probe implemented; Flatpak runtime probe pending | Not applicable | Toast adapter and developer-only probe implemented; MSIX run pending |
-| Sandbox filesystem access | Flatpak has no broad filesystem permission; portal-grant runtime probe pending | Not started | Not started |
+| Sandbox filesystem access | Flatpak has no broad filesystem permission; portal-grant runtime probe pending | SAF document-tree adapter implemented; physical transfer run pending | Not started |
 
 Continuous builds compile the shared Slint application on Linux and Windows, build the Flatpak
 feasibility package, and package an ARM64 Android folder-picker probe APK with a minimum SDK
@@ -96,6 +96,9 @@ accepted; source builds alone do not meet its packaging/security-model exit crit
 - Android folder selection cannot be modelled as a filesystem path. The Storage Access
   Framework returns a tree content URI and persistable permission grant, so the filesystem
   capability uses a platform-neutral selection type that can carry either a path or URI.
+- Android keeps that content URI opaque and routes verification, inventory, reads, writes,
+  directory creation, deletion, and archive storage through the document provider. It does not
+  require broad storage permission, a `FileProvider`, or a storage-path allowlist XML file.
 - Android uses a small `NativeActivity` subclass to receive the asynchronous picker result.
   It takes the persistable read/write permissions actually granted, returns cancellation
   separately, and passes only the content tree URI into the shared capability model.

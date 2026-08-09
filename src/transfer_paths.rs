@@ -1,31 +1,8 @@
-use std::{
-    error::Error,
-    fmt,
-    path::{Path, PathBuf},
-};
+use std::{error::Error, fmt};
 
 use crate::inventory::RelativePath;
 
-/// Resolves inventory paths beneath a configured local root without lexical traversal.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct LocalTransferRoot(PathBuf);
-
-impl LocalTransferRoot {
-    pub fn new(root: impl Into<PathBuf>) -> Self {
-        Self(root.into())
-    }
-
-    pub fn resolve(&self, relative: &RelativePath) -> PathBuf {
-        relative
-            .as_str()
-            .split('/')
-            .fold(self.0.clone(), |path, component| path.join(component))
-    }
-
-    pub fn as_path(&self) -> &Path {
-        &self.0
-    }
-}
+pub use crate::local_transfer_root::LocalTransferRoot;
 
 /// A normalized provider key prefix for a configured connection.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -84,8 +61,8 @@ mod tests {
         let path = RelativePath::new("photos/é.png").unwrap();
 
         assert_eq!(
-            LocalTransferRoot::new("/sync").resolve(&path),
-            Path::new("/sync/photos/é.png")
+            LocalTransferRoot::new("/sync").native_path(&path),
+            Some(Path::new("/sync/photos/é.png").to_owned())
         );
         assert_eq!(
             RemoteTransferPrefix::new("backups/")

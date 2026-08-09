@@ -24,6 +24,7 @@ pub(crate) async fn execute(
     transfer: &LocalRemoteTransfer<'_, S3Transport, impl RetrySleeper>,
     cancellation: &CancellationToken,
     history: &ArchiveHistory,
+    staging_directory: &std::path::Path,
     observer: &dyn TransferProgressObserver,
     jitter_seed: u64,
 ) -> ExecutionResult {
@@ -54,7 +55,7 @@ pub(crate) async fn execute(
         total_actions: 1,
         current_action: Some(action),
     });
-    let root = LocalTransferRoot::new(&request.connection.local_path);
+    let root = LocalTransferRoot::from_config(&request.connection.local_path);
     let timestamp = utc_timestamp();
     let success = match request.direction {
         Direction::Upload => {
@@ -66,6 +67,7 @@ pub(crate) async fn execute(
                 &timestamp,
                 cancellation,
                 history,
+                staging_directory,
                 jitter_seed,
             )
             .await
@@ -78,6 +80,7 @@ pub(crate) async fn execute(
                 &timestamp,
                 &request.connection.name,
                 cancellation,
+                staging_directory,
                 jitter_seed,
             )
             .await
@@ -121,6 +124,7 @@ async fn create_upload_archive(
     timestamp: &str,
     cancellation: &CancellationToken,
     history: &ArchiveHistory,
+    staging_directory: &std::path::Path,
     jitter_seed: u64,
 ) -> bool {
     let connection_id = &request.connection.id;
@@ -133,7 +137,7 @@ async fn create_upload_archive(
     let stored = create_upload_and_prune_archive(
         root,
         preflight.source(),
-        root.as_path(),
+        staging_directory,
         timestamp,
         connection_id,
         &request.connection.name,
@@ -166,6 +170,7 @@ async fn create_download_archive(
     timestamp: &str,
     connection_name: &str,
     cancellation: &CancellationToken,
+    staging_directory: &std::path::Path,
     jitter_seed: u64,
 ) -> bool {
     let Ok(filename) = archive_filename(timestamp, connection_name) else {
@@ -174,16 +179,24 @@ async fn create_download_archive(
     let Ok(path) = RelativePath::new(filename) else {
         return false;
     };
-    download_and_create_archive(
+    let destination =
+        staging_directory.join(format!(".syncpak-archive-{}.tmp", uuid::Uuid::new_v4()));
+    let result = download_and_create_archive(
         transfer,
         preflight.source(),
-        root.as_path(),
-        &root.resolve(&path),
+        staging_directory,
+        &destination,
         cancellation,
         jitter_seed,
     )
-    .await
-    .is_ok()
+    .await;
+    if result.is_err() {
+        let _ = std::fs::remove_file(destination);
+        return false;
+    }
+    let copied = root.copy_from(&path, &destination).is_ok();
+    let _ = std::fs::remove_file(destination);
+    copied
 }
 
 fn finish(

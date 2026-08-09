@@ -1,15 +1,12 @@
-use std::{error::Error, fmt, path::Path, time::UNIX_EPOCH};
+use std::{error::Error, fmt};
 
 use crate::{
-    cancellation::CancellationToken,
     download::DownloadError,
-    inventory::{InventoryError, RelativePath},
-    multipart_file_upload::{MultipartFileUploadError, upload_file_with_cancellation},
-    provider_capabilities::{MultipartUploadRequest, MultipartUploader, ObjectWriter},
-    retry::{RetryPolicy, RetrySleeper},
+    inventory::InventoryError,
+    multipart_file_upload::MultipartFileUploadError,
+    retry::RetryPolicy,
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
-    upload::{UploadError, upload_from_path_with_retry_and_cancellation},
-    upload_strategy::{UploadStrategy, select_upload_strategy},
+    upload::UploadError,
 };
 
 /// Transfers individual validated inventory paths between one local root and provider prefix.
@@ -38,85 +35,6 @@ impl<'a, P, S> LocalRemoteTransfer<'a, P, S> {
             remote_prefix,
             retry_policy,
             sleeper,
-        }
-    }
-}
-
-impl<P: ObjectWriter, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
-    pub async fn upload(
-        &self,
-        relative: &RelativePath,
-        cancellation: &CancellationToken,
-        jitter_seed: u64,
-    ) -> Result<(), LocalRemoteTransferError> {
-        upload_from_path_with_retry_and_cancellation(
-            self.provider,
-            self.bucket,
-            &self.remote_prefix.resolve(relative),
-            &self.local_root.resolve(relative),
-            self.retry_policy,
-            self.sleeper,
-            jitter_seed,
-            cancellation,
-        )
-        .await
-        .map_err(LocalRemoteTransferError::Upload)
-    }
-}
-
-impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
-    /// Uploads a file with the bounded-memory multipart strategy when it is large enough.
-    pub async fn upload_auto(
-        &self,
-        relative: &RelativePath,
-        cancellation: &CancellationToken,
-        jitter_seed: u64,
-    ) -> Result<(), LocalRemoteTransferError> {
-        let source = self.local_root.resolve(relative);
-        self.upload_path_auto(&source, relative, cancellation, jitter_seed)
-            .await
-    }
-
-    /// Uploads a local file to a validated key using the normal size strategy.
-    pub(crate) async fn upload_path_auto(
-        &self,
-        source: &Path,
-        relative: &RelativePath,
-        cancellation: &CancellationToken,
-        jitter_seed: u64,
-    ) -> Result<(), LocalRemoteTransferError> {
-        let metadata = std::fs::metadata(&source).map_err(LocalRemoteTransferError::Local)?;
-        match select_upload_strategy(metadata.len()) {
-            UploadStrategy::SinglePart => upload_from_path_with_retry_and_cancellation(
-                self.provider,
-                self.bucket,
-                &self.remote_prefix.resolve(relative),
-                source,
-                self.retry_policy,
-                self.sleeper,
-                jitter_seed,
-                cancellation,
-            )
-            .await
-            .map_err(LocalRemoteTransferError::Upload),
-            UploadStrategy::Multipart { part_size } => upload_file_with_cancellation(
-                self.provider,
-                &MultipartUploadRequest {
-                    bucket: self.bucket.into(),
-                    key: self.remote_prefix.resolve(relative),
-                    content_type: None,
-                    source_modified_unix_seconds: metadata
-                        .modified()
-                        .ok()
-                        .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
-                        .and_then(|duration| duration.as_secs().try_into().ok()),
-                },
-                source,
-                part_size,
-                cancellation,
-            )
-            .await
-            .map_err(LocalRemoteTransferError::Multipart),
         }
     }
 }

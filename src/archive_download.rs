@@ -39,7 +39,11 @@ pub async fn download_and_create_archive<D: ArchiveDownloader>(
         if cancellation.check().is_err() {
             return Err(ArchiveDownloadError::Cancelled);
         }
-        let path = staging.root.resolve(&entry.path);
+        let path = staging
+            .root
+            .native_path(&entry.path)
+            .ok_or_else(|| std::io::Error::other("archive staging root is not a filesystem path"))
+            .map_err(ArchiveDownloadError::Local)?;
         match &entry.kind {
             InventoryEntryKind::Directory => {
                 fs::create_dir_all(path).map_err(ArchiveDownloadError::Local)?

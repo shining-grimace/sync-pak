@@ -17,18 +17,7 @@ pub fn delete_local(
     cancellation
         .check()
         .map_err(|_| TransferDeleteError::Cancelled)?;
-    let path = root.resolve(relative);
-    let metadata = match std::fs::symlink_metadata(&path) {
-        Ok(metadata) => metadata,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(TransferDeleteError::Local(error)),
-    };
-    let result = if metadata.file_type().is_dir() {
-        std::fs::remove_dir(path)
-    } else {
-        std::fs::remove_file(path)
-    };
-    result.map_err(TransferDeleteError::Local)
+    root.delete(relative).map_err(TransferDeleteError::Local)
 }
 
 /// Removes one provider object beneath a transfer prefix.

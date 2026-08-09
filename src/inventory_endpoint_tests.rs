@@ -21,7 +21,7 @@ fn local_endpoint_collects_an_inventory_with_explicit_case_sensitivity() {
     let root = std::env::temp_dir().join(format!("sync-pak-endpoint-{}", Uuid::new_v4()));
     fs::create_dir(&root).unwrap();
     fs::write(root.join("é.txt"), "contents").unwrap();
-    let endpoint = LocalFolderEndpoint::new(&root, CaseSensitivity::Sensitive);
+    let endpoint = LocalFolderEndpoint::new(root.to_str().unwrap(), CaseSensitivity::Sensitive);
 
     let inventory = block_on(endpoint.collect()).unwrap();
     fs::remove_dir_all(&root).unwrap();

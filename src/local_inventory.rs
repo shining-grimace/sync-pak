@@ -114,6 +114,7 @@ pub enum LocalInventoryError {
     NonUtf8Path(PathBuf),
     UnsupportedFileType(PathBuf),
     InvalidInventory(InventoryError),
+    Platform(io::Error),
 }
 
 impl fmt::Display for LocalInventoryError {
@@ -139,6 +140,9 @@ impl fmt::Display for LocalInventoryError {
                 )
             }
             Self::InvalidInventory(source) => source.fmt(formatter),
+            Self::Platform(source) => {
+                write!(formatter, "could not inventory local storage: {source}")
+            }
         }
     }
 }
@@ -148,6 +152,7 @@ impl Error for LocalInventoryError {
         match self {
             Self::Io { source, .. } => Some(source),
             Self::InvalidInventory(source) => Some(source),
+            Self::Platform(source) => Some(source),
             _ => None,
         }
     }

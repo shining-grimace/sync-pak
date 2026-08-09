@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, path::Path};
+use std::{error::Error, fmt, fs, path::Path};
 
 use crate::{
     archive_download::{ArchiveDownloadError, ArchiveDownloader, download_and_create_archive},
@@ -30,16 +30,23 @@ pub async fn download_create_and_prune_archive<D: ArchiveDownloader, R: ArchiveR
     let filename =
         archive_filename(timestamp, connection_name).map_err(ArchiveDownloadStoreError::Name)?;
     let relative = RelativePath::new(filename.clone()).map_err(ArchiveDownloadStoreError::Path)?;
+    fs::create_dir_all(staging_parent)
+        .map_err(|error| ArchiveDownloadStoreError::Store(ArchiveDownloadError::Local(error)))?;
+    let staged = staging_parent.join(format!(".syncpak-archive-{}.tmp", uuid::Uuid::new_v4()));
     download_and_create_archive(
         downloader,
         inventory,
         staging_parent,
-        &destination_root.resolve(&relative),
+        &staged,
         cancellation,
         jitter_seed,
     )
     .await
     .map_err(ArchiveDownloadStoreError::Store)?;
+    let copy_result = destination_root.copy_from(&relative, &staged);
+    let _ = fs::remove_file(&staged);
+    copy_result
+        .map_err(|error| ArchiveDownloadStoreError::Store(ArchiveDownloadError::Local(error)))?;
     let archive = ArchiveRecord {
         connection_id: connection_id.clone(),
         location: filename,

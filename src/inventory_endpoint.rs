@@ -1,15 +1,15 @@
 use std::error::Error;
 use std::fmt;
 use std::future::Future;
-use std::path::{Path, PathBuf};
 
 use crate::configuration::SyncMode;
 use crate::inventory::Inventory;
-use crate::local_inventory::{LocalInventoryAccess, LocalInventoryError, NativeLocalInventory};
+use crate::local_inventory::LocalInventoryError;
 use crate::planning::Direction;
 use crate::preflight::{CaseSensitivity, Preflight, PreflightError, preflight};
 use crate::provider_capabilities::ObjectLister;
 use crate::remote_inventory::{RemoteInventoryError, list_remote_inventory};
+use crate::transfer_paths::LocalTransferRoot;
 
 pub trait InventoryEndpoint {
     fn case_sensitivity(&self) -> CaseSensitivity;
@@ -19,20 +19,16 @@ pub trait InventoryEndpoint {
 
 #[derive(Clone, Debug)]
 pub struct LocalFolderEndpoint {
-    root: PathBuf,
+    root: LocalTransferRoot,
     case_sensitivity: CaseSensitivity,
 }
 
 impl LocalFolderEndpoint {
-    pub fn new(root: impl Into<PathBuf>, case_sensitivity: CaseSensitivity) -> Self {
+    pub fn new(root: &str, case_sensitivity: CaseSensitivity) -> Self {
         Self {
-            root: root.into(),
+            root: LocalTransferRoot::from_config(root),
             case_sensitivity,
         }
-    }
-
-    pub fn root(&self) -> &Path {
-        &self.root
     }
 }
 
@@ -42,9 +38,7 @@ impl InventoryEndpoint for LocalFolderEndpoint {
     }
 
     async fn collect(&self) -> Result<Inventory, EndpointInventoryError> {
-        NativeLocalInventory
-            .inventory(&self.root)
-            .map_err(EndpointInventoryError::Local)
+        self.root.inventory().map_err(EndpointInventoryError::Local)
     }
 }
 

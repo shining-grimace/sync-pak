@@ -150,7 +150,7 @@ async fn execute_confirmed(
     let transfer = LocalRemoteTransfer::new(
         &transport,
         &confirmed.request().connection.bucket,
-        LocalTransferRoot::new(&confirmed.request().connection.local_path),
+        LocalTransferRoot::from_config(&confirmed.request().connection.local_path),
         RemoteTransferPrefix::new(&confirmed.request().connection.remote_path)
             .map_err(|_| CapabilityError::InvalidReference)?,
         &retry,
@@ -187,6 +187,7 @@ async fn execute_confirmed(
             &transfer,
             cancellation,
             &history,
+            history_directory,
             observer,
             jitter_seed,
         )

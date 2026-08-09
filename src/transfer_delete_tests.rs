@@ -77,9 +77,19 @@ fn removes_local_files_and_empty_directories() {
     )
     .unwrap();
 
-    assert!(!root.resolve(&RelativePath::new("file").unwrap()).exists());
-    assert!(!root.resolve(&RelativePath::new("empty").unwrap()).exists());
-    std::fs::remove_dir(root.as_path()).unwrap();
+    assert!(
+        !root
+            .native_path(&RelativePath::new("file").unwrap())
+            .unwrap()
+            .exists()
+    );
+    assert!(
+        !root
+            .native_path(&RelativePath::new("empty").unwrap())
+            .unwrap()
+            .exists()
+    );
+    std::fs::remove_dir(root.native_root().unwrap()).unwrap();
 }
 
 #[test]

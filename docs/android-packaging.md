@@ -53,6 +53,17 @@ Folder selection is asynchronous because Android delivers the result after the s
 closes. Only one request may be active, and cancellation returns no selection. The bridge
 does not request broad storage permissions.
 
+The returned `content://` value is an opaque document-tree URI, not a filesystem path. Percent-
+escaped characters such as `%2F` remain encoded in configuration. Verification checks the
+persisted read and write grant, then inventory, upload, download, directory creation, deletion,
+and archive storage all go through `ContentResolver` and `DocumentsContract`. Desktop builds
+continue to use native paths.
+
+No storage allowlist XML or `FileProvider` declaration is required. Access is scoped by the
+picker's persisted URI grant. If the user revokes that grant, removes the selected tree, or the
+document provider becomes unavailable, connection verification fails without attempting to
+interpret the URI as a local path.
+
 ## Foreground execution
 
 Long-running Android transfers use a non-exported foreground service declared with the
