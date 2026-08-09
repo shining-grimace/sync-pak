@@ -78,7 +78,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
     }
 
     if root.provider-form-kind == 0: VerticalLayout {
-        spacing: 4px;
+        spacing: Dimensions.element-gap;
         SectionHeadingLabel {
             text: "Account ID";
         }
@@ -91,7 +91,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
         }
     }
     if root.provider-form-kind != 0: VerticalLayout {
-        spacing: 4px;
+        spacing: Dimensions.element-gap;
         SectionHeadingLabel {
             text: "Region";
         }
@@ -115,7 +115,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
     }
 
     if root.provider-verified-buckets.length > 0: VerticalLayout {
-        spacing: 4px;
+        spacing: Dimensions.element-gap;
         DescriptionLabel {
             text: "Verified available buckets";
         }
@@ -189,7 +189,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
     }
 
     if root.provider-advanced-expanded: VerticalLayout {
-        spacing: 4px;
+        spacing: Dimensions.element-gap;
         SectionHeadingLabel {
             text: "Custom endpoint";
         }

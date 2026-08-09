@@ -36,7 +36,7 @@ export component ProvidersPage inherits CenteredPageRoot {
     if root.load-failed: VerticalLayout {
         accessible-role: region;
         accessible-label: "Providers unavailable";
-        spacing: 8px;
+        spacing: Dimensions.element-gap;
         ErrorHeadingLabel {
             text: "Providers unavailable";
             color: Colors.danger;
@@ -56,7 +56,7 @@ export component ProvidersPage inherits CenteredPageRoot {
     }
     if !root.load-failed: VerticalLayout {
         vertical-stretch: 1;
-        spacing: 12px;
+        spacing: Dimensions.section-gap;
         PrimaryActionButton {
             accessible-label: "Add a provider";
             text: "Add Provider";
@@ -66,7 +66,7 @@ export component ProvidersPage inherits CenteredPageRoot {
         }
 
         if root.providers.length == 0: ContentGroup {
-            spacing: 8px;
+            spacing: Dimensions.element-gap;
             SectionHeadingLabel {
                 text: "No providers yet";
             }

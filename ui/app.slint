@@ -335,12 +335,12 @@ export component AppWindow inherits Window {
             padding-right: 16px + root.safe-area-insets.right;
             padding-bottom: 16px + root.safe-area-insets.bottom;
             padding-left: (root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px) + root.safe-area-insets.left;
-            spacing: 16px;
+            spacing: Dimensions.section-gap;
 
             if root.width >= Dimensions.medium-layout-breakpoint && root.width < Dimensions.desktop-layout-breakpoint: VerticalLayout {
                 accessible-role: navigation;
                 accessible-label: "Primary navigation";
-                spacing: 6px;
+                spacing: Dimensions.element-gap;
                 Text {
                     text: "SYNCPAK";
                     color: Colors.tertiary;
@@ -350,7 +350,7 @@ export component AppWindow inherits Window {
                 }
 
                 HorizontalLayout {
-                    spacing: 6px;
+                    spacing: Dimensions.element-gap;
                     NavMenuButton {
                         accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
                         text: "Connections";
@@ -373,7 +373,7 @@ export component AppWindow inherits Window {
                 }
 
                 HorizontalLayout {
-                    spacing: 6px;
+                    spacing: Dimensions.element-gap;
                     NavMenuButton {
                         accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                         text: "Activity";

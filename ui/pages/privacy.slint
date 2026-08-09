@@ -1,4 +1,5 @@
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { Dimensions } from "../dimensions.slint";
 import { ComboBox } from "../components/form-controls.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
@@ -79,7 +80,7 @@ export component PrivacyPage inherits CenteredPageRoot {
     VerticalLayout {
         accessible-role: region;
         accessible-label: "Appearance";
-        spacing: 6px;
+        spacing: Dimensions.element-gap;
         SectionHeadingLabel {
             text: "Appearance";
         }
@@ -103,7 +104,7 @@ export component PrivacyPage inherits CenteredPageRoot {
     VerticalLayout {
         accessible-role: region;
         accessible-label: "Privacy and source links";
-        spacing: 6px;
+        spacing: Dimensions.element-gap;
         SectionHeadingLabel {
             text: "Links";
         }

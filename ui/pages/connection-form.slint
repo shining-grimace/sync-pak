@@ -1,4 +1,5 @@
 import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
@@ -45,7 +46,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     VerticalLayout {
         accessible-role: region;
         accessible-label: "Connection identity and cloud destination";
-        spacing: 6px;
+        spacing: Dimensions.element-gap;
         FocusScope {
             width: 0px;
             height: 0px;
@@ -91,7 +92,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
             text: "Loading providers…";
         }
         if root.connection-providers-load-failed: VerticalLayout {
-            spacing: 6px;
+            spacing: Dimensions.element-gap;
             ErrorLabel {
                 accessible-live-region: assertive;
                 text: "SyncPak could not load providers. Check configuration storage and try again.";
@@ -127,7 +128,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
             text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider's current default bucket.";
         }
         if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0: VerticalLayout {
-            spacing: 4px;
+            spacing: Dimensions.element-gap;
             DescriptionLabel {
                 text: "Buckets verified this session";
             }
@@ -168,7 +169,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     }
 
     VerticalLayout {
-        spacing: 6px;
+        spacing: Dimensions.element-gap;
         connection-local := LineEdit {
             accessible-label: "Local folder";
             placeholder-text: "Full local folder path";
@@ -213,7 +214,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
         text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts. Any files or metadata that cannot be matched are listed when the operation finishes.";
     }
     if connection-mode.current-index == 2: VerticalLayout {
-        spacing: 4px;
+        spacing: Dimensions.element-gap;
         DescriptionLabel {
             text: "Creates a timestamped ZIP from the source and stores it at the destination. Older archives are removed according to this connection's retention setting.";
         }

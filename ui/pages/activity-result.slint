@@ -69,7 +69,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
         text: "No actions were started for this operation.";
     }
     if root.details.length > 0: VerticalLayout {
-        spacing: 6px;
+        spacing: Dimensions.element-gap;
         SectionHeadingLabel {
             text: "Action outcomes";
             font-weight: 700;

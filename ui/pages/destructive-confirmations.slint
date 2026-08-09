@@ -39,7 +39,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
     }
 
     if root.connections.length > 0: VerticalLayout {
-        spacing: 3px;
+        spacing: Dimensions.element-gap;
         ErrorHeadingLabel {
             text: "Connections that will be deleted";
         }

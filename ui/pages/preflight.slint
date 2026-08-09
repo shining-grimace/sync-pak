@@ -98,14 +98,14 @@ export component PreflightPage inherits CenteredPageRoot {
         max-height: review-layout.max-height;
         vertical-stretch: 1;
         review-layout := VerticalLayout {
-            spacing: 8px;
+            spacing: Dimensions.section-gap;
             VerticalLayout {
                 accessible-role: region;
                 accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
                 vertical-stretch: 0;
-                spacing: 4px;
+                spacing: Dimensions.element-gap;
                 if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
-                    spacing: 3px;
+                    spacing: Dimensions.element-gap;
                     DescriptionLabel {
                         text: root.additions;
                     }
@@ -123,7 +123,7 @@ export component PreflightPage inherits CenteredPageRoot {
                     }
                 }
                 if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
-                    spacing: 8px;
+                    spacing: Dimensions.element-gap;
                     DescriptionLabel {
                         text: root.additions;
                     }
@@ -133,7 +133,7 @@ export component PreflightPage inherits CenteredPageRoot {
                     }
                 }
                 if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
-                    spacing: 8px;
+                    spacing: Dimensions.element-gap;
                     DescriptionLabel {
                         text: root.deletions;
                     }
@@ -173,13 +173,13 @@ export component PreflightPage inherits CenteredPageRoot {
                 if root.items.length > 0: VerticalLayout {
                     accessible-role: region;
                     accessible-label: "Filter planned file changes";
-                    spacing: 6px;
+                    spacing: Dimensions.element-gap;
                     SectionHeadingLabel {
                         text: "Show planned changes";
                     }
 
                     HorizontalLayout {
-                        spacing: 6px;
+                        spacing: Dimensions.element-gap;
                         preflight-filter-all := RadioButton {
                             accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
                             text: "All";
@@ -209,7 +209,7 @@ export component PreflightPage inherits CenteredPageRoot {
                     }
 
                     HorizontalLayout {
-                        spacing: 6px;
+                        spacing: Dimensions.element-gap;
                         RadioButton {
                             accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
                             text: "Deletions";
@@ -249,12 +249,12 @@ export component PreflightPage inherits CenteredPageRoot {
                     width: parent.width;
                     accessible-role: list-item;
                     accessible-label: item.status + ": " + item.path + ". " + item.detail;
-                    spacing: 4px;
+                    spacing: Dimensions.element-gap;
                     if root.width < Dimensions.narrow-layout-breakpoint: SectionHeadingLabel {
                         text: item.status;
                     }
                     if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
-                        spacing: 8px;
+                        spacing: Dimensions.element-gap;
                         DescriptionLabel {
                             text: item.status;
                             width: 110px;
@@ -269,7 +269,7 @@ export component PreflightPage inherits CenteredPageRoot {
                         text: item.path;
                     }
                     VerticalLayout {
-                        spacing: 2px;
+                        spacing: Dimensions.element-gap;
                         DescriptionLabel {
                             text: item.detail;
                         }
