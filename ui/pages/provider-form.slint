@@ -154,9 +154,12 @@ export component ProviderFormPage inherits CenteredPageRoot {
         text: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
     }
 
-    HorizontalLayout {
+    GridLayout {
         spacing: Dimensions.element-gap;
         LineEdit {
+            row: 0;
+            col: 0;
+            colspan: root.width < Dimensions.narrow-layout-breakpoint ? 2 : 1;
             accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
             placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
             text <=> root.provider-form-secret-key;
@@ -166,6 +169,9 @@ export component ProviderFormPage inherits CenteredPageRoot {
         }
 
         SecondaryActionButton {
+            row: root.width < Dimensions.narrow-layout-breakpoint ? 1 : 0;
+            col: root.width < Dimensions.narrow-layout-breakpoint ? 0 : 1;
+            colspan: root.width < Dimensions.narrow-layout-breakpoint ? 2 : 1;
             accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key");
             text: root.provider-secret-visible ? "Hide" : "Reveal";
             enabled: !root.provider-verifying;

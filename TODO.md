@@ -3,6 +3,7 @@
 - The Rust crate needs to be modularised better
 - Outlining drop-down elements with the primary colour would look nice
 - The bottom-nav on mobile should be compacted somehow
+- Filter buttons (like on Connections) should be compacted to a single row and probably less-high buttons with a new dimension
 - Set up release config for Android
 - Target latest Android
 - Bump Rust and Android dependencies where possible
