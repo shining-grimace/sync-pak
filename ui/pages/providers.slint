@@ -9,10 +9,13 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { InfoCard } from "../components/cards.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import {
-    CardPrimaryActionButton,
-    CardSecondaryActionButton,
+    NewActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
+import {
+    CompactCardPrimaryActionButton,
+    CompactCardSecondaryActionButton,
+} from "../components/compact-action-buttons.slint";
 import { ContentGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ProvidersPage inherits CenteredPageRoot {
@@ -25,8 +28,20 @@ export component ProvidersPage inherits CenteredPageRoot {
     callback request-provider-delete(string);
     fill-height: true;
 
-    HeadingLabel {
-        text: "Providers";
+    HorizontalLayout {
+        spacing: Dimensions.element-gap;
+        HeadingLabel {
+            text: "Providers";
+        }
+
+        if !root.load-failed: NewActionButton {
+            accessible-label: "Add a provider";
+            text: "New";
+            focus-on-init: true;
+            clicked => {
+                root.show-add-provider();
+            }
+        }
     }
 
     DescriptionLabel {
@@ -57,14 +72,6 @@ export component ProvidersPage inherits CenteredPageRoot {
     if !root.load-failed: VerticalLayout {
         vertical-stretch: 1;
         spacing: Dimensions.section-gap;
-        PrimaryActionButton {
-            accessible-label: "Add a provider";
-            text: "Add Provider";
-            clicked => {
-                root.show-add-provider();
-            }
-        }
-
         if root.providers.length == 0: ContentGroup {
             spacing: Dimensions.element-gap;
             SectionHeadingLabel {
@@ -84,7 +91,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                 InfoCard {
                     accessible-role: list-item;
                     accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
-                    baseline-height: root.width < Dimensions.narrow-layout-breakpoint ? 168px : 82px;
+                    baseline-height: root.width < Dimensions.narrow-layout-breakpoint ? 128px : 66px;
                     VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
                     VerticalLayout {
@@ -102,9 +109,9 @@ export component ProvidersPage inherits CenteredPageRoot {
                         }
                     }
 
-                    if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
+                    HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        CardPrimaryActionButton {
+                        CompactCardPrimaryActionButton {
                             accessible-label: "Verify provider " + provider.name;
                             text: provider.verifying ? "Verifying…" : "Verify";
                             enabled: !provider.verifying;
@@ -113,7 +120,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                             }
                         }
 
-                        CardSecondaryActionButton {
+                        CompactCardSecondaryActionButton {
                             accessible-label: "Edit provider " + provider.name;
                             text: "Edit";
                             clicked => {
@@ -121,43 +128,12 @@ export component ProvidersPage inherits CenteredPageRoot {
                             }
                         }
 
-                        CardSecondaryActionButton {
+                        CompactCardSecondaryActionButton {
                             accessible-label: "Delete provider " + provider.name;
                             text: "Delete";
                             clicked => {
                                 root.request-provider-delete(provider.id);
                             }
-                        }
-                    }
-                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
-                        spacing: Dimensions.card-element-spacing;
-                        CardPrimaryActionButton {
-                            accessible-label: "Verify provider " + provider.name;
-                            text: provider.verifying ? "Verifying…" : "Verify";
-                            enabled: !provider.verifying;
-                            clicked => {
-                                root.verify-saved-provider(provider.id);
-                            }
-                        }
-
-                        CardSecondaryActionButton {
-                            accessible-label: "Edit provider " + provider.name;
-                            text: "Edit";
-                            clicked => {
-                                root.request-provider-edit(provider.id);
-                            }
-                        }
-
-                        CardSecondaryActionButton {
-                            accessible-label: "Delete provider " + provider.name;
-                            text: "Delete";
-                            clicked => {
-                                root.request-provider-delete(provider.id);
-                            }
-                        }
-
-                        Rectangle {
-                            horizontal-stretch: 1;
                         }
                     }
                     }

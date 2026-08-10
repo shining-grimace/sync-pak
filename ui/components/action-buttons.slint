@@ -8,15 +8,19 @@ component ActionButton inherits Rectangle {
     in property <brush> fill-color;
     in property <brush> outline-color;
     in property <brush> label-color;
+    in property <length> label-text-size: Dimensions.text-size-description;
     in property <length> button-width;
+    in property <length> button-height: Dimensions.control-height;
     in property <bool> fixed-width: false;
+    in property <bool> expand-width: false;
+    in property <bool> focus-on-init: false;
     callback clicked();
 
     min-width: root.fixed-width ? root.button-width : 0px;
     preferred-width: root.button-width;
-    max-width: root.button-width;
-    height: Dimensions.control-height;
-    horizontal-stretch: 0;
+    max-width: root.expand-width ? 100000px : root.button-width;
+    height: root.button-height;
+    horizontal-stretch: root.expand-width ? 1 : 0;
     vertical-stretch: 0;
     forward-focus: button-focus;
     accessible-role: button;
@@ -34,7 +38,7 @@ component ActionButton inherits Rectangle {
     Text {
         text: root.text;
         color: root.label-color;
-        font-size: Dimensions.text-size-description;
+        font-size: root.label-text-size;
         font-weight: root.emphasized ? 700 : 500;
         horizontal-alignment: center;
         vertical-alignment: center;
@@ -52,6 +56,11 @@ component ActionButton inherits Rectangle {
         x: 0px;
         width: 0px;
         enabled: root.enabled;
+        init => {
+            if root.focus-on-init {
+                self.focus();
+            }
+        }
         key-pressed(event) => {
             if event.text == Key.Space || event.text == "\n" {
                 button-touch.clicked();
@@ -89,6 +98,31 @@ export component RadioButton inherits ActionButton {
     accessible-role: radio-button;
     accessible-checkable: true;
     accessible-checked: root.selected;
+}
+
+export component FilterButton inherits ActionButton {
+    in property <bool> selected: false;
+
+    button-width: 0px;
+    button-height: Dimensions.compact-action-button-height;
+    expand-width: true;
+    emphasized: root.selected;
+    fill-color: root.selected ? Colors.primary : Colors.surface;
+    outline-color: Colors.primary;
+    label-color: root.selected ? Colors.surface : Colors.primary;
+    accessible-role: radio-button;
+    accessible-checkable: true;
+    accessible-checked: root.selected;
+}
+
+export component NewActionButton inherits ActionButton {
+    button-width: Dimensions.new-action-button-width;
+    button-height: Dimensions.compact-action-button-height;
+    fixed-width: true;
+    emphasized: true;
+    fill-color: Colors.primary;
+    outline-color: Colors.primary;
+    label-color: Colors.surface;
 }
 
 export component CardPrimaryActionButton inherits ActionButton {

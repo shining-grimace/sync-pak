@@ -11,7 +11,7 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
 import { DangerCard, InfoCard } from "../components/cards.slint";
-import { PrimaryActionButton, RadioButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { FilterButton, PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 component MeasuredVerticalRegion inherits Rectangle {
@@ -193,7 +193,7 @@ export component PreflightPage inherits CenteredPageRoot {
 
                     HorizontalLayout {
                         spacing: Dimensions.element-gap;
-                        preflight-filter-all := RadioButton {
+                        preflight-filter-all := FilterButton {
                             accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
                             text: "All";
                             selected: root.item-filter == 0;
@@ -202,7 +202,7 @@ export component PreflightPage inherits CenteredPageRoot {
                             }
                         }
 
-                        RadioButton {
+                        FilterButton {
                             accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
                             text: "New";
                             selected: root.item-filter == 1;
@@ -211,7 +211,7 @@ export component PreflightPage inherits CenteredPageRoot {
                             }
                         }
 
-                        RadioButton {
+                        FilterButton {
                             accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
                             text: "Overwrites";
                             selected: root.item-filter == 2;
@@ -219,11 +219,7 @@ export component PreflightPage inherits CenteredPageRoot {
                                 root.set-item-filter(2);
                             }
                         }
-                    }
-
-                    HorizontalLayout {
-                        spacing: Dimensions.element-gap;
-                        RadioButton {
+                        FilterButton {
                             accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
                             text: "Deletions";
                             selected: root.item-filter == 3;
@@ -232,7 +228,7 @@ export component PreflightPage inherits CenteredPageRoot {
                             }
                         }
 
-                        RadioButton {
+                        FilterButton {
                             accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
                             text: "Warnings";
                             selected: root.item-filter == 4;

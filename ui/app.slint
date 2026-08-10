@@ -40,6 +40,7 @@ import {
     CardSecondaryActionButton,
     NavMenuButton,
 } from "components/action-buttons.slint";
+import { MobileNavMenuButton } from "components/compact-action-buttons.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -836,52 +837,49 @@ export component AppWindow inherits Window {
             if root.width < Dimensions.medium-layout-breakpoint: InfoCard {
                 accessible-role: navigation;
                 accessible-label: "Primary navigation";
-                baseline-height: 88px;
-                    HorizontalLayout {
-                        spacing: Dimensions.card-element-spacing;
-                        NavMenuButton {
-                            accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
-                            text: "Connections";
-                            selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
-                            enabled: !root.confirmation-open && !root.configuration-unavailable;
-                            clicked => {
-                                root.request-navigation(4);
-                            }
-                        }
-
-                        NavMenuButton {
-                            accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
-                            text: "Providers";
-                            selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
-                            enabled: !root.confirmation-open && !root.configuration-unavailable;
-                            clicked => {
-                                root.request-navigation(1);
-                            }
+                baseline-height: Dimensions.compact-action-button-height + Dimensions.card-padding * 2;
+                HorizontalLayout {
+                    spacing: Dimensions.card-element-spacing;
+                    MobileNavMenuButton {
+                        accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
+                        text: "Connections";
+                        selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
+                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        clicked => {
+                            root.request-navigation(4);
                         }
                     }
 
-                    HorizontalLayout {
-                        spacing: Dimensions.card-element-spacing;
-                        NavMenuButton {
-                            accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
-                            text: "Activity";
-                            selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
-                            enabled: !root.confirmation-open && !root.configuration-unavailable;
-                            clicked => {
-                                root.request-navigation(9);
-                            }
-                        }
-
-                        NavMenuButton {
-                            accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
-                            text: "Privacy";
-                            selected: root.page == 3;
-                            enabled: !root.confirmation-open;
-                            clicked => {
-                                root.request-navigation(3);
-                            }
+                    MobileNavMenuButton {
+                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
+                        text: "Providers";
+                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        clicked => {
+                            root.request-navigation(1);
                         }
                     }
+
+                    MobileNavMenuButton {
+                        accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
+                        text: "Activity";
+                        selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
+                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        clicked => {
+                            root.request-navigation(9);
+                        }
+                    }
+
+                    MobileNavMenuButton {
+                        accessible-label: root.page == 3 ? "Privacy, selected" : "Privacy";
+                        text: "Privacy";
+                        selected: root.page == 3;
+                        enabled: !root.confirmation-open;
+                        clicked => {
+                            root.request-navigation(3);
+                        }
+                    }
+                }
             }
         }
 

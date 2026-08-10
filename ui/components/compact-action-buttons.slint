@@ -1,0 +1,31 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import {
+    CardPrimaryActionButton,
+    CardSecondaryActionButton,
+    NavMenuButton,
+} from "action-buttons.slint";
+
+export component CompactCardPrimaryActionButton inherits CardPrimaryActionButton {
+    button-width: 0px;
+    button-height: Dimensions.compact-action-button-height;
+    fixed-width: false;
+    expand-width: true;
+}
+
+export component CompactCardSecondaryActionButton inherits CardSecondaryActionButton {
+    button-width: 0px;
+    button-height: Dimensions.compact-action-button-height;
+    fixed-width: false;
+    expand-width: true;
+}
+
+export component MobileNavMenuButton inherits NavMenuButton {
+    button-width: 0px;
+    button-height: Dimensions.compact-action-button-height;
+    expand-width: true;
+    label-text-size: Dimensions.text-size-mobile-navigation;
+    fill-color: root.selected ? Colors.primary : Colors.surface;
+    outline-color: Colors.primary;
+    label-color: root.selected ? Colors.surface : Colors.primary;
+}
