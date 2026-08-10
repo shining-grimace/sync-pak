@@ -144,6 +144,8 @@ mod s3_bucket;
 #[cfg(feature = "provider-s3")]
 mod s3_error;
 #[cfg(feature = "provider-s3")]
+mod s3_execution_failure;
+#[cfg(feature = "provider-s3")]
 mod s3_multipart;
 #[cfg(feature = "provider-s3")]
 pub mod s3_operation_executor;

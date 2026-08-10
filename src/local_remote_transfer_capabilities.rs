@@ -10,7 +10,9 @@ use crate::{
     local_remote_transfer::{LocalRemoteTransfer, LocalRemoteTransferError},
     mirror_execution::MirrorTransfer,
     planning::Direction,
-    provider_capabilities::{MultipartUploader, ObjectDeleter, ObjectReader, ObjectWriter},
+    provider_capabilities::{
+        MultipartUploader, ObjectDeleter, ObjectPrefixChecker, ObjectReader, ObjectWriter,
+    },
     retry::RetrySleeper,
     transfer_delete::{delete_local, delete_remote_with_retry_and_cancellation},
 };
@@ -78,8 +80,8 @@ impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> ArchiveUploader
     }
 }
 
-impl<P: ObjectReader + ObjectWriter + MultipartUploader, S: RetrySleeper> AddOnlyTransfer
-    for LocalRemoteTransfer<'_, P, S>
+impl<P: ObjectPrefixChecker + ObjectReader + ObjectWriter + MultipartUploader, S: RetrySleeper>
+    AddOnlyTransfer for LocalRemoteTransfer<'_, P, S>
 {
     type Error = LocalRemoteTransferError;
 
@@ -102,8 +104,10 @@ impl<P: ObjectReader + ObjectWriter + MultipartUploader, S: RetrySleeper> AddOnl
     }
 }
 
-impl<P: ObjectDeleter + ObjectReader + ObjectWriter + MultipartUploader, S: RetrySleeper>
-    MirrorTransfer for LocalRemoteTransfer<'_, P, S>
+impl<
+    P: ObjectDeleter + ObjectPrefixChecker + ObjectReader + ObjectWriter + MultipartUploader,
+    S: RetrySleeper,
+> MirrorTransfer for LocalRemoteTransfer<'_, P, S>
 {
     type Error = LocalRemoteTransferError;
 

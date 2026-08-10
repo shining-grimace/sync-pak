@@ -7,10 +7,13 @@ use crate::{
     configuration::{ConfigStore, ProviderRepository, SyncMode},
     execution::{ExecutionResult, OperationExecutor},
     local_remote_transfer::LocalRemoteTransfer,
-    mirror_execution::execute_confirmed_mirror,
+    mirror_execution::{MirrorExecutionError, execute_confirmed_mirror},
     platform::PlatformCredentialStore,
     queue::QueueEntry,
     retry::{RetryPolicy, RetrySleeper},
+    s3_execution_failure::{
+        credential_store_message, failed_action, inventory_message, provider_message,
+    },
     s3_preflight::{S3PreflightError, collect_s3_connection_preflight},
     s3_transport::S3Transport,
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
@@ -96,7 +99,10 @@ async fn execute_confirmed(
     jitter_seed: u64,
 ) -> Result<ExecutionResult, CapabilityError> {
     let configuration = ConfigStore::at(configuration_path.into());
-    let credentials = PlatformCredentialStore::new()?;
+    let credentials = match PlatformCredentialStore::new() {
+        Ok(credentials) => credentials,
+        Err(error) => return Ok(failed(credential_store_message(error))),
+    };
     let providers = ProviderRepository::new(&configuration, &credentials);
     let current = match collect_s3_connection_preflight(
         confirmed.request(),
@@ -108,19 +114,11 @@ async fn execute_confirmed(
         Ok(current) => current,
         Err(S3PreflightError::Credentials(_)) => {
             return Ok(failed(
-                "SyncPak could not access the saved credentials. Unlock protected storage, then try again.",
+                "SyncPak could not reload the saved credentials while rechecking this run. Unlock protected storage, then try again.",
             ));
         }
-        Err(S3PreflightError::Provider(_)) => {
-            return Ok(failed(
-                "SyncPak could not reach this provider. Check its credentials, bucket, and network connection.",
-            ));
-        }
-        Err(S3PreflightError::Inventory(_)) => {
-            return Ok(failed(
-                "SyncPak could not recheck the source and destination. Refresh the review and try again.",
-            ));
-        }
+        Err(S3PreflightError::Provider(error)) => return Ok(failed(provider_message(error))),
+        Err(S3PreflightError::Inventory(error)) => return Ok(failed(inventory_message(error))),
     };
     if current != *confirmed.preflight().preflight() {
         return Ok(failed(
@@ -135,16 +133,11 @@ async fn execute_confirmed(
             ));
         }
     };
-    let transport = match S3Transport::connect(&confirmed.request().provider, provider_credentials)
-        .await
-    {
-        Ok(transport) => transport,
-        Err(_) => {
-            return Ok(failed(
-                "SyncPak could not connect to this provider. Check its settings and network connection.",
-            ));
-        }
-    };
+    let transport =
+        match S3Transport::connect(&confirmed.request().provider, provider_credentials).await {
+            Ok(transport) => transport,
+            Err(error) => return Ok(failed(provider_message(error))),
+        };
     let retry = RetryPolicy::default();
     let sleeper = TokioSleeper;
     let transfer = LocalRemoteTransfer::new(
@@ -161,7 +154,7 @@ async fn execute_confirmed(
         .ok_or(CapabilityError::Unavailable)?;
     let history = crate::archive_history::ArchiveHistory::new(history_directory);
     match confirmed.request().connection.mode {
-        SyncMode::AddOnly => execute_add_only_actions(
+        SyncMode::AddOnly => match execute_add_only_actions(
             confirmed.request().direction,
             confirmed.preflight().preflight().plan().actions(),
             &transfer,
@@ -170,8 +163,11 @@ async fn execute_confirmed(
             jitter_seed,
         )
         .await
-        .map_err(|_| CapabilityError::Unexpected),
-        SyncMode::Mirror => execute_confirmed_mirror(
+        {
+            Ok(result) => Ok(result),
+            Err(error) => Ok(failed_action(error.error, error.result)),
+        },
+        SyncMode::Mirror => match execute_confirmed_mirror(
             confirmed.preflight().preflight().plan(),
             confirmed.preflight().destructive_confirmation(),
             &transfer,
@@ -180,7 +176,11 @@ async fn execute_confirmed(
             jitter_seed,
         )
         .await
-        .map_err(|_| CapabilityError::Unexpected),
+        {
+            Ok(result) => Ok(result),
+            Err(MirrorExecutionError::Action { error, result }) => Ok(failed_action(error, result)),
+            Err(_) => Err(CapabilityError::InvalidReference),
+        },
         SyncMode::Archive => Ok(crate::s3_archive_operation::execute(
             confirmed.request(),
             confirmed.preflight().preflight(),
@@ -195,7 +195,7 @@ async fn execute_confirmed(
     }
 }
 
-fn failed(message: &'static str) -> ExecutionResult {
+fn failed(message: impl Into<String>) -> ExecutionResult {
     ExecutionResult::failed_before_start_with_message(message)
 }
 

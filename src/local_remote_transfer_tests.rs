@@ -14,8 +14,9 @@ use crate::{
     configuration::ConnectionId,
     inventory::RelativePath,
     provider_capabilities::{
-        MultipartUpload, MultipartUploadRequest, MultipartUploader, ObjectDeleter, ObjectReader,
-        ObjectWriteMetadata, ObjectWriter, ProviderError, ProviderResult, UploadedPart,
+        MultipartUpload, MultipartUploadRequest, MultipartUploader, ObjectDeleter,
+        ObjectPrefixChecker, ObjectReader, ObjectWriteMetadata, ObjectWriter, ProviderError,
+        ProviderResult, UploadedPart,
     },
     retry::{RetryPolicy, RetrySleeper},
     transfer_paths::{LocalTransferRoot, RemoteTransferPrefix},
@@ -28,6 +29,7 @@ struct Provider {
     multipart_keys: Mutex<Vec<String>>,
     deletes: Mutex<Vec<String>>,
     missing_reads: Mutex<Vec<String>>,
+    existing_prefixes: Mutex<Vec<String>>,
 }
 
 impl ObjectWriter for Provider {
@@ -63,6 +65,17 @@ impl ObjectReader for Provider {
         } else {
             Ok(b"remote".to_vec())
         }
+    }
+}
+
+impl ObjectPrefixChecker for Provider {
+    async fn prefix_exists(&self, _: &str, prefix: &str) -> ProviderResult<bool> {
+        Ok(self
+            .existing_prefixes
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|existing| existing == prefix))
     }
 }
 
@@ -223,6 +236,11 @@ fn downloads_a_directory_marker_to_the_local_root() {
         .lock()
         .unwrap()
         .push("sync/empty".into());
+    provider
+        .existing_prefixes
+        .lock()
+        .unwrap()
+        .push("sync/empty/".into());
     let policy = RetryPolicy::default();
 
     block_on(transfer(&provider, &root, &policy).download(
@@ -233,6 +251,61 @@ fn downloads_a_directory_marker_to_the_local_root() {
     .unwrap();
 
     assert!(root.join("empty").is_dir());
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn downloads_an_implicit_remote_directory_without_a_marker_object() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let provider = Provider::default();
+    provider
+        .missing_reads
+        .lock()
+        .unwrap()
+        .push("sync/folder".into());
+    provider
+        .existing_prefixes
+        .lock()
+        .unwrap()
+        .push("sync/folder/".into());
+    let policy = RetryPolicy::default();
+
+    block_on(transfer(&provider, &root, &policy).download(
+        &RelativePath::new("folder").unwrap(),
+        &CancellationToken::default(),
+        1,
+    ))
+    .unwrap();
+
+    assert!(root.join("folder").is_dir());
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn missing_remote_file_without_descendants_remains_a_failure() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let provider = Provider::default();
+    provider
+        .missing_reads
+        .lock()
+        .unwrap()
+        .push("sync/missing.txt".into());
+    let policy = RetryPolicy::default();
+
+    let result = block_on(transfer(&provider, &root, &policy).download(
+        &RelativePath::new("missing.txt").unwrap(),
+        &CancellationToken::default(),
+        1,
+    ));
+
+    assert!(matches!(
+        result,
+        Err(LocalRemoteTransferError::Download(
+            crate::download::DownloadError::Provider(ProviderError::NotFound)
+        ))
+    ));
     std::fs::remove_dir_all(&root).unwrap();
 }
 

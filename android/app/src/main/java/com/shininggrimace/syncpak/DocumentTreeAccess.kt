@@ -66,7 +66,7 @@ internal class DocumentTreeAccess(context: Context) {
         }
         val document = existing ?: create(tree, parent, "application/octet-stream", name)
             ?: return@safely UNAVAILABLE
-        resolver.openFileDescriptor(document.uri, "rwt")?.detachFd() ?: UNAVAILABLE
+        resolver.openFileDescriptor(document.uri, "wt")?.detachFd() ?: UNAVAILABLE
     }
 
     fun createDirectories(value: String, path: String): Int = safely {
