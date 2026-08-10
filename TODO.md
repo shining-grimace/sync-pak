@@ -1,6 +1,5 @@
 
 - There should probably be text input limits on things like Connection Name
-- On Android, the cursor inside the focuses text input leaves its boundary when the page is scrolled
 - The Rust crate needs to be modularised better
 - Outlining drop-down elements with the primary colour would look nice
 - The bottom-nav on mobile should be compacted somehow

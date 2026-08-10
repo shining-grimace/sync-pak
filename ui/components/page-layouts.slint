@@ -1,11 +1,20 @@
 import { ScrollView } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
+import { InputPositionRefresh } from "../input-position-refresh.slint";
 
 export component PageRoot inherits ScrollView {
     viewport-width: root.visible-width;
     vertical-scrollbar-policy: always-on;
     horizontal-scrollbar-policy: always-off;
     mouse-drag-pan-enabled: true;
+
+    changed viewport-x => {
+        InputPositionRefresh.generation += 1;
+    }
+
+    changed viewport-y => {
+        InputPositionRefresh.generation += 1;
+    }
 }
 
 export component CenteredPageColumn inherits VerticalLayout {
