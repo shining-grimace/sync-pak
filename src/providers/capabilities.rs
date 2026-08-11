@@ -1,0 +1,178 @@
+//! Provider-neutral contracts for remote object storage.
+//!
+//! Providers implement only the traits their credentials and API support. This keeps an
+//! unavailable optional feature, such as multipart upload, out of the normal object API.
+
+use std::future::Future;
+
+pub use crate::providers::error::{
+    ProviderCertificateError, ProviderError, ProviderTransportError,
+};
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ObjectMetadata {
+    pub byte_size: u64,
+    pub modified_unix_seconds: Option<i64>,
+    pub source_modified_unix_seconds: Option<i64>,
+    pub content_type: Option<String>,
+    pub entity_tag: Option<String>,
+}
+
+pub const SOURCE_MODIFIED_TIME_METADATA_KEY: &str = "syncpak-source-modified-unix-seconds";
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct ObjectWriteMetadata {
+    pub source_modified_unix_seconds: Option<i64>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RemoteObject {
+    pub key: String,
+    pub metadata: ObjectMetadata,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MultipartUpload {
+    pub id: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UploadedPart {
+    pub part_number: u32,
+    pub entity_tag: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MultipartUploadRequest {
+    pub bucket: String,
+    pub key: String,
+    pub content_type: Option<String>,
+    pub source_modified_unix_seconds: Option<i64>,
+}
+
+pub type ProviderResult<T> = Result<T, ProviderError>;
+
+pub trait BucketAccessChecker {
+    fn check_bucket_access(&self, bucket: &str) -> impl Future<Output = ProviderResult<()>> + Send;
+}
+
+pub trait BucketLister {
+    fn list_buckets(&self) -> impl Future<Output = ProviderResult<Vec<String>>> + Send;
+}
+
+pub trait ObjectLister {
+    fn list_objects(
+        &self,
+        bucket: &str,
+        prefix: &str,
+    ) -> impl Future<Output = ProviderResult<Vec<RemoteObject>>> + Send;
+}
+
+pub trait ObjectPrefixChecker {
+    fn prefix_exists(
+        &self,
+        bucket: &str,
+        prefix: &str,
+    ) -> impl Future<Output = ProviderResult<bool>> + Send;
+}
+
+pub trait ObjectReader {
+    fn read(&self, bucket: &str, key: &str)
+    -> impl Future<Output = ProviderResult<Vec<u8>>> + Send;
+}
+
+pub trait ObjectWriter {
+    fn write_with_metadata(
+        &self,
+        bucket: &str,
+        key: &str,
+        contents: &[u8],
+        metadata: &ObjectWriteMetadata,
+    ) -> impl Future<Output = ProviderResult<()>> + Send;
+}
+
+#[cfg(any(test, feature = "provider-probes"))]
+pub trait ObjectMetadataReader {
+    fn metadata(
+        &self,
+        bucket: &str,
+        key: &str,
+    ) -> impl Future<Output = ProviderResult<ObjectMetadata>> + Send;
+}
+
+pub trait ObjectDeleter {
+    fn delete(&self, bucket: &str, key: &str) -> impl Future<Output = ProviderResult<()>> + Send;
+}
+
+pub trait MultipartUploader {
+    fn begin_multipart_upload(
+        &self,
+        request: &MultipartUploadRequest,
+    ) -> impl Future<Output = ProviderResult<MultipartUpload>> + Send;
+
+    fn upload_part(
+        &self,
+        bucket: &str,
+        key: &str,
+        upload: &MultipartUpload,
+        part_number: u32,
+        contents: &[u8],
+    ) -> impl Future<Output = ProviderResult<UploadedPart>> + Send;
+
+    fn complete_multipart_upload(
+        &self,
+        bucket: &str,
+        key: &str,
+        upload: &MultipartUpload,
+        parts: &[UploadedPart],
+    ) -> impl Future<Output = ProviderResult<()>> + Send;
+
+    fn abort_multipart_upload(
+        &self,
+        bucket: &str,
+        key: &str,
+        upload: &MultipartUpload,
+    ) -> impl Future<Output = ProviderResult<()>> + Send;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ObjectMetadata, ProviderError, RemoteObject};
+
+    #[test]
+    fn object_metadata_preserves_provider_values() {
+        let object = RemoteObject {
+            key: "photos/é.png".to_owned(),
+            metadata: ObjectMetadata {
+                byte_size: 42,
+                modified_unix_seconds: Some(1_700_000_000),
+                source_modified_unix_seconds: Some(1_600_000_000),
+                content_type: Some("image/png".to_owned()),
+                entity_tag: Some("abc123".to_owned()),
+            },
+        };
+
+        assert_eq!(object.metadata.byte_size, 42);
+        assert_eq!(
+            object.metadata.source_modified_unix_seconds,
+            Some(1_600_000_000)
+        );
+        assert_eq!(object.metadata.entity_tag.as_deref(), Some("abc123"));
+    }
+
+    #[test]
+    fn provider_errors_have_redaction_safe_messages() {
+        assert_eq!(
+            ProviderError::Authentication.to_string(),
+            "The provider rejected the saved credentials."
+        );
+    }
+
+    #[test]
+    fn clock_skew_tells_the_user_how_to_recover() {
+        assert_eq!(
+            ProviderError::ClockSkew.to_string(),
+            "This device's clock differs too much from the provider. Enable automatic date and time, then retry."
+        );
+    }
+}

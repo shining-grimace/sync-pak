@@ -1,188 +1,22 @@
-#[allow(dead_code)]
-mod activity_controller;
-pub mod activity_presentation;
-mod activity_progress_controller;
-mod activity_result_controller;
-pub mod activity_snapshot;
-pub mod add_only_execution;
-#[cfg(all(target_os = "android", feature = "provider-s3"))]
-mod android_certificate_verifier;
-#[cfg(all(target_os = "android", feature = "provider-s3"))]
-mod android_connector_error;
-#[cfg(all(target_os = "android", feature = "provider-s3"))]
-mod android_dns_resolver;
-#[cfg(target_os = "android")]
-mod android_document_file;
-#[cfg(target_os = "android")]
-mod android_document_tree;
-#[cfg(target_os = "android")]
-mod android_document_tree_model;
-#[cfg(target_os = "android")]
-mod android_folder_picker;
-#[cfg(target_os = "android")]
-mod android_foreground_execution;
-#[cfg(all(target_os = "android", feature = "provider-s3"))]
-mod android_http_timeout;
-#[cfg(target_os = "android")]
-mod android_network_access;
-#[cfg(all(target_os = "android", feature = "provider-s3"))]
-mod android_s3_http_client;
-#[cfg(all(target_os = "android", feature = "provider-s3"))]
-mod android_server_certificate_verifier;
-mod app_controller;
-mod appearance_controller;
-pub mod archive_create;
-mod archive_create_writer;
-pub mod archive_download;
-pub mod archive_download_store;
-pub mod archive_execution;
-pub mod archive_history;
-pub mod archive_naming;
-pub mod archive_prune;
-pub mod archive_retention;
-pub mod archive_store;
-pub mod archive_upload;
-pub mod atomic_write;
-pub mod background_queue;
-mod background_worker;
-pub mod cancellation;
+mod app;
 pub mod capabilities;
-pub mod comparison;
-pub mod configuration;
-mod configuration_startup_controller;
-pub mod confirmed_preflight;
-mod connection_delete_controller;
-mod connection_form_controller;
-mod connection_form_data;
-mod connection_form_state;
-mod connection_form_verify_controller;
-mod connection_list_controller;
-mod connection_list_verification_controller;
-pub mod connection_preflight;
-mod connection_verification;
-mod connection_verification_worker;
-pub mod destructive_confirmation;
-mod diagnostics_controller;
-pub mod download;
-#[cfg(all(feature = "provider-s3", any(target_os = "android", test)))]
-mod endpoint_resolution_error;
-pub mod execution;
-#[cfg(test)]
-mod feasibility;
-pub mod filesystem;
-mod folder_picker_controller;
-mod form_validation;
-pub mod inventory;
-pub mod inventory_endpoint;
-pub mod inventory_fingerprint;
-pub mod local_archive_remover;
-pub mod local_inventory;
-pub mod local_remote_transfer;
-mod local_remote_transfer_capabilities;
-mod local_remote_transfer_download;
-mod local_remote_transfer_upload;
-mod local_transfer_root;
-pub mod mirror_execution;
-mod mirror_execution_error;
-pub mod multipart_file_upload;
-mod multipart_file_upload_error;
-pub mod multipart_upload;
-pub mod notifications;
-mod onboarding;
-pub mod operation_cancellation;
-pub mod operation_progress;
-#[cfg(feature = "provider-s3")]
-mod operation_start_controller;
-pub mod plan_summary;
-pub mod planning;
-pub mod platform;
-pub mod preflight;
-pub mod preflight_controller;
-pub mod preflight_execution;
-pub mod preflight_mirror_execution;
-pub mod preflight_presentation;
-pub mod preflight_review;
-mod provider_bucket_cache;
-pub mod provider_capabilities;
-pub mod provider_conformance;
-mod provider_connectivity_failure;
-mod provider_delete_controller;
-mod provider_error;
-mod provider_form;
-mod provider_form_controller;
-mod provider_form_credentials;
-mod provider_list_controller;
-mod provider_list_verification_controller;
-pub mod provider_multipart_conformance;
-#[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
-mod provider_network_access;
-#[cfg(feature = "provider-probes")]
-pub mod provider_probe;
-#[cfg(feature = "provider-probes")]
-mod provider_probe_config;
-mod provider_save_error;
-mod provider_secret_reveal_controller;
-pub mod provider_verification;
-#[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
-mod provider_verification_failure;
-#[cfg_attr(not(feature = "provider-s3"), allow(dead_code))]
-mod provider_verification_panic;
-pub mod queue;
-pub mod queue_progress_observer;
-pub mod queue_retry_observer;
-pub mod queue_runner;
-pub mod remote_inventory;
-pub mod retry;
-pub mod reviewed_operation;
-mod run_direction_controller;
-mod run_direction_presentation;
-pub mod run_request;
-#[cfg(feature = "provider-s3")]
-mod s3_archive_operation;
-#[cfg(feature = "provider-s3")]
-mod s3_bucket;
-#[cfg(feature = "provider-s3")]
-mod s3_error;
-#[cfg(feature = "provider-s3")]
-mod s3_execution_failure;
-#[cfg(feature = "provider-s3")]
-mod s3_multipart;
-#[cfg(feature = "provider-s3")]
-pub mod s3_operation_executor;
-#[cfg(feature = "provider-s3")]
-pub mod s3_preflight;
-#[cfg(feature = "provider-s3")]
-mod s3_preflight_controller;
-#[cfg(feature = "provider-s3")]
-pub mod s3_provider_verification;
-#[cfg(feature = "provider-s3")]
-mod s3_provider_verification_worker;
-#[cfg(feature = "provider-s3")]
-mod s3_provider_verify_controller;
-#[cfg(feature = "provider-s3")]
-mod s3_settings;
-#[cfg(all(target_os = "android", feature = "provider-s3"))]
-mod s3_tls_error;
-#[cfg(feature = "provider-s3")]
-pub mod s3_transport;
-#[cfg(feature = "provider-s3")]
-mod s3_writer;
-mod safe_transport_detail;
-mod saved_provider_verification;
-#[cfg(all(feature = "provider-s3", any(target_os = "android", test)))]
-mod secure_connection_error;
-pub mod temporary_cleanup;
-pub mod transfer_delete;
-pub mod transfer_execution;
-pub mod transfer_paths;
-pub mod transfer_progress;
-pub mod upload;
-mod upload_contents;
-pub mod upload_strategy;
+mod configuration;
+mod inventory;
+mod operations;
+mod platform;
+mod preflight;
+mod providers;
 
 pub use capabilities::CapabilityError;
+pub use platform::notifications;
+#[cfg(feature = "provider-probes")]
+pub use providers::probe as provider_probe;
 
-slint::include_modules!();
+mod ui {
+    slint::include_modules!();
+}
+
+pub(crate) use ui::*;
 
 /// Opens the SyncPak application window and runs its event loop.
 pub fn run() -> Result<(), slint::PlatformError> {
@@ -190,7 +24,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // The desktop backend resolves the native colour scheme when the window is
     // shown. Initialise appearance-dependent UI only after that has happened.
     window.show()?;
-    app_controller::initialize(&window);
+    app::controller::initialize(&window);
     slint::run_event_loop()?;
     window.hide()
 }
@@ -198,25 +32,25 @@ pub fn run() -> Result<(), slint::PlatformError> {
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub fn android_main(app: slint::android::AndroidApp) {
-    if let Err(error) = android_document_tree::initialize(app.clone()) {
+    if let Err(error) = platform::android::document_tree::access::initialize(app.clone()) {
         eprintln!("Android document-tree access initialization failed: {error}");
         return;
     }
-    if let Err(error) = android_folder_picker::initialize(app.clone()) {
+    if let Err(error) = platform::android::folder_picker::initialize(app.clone()) {
         eprintln!("Android folder picker initialization failed: {error}");
         return;
     }
     #[cfg(feature = "provider-s3")]
     {
-        if let Err(error) = android_certificate_verifier::initialize(&app) {
+        if let Err(error) = platform::android::s3::certificate_verifier::initialize(&app) {
             eprintln!("Android certificate verifier initialization failed: {error}");
         }
     }
-    if let Err(error) = android_foreground_execution::initialize(app.clone()) {
+    if let Err(error) = platform::android::foreground_execution::initialize(app.clone()) {
         eprintln!("Android foreground execution initialization failed: {error}");
         return;
     }
-    if let Err(error) = android_network_access::initialize(app.clone()) {
+    if let Err(error) = platform::android::network_access::initialize(app.clone()) {
         eprintln!("Android network access check initialization failed: {error}");
         return;
     }
@@ -226,8 +60,8 @@ pub fn android_main(app: slint::android::AndroidApp) {
     }
     #[cfg(feature = "feasibility-probes")]
     {
-        android_foreground_execution::schedule_probe();
-        android_folder_picker::schedule_probe();
+        platform::android::foreground_execution::schedule_probe();
+        platform::android::folder_picker::schedule_probe();
     }
     if let Err(error) = run() {
         eprintln!("SyncPak UI failed: {error}");

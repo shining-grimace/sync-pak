@@ -1,3 +1,4 @@
+#[cfg(test)]
 use std::path::Path;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -26,6 +27,7 @@ impl StructuredError {
         }
     }
 
+    #[cfg(test)]
     pub fn at_path(mut self, path: &Path) -> Self {
         self.affected_path = path.to_str().map(ToOwned::to_owned);
         self

@@ -1,15 +1,25 @@
 use std::error::Error;
 use std::fmt;
 
-use crate::comparison::{ComparedEntry, compare};
+pub mod comparison;
+pub mod confirmed;
+pub mod connection;
+pub mod destructive_confirmation;
+pub mod plan_summary;
+pub mod planning;
+pub mod review;
+pub mod reviewed_operation;
+
 use crate::configuration::SyncMode;
+use crate::inventory::fingerprint::{InventoryFingerprint, fingerprint};
 use crate::inventory::{Inventory, RelativePath};
-use crate::inventory_fingerprint::{InventoryFingerprint, fingerprint};
-use crate::planning::{Direction, Endpoint, PlanError, TransferPlan, plan};
+use crate::preflight::comparison::{ComparedEntry, compare};
+use crate::preflight::planning::{Direction, Endpoint, PlanError, TransferPlan, plan};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CaseSensitivity {
     Sensitive,
+    #[cfg(any(test, target_os = "windows"))]
     Insensitive,
 }
 
@@ -38,11 +48,7 @@ impl Preflight {
         &self.source
     }
 
-    /// Returns the immutable destination inventory that was reviewed with this plan.
-    pub fn destination(&self) -> &Inventory {
-        &self.destination
-    }
-
+    #[cfg(test)]
     pub fn is_current(&self, source: &Inventory, destination: &Inventory) -> bool {
         self.source_fingerprint == fingerprint(source)
             && self.destination_fingerprint == fingerprint(destination)
@@ -142,8 +148,6 @@ impl Error for PreflightError {
 }
 
 #[cfg(test)]
-#[path = "preflight_golden_tests.rs"]
 mod golden_tests;
 #[cfg(test)]
-#[path = "preflight_tests.rs"]
 mod tests;

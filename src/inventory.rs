@@ -1,4 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
+
+pub mod endpoint;
+pub mod fingerprint;
+pub mod local;
+pub mod remote;
 use std::error::Error;
 use std::fmt;
 
@@ -98,6 +103,7 @@ impl Inventory {
             .collect()
     }
 
+    #[cfg(test)]
     pub fn validate_case_collisions(&self) -> Result<(), InventoryError> {
         self.case_collisions()
             .into_iter()
@@ -111,6 +117,7 @@ impl Inventory {
 pub enum InventoryError {
     InvalidRelativePath(String),
     DuplicatePath(RelativePath),
+    #[cfg(test)]
     CaseCollision(Vec<RelativePath>),
 }
 
@@ -121,6 +128,7 @@ impl fmt::Display for InventoryError {
             Self::DuplicatePath(path) => {
                 write!(formatter, "duplicate inventory path: {}", path.as_str())
             }
+            #[cfg(test)]
             Self::CaseCollision(paths) => write!(
                 formatter,
                 "paths differ only by case: {}",

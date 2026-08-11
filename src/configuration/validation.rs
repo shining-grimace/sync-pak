@@ -5,12 +5,6 @@ use super::{AppConfig, CURRENT_SCHEMA_VERSION, ProviderKind, SyncMode};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ValidationErrors(Vec<String>);
 
-impl ValidationErrors {
-    pub fn messages(&self) -> &[String] {
-        &self.0
-    }
-}
-
 impl std::fmt::Display for ValidationErrors {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(&self.0.join(" "))

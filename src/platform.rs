@@ -1,10 +1,19 @@
 use std::sync::Arc;
 
+#[cfg(target_os = "android")]
+pub(crate) mod android;
+pub mod atomic_write;
+#[cfg(test)]
+pub(crate) mod feasibility;
+pub mod notifications;
+pub mod temporary_cleanup;
+
 use keyring_core::{CredentialStore, Entry};
 
+#[cfg(target_os = "android")]
+use crate::capabilities::BackgroundExecution;
 use crate::capabilities::{
-    BackgroundExecution, CapabilityError, FolderPicker, FolderPickerCompletion,
-    ProtectedCredentialStore,
+    CapabilityError, FolderPicker, FolderPickerCompletion, ProtectedCredentialStore,
 };
 
 const SERVICE_NAME: &str = "com.shininggrimace.syncpak.providers";
@@ -55,8 +64,10 @@ impl FolderPicker for PlatformFolderPicker {
     }
 }
 
+#[cfg(target_os = "android")]
 pub struct PlatformBackgroundExecution;
 
+#[cfg(target_os = "android")]
 impl BackgroundExecution for PlatformBackgroundExecution {
     fn start(&self, connection_name: &str) -> Result<(), CapabilityError> {
         start_background_execution(connection_name)
@@ -65,7 +76,7 @@ impl BackgroundExecution for PlatformBackgroundExecution {
     fn update(
         &self,
         connection_name: &str,
-        progress: &crate::operation_progress::OperationProgress,
+        progress: &crate::operations::operation_progress::OperationProgress,
     ) -> Result<(), CapabilityError> {
         update_background_execution(connection_name, progress)
     }
@@ -102,43 +113,25 @@ fn pick_folder(completion: FolderPickerCompletion) -> Result<(), CapabilityError
 
 #[cfg(target_os = "android")]
 fn pick_folder(completion: FolderPickerCompletion) -> Result<(), CapabilityError> {
-    crate::android_folder_picker::pick_folder(completion)
+    crate::platform::android::folder_picker::pick_folder(completion)
 }
 
 #[cfg(target_os = "android")]
 fn start_background_execution(connection_name: &str) -> Result<(), CapabilityError> {
-    crate::android_foreground_execution::start(connection_name)
+    crate::platform::android::foreground_execution::start(connection_name)
 }
 
 #[cfg(target_os = "android")]
 fn update_background_execution(
     connection_name: &str,
-    progress: &crate::operation_progress::OperationProgress,
+    progress: &crate::operations::operation_progress::OperationProgress,
 ) -> Result<(), CapabilityError> {
-    crate::android_foreground_execution::update(connection_name, progress)
+    crate::platform::android::foreground_execution::update(connection_name, progress)
 }
 
 #[cfg(target_os = "android")]
 fn stop_background_execution() -> Result<(), CapabilityError> {
-    crate::android_foreground_execution::stop()
-}
-
-#[cfg(not(target_os = "android"))]
-fn start_background_execution(_: &str) -> Result<(), CapabilityError> {
-    Err(CapabilityError::Unsupported)
-}
-
-#[cfg(not(target_os = "android"))]
-fn update_background_execution(
-    _: &str,
-    _: &crate::operation_progress::OperationProgress,
-) -> Result<(), CapabilityError> {
-    Err(CapabilityError::Unsupported)
-}
-
-#[cfg(not(target_os = "android"))]
-fn stop_background_execution() -> Result<(), CapabilityError> {
-    Err(CapabilityError::Unsupported)
+    crate::platform::android::foreground_execution::stop()
 }
 
 fn map_keyring_error(error: keyring_core::Error) -> CapabilityError {

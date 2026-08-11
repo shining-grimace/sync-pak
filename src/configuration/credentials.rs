@@ -18,7 +18,7 @@ pub struct ProviderCredentials {
 pub enum CredentialError {
     Configuration(ConfigurationError),
     ProtectedStore(CapabilityError),
-    Serialization(serde_json::Error),
+    Serialization,
     RollbackFailed,
     NotFound,
 }
@@ -33,7 +33,7 @@ impl std::fmt::Display for CredentialError {
                 formatter,
                 "Protected credential storage is unavailable: {error}"
             ),
-            Self::Serialization(_) => formatter
+            Self::Serialization => formatter
                 .write_str("Provider credentials could not be prepared for secure storage."),
             Self::RollbackFailed => formatter.write_str(
                 "Provider settings were not saved and protected credential recovery failed.",
@@ -74,7 +74,7 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
             .credentials
             .load(id.as_str())
             .map_err(CredentialError::ProtectedStore)?;
-        serde_json::from_slice(&serialized).map_err(CredentialError::Serialization)
+        serde_json::from_slice(&serialized).map_err(|_| CredentialError::Serialization)
     }
 
     /// Saves the protected document before committing metadata, restoring it if that commit fails.
@@ -171,7 +171,7 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
         secret: &ProviderCredentials,
     ) -> Result<(), CredentialError> {
         let provider_id = provider.id.clone();
-        let serialized = serde_json::to_vec(secret).map_err(CredentialError::Serialization)?;
+        let serialized = serde_json::to_vec(secret).map_err(|_| CredentialError::Serialization)?;
         let previous_secret = match self.credentials.load(provider.id.as_str()) {
             Ok(value) => Some(value),
             Err(CapabilityError::NotFound) => None,
@@ -216,5 +216,4 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
 }
 
 #[cfg(test)]
-#[path = "credentials_tests.rs"]
 mod tests;

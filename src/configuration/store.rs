@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::atomic_write::atomic_write;
+use crate::platform::atomic_write::atomic_write;
 
 use super::{AppConfig, ValidationErrors};
 
@@ -29,7 +29,15 @@ impl std::fmt::Display for ConfigurationError {
     }
 }
 
-impl std::error::Error for ConfigurationError {}
+impl std::error::Error for ConfigurationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Invalid(error) => Some(error),
+            Self::Io(error) => Some(error),
+            Self::Parse(error) => Some(error),
+        }
+    }
+}
 
 pub struct ConfigStore {
     path: PathBuf,
@@ -95,5 +103,4 @@ fn config_directory() -> Option<PathBuf> {
 }
 
 #[cfg(test)]
-#[path = "store_tests.rs"]
 mod tests;
