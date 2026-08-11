@@ -62,6 +62,14 @@ impl BackgroundExecution for PlatformBackgroundExecution {
         start_background_execution(connection_name)
     }
 
+    fn update(
+        &self,
+        connection_name: &str,
+        progress: &crate::operation_progress::OperationProgress,
+    ) -> Result<(), CapabilityError> {
+        update_background_execution(connection_name, progress)
+    }
+
     fn stop(&self) -> Result<(), CapabilityError> {
         stop_background_execution()
     }
@@ -103,12 +111,28 @@ fn start_background_execution(connection_name: &str) -> Result<(), CapabilityErr
 }
 
 #[cfg(target_os = "android")]
+fn update_background_execution(
+    connection_name: &str,
+    progress: &crate::operation_progress::OperationProgress,
+) -> Result<(), CapabilityError> {
+    crate::android_foreground_execution::update(connection_name, progress)
+}
+
+#[cfg(target_os = "android")]
 fn stop_background_execution() -> Result<(), CapabilityError> {
     crate::android_foreground_execution::stop()
 }
 
 #[cfg(not(target_os = "android"))]
 fn start_background_execution(_: &str) -> Result<(), CapabilityError> {
+    Err(CapabilityError::Unsupported)
+}
+
+#[cfg(not(target_os = "android"))]
+fn update_background_execution(
+    _: &str,
+    _: &crate::operation_progress::OperationProgress,
+) -> Result<(), CapabilityError> {
     Err(CapabilityError::Unsupported)
 }
 

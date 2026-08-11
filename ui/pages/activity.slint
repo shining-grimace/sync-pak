@@ -20,6 +20,8 @@ export component ActivityPage inherits CenteredPageRoot {
     callback show-activity-progress(string);
     callback request-cancel-activity(string, string);
     callback remove-queued-activity(string);
+    fill-height: true;
+    mouse-drag-pan-enabled: false;
 
     HeadingLabel {
         text: "Activity";
@@ -70,7 +72,7 @@ export component ActivityPage inherits CenteredPageRoot {
     }
     if root.activity-rows.length > 0 : ListView {
         accessible-label: "Current activity";
-        height: 240px;
+        vertical-stretch: 1;
         vertical-scrollbar-policy: always-on;
         for activity in root.activity-rows : ListItem {
             width: parent.width;

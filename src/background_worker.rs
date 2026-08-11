@@ -54,14 +54,21 @@ fn execute<E: OperationExecutor>(
     });
     let result = match foreground {
         Ok(()) => {
-            let observer =
-                QueueProgressObserver::new(entry.operation_id, |operation_id, progress| {
+            let observer = QueueProgressObserver::new(
+                entry.operation_id,
+                |operation_id, progress: crate::operation_progress::OperationProgress| {
+                    if progress.current_item_number().is_some()
+                        && let Some(background) = background
+                    {
+                        let _ = background.update(&entry.snapshot.connection_name, &progress);
+                    }
                     let (queue, _) = shared;
                     let _ = queue
                         .lock()
                         .expect("queue mutex poisoned")
                         .update_progress(operation_id, progress);
-                });
+                },
+            );
             executor.execute(entry, &observer).unwrap_or_else(|error| {
                 ExecutionResult::failed_before_start_with_message(error.to_string())
             })

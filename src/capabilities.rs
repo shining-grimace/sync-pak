@@ -19,6 +19,11 @@ pub trait DesktopNotifier {
 
 pub trait BackgroundExecution {
     fn start(&self, connection_name: &str) -> Result<(), CapabilityError>;
+    fn update(
+        &self,
+        connection_name: &str,
+        progress: &crate::operation_progress::OperationProgress,
+    ) -> Result<(), CapabilityError>;
     fn stop(&self) -> Result<(), CapabilityError>;
 }
 

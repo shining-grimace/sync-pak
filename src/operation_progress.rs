@@ -65,6 +65,13 @@ impl Default for OperationProgress {
 }
 
 impl OperationProgress {
+    pub fn current_item_number(&self) -> Option<usize> {
+        (self.current_path.is_some()
+            && self.phase != OperationPhase::CleaningUp
+            && self.completed_items < self.total_items)
+            .then(|| self.completed_items + 1)
+    }
+
     pub fn summary(&self) -> String {
         if let Some(retry) = self.retry {
             return retry.summary();
@@ -114,6 +121,27 @@ mod tests {
             }
             .summary(),
             "Trying again in 250 ms (attempt 2 of 4)"
+        );
+    }
+
+    #[test]
+    fn current_item_number_is_only_available_during_active_item_progress() {
+        let active = OperationProgress {
+            phase: OperationPhase::Copying,
+            completed_items: 2,
+            total_items: 5,
+            current_path: Some("photo.jpg".into()),
+            ..Default::default()
+        };
+        assert_eq!(active.current_item_number(), Some(3));
+        assert_eq!(OperationProgress::default().current_item_number(), None);
+        assert_eq!(
+            OperationProgress {
+                phase: OperationPhase::CleaningUp,
+                ..active
+            }
+            .current_item_number(),
+            None
         );
     }
 }

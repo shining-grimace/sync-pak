@@ -26,6 +26,10 @@ class SyncPakActivity : NativeActivity() {
         startForegroundService(SyncExecutionService.startIntent(this, connectionName))
     }
 
+    fun updateSyncExecution(connectionName: String, currentFile: Int, totalFiles: Int) {
+        SyncExecutionNotification.update(this, connectionName, currentFile, totalFiles)
+    }
+
     fun stopSyncExecution() {
         stopService(Intent(this, SyncExecutionService::class.java))
     }

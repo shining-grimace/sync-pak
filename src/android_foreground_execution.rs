@@ -6,7 +6,7 @@ use jni::{
 };
 use slint::android::AndroidApp;
 
-use crate::capabilities::CapabilityError;
+use crate::{capabilities::CapabilityError, operation_progress::OperationProgress};
 
 static ANDROID_APP: Mutex<Option<AndroidApp>> = Mutex::new(None);
 static CANCEL_HANDLER: Mutex<Option<Arc<dyn Fn() + Send + Sync>>> = Mutex::new(None);
@@ -37,6 +37,29 @@ pub fn start(connection_name: &str) -> Result<(), CapabilityError> {
             jni_str!("startSyncExecution"),
             jni_sig!("(Ljava/lang/String;)V"),
             &[(&connection_name).into()],
+        )?;
+        Ok(())
+    })
+}
+
+pub fn update(connection_name: &str, progress: &OperationProgress) -> Result<(), CapabilityError> {
+    let Some(current_item) = progress.current_item_number() else {
+        return Ok(());
+    };
+    let current_item = i32::try_from(current_item).map_err(|_| CapabilityError::Unexpected)?;
+    let total_items =
+        i32::try_from(progress.total_items).map_err(|_| CapabilityError::Unexpected)?;
+    with_activity(|env, activity| {
+        let connection_name = env.new_string(connection_name)?;
+        env.call_method(
+            activity,
+            jni_str!("updateSyncExecution"),
+            jni_sig!("(Ljava/lang/String;II)V"),
+            &[
+                (&connection_name).into(),
+                current_item.into(),
+                total_items.into(),
+            ],
         )?;
         Ok(())
     })

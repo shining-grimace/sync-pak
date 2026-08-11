@@ -1,6 +1,4 @@
 
-- In-progress notifications should show the current file number in the operation like the Activity screen does
-- On Android, on the post-operation Activity screen, the list items cannot be dragged to scroll the view unless the down position of the gesture was over the action buttons (tapping down on the text labels and dragging doesn't do anything)
 - There should probably be text input limits on things like Connection Name
 - The Rust crate needs to be modularised better
 - Outlining drop-down elements with the primary colour would look nice

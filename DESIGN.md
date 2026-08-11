@@ -528,6 +528,7 @@ plain-language message.
 - Clear explanation: `Removes completed, failed, and cancelled entries from this activity list.`
 - Android notification channel: `Sync operations`
 - Android notification running: `SyncPak is running {connection}`
+- Android notification progress: `SyncPak is running {connection} · File {current} of {total}`
 - Android notification queued: `{count} operations waiting`
 - Android notification cancel: `Cancel`
 

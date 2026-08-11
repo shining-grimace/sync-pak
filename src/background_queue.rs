@@ -235,3 +235,7 @@ fn install_android_cancellation<E: OperationExecutor + Send + Sync + 'static>(
 #[cfg(test)]
 #[path = "background_queue_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "background_notification_tests.rs"]
+mod notification_tests;

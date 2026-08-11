@@ -9,7 +9,6 @@ use std::{
 
 use crate::{
     activity_snapshot::ActivitySnapshot,
-    capabilities::BackgroundExecution,
     configuration::{ConnectionConfig, ConnectionId, ProviderId, SyncMode},
     execution::{ExecutionProgress, OperationExecutor},
     planning::{Direction, OperationPlan},
@@ -24,24 +23,6 @@ struct Executor(Mutex<Vec<String>>);
 struct BlockingExecutor {
     cancelled: Mutex<Vec<String>>,
     started: AtomicBool,
-}
-
-#[derive(Default)]
-struct Foreground(Mutex<Vec<String>>);
-
-impl BackgroundExecution for Foreground {
-    fn start(&self, connection_name: &str) -> Result<(), crate::CapabilityError> {
-        self.0
-            .lock()
-            .unwrap()
-            .push(format!("start:{connection_name}"));
-        Ok(())
-    }
-
-    fn stop(&self) -> Result<(), crate::CapabilityError> {
-        self.0.lock().unwrap().push("stop".into());
-        Ok(())
-    }
 }
 
 impl OperationExecutor for Executor {
@@ -140,34 +121,6 @@ fn worker_reports_progress_and_completes_operations_in_submission_order() {
             .activity()
             .iter()
             .all(|entry| entry.state == QueueState::Completed)
-    );
-}
-
-#[test]
-fn foreground_execution_wraps_each_active_operation() {
-    let executor = std::sync::Arc::new(Executor(Mutex::new(Vec::new())));
-    let foreground = std::sync::Arc::new(Foreground::default());
-    let queue = BackgroundQueue::with_background_execution(
-        std::sync::Arc::clone(&executor),
-        foreground.clone(),
-    );
-    queue.enqueue(
-        OperationPlan::new("first", SyncMode::AddOnly, Direction::Upload),
-        snapshot("First"),
-    );
-    for _ in 0..50 {
-        if queue
-            .activity()
-            .iter()
-            .all(|entry| entry.state == QueueState::Completed)
-        {
-            break;
-        }
-        thread::sleep(Duration::from_millis(2));
-    }
-    assert_eq!(
-        foreground.0.lock().unwrap().as_slice(),
-        ["start:First", "stop"]
     );
 }
 
