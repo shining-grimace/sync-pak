@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use crate::validation::validate_name_length;
+
 use super::{AppConfig, CURRENT_SCHEMA_VERSION, ProviderKind, SyncMode};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -22,6 +24,7 @@ pub(super) fn validate(config: &AppConfig) -> Result<(), ValidationErrors> {
     unique_connection_ids(config, &mut errors);
     for provider in &config.providers {
         required(&provider.name, "Provider name", &mut errors);
+        validate_name(&provider.name, "Provider name", &mut errors);
         validate_provider_options(provider, &mut errors);
         if provider.id != provider.credential_reference.provider_id {
             errors.push("A provider credential reference must use its provider ID.".to_owned());
@@ -29,6 +32,7 @@ pub(super) fn validate(config: &AppConfig) -> Result<(), ValidationErrors> {
     }
     for connection in &config.connections {
         required(&connection.name, "Connection name", &mut errors);
+        validate_name(&connection.name, "Connection name", &mut errors);
         required(&connection.bucket, "Bucket", &mut errors);
         required(&connection.local_path, "Local folder", &mut errors);
         if !config
@@ -59,6 +63,12 @@ pub(super) fn validate(config: &AppConfig) -> Result<(), ValidationErrors> {
 fn required(value: &str, label: &str, errors: &mut Vec<String>) {
     if value.trim().is_empty() {
         errors.push(format!("{label} is required."));
+    }
+}
+
+fn validate_name(value: &str, label: &str, errors: &mut Vec<String>) {
+    if let Err(error) = validate_name_length(value, label) {
+        errors.push(error);
     }
 }
 

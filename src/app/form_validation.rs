@@ -1,4 +1,4 @@
-use crate::configuration::ProviderKind;
+use crate::{configuration::ProviderKind, validation::validate_name_length};
 
 pub(crate) fn provider(
     name: &str,
@@ -11,6 +11,7 @@ pub(crate) fn provider(
     endpoint: &str,
 ) -> Result<(), String> {
     required(name, "Provider name")?;
+    validate_name_length(name, "Provider name")?;
     required(access_key_id, "Access key ID")?;
     required(secret_access_key, "Secret access key")?;
     match kind {
@@ -40,6 +41,7 @@ pub(crate) fn connection(
     retention: &str,
 ) -> Result<(), String> {
     required(name, "Connection name")?;
+    validate_name_length(name, "Connection name")?;
     (provider_index >= 0)
         .then_some(())
         .ok_or_else(|| "Choose a provider.".to_owned())?;
@@ -68,7 +70,20 @@ fn required(value: &str, label: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{connection, provider};
-    use crate::configuration::ProviderKind;
+    use crate::{configuration::ProviderKind, validation::NAME_MAX_LENGTH};
+
+    fn valid_provider(name: &str) -> Result<(), String> {
+        provider(
+            name,
+            "access",
+            "secret",
+            ProviderKind::AwsS3,
+            "",
+            "region",
+            "",
+            "",
+        )
+    }
 
     #[test]
     fn provider_credentials_are_required() {
@@ -169,6 +184,34 @@ mod tests {
         assert_eq!(
             connection("Photos", 0, "bucket", "/folder", 2, "0"),
             Err("Enter a whole number of at least 1 for archive retention.".to_owned())
+        );
+    }
+
+    #[test]
+    fn provider_name_must_not_exceed_the_shared_limit() {
+        assert_eq!(valid_provider(&"a".repeat(NAME_MAX_LENGTH)), Ok(()));
+        assert_eq!(
+            valid_provider(&"a".repeat(NAME_MAX_LENGTH + 1)),
+            Err("Provider name must not exceed 60 characters".to_owned())
+        );
+    }
+
+    #[test]
+    fn connection_name_must_not_exceed_the_shared_limit() {
+        assert_eq!(
+            connection(&"a".repeat(NAME_MAX_LENGTH), 0, "bucket", "/folder", 0, ""),
+            Ok(())
+        );
+        assert_eq!(
+            connection(
+                &"a".repeat(NAME_MAX_LENGTH + 1),
+                0,
+                "bucket",
+                "/folder",
+                0,
+                ""
+            ),
+            Err("Connection name must not exceed 60 characters".to_owned())
         );
     }
 }
