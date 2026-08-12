@@ -1,0 +1,119 @@
+export component ComboBoxBase {
+    in property <[string]> model;
+    in property <bool> enabled <=> focus-scope.enabled;
+    out property <bool> has-focus: (focus-scope.has-focus || root.popup-has-focus) && root.enabled;
+    in-out property <int> current-index: 0;
+    in-out property <string> current-value: root.model[root.current-index];
+    in-out property <bool> popup-has-focus;
+
+    callback selected(string);
+    callback show-popup();
+    callback close-popup();
+
+    public function select(index: int) {
+        if !root.enabled || root.model.length == 0 {
+            return;
+        }
+        root.current-index = index.clamp(0, root.model.length - 1);
+        root.update-current-value();
+        root.selected(root.current-value);
+    }
+
+    public function move-selection-up() {
+        root.select(root.current-index - 1);
+    }
+
+    public function move-selection-down() {
+        root.select(root.current-index + 1);
+    }
+
+    public function handle-popup-key(event: KeyEvent) -> EventResult {
+        if event.text == Key.UpArrow {
+            root.move-selection-up();
+            return accept;
+        } else if event.text == Key.DownArrow {
+            root.move-selection-down();
+            return accept;
+        } else if event.text == Key.Return || event.text == Key.Escape {
+            root.close-popup();
+            return accept;
+        }
+        return reject;
+    }
+
+    function update-current-value() {
+        if root.current-index < 0 || root.current-index >= root.model.length {
+            root.current-value = "";
+        } else {
+            root.current-value = root.model[root.current-index];
+        }
+    }
+
+    changed model => {
+        if root.model.length == 0 {
+            root.current-index = 0;
+        } else {
+            root.current-index = root.current-index.clamp(0, root.model.length - 1);
+        }
+        root.update-current-value();
+    }
+
+    changed current-index => {
+        root.update-current-value();
+    }
+
+    forward-focus: focus-scope;
+
+    focus-scope := FocusScope {
+        width: 100%;
+        height: 100%;
+
+        changed has-focus => {
+            if self.has-focus {
+                root.popup-has-focus = false;
+            }
+        }
+
+        key-pressed(event) => {
+            if !root.enabled {
+                return reject;
+            }
+            if event.text == Key.UpArrow {
+                root.move-selection-up();
+                return accept;
+            } else if event.text == Key.DownArrow {
+                root.move-selection-down();
+                return accept;
+            } else if event.text == Key.Return {
+                root.show-popup();
+                return accept;
+            }
+            return reject;
+        }
+
+        touch-area := TouchArea {
+            width: 100%;
+            height: 100%;
+            enabled: root.enabled;
+
+            clicked => {
+                root.focus();
+                root.show-popup();
+            }
+
+            scroll-event(event) => {
+                if !root.has-focus {
+                    return reject;
+                }
+                if event.delta-y < -2px {
+                    root.move-selection-down();
+                    return accept;
+                } else if event.delta-y > 2px {
+                    root.move-selection-up();
+                    return accept;
+                }
+                return reject;
+            }
+        }
+    }
+}

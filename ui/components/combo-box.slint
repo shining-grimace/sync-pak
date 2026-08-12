@@ -1,0 +1,140 @@
+import { Palette, ScrollView } from "std-widgets.slint";
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import { ComboBoxBase } from "combo-box-base.slint";
+
+export component ComboBox {
+    in property <[string]> model <=> base.model;
+    in property <bool> enabled <=> base.enabled;
+    out property <bool> has-focus: base.has-focus;
+    in-out property <int> current-index <=> base.current-index;
+    in-out property <string> current-value <=> base.current-value;
+    private property <int> visible-items: min(6, root.model.length);
+
+    callback selected(string);
+
+    height: Dimensions.control-height;
+    vertical-stretch: 0;
+    horizontal-stretch: 1;
+    min-width: 1px;
+    forward-focus: base;
+    accessible-role: combobox;
+    accessible-enabled: root.enabled;
+    accessible-expandable: true;
+    accessible-expanded: base.popup-has-focus;
+    accessible-value: root.current-value;
+    accessible-action-expand => {
+        popup.show();
+    }
+
+    base := ComboBoxBase {
+        width: 100%;
+        height: 100%;
+
+        show-popup => {
+            popup.show();
+        }
+
+        close-popup => {
+            popup.close();
+            root.focus();
+        }
+
+        selected(value) => {
+            root.selected(value);
+        }
+    }
+
+    Rectangle {
+        border-radius: Dimensions.input-border-radius;
+        border-width: 1px;
+        border-color: root.has-focus ? Colors.secondary : Colors.primary;
+        background: Palette.control-background;
+        opacity: root.enabled ? 1 : 0.55;
+
+        HorizontalLayout {
+            padding-left: 12px;
+            padding-right: 12px;
+            spacing: 8px;
+
+            Text {
+                horizontal-stretch: 1;
+                horizontal-alignment: left;
+                vertical-alignment: center;
+                text: root.current-value;
+                color: Palette.foreground;
+                overflow: elide;
+                accessible-role: none;
+            }
+
+            Text {
+                width: 16px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                text: "⌄";
+                color: Palette.foreground;
+                accessible-role: none;
+            }
+        }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: root.height + 4px;
+        width: root.width;
+        height: root.visible-items * Dimensions.compact-action-button-height + 2px;
+        close-policy: close-on-click-outside;
+        forward-focus: popup-focus;
+
+        Rectangle {
+            background: Colors.surface;
+            border-color: Colors.primary;
+            border-width: 1px;
+            border-radius: Dimensions.input-border-radius;
+            clip: true;
+
+            popup-focus := FocusScope {
+                init => {
+                    self.focus();
+                    base.popup-has-focus = true;
+                }
+
+                changed has-focus => {
+                    base.popup-has-focus = self.has-focus;
+                }
+
+                key-pressed(event) => {
+                    return base.handle-popup-key(event);
+                }
+
+                ScrollView {
+                    VerticalLayout {
+                        for value[index] in root.model: Rectangle {
+                            height: Dimensions.compact-action-button-height;
+                            vertical-stretch: 0;
+                            background: index == root.current-index ? Colors.primary : transparent;
+
+                            Text {
+                                x: 12px;
+                                width: parent.width - 24px;
+                                text: value;
+                                color: index == root.current-index ? Colors.surface : Colors.primary;
+                                vertical-alignment: center;
+                                overflow: elide;
+                                accessible-role: none;
+                            }
+
+                            TouchArea {
+                                clicked => {
+                                    base.select(index);
+                                    popup.close();
+                                    root.focus();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
