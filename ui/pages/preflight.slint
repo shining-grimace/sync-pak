@@ -12,7 +12,11 @@ import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
 import { DangerCard, InfoCard } from "../components/cards.slint";
 import { FilterButton, PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
-import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
+import {
+    ListItem,
+    ListLoadingIndicator,
+    ListView,
+} from "../components/list-and-action-layouts.slint";
 
 component MeasuredVerticalRegion inherits Rectangle {
     in property <length> spacing;
@@ -88,11 +92,8 @@ export component PreflightPage inherits CenteredPageRoot {
         text: "No files are changed during this check.";
     }
 
-    if root.loading: InfoCard {
-        baseline-height: 110px;
-        DescriptionLabel {
-            text: "Preflight will compare the endpoints above, then show additions, overwrites, deletions, and skipped files before anything starts.";
-        }
+    if root.loading: ListLoadingIndicator {
+        label: "Listing files";
     }
     if root.failed: DangerCard {
         accessible-role: region;

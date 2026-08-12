@@ -10,11 +10,16 @@ import {
     CardSecondaryActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
-import { ListItem, ListView } from "../components/list-and-action-layouts.slint";
+import {
+    ListItem,
+    ListLoadingIndicator,
+    ListView,
+} from "../components/list-and-action-layouts.slint";
 
 export component ActivityPage inherits CenteredPageRoot {
     in property <[ActivityRow]> activity-rows;
     in property <int> activity-clearable-count;
+    in property <bool> operation-running;
     callback clear-completed-activity();
     callback show-activity-result(string);
     callback show-activity-progress(string);
@@ -53,7 +58,10 @@ export component ActivityPage inherits CenteredPageRoot {
                 (root.activity-clearable-count == 1 ? " completed, failed, or cancelled entry." : " completed, failed, or cancelled entries.");
         }
     }
-    if root.activity-rows.length == 0 : InfoCard {
+    if root.operation-running: ListLoadingIndicator {
+        label: "Operation running";
+    }
+    if !root.operation-running && root.activity-rows.length == 0 : InfoCard {
         accessible-role: region;
         accessible-label: "No activity this time";
         baseline-height: 130px;
@@ -70,7 +78,7 @@ export component ActivityPage inherits CenteredPageRoot {
             }
         }
     }
-    if root.activity-rows.length > 0 : ListView {
+    if !root.operation-running && root.activity-rows.length > 0 : ListView {
         accessible-label: "Current activity";
         vertical-stretch: 1;
         vertical-scrollbar-policy: always-on;

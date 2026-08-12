@@ -702,6 +702,7 @@ export component AppWindow inherits Window {
             if root.page == Page.activity: ActivityPage {
                 activity-rows: root.activity-rows;
                 activity-clearable-count: root.activity-clearable-count;
+                operation-running: root.active-activity-id != "";
                 clear-completed-activity => {
                     root.clear-completed-activity();
                 }
