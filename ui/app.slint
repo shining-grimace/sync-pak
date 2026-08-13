@@ -162,6 +162,8 @@ export component AppWindow inherits Window {
     in-out property <string> run-archive-download-details;
     in-out property <bool> run-allows-both-ways;
     in-out property <int> run-direction: 0;
+    in-out property <bool> run-upload-selected: true;
+    in-out property <bool> run-download-selected: true;
     in-out property <bool> preflight-loading: false;
     in-out property <bool> preflight-failed: false;
     in-out property <string> preflight-failure-message;
@@ -237,7 +239,8 @@ export component AppWindow inherits Window {
     callback dismiss-activity-progress();
     callback request-run-connection(string);
     callback verify-saved-connection(string);
-    callback choose-run-direction(int);
+    callback set-run-upload-selected(bool);
+    callback set-run-download-selected(bool);
     callback begin-preflight();
     callback start-preflight-operation();
     callback set-preflight-item-filter(int);
@@ -795,9 +798,13 @@ export component AppWindow inherits Window {
                 archive-upload-details: root.run-archive-upload-details;
                 archive-download-details: root.run-archive-download-details;
                 allows-both-ways: root.run-allows-both-ways;
-                direction: root.run-direction;
-                choose-direction(direction) => {
-                    root.choose-run-direction(direction);
+                upload-selected: root.run-upload-selected;
+                download-selected: root.run-download-selected;
+                set-upload-selected(selected) => {
+                    root.set-run-upload-selected(selected);
+                }
+                set-download-selected(selected) => {
+                    root.set-run-download-selected(selected);
                 }
                 cancel => {
                     root.cancel-run-direction();

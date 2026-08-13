@@ -115,6 +115,21 @@ export component FilterButton inherits ActionButton {
     accessible-checked: root.selected;
 }
 
+export component ToggleButton inherits ActionButton {
+    in property <bool> selected: false;
+
+    button-width: 0px;
+    button-height: Dimensions.compact-action-button-height;
+    expand-width: true;
+    emphasized: root.selected;
+    fill-color: root.selected ? Colors.primary : Colors.surface;
+    outline-color: Colors.primary;
+    label-color: root.selected ? Colors.surface : Colors.primary;
+    accessible-role: checkbox;
+    accessible-checkable: true;
+    accessible-checked: root.selected;
+}
+
 export component NewActionButton inherits ActionButton {
     button-width: Dimensions.new-action-button-width;
     button-height: Dimensions.compact-action-button-height;

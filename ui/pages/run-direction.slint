@@ -1,9 +1,10 @@
 import { CenteredPageRoot } from "../components/page-layouts.slint";
+import { Dimensions } from "../dimensions.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
-import { PrimaryActionButton, RadioButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { PrimaryActionButton, SecondaryActionButton, ToggleButton } from "../components/action-buttons.slint";
 import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
 export component RunDirectionPage inherits CenteredPageRoot {
@@ -14,8 +15,10 @@ export component RunDirectionPage inherits CenteredPageRoot {
     in property <string> archive-upload-details;
     in property <string> archive-download-details;
     in property <bool> allows-both-ways;
-    in property <int> direction;
-    callback choose-direction(int);
+    in property <bool> upload-selected;
+    in property <bool> download-selected;
+    callback set-upload-selected(bool);
+    callback set-download-selected(bool);
     callback cancel();
     callback begin-preflight();
 
@@ -28,126 +31,101 @@ export component RunDirectionPage inherits CenteredPageRoot {
         text: root.connection-mode + " connection";
     }
 
-    if root.direction == 0 && root.archive-upload-details != "": InfoCard {
+    if root.upload-selected && !root.download-selected && root.archive-upload-details != "": InfoCard {
         baseline-height: 66px;
         vertical-stretch: 0;
         DescriptionLabel {
             text: root.archive-upload-details;
         }
     }
-    if root.direction == 1 && root.archive-download-details != "": InfoCard {
+    if !root.upload-selected && root.download-selected && root.archive-download-details != "": InfoCard {
         baseline-height: 66px;
         vertical-stretch: 0;
         DescriptionLabel {
             text: root.archive-download-details;
         }
     }
-    InfoCard {
+    HorizontalLayout {
+        spacing: Dimensions.element-gap;
+        vertical-stretch: 0;
+        ToggleButton {
+            accessible-label: root.upload-selected ? "Upload direction, selected" : "Select upload direction";
+            text: "Upload";
+            selected: root.upload-selected;
+            clicked => {
+                root.set-upload-selected(!root.upload-selected);
+            }
+        }
+        ToggleButton {
+            accessible-label: root.download-selected ? "Download direction, selected" : "Select download direction";
+            text: "Download";
+            selected: root.download-selected;
+            enabled: root.allows-both-ways || !root.upload-selected;
+            clicked => {
+                root.set-download-selected(!root.download-selected);
+            }
+        }
+    }
+
+    if root.upload-selected && !root.download-selected: InfoCard {
         accessible-role: region;
         accessible-label: "Upload direction. Source: " + root.local-endpoint + ". Destination: " + root.remote-endpoint;
         baseline-height: 132px;
         vertical-stretch: 0;
-            SectionHeadingLabel {
-                text: "Upload";
-            }
+        SectionHeadingLabel {
+            text: "Upload";
+        }
 
-            DescriptionLabel {
-                text: "Use the local folder as the source and cloud storage as the destination.";
-            }
+        DescriptionLabel {
+            text: "Use the local folder as the source and cloud storage as the destination.";
+        }
 
-            DescriptionLabel {
-                text: "Source: " + root.local-endpoint;
-            }
-
-            DescriptionLabel {
-                text: "Destination: " + root.remote-endpoint;
-            }
-
-            FocusScope {
-                width: 0px;
-                height: 0px;
-                focus-on-click: false;
-                focus-on-tab-navigation: false;
-                forward-focus: choose-upload;
-                init => {
-                    self.focus();
-                }
-            }
-
-            choose-upload := RadioButton {
-                accessible-label: root.direction == 0 ? "Upload direction, selected" : "Choose upload direction";
-                text: "Choose Upload";
-                selected: root.direction == 0;
-                clicked => {
-                    root.choose-direction(0);
-                }
-            }
     }
 
-    InfoCard {
+    if !root.upload-selected && root.download-selected: InfoCard {
         accessible-role: region;
         accessible-label: "Download direction. Source: " + root.remote-endpoint + ". Destination: " + root.local-endpoint;
         baseline-height: 132px;
         vertical-stretch: 0;
-            SectionHeadingLabel {
-                text: "Download";
-            }
+        SectionHeadingLabel {
+            text: "Download";
+        }
 
-            DescriptionLabel {
-                text: "Use cloud storage as the source and the local folder as the destination.";
-            }
+        DescriptionLabel {
+            text: "Use cloud storage as the source and the local folder as the destination.";
+        }
 
-            DescriptionLabel {
-                text: "Source: " + root.remote-endpoint;
-            }
-
-            DescriptionLabel {
-                text: "Destination: " + root.local-endpoint;
-            }
-
-            RadioButton {
-                accessible-label: root.direction == 1 ? "Download direction, selected" : "Choose download direction";
-                text: "Choose Download";
-                selected: root.direction == 1;
-                clicked => {
-                    root.choose-direction(1);
-                }
-            }
     }
 
-    InfoCard {
-        visible: root.allows-both-ways;
+    if root.upload-selected && root.download-selected: InfoCard {
         accessible-role: region;
         accessible-label: "Both ways direction between " + root.local-endpoint + " and " + root.remote-endpoint;
         baseline-height: 132px;
         vertical-stretch: 0;
-            SectionHeadingLabel {
-                text: "Both ways";
-            }
+        SectionHeadingLabel {
+            text: "Both ways";
+        }
 
-            DescriptionLabel {
-                text: "Copy files found on only one side to the other. Changed files are skipped.";
-            }
+        DescriptionLabel {
+            text: "Copy files found on only one side to the other. Changed files are skipped.";
+        }
 
-            DescriptionLabel {
-                text: "This device: " + root.local-endpoint;
-            }
+    }
 
-            DescriptionLabel {
-                text: "Cloud storage: " + root.remote-endpoint;
-            }
-
-            RadioButton {
-                accessible-label: root.direction == 2 ? "Both-ways direction, selected" : "Choose both-ways direction";
-                text: "Choose Both Ways";
-                selected: root.direction == 2;
-                clicked => {
-                    root.choose-direction(2);
-                }
-            }
+    if !root.upload-selected && !root.download-selected: DescriptionLabel {
+        accessible-live-region: polite;
+        text: "Please select at least one transfer direction";
     }
     DescriptionLabel {
         text: "Continue performs a read-only inventory and shows the complete plan before any files can change.";
+    }
+
+    DescriptionLabel {
+        text: "This device: " + root.local-endpoint;
+    }
+
+    DescriptionLabel {
+        text: "Cloud storage: " + root.remote-endpoint;
     }
 
     ActionGroup {
@@ -160,8 +138,9 @@ export component RunDirectionPage inherits CenteredPageRoot {
         }
 
         PrimaryActionButton {
-            accessible-label: "Continue to preflight for " + root.connection-name;
+            accessible-label: root.upload-selected || root.download-selected ? "Continue to preflight for " + root.connection-name : "Select at least one transfer direction before reviewing the plan";
             text: "Review Plan";
+            enabled: root.upload-selected || root.download-selected;
             clicked => {
                 root.begin-preflight();
             }

@@ -5,6 +5,8 @@ use crate::{
 
 use crate::app::run::direction_presentation::{archive_details, remote_endpoint};
 
+use super::selected_direction;
+
 fn archive_connection() -> ConnectionConfig {
     ConnectionConfig {
         id: ConnectionId::new(),
@@ -48,4 +50,12 @@ fn remote_endpoint_names_the_provider_bucket_and_folder() {
         remote_endpoint("Personal cloud", &root_connection),
         "Personal cloud · archives (bucket root)"
     );
+}
+
+#[test]
+fn selected_direction_requires_at_least_one_selection() {
+    assert_eq!(selected_direction(false, false), None);
+    assert_eq!(selected_direction(true, false), Some(Direction::Upload));
+    assert_eq!(selected_direction(false, true), Some(Direction::Download));
+    assert_eq!(selected_direction(true, true), Some(Direction::BothWays));
 }

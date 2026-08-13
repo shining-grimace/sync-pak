@@ -84,6 +84,8 @@ fn retry(weak: &slint::Weak<AppWindow>) {
         return;
     }
     window.set_run_direction(direction);
+    window.set_run_upload_selected(direction != 1);
+    window.set_run_download_selected(direction != 0);
     window.invoke_begin_preflight();
 }
 

@@ -26,9 +26,16 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
-    window.on_choose_run_direction(move |direction| {
+    window.on_set_run_upload_selected(move |selected| {
         if let Some(window) = weak.upgrade() {
-            window.set_run_direction(direction.clamp(0, 2));
+            window.set_run_upload_selected(selected);
+        }
+    });
+
+    let weak = window.as_weak();
+    window.on_set_run_download_selected(move |selected| {
+        if let Some(window) = weak.upgrade() {
+            window.set_run_download_selected(selected);
         }
     });
 
@@ -62,13 +69,18 @@ fn begin_preflight(
     diagnostics: &SharedDiagnosticLog,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    let Some(direction) = selected_direction(
+        window.get_run_upload_selected(),
+        window.get_run_download_selected(),
+    ) else {
+        return;
+    };
+    window.set_run_direction(direction_index(direction));
     let result = configuration.load().and_then(|config| {
-        RunRequest::from_config(
-            &config,
-            window.get_run_connection_id().as_str(),
-            direction(window.get_run_direction()),
-        )
-        .map_err(|error| crate::configuration::ConfigurationError::Io(std::io::Error::other(error)))
+        RunRequest::from_config(&config, window.get_run_connection_id().as_str(), direction)
+            .map_err(|error| {
+                crate::configuration::ConfigurationError::Io(std::io::Error::other(error))
+            })
     });
     match result {
         Ok(request) => {
@@ -138,11 +150,20 @@ fn start_preflight(
     );
 }
 
-fn direction(index: i32) -> Direction {
-    match index {
-        1 => Direction::Download,
-        2 => Direction::BothWays,
-        _ => Direction::Upload,
+fn selected_direction(upload_selected: bool, download_selected: bool) -> Option<Direction> {
+    match (upload_selected, download_selected) {
+        (true, false) => Some(Direction::Upload),
+        (false, true) => Some(Direction::Download),
+        (true, true) => Some(Direction::BothWays),
+        (false, false) => None,
+    }
+}
+
+fn direction_index(direction: Direction) -> i32 {
+    match direction {
+        Direction::Upload => 0,
+        Direction::Download => 1,
+        Direction::BothWays => 2,
     }
 }
 
@@ -182,7 +203,8 @@ fn show(
             window.set_run_archive_upload_details(archive_upload_details.into());
             window.set_run_archive_download_details(archive_download_details.into());
             window.set_run_allows_both_ways(connection.mode == SyncMode::AddOnly);
-            window.set_run_direction(0);
+            window.set_run_upload_selected(true);
+            window.set_run_download_selected(connection.mode == SyncMode::AddOnly);
             window.set_page(10);
         }
         None => diagnostics_controller::present(
