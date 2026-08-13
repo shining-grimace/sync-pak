@@ -17,7 +17,6 @@ import {
     ConnectionDeletePage,
     ActivityCancelPage,
 } from "pages/destructive-confirmations.slint";
-import { ActivityProgressPage } from "pages/activity-progress.slint";
 import { ActivityResultPage } from "pages/activity-result.slint";
 import { ProviderFormPage } from "pages/provider-form.slint";
 import { ConnectionsPage } from "pages/connections.slint";
@@ -62,7 +61,6 @@ export global Page {
     out property <int> connection-discard-confirmation: 14;
     out property <int> provider-discard-confirmation: 15;
     out property <int> activity-result: 16;
-    out property <int> activity-progress: 17;
 }
 
 export component AppWindow inherits Window {
@@ -90,18 +88,10 @@ export component AppWindow inherits Window {
     in-out property <string> activity-result-connection-id;
     in-out property <int> activity-result-retry-direction: 0;
     in-out property <bool> activity-result-can-retry: false;
-    in-out property <string> activity-progress-id;
-    in-out property <string> activity-progress-title;
-    in-out property <string> activity-progress-phase;
-    in-out property <string> activity-progress-summary;
-    in-out property <string> activity-progress-items;
-    in-out property <string> activity-progress-bytes;
-    in-out property <string> activity-progress-path;
-    in-out property <float> activity-progress-fraction: 0;
-    in-out property <int> activity-progress-percent: 0;
     in-out property <string> active-activity-id;
     in-out property <string> active-activity-title;
     in-out property <string> active-activity-progress;
+    in-out property <bool> active-activity-cancelling: false;
     in-out property <[string]> provider-names;
     in-out property <[string]> provider-buckets;
     in-out property <[string]> provider-verified-buckets;
@@ -255,8 +245,6 @@ export component AppWindow inherits Window {
     callback show-activity-result(string);
     callback dismiss-activity-result();
     callback retry-activity-result();
-    callback show-activity-progress(string);
-    callback dismiss-activity-progress();
     callback request-run-connection(string);
     callback verify-saved-connection(string);
     callback set-run-upload-selected(bool);
@@ -321,10 +309,6 @@ export component AppWindow inherits Window {
                     }
                     if root.page == Page.activity-result {
                         root.dismiss-activity-result();
-                        return accept;
-                    }
-                    if root.page == Page.activity-progress {
-                        root.dismiss-activity-progress();
                         return accept;
                     }
                     if root.page == Page.provider-save-confirmation {
@@ -423,65 +407,6 @@ export component AppWindow inherits Window {
 
                     Rectangle {
                         horizontal-stretch: 1;
-                    }
-                }
-            }
-
-            /* App notifications are overlaid below; keeping this layout page-only prevents jumps. */
-            if false: Rectangle {
-                visible: false;
-                accessible-role: region;
-                accessible-label: "Active operation " + root.active-activity-title;
-                VerticalLayout {
-                    spacing: Dimensions.card-element-spacing;
-                    Text {
-                        text: root.active-activity-title;
-                        color: Colors.primary;
-                        font-weight: 700;
-                        wrap: word-wrap;
-                    }
-
-                    Text {
-                        text: root.active-activity-progress;
-                        color: Colors.secondary;
-                        wrap: word-wrap;
-                    }
-                }
-
-                if root.width < Dimensions.narrow-layout-breakpoint: VerticalLayout {
-                    spacing: Dimensions.card-element-spacing;
-                    CardPrimaryActionButton {
-                        accessible-label: "View progress for " + root.active-activity-title;
-                        text: "View Progress";
-                        clicked => {
-                            root.show-activity-progress(root.active-activity-id);
-                        }
-                    }
-
-                    CardSecondaryActionButton {
-                        accessible-label: "Cancel " + root.active-activity-title;
-                        text: "Cancel";
-                        clicked => {
-                            root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
-                        }
-                    }
-                }
-                if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
-                    spacing: Dimensions.card-element-spacing;
-                    CardPrimaryActionButton {
-                        accessible-label: "View progress for " + root.active-activity-title;
-                        text: "View Progress";
-                        clicked => {
-                            root.show-activity-progress(root.active-activity-id);
-                        }
-                    }
-
-                    CardSecondaryActionButton {
-                        accessible-label: "Cancel " + root.active-activity-title;
-                        text: "Cancel";
-                        clicked => {
-                            root.request-cancel-activity(root.active-activity-id, root.active-activity-title);
-                        }
                     }
                 }
             }
@@ -698,9 +623,6 @@ export component AppWindow inherits Window {
                 show-activity-result(id) => {
                     root.show-activity-result(id);
                 }
-                show-activity-progress(id) => {
-                    root.show-activity-progress(id);
-                }
                 request-cancel-activity(id, title) => {
                     root.request-cancel-activity(id, title);
                 }
@@ -726,23 +648,6 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.page == Page.activity-progress: ActivityProgressPage {
-                id: root.activity-progress-id;
-                title: root.activity-progress-title;
-                phase: root.activity-progress-phase;
-                summary: root.activity-progress-summary;
-                items: root.activity-progress-items;
-                bytes: root.activity-progress-bytes;
-                path: root.activity-progress-path;
-                fraction: root.activity-progress-fraction;
-                percent: root.activity-progress-percent;
-                dismiss => {
-                    root.dismiss-activity-progress();
-                }
-                request-cancel(id, title) => {
-                    root.request-cancel-activity(id, title);
-                }
-            }
 
             if root.page == Page.provider-delete: ProviderDeletePage {
                 provider-name: root.pending-provider-name;
@@ -889,7 +794,7 @@ export component AppWindow inherits Window {
             activate(id) => { root.activate-notification(id); }
         }
 
-        if root.active-activity-id != "" && !root.confirmation-open: InfoCard {
+        if root.active-activity-id != "" && !root.confirmation-open && root.page != Page.activity: InfoCard {
             x: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
             y: root.height - self.preferred-height - 16px;
             width: min(440px, root.width - self.x - 16px);
@@ -901,8 +806,11 @@ export component AppWindow inherits Window {
                 Text { text: root.active-activity-progress; color: Colors.secondary; wrap: word-wrap; }
                 HorizontalLayout {
                     spacing: Dimensions.card-element-spacing;
-                    CardPrimaryActionButton { text: "View Progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
-                    CardSecondaryActionButton { text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
+                    CardSecondaryActionButton {
+                        text: root.active-activity-cancelling ? "Cancelling…" : "Cancel";
+                        enabled: !root.active-activity-cancelling;
+                        clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); }
+                    }
                 }
             }
         }

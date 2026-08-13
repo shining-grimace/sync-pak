@@ -103,10 +103,7 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             if queue.cancel_queued(operation_id) {
                 return Ok(true);
             }
-            queue
-                .running()
-                .filter(|entry| entry.operation_id == operation_id)
-                .map(|entry| entry.plan.connection_id.clone())
+            queue.request_cancel(operation_id)
         };
         match connection_id {
             Some(connection_id) => self.executor.cancel(&connection_id).map(|()| true),

@@ -54,6 +54,12 @@ export component ListLoadingIndicator inherits Rectangle {
     }
 }
 
+export component InlineLoadingIndicator inherits ListLoadingIndicator {
+    width: 32px;
+    height: 32px;
+    vertical-stretch: 0;
+}
+
 export component ActionGroup inherits VerticalLayout {
     spacing: Dimensions.element-gap;
     @children

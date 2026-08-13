@@ -79,14 +79,17 @@ impl OperationProgress {
         if self.total_items == 0 {
             return self.phase.label().into();
         }
-        format!(
-            "{} · {} of {} items · {} of {} bytes",
-            self.phase.label(),
-            self.completed_items,
-            self.total_items,
-            self.transferred_bytes,
-            self.total_bytes
-        )
+        let items = format!("{} of {} items", self.completed_items, self.total_items);
+        if self.total_bytes == 0 {
+            format!("{} · {items}", self.phase.label())
+        } else {
+            format!(
+                "{} · {items} · {} of {} bytes",
+                self.phase.label(),
+                self.transferred_bytes,
+                self.total_bytes
+            )
+        }
     }
 }
 

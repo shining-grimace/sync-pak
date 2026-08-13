@@ -1,5 +1,6 @@
 
-- Unchanged items listed in Preflight should be listed last
+- When setting up a connection, the allowed directions should be specified (using checkbox-like buttons just like the ones on the pre-preflight select-direction screen); these will both be selected by default initially when creating a new connection, and will serve nothing other than to restrict which buttons can be used in pre-preflight (disable the ones that aren't allowed as per the connection's settings); when implementing this do not include migration code for existing settings files which don't have the setting yet, as the local config file could be manually amended so that we don't need to bloat the project code for a feature never released to the public
+- After a successful run, the Result screen has the issue fixed in various other screens where the action button ("Activity") is not at the bottom of the screen, but rather in the middle vertically, and hence the scrolling list view above it (listing the "Action outcomes") isn't stretching to fill as much area as it should have
 - Notifications should work on desktop platforms just like they do on Android (apparently they exist already but aren't wired in yet)
 - Set up release config for Android
 - Target latest Android

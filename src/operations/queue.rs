@@ -38,6 +38,7 @@ pub struct QueueEntry {
     pub state: QueueState,
     pub progress: Option<OperationProgress>,
     pub result: Option<ExecutionResult>,
+    pub cancellation_requested: bool,
 }
 
 #[derive(Default)]
@@ -76,6 +77,7 @@ impl OperationQueue {
             state: QueueState::Queued,
             progress: None,
             result: None,
+            cancellation_requested: false,
         });
         operation_id
     }
@@ -109,6 +111,15 @@ impl OperationQueue {
         };
         entry.progress = Some(progress);
         true
+    }
+
+    /// Marks a running entry as cancelling while the executor stops at its next safe point.
+    pub fn request_cancel(&mut self, operation_id: Uuid) -> Option<String> {
+        let entry = self.entries.iter_mut().find(|entry| {
+            entry.operation_id == operation_id && entry.state == QueueState::Running
+        })?;
+        entry.cancellation_requested = true;
+        Some(entry.plan.connection_id.clone())
     }
 
     /// Adds retry status while retaining the latest phase, counts, and current path.
