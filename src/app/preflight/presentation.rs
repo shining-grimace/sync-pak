@@ -13,6 +13,9 @@ pub struct PreflightPresentation {
     pub overwrites: String,
     pub deletions: String,
     pub skipped: String,
+    pub unchanged: String,
+    pub planned_file_changes: usize,
+    pub has_planned_actions: bool,
     pub start_action: &'static str,
     pub requires_mirror_confirmation: bool,
     pub items: Vec<PreflightItemPresentation>,
@@ -43,7 +46,14 @@ impl From<&Preflight> for PreflightPresentation {
                 summary.delete_byte_size(),
             ),
             skipped: count(summary.skipped(), "skipped", "skipped"),
-            start_action: start_action(preflight.plan()),
+            unchanged: count(summary.unchanged(), "unchanged", "unchanged"),
+            planned_file_changes: summary.planned_file_changes(),
+            has_planned_actions: !preflight.plan().actions().is_empty(),
+            start_action: if preflight.plan().actions().is_empty() {
+                "No Action Needed"
+            } else {
+                start_action(preflight.plan())
+            },
             requires_mirror_confirmation: preflight.plan().mode() == SyncMode::Mirror
                 && preflight.plan().requires_confirmation(),
             items: review_items(preflight)

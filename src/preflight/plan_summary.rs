@@ -1,4 +1,4 @@
-use crate::preflight::comparison::ComparedEntry;
+use crate::preflight::comparison::{ComparedEntry, EntryStatus};
 use crate::preflight::planning::{Endpoint, PlannedAction};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -7,6 +7,7 @@ pub struct PlanSummary {
     overwrites: usize,
     deletions: usize,
     skipped: usize,
+    unchanged: usize,
     archives: usize,
     copy_byte_size: u64,
     overwrite_byte_size: u64,
@@ -30,6 +31,14 @@ impl PlanSummary {
         self.skipped
     }
 
+    pub fn unchanged(&self) -> usize {
+        self.unchanged
+    }
+
+    pub fn planned_file_changes(&self) -> usize {
+        self.additions + self.overwrites + self.deletions + self.skipped
+    }
+
     #[cfg(test)]
     pub fn archives(&self) -> usize {
         self.archives
@@ -50,6 +59,10 @@ impl PlanSummary {
 
 pub(crate) fn summarize(actions: &[PlannedAction], comparison: &[ComparedEntry]) -> PlanSummary {
     let mut summary = PlanSummary::default();
+    summary.unchanged = comparison
+        .iter()
+        .filter(|entry| entry.status == EntryStatus::Unchanged)
+        .count();
     for action in actions {
         match action {
             PlannedAction::Copy { path, from, .. } => {

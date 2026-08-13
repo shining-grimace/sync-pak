@@ -2,6 +2,7 @@ import {
     CheckBox,
 } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
+import { Colors } from "../colors.slint";
 import { PreflightRow } from "../models.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
@@ -45,6 +46,9 @@ export component PreflightPage inherits CenteredPageRoot {
     in property <string> overwrites;
     in property <string> deletions;
     in property <string> skipped;
+    in property <string> unchanged;
+    in property <int> planned-file-changes;
+    in property <bool> has-planned-actions;
     in property <string> start-action;
     in property <bool> requires-mirror-confirmation;
     in-out property <bool> mirror-confirmed;
@@ -116,7 +120,7 @@ export component PreflightPage inherits CenteredPageRoot {
             spacing: Dimensions.section-gap;
             MeasuredVerticalRegion {
                 accessible-role: region;
-                accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped;
+                accessible-label: "Plan summary: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped + ", " + root.unchanged;
                 spacing: Dimensions.element-gap;
                 if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
                     spacing: Dimensions.element-gap;
@@ -135,6 +139,10 @@ export component PreflightPage inherits CenteredPageRoot {
                     DescriptionLabel {
                         text: root.skipped;
                     }
+
+                    DescriptionLabel {
+                        text: root.unchanged;
+                    }
                 }
                 if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                     spacing: Dimensions.element-gap;
@@ -145,15 +153,19 @@ export component PreflightPage inherits CenteredPageRoot {
                     DescriptionLabel {
                         text: root.overwrites;
                     }
+
+                    DescriptionLabel {
+                        text: root.deletions;
+                    }
                 }
                 if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                     spacing: Dimensions.element-gap;
                     DescriptionLabel {
-                        text: root.deletions;
+                        text: root.skipped;
                     }
 
                     DescriptionLabel {
-                        text: root.skipped;
+                        text: root.unchanged;
                     }
                 }
             }
@@ -175,12 +187,12 @@ export component PreflightPage inherits CenteredPageRoot {
                     text: root.overwrites + " · " + root.deletions;
                 }
             }
-            if root.items.length == 0: SuccessLabel {
+            if !root.has-planned-actions: SuccessLabel {
                 text: "No changes are needed. The reviewed local folder and cloud storage already match for this direction.";
             }
             if root.items.length > 0: DescriptionLabel {
                 accessible-live-region: polite;
-                text: root.item-filter == 0 ? "Reviewing " + root.items.length + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
+                text: root.item-filter == 0 ? "Reviewing " + root.planned-file-changes + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
             }
             MeasuredVerticalRegion {
                 if root.items.length > 0: MeasuredVerticalRegion {
@@ -308,9 +320,12 @@ export component PreflightPage inherits CenteredPageRoot {
                 text: "Acknowledge the listed changes before this mirror can start.";
             }
             PrimaryActionButton {
-                accessible-label: root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action;
+                accessible-label: !root.has-planned-actions ? "No action needed" : (root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action);
                 text: root.start-action;
-                enabled: !root.loading && !root.failed && (!root.requires-mirror-confirmation || root.mirror-confirmed);
+                enabled: !root.loading && !root.failed && root.has-planned-actions && (!root.requires-mirror-confirmation || root.mirror-confirmed);
+                emphasized: root.has-planned-actions;
+                fill-color: root.has-planned-actions ? Colors.primary : Colors.surface;
+                label-color: root.has-planned-actions ? Colors.surface : Colors.primary;
                 clicked => {
                     root.start-operation();
                 }

@@ -44,6 +44,9 @@ pub fn show_loading(window: &AppWindow) {
     window.set_preflight_overwrites(SharedString::default());
     window.set_preflight_deletions(SharedString::default());
     window.set_preflight_skipped(SharedString::default());
+    window.set_preflight_unchanged(SharedString::default());
+    window.set_preflight_planned_file_changes(0);
+    window.set_preflight_has_planned_actions(false);
     window.set_preflight_start_action(SharedString::default());
     window.set_preflight_requires_mirror_confirmation(false);
     window.set_preflight_mirror_confirmed(false);
@@ -61,6 +64,9 @@ pub fn show_review(window: &AppWindow, preflight: &Preflight) {
     window.set_preflight_overwrites(presentation.overwrites.into());
     window.set_preflight_deletions(presentation.deletions.into());
     window.set_preflight_skipped(presentation.skipped.into());
+    window.set_preflight_unchanged(presentation.unchanged.into());
+    window.set_preflight_planned_file_changes(presentation.planned_file_changes as i32);
+    window.set_preflight_has_planned_actions(presentation.has_planned_actions);
     window.set_preflight_start_action(presentation.start_action.into());
     window.set_preflight_requires_mirror_confirmation(presentation.requires_mirror_confirmation);
     window.set_preflight_mirror_confirmed(false);
@@ -106,6 +112,9 @@ pub fn show_failed(window: &AppWindow, message: &str) {
     window.set_preflight_overwrites(SharedString::default());
     window.set_preflight_deletions(SharedString::default());
     window.set_preflight_skipped(SharedString::default());
+    window.set_preflight_unchanged(SharedString::default());
+    window.set_preflight_planned_file_changes(0);
+    window.set_preflight_has_planned_actions(false);
     window.set_preflight_start_action(SharedString::default());
     window.set_preflight_requires_mirror_confirmation(false);
     window.set_preflight_mirror_confirmed(false);

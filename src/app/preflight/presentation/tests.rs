@@ -35,6 +35,9 @@ fn presents_mirror_counts_destructive_confirmation_and_item_labels() {
     assert_eq!(presentation.overwrites, "1 overwrite · 2 bytes");
     assert_eq!(presentation.deletions, "1 deletion · 1 byte");
     assert_eq!(presentation.skipped, "0 skipped");
+    assert_eq!(presentation.unchanged, "0 unchanged");
+    assert_eq!(presentation.planned_file_changes, 3);
+    assert!(presentation.has_planned_actions);
     assert_eq!(presentation.start_action, "Start Mirror");
     assert!(presentation.requires_mirror_confirmation);
     assert_eq!(
@@ -64,4 +67,26 @@ fn presents_mirror_counts_destructive_confirmation_and_item_labels() {
             .status,
         "Will delete"
     );
+}
+
+#[test]
+fn presents_unchanged_files_without_a_start_action() {
+    let source = Inventory::new([file("unchanged", 1)]).unwrap();
+    let destination = Inventory::new([file("unchanged", 1)]).unwrap();
+    let preflight = preflight(
+        SyncMode::AddOnly,
+        Direction::Upload,
+        &source,
+        CaseSensitivity::Sensitive,
+        &destination,
+        CaseSensitivity::Sensitive,
+    )
+    .unwrap();
+
+    let presentation = PreflightPresentation::from(&preflight);
+
+    assert_eq!(presentation.unchanged, "1 unchanged");
+    assert_eq!(presentation.planned_file_changes, 0);
+    assert!(!presentation.has_planned_actions);
+    assert_eq!(presentation.start_action, "No Action Needed");
 }

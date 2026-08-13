@@ -170,6 +170,9 @@ export component AppWindow inherits Window {
     in-out property <string> preflight-overwrites;
     in-out property <string> preflight-deletions;
     in-out property <string> preflight-skipped;
+    in-out property <string> preflight-unchanged;
+    in-out property <int> preflight-planned-file-changes: 0;
+    in-out property <bool> preflight-has-planned-actions: false;
     in-out property <string> preflight-start-action;
     in-out property <bool> preflight-requires-mirror-confirmation: false;
     in-out property <bool> preflight-mirror-confirmed: false;
@@ -816,6 +819,9 @@ export component AppWindow inherits Window {
                 overwrites: root.preflight-overwrites;
                 deletions: root.preflight-deletions;
                 skipped: root.preflight-skipped;
+                unchanged: root.preflight-unchanged;
+                planned-file-changes: root.preflight-planned-file-changes;
+                has-planned-actions: root.preflight-has-planned-actions;
                 start-action: root.preflight-start-action;
                 requires-mirror-confirmation: root.preflight-requires-mirror-confirmation;
                 mirror-confirmed <=> root.preflight-mirror-confirmed;
