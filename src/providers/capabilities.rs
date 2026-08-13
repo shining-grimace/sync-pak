@@ -32,6 +32,12 @@ pub struct RemoteObject {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ReadObject {
+    pub contents: Vec<u8>,
+    pub metadata: Option<ObjectMetadata>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MultipartUpload {
     pub id: String,
 }
@@ -76,9 +82,22 @@ pub trait ObjectPrefixChecker {
     ) -> impl Future<Output = ProviderResult<bool>> + Send;
 }
 
-pub trait ObjectReader {
+pub trait ObjectReader: Sync {
     fn read(&self, bucket: &str, key: &str)
     -> impl Future<Output = ProviderResult<Vec<u8>>> + Send;
+
+    fn read_with_metadata(
+        &self,
+        bucket: &str,
+        key: &str,
+    ) -> impl Future<Output = ProviderResult<ReadObject>> + Send {
+        async move {
+            self.read(bucket, key).await.map(|contents| ReadObject {
+                contents,
+                metadata: None,
+            })
+        }
+    }
 }
 
 pub trait ObjectWriter {
@@ -91,7 +110,6 @@ pub trait ObjectWriter {
     ) -> impl Future<Output = ProviderResult<()>> + Send;
 }
 
-#[cfg(any(test, feature = "provider-probes"))]
 pub trait ObjectMetadataReader {
     fn metadata(
         &self,

@@ -1,8 +1,10 @@
 use std::{error::Error, fmt};
 
+mod cache;
 pub(crate) mod capabilities;
 pub(crate) mod download;
 pub(crate) mod root;
+mod root_metadata;
 pub(crate) mod upload;
 
 use crate::{
@@ -12,7 +14,14 @@ use crate::{
     operations::transfer::multipart_file::MultipartFileUploadError,
     operations::transfer::paths::{LocalTransferRoot, RemoteTransferPrefix},
     operations::transfer::upload::UploadError,
+    sync_cache::{CacheNamespace, SyncCache},
 };
+
+#[derive(Clone)]
+pub(crate) struct TransferCache {
+    cache: SyncCache,
+    namespace: CacheNamespace,
+}
 
 /// Transfers individual validated inventory paths between one local root and provider prefix.
 pub struct LocalRemoteTransfer<'a, P, S> {
@@ -22,6 +31,7 @@ pub struct LocalRemoteTransfer<'a, P, S> {
     pub(crate) remote_prefix: RemoteTransferPrefix,
     pub(crate) retry_policy: &'a RetryPolicy,
     pub(crate) sleeper: &'a S,
+    pub(crate) cache: Option<TransferCache>,
 }
 
 impl<'a, P, S> LocalRemoteTransfer<'a, P, S> {
@@ -40,7 +50,13 @@ impl<'a, P, S> LocalRemoteTransfer<'a, P, S> {
             remote_prefix,
             retry_policy,
             sleeper,
+            cache: None,
         }
+    }
+
+    pub fn with_cache(mut self, cache: SyncCache, namespace: CacheNamespace) -> Self {
+        self.cache = Some(TransferCache { cache, namespace });
+        self
     }
 }
 

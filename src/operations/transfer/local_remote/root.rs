@@ -1,7 +1,7 @@
 use std::{
     fs, io,
     path::{Path, PathBuf},
-    time::UNIX_EPOCH,
+    time::{Duration, UNIX_EPOCH},
 };
 
 #[cfg(target_os = "android")]
@@ -9,7 +9,10 @@ use std::io::Write;
 
 use crate::{
     inventory::local::{LocalInventoryAccess, LocalInventoryError, NativeLocalInventory},
-    inventory::{Inventory, InventoryEntryKind, RelativePath},
+    inventory::{Inventory, RelativePath},
+    operations::transfer::local_remote::root_metadata::{
+        LocalEntryMetadata, native_metadata, verify_directory,
+    },
     platform::atomic_write::atomic_write,
 };
 
@@ -63,9 +66,9 @@ impl LocalTransferRoot {
                     byte_size: metadata.size,
                     modified_unix_seconds: metadata.modified,
                     kind: if metadata.is_directory() {
-                        InventoryEntryKind::Directory
+                        crate::inventory::InventoryEntryKind::Directory
                     } else {
-                        InventoryEntryKind::File
+                        crate::inventory::InventoryEntryKind::File
                     },
                 })
             }
@@ -82,9 +85,27 @@ impl LocalTransferRoot {
         }
     }
 
-    pub fn write(&self, relative: &RelativePath, contents: &[u8]) -> io::Result<()> {
+    pub fn write_with_modified_time(
+        &self,
+        relative: &RelativePath,
+        contents: &[u8],
+        modified_unix_seconds: Option<i64>,
+    ) -> io::Result<()> {
         match self {
-            Self::FileSystem(root) => atomic_write(&resolve(root, relative), contents),
+            Self::FileSystem(root) => {
+                let path = resolve(root, relative);
+                atomic_write(&path, contents)?;
+                if let Some(seconds) =
+                    modified_unix_seconds.and_then(|value| u64::try_from(value).ok())
+                    && let Ok(file) = fs::File::options().write(true).open(path)
+                {
+                    let _ = file.set_times(
+                        fs::FileTimes::new()
+                            .set_modified(UNIX_EPOCH + Duration::from_secs(seconds)),
+                    );
+                }
+                Ok(())
+            }
             #[cfg(target_os = "android")]
             Self::AndroidTree(uri) => {
                 let mut file =
@@ -145,41 +166,6 @@ impl LocalTransferRoot {
             Self::AndroidTree(_) => None,
         }
     }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct LocalEntryMetadata {
-    pub byte_size: u64,
-    pub modified_unix_seconds: Option<i64>,
-    pub kind: InventoryEntryKind,
-}
-
-fn verify_directory(root: &Path) -> io::Result<()> {
-    match fs::metadata(root) {
-        Ok(metadata) if metadata.is_dir() => Ok(()),
-        Ok(_) => Err(io::Error::new(
-            io::ErrorKind::NotADirectory,
-            "not a directory",
-        )),
-        Err(error) => Err(error),
-    }
-}
-
-fn native_metadata(path: &Path) -> io::Result<LocalEntryMetadata> {
-    let metadata = fs::symlink_metadata(path)?;
-    Ok(LocalEntryMetadata {
-        byte_size: metadata.len(),
-        modified_unix_seconds: metadata
-            .modified()
-            .ok()
-            .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
-            .and_then(|duration| duration.as_secs().try_into().ok()),
-        kind: if metadata.is_dir() {
-            InventoryEntryKind::Directory
-        } else {
-            InventoryEntryKind::File
-        },
-    })
 }
 
 fn delete_native(path: &Path) -> io::Result<()> {

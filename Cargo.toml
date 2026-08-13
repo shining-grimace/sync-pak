@@ -19,6 +19,7 @@ provider-s3 = [
     "dep:hyper",
     "dep:hyper-rustls",
     "dep:hyper-util",
+    "dep:futures-util",
     "dep:rustls",
     "dep:rustls-platform-verifier",
     "dep:tokio",
@@ -36,6 +37,8 @@ tokio = { version = "=1.52.4", features = ["macros", "rt-multi-thread", "time"],
 uuid = { version = "=1.21.0", features = ["v4"] }
 unicode-normalization = "=0.1.24"
 zip = { version = "=2.4.2", default-features = false }
+futures-util = { version = "=0.3.32", optional = true }
+rusqlite = { version = "=0.38.0", features = ["bundled"] }
 
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
 notify-rust = "=4.18.0"

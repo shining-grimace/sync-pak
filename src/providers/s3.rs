@@ -1,5 +1,6 @@
 pub(crate) mod bucket;
 pub(crate) mod error;
+pub(crate) mod inventory;
 pub(crate) mod multipart;
 pub(crate) mod operations;
 pub mod preflight;

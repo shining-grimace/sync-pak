@@ -108,6 +108,7 @@ async fn execute_confirmed(
         confirmed.request(),
         &providers,
         local_case_sensitivity(),
+        configuration_path,
     )
     .await
     {
@@ -140,6 +141,10 @@ async fn execute_confirmed(
         };
     let retry = RetryPolicy::default();
     let sleeper = TokioSleeper;
+    let cache = crate::sync_cache::SyncCache::for_configuration(configuration_path);
+    let namespace = cache
+        .as_ref()
+        .map(|cache| cache.namespace(confirmed.request()));
     let transfer = LocalRemoteTransfer::new(
         &transport,
         &confirmed.request().connection.bucket,
@@ -149,6 +154,10 @@ async fn execute_confirmed(
         &retry,
         &sleeper,
     );
+    let transfer = match cache.zip(namespace) {
+        Some((cache, namespace)) => transfer.with_cache(cache, namespace),
+        None => transfer,
+    };
     let history_directory = configuration_path
         .parent()
         .ok_or(CapabilityError::Unavailable)?;

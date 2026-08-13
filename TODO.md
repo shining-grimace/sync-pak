@@ -1,6 +1,9 @@
 
+- Unchanged items listed in Preflight should be listed last
 - There are lots of files in preflight listed as "warning", even when there's nothing to do and all is fine
+- The direction selection can be compacted substantially by using two separate checkboxes rather than three radio buttons
 - Success and failure notification cards look shoddy the way they pop in and out causing layouts to jump; let's try a vertical column built at the app shell level which flows from the top and covers whatever page is shown beneath it; each card will need a dismiss button, and for ones without action buttons they should fade away after a sensible timeout
+- Notifications should work on desktop platforms just like they do on Android
 - Set up release config for Android
 - Target latest Android
 - Bump Rust and Android dependencies where possible
@@ -8,3 +11,5 @@
 - Create privacy policy
 - Review UI theming
 - Revise the roadmap's later stages to include prep of marketing material (think what are going to be the most popular workflows, think how they're made easy assuming they are, and how can we market those facts)
+- Make sure the roadmap's key points are all implemented
+- See where beta versions can be release; Google Play bein a likely candidate

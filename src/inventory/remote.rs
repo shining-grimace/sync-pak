@@ -5,20 +5,7 @@ use std::fmt;
 use crate::inventory::{
     Inventory, InventoryEntry, InventoryEntryKind, InventoryError, RelativePath,
 };
-use crate::providers::capabilities::{ObjectLister, ProviderError, RemoteObject};
-
-pub async fn list_remote_inventory<L: ObjectLister + ?Sized>(
-    lister: &L,
-    bucket: &str,
-    prefix: &str,
-) -> Result<Inventory, RemoteInventoryError> {
-    let prefix = normalize_prefix(prefix)?;
-    let objects = lister
-        .list_objects(bucket, &prefix)
-        .await
-        .map_err(RemoteInventoryError::Provider)?;
-    inventory_from_objects(&prefix, objects)
-}
+use crate::providers::capabilities::{ProviderError, RemoteObject};
 
 pub fn inventory_from_objects(
     prefix: &str,

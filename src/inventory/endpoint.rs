@@ -5,11 +5,10 @@ use std::future::Future;
 use crate::configuration::SyncMode;
 use crate::inventory::Inventory;
 use crate::inventory::local::LocalInventoryError;
-use crate::inventory::remote::{RemoteInventoryError, list_remote_inventory};
+use crate::inventory::remote::RemoteInventoryError;
 use crate::operations::transfer::paths::LocalTransferRoot;
 use crate::preflight::planning::Direction;
 use crate::preflight::{CaseSensitivity, Preflight, PreflightError, preflight};
-use crate::providers::capabilities::ObjectLister;
 
 pub trait InventoryEndpoint {
     fn case_sensitivity(&self) -> CaseSensitivity;
@@ -42,31 +41,28 @@ impl InventoryEndpoint for LocalFolderEndpoint {
     }
 }
 
-pub struct RemoteFolderEndpoint<'a, L: ObjectLister + Sync + ?Sized> {
-    lister: &'a L,
-    bucket: String,
-    prefix: String,
+#[derive(Clone, Debug)]
+pub struct InventorySnapshotEndpoint {
+    inventory: Inventory,
+    case_sensitivity: CaseSensitivity,
 }
 
-impl<'a, L: ObjectLister + Sync + ?Sized> RemoteFolderEndpoint<'a, L> {
-    pub fn new(lister: &'a L, bucket: impl Into<String>, prefix: impl Into<String>) -> Self {
+impl InventorySnapshotEndpoint {
+    pub fn new(inventory: Inventory, case_sensitivity: CaseSensitivity) -> Self {
         Self {
-            lister,
-            bucket: bucket.into(),
-            prefix: prefix.into(),
+            inventory,
+            case_sensitivity,
         }
     }
 }
 
-impl<L: ObjectLister + Sync + ?Sized> InventoryEndpoint for RemoteFolderEndpoint<'_, L> {
+impl InventoryEndpoint for InventorySnapshotEndpoint {
     fn case_sensitivity(&self) -> CaseSensitivity {
-        CaseSensitivity::Sensitive
+        self.case_sensitivity
     }
 
     async fn collect(&self) -> Result<Inventory, EndpointInventoryError> {
-        list_remote_inventory(self.lister, &self.bucket, &self.prefix)
-            .await
-            .map_err(EndpointInventoryError::Remote)
+        Ok(self.inventory.clone())
     }
 }
 

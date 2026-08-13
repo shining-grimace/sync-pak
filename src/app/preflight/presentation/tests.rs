@@ -53,7 +53,7 @@ fn presents_mirror_counts_destructive_confirmation_and_item_labels() {
             .find(|item| item.path == "changed")
             .unwrap()
             .detail,
-        "Source: file · 2 bytes · Destination: file · 1 byte"
+        "Source: file · 2 bytes · Destination: file · 1 byte · Sizes differ"
     );
     assert_eq!(
         presentation

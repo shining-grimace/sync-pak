@@ -6,7 +6,7 @@ use crate::{
     operations::cancellation::CancellationToken,
     operations::retry::{NoopRetryObserver, RetryObserver, RetryPolicy, RetrySleeper},
     platform::atomic_write::atomic_write,
-    providers::capabilities::{ObjectReader, ProviderError},
+    providers::capabilities::{ObjectReader, ProviderError, ReadObject},
 };
 
 #[cfg(test)]
@@ -53,7 +53,7 @@ pub async fn download_to_path_with_retry_and_cancellation_and_observer<
     atomic_write(destination, &contents).map_err(DownloadError::Local)
 }
 
-pub async fn download_contents_with_retry_and_cancellation<T: ObjectReader, S: RetrySleeper>(
+pub async fn download_object_with_retry_and_cancellation<T: ObjectReader, S: RetrySleeper>(
     provider: &T,
     bucket: &str,
     key: &str,
@@ -61,18 +61,27 @@ pub async fn download_contents_with_retry_and_cancellation<T: ObjectReader, S: R
     sleeper: &S,
     jitter_seed: u64,
     cancellation: &CancellationToken,
-) -> Result<Vec<u8>, DownloadError> {
-    download_contents_with_retry_and_cancellation_and_observer(
-        provider,
-        bucket,
-        key,
-        policy,
-        sleeper,
-        jitter_seed,
-        cancellation,
-        &NoopRetryObserver,
-    )
-    .await
+) -> Result<ReadObject, DownloadError> {
+    let mut completed_attempts = 0;
+    loop {
+        cancellation.check().map_err(|_| DownloadError::Cancelled)?;
+        completed_attempts += 1;
+        match provider.read_with_metadata(bucket, key).await {
+            Ok(object) => {
+                cancellation.check().map_err(|_| DownloadError::Cancelled)?;
+                return Ok(object);
+            }
+            Err(error) => {
+                match policy.delay_after_failure(completed_attempts, &error, None, jitter_seed) {
+                    Some(retry) => {
+                        sleeper.sleep(retry.delay).await;
+                        cancellation.check().map_err(|_| DownloadError::Cancelled)?;
+                    }
+                    None => return Err(DownloadError::Provider(error)),
+                }
+            }
+        }
+    }
 }
 
 async fn download_contents_with_retry_and_cancellation_and_observer<

@@ -13,7 +13,8 @@ use crate::{
     operations::transfer::modes::mirror::MirrorTransfer,
     preflight::planning::Direction,
     providers::capabilities::{
-        MultipartUploader, ObjectDeleter, ObjectPrefixChecker, ObjectReader, ObjectWriter,
+        MultipartUploader, ObjectDeleter, ObjectMetadataReader, ObjectPrefixChecker, ObjectReader,
+        ObjectWriter,
     },
 };
 
@@ -39,7 +40,9 @@ impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'
                 cancellation,
             )
             .await
-            .map_err(LocalRemoteTransferError::Delete)
+            .map_err(LocalRemoteTransferError::Delete)?;
+            self.invalidate_cache(&path);
+            Ok(())
         }
     }
 }
@@ -61,7 +64,7 @@ impl<P: ObjectReader, S: RetrySleeper> ArchiveDownloader for LocalRemoteTransfer
     }
 }
 
-impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> ArchiveUploader
+impl<P: ObjectWriter + MultipartUploader + ObjectMetadataReader, S: RetrySleeper> ArchiveUploader
     for LocalRemoteTransfer<'_, P, S>
 {
     type Error = LocalRemoteTransferError;
@@ -80,8 +83,10 @@ impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> ArchiveUploader
     }
 }
 
-impl<P: ObjectPrefixChecker + ObjectReader + ObjectWriter + MultipartUploader, S: RetrySleeper>
-    AddOnlyTransfer for LocalRemoteTransfer<'_, P, S>
+impl<
+    P: ObjectPrefixChecker + ObjectReader + ObjectWriter + MultipartUploader + ObjectMetadataReader,
+    S: RetrySleeper,
+> AddOnlyTransfer for LocalRemoteTransfer<'_, P, S>
 {
     type Error = LocalRemoteTransferError;
 
@@ -105,7 +110,12 @@ impl<P: ObjectPrefixChecker + ObjectReader + ObjectWriter + MultipartUploader, S
 }
 
 impl<
-    P: ObjectDeleter + ObjectPrefixChecker + ObjectReader + ObjectWriter + MultipartUploader,
+    P: ObjectDeleter
+        + ObjectPrefixChecker
+        + ObjectReader
+        + ObjectWriter
+        + MultipartUploader
+        + ObjectMetadataReader,
     S: RetrySleeper,
 > MirrorTransfer for LocalRemoteTransfer<'_, P, S>
 {
@@ -137,7 +147,7 @@ impl<
         cancellation: &CancellationToken,
     ) -> impl Future<Output = Result<(), Self::Error>> {
         async move {
-            match direction {
+            let result = match direction {
                 Direction::Upload => delete_remote_with_retry_and_cancellation(
                     self.provider,
                     self.bucket,
@@ -153,7 +163,10 @@ impl<
                 Direction::Download => delete_local(&self.local_root, path, cancellation)
                     .map_err(LocalRemoteTransferError::Delete),
                 Direction::BothWays => Err(LocalRemoteTransferError::UnsupportedDirection),
-            }
+            };
+            result?;
+            self.invalidate_cache(path);
+            Ok(())
         }
     }
 }

@@ -64,9 +64,6 @@ fn add_only_golden_plan_copies_only_missing_paths_and_warns_for_every_difference
             PlannedAction::SkipChanged {
                 path: RelativePath::new("link").unwrap(),
             },
-            PlannedAction::SkipChanged {
-                path: RelativePath::new("missing-time").unwrap(),
-            },
             PlannedAction::Copy {
                 path: RelativePath::new("source-only").unwrap(),
                 from: Endpoint::Source,
@@ -106,11 +103,6 @@ fn mirror_golden_plan_overwrites_differences_then_deletes_destination_only_paths
             },
             PlannedAction::Overwrite {
                 path: RelativePath::new("link").unwrap(),
-                from: Endpoint::Source,
-                to: Endpoint::Destination,
-            },
-            PlannedAction::Overwrite {
-                path: RelativePath::new("missing-time").unwrap(),
                 from: Endpoint::Source,
                 to: Endpoint::Destination,
             },

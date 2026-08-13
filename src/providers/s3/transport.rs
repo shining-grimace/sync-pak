@@ -8,13 +8,12 @@ use crate::{
     configuration::{ProviderConfig, ProviderCredentials},
     providers::capabilities::{
         ObjectDeleter, ObjectLister, ObjectMetadata, ObjectReader, ProviderError, ProviderResult,
-        RemoteObject,
+        ReadObject, RemoteObject,
     },
     providers::s3::error::provider_error,
     providers::s3::settings::S3Settings,
 };
 
-#[cfg(any(test, feature = "provider-probes"))]
 use crate::providers::capabilities::ObjectMetadataReader;
 
 pub struct S3Transport {
@@ -88,6 +87,10 @@ impl ObjectLister for S3Transport {
 
 impl ObjectReader for S3Transport {
     async fn read(&self, bucket: &str, key: &str) -> ProviderResult<Vec<u8>> {
+        Ok(self.read_with_metadata(bucket, key).await?.contents)
+    }
+
+    async fn read_with_metadata(&self, bucket: &str, key: &str) -> ProviderResult<ReadObject> {
         let object = self
             .client
             .get_object()
@@ -96,16 +99,26 @@ impl ObjectReader for S3Transport {
             .send()
             .await
             .map_err(provider_error)?;
-        object
+        let metadata = object_metadata(
+            object.content_length(),
+            object.last_modified().map(|value| value.secs()),
+            source_modified_time(object.metadata()),
+            object.content_type(),
+            object.e_tag(),
+        )?;
+        let contents = object
             .body
             .collect()
             .await
             .map(|contents| contents.into_bytes().to_vec())
-            .map_err(|_| ProviderError::Unavailable)
+            .map_err(|_| ProviderError::Unavailable)?;
+        Ok(ReadObject {
+            contents,
+            metadata: Some(metadata),
+        })
     }
 }
 
-#[cfg(any(test, feature = "provider-probes"))]
 impl ObjectMetadataReader for S3Transport {
     async fn metadata(&self, bucket: &str, key: &str) -> ProviderResult<ObjectMetadata> {
         let object = self
@@ -172,7 +185,6 @@ fn object_metadata(
     })
 }
 
-#[cfg(any(test, feature = "provider-probes"))]
 fn source_modified_time(
     metadata: Option<&std::collections::HashMap<String, String>>,
 ) -> Option<i64> {

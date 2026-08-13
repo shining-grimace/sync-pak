@@ -43,7 +43,7 @@ fn collect(
     request: RunRequest,
     configuration_path: PathBuf,
 ) -> Result<Preflight, PreflightFailure> {
-    let configuration = ConfigStore::at(configuration_path);
+    let configuration = ConfigStore::at(configuration_path.clone());
     let credentials = PlatformCredentialStore::new().map_err(|_| PreflightFailure::Credentials)?;
     let providers = ProviderRepository::new(&configuration, &credentials);
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -55,6 +55,7 @@ fn collect(
             &request,
             &providers,
             local_case_sensitivity(),
+            &configuration_path,
         ))
         .map_err(PreflightFailure::from)
 }

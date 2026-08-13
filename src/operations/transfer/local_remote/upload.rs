@@ -13,7 +13,8 @@ use crate::{
     },
     operations::transfer::upload_strategy::{UploadStrategy, select_upload_strategy},
     providers::capabilities::{
-        MultipartUploadRequest, MultipartUploader, ObjectWriteMetadata, ObjectWriter,
+        MultipartUploadRequest, MultipartUploader, ObjectMetadataReader, ObjectWriteMetadata,
+        ObjectWriter,
     },
 };
 
@@ -47,7 +48,9 @@ impl<P: ObjectWriter, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
     }
 }
 
-impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
+impl<P: ObjectWriter + MultipartUploader + ObjectMetadataReader, S: RetrySleeper>
+    LocalRemoteTransfer<'_, P, S>
+{
     pub async fn upload_auto(
         &self,
         relative: &RelativePath,
@@ -75,7 +78,7 @@ impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'
             .map_err(LocalRemoteTransferError::Upload);
         }
         let mut source = self.local_root.open_read(relative).map_err(local_error)?;
-        match select_upload_strategy(metadata.byte_size) {
+        let result = match select_upload_strategy(metadata.byte_size) {
             UploadStrategy::SinglePart => {
                 let mut contents = Vec::new();
                 source.read_to_end(&mut contents).map_err(local_error)?;
@@ -107,7 +110,10 @@ impl<P: ObjectWriter + MultipartUploader, S: RetrySleeper> LocalRemoteTransfer<'
             )
             .await
             .map_err(LocalRemoteTransferError::Multipart),
-        }
+        };
+        result?;
+        self.record_upload(relative, &metadata).await;
+        Ok(())
     }
 
     pub(crate) async fn upload_path_auto(

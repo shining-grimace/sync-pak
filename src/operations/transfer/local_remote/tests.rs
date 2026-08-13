@@ -16,10 +16,11 @@ use crate::{
     operations::retry::{RetryPolicy, RetrySleeper},
     operations::transfer::paths::{LocalTransferRoot, RemoteTransferPrefix},
     providers::capabilities::{
-        MultipartUpload, MultipartUploadRequest, MultipartUploader, ObjectDeleter,
-        ObjectPrefixChecker, ObjectReader, ObjectWriteMetadata, ObjectWriter, ProviderError,
-        ProviderResult, UploadedPart,
+        MultipartUpload, MultipartUploadRequest, MultipartUploader, ObjectDeleter, ObjectMetadata,
+        ObjectMetadataReader, ObjectPrefixChecker, ObjectReader, ObjectWriteMetadata, ObjectWriter,
+        ProviderError, ProviderResult, ReadObject, UploadedPart,
     },
+    sync_cache::{CacheNamespace, SyncCache},
 };
 
 use super::{LocalRemoteTransfer, LocalRemoteTransferError};
@@ -30,6 +31,7 @@ struct Provider {
     deletes: Mutex<Vec<String>>,
     missing_reads: Mutex<Vec<String>>,
     existing_prefixes: Mutex<Vec<String>>,
+    source_modified: Mutex<Option<i64>>,
 }
 
 impl ObjectWriter for Provider {
@@ -38,8 +40,9 @@ impl ObjectWriter for Provider {
         _: &str,
         key: &str,
         contents: &[u8],
-        _: &ObjectWriteMetadata,
+        metadata: &ObjectWriteMetadata,
     ) -> ProviderResult<()> {
+        *self.source_modified.lock().unwrap() = metadata.source_modified_unix_seconds;
         self.writes
             .lock()
             .unwrap()
@@ -61,6 +64,25 @@ impl ObjectReader for Provider {
         } else {
             Ok(b"remote".to_vec())
         }
+    }
+
+    async fn read_with_metadata(&self, bucket: &str, key: &str) -> ProviderResult<ReadObject> {
+        Ok(ReadObject {
+            contents: self.read(bucket, key).await?,
+            metadata: Some(self.metadata(bucket, key).await?),
+        })
+    }
+}
+
+impl ObjectMetadataReader for Provider {
+    async fn metadata(&self, _: &str, _: &str) -> ProviderResult<ObjectMetadata> {
+        Ok(ObjectMetadata {
+            byte_size: 6,
+            modified_unix_seconds: Some(100),
+            source_modified_unix_seconds: *self.source_modified.lock().unwrap(),
+            content_type: None,
+            entity_tag: Some("etag".into()),
+        })
     }
 }
 
@@ -181,6 +203,30 @@ fn uploads_a_relative_local_file_to_its_prefixed_key() {
 }
 
 #[test]
+fn records_a_verified_baseline_after_a_successful_upload() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    std::fs::write(root.join("photo.jpg"), b"local!").unwrap();
+    let cache = SyncCache::for_configuration(&root.join("state/config.json")).unwrap();
+    let namespace = CacheNamespace::from_stored("test-namespace".into());
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+    let transfer = transfer(&provider, &root, &policy).with_cache(cache.clone(), namespace.clone());
+
+    block_on(transfer.upload_auto(
+        &RelativePath::new("photo.jpg").unwrap(),
+        &CancellationToken::default(),
+        1,
+    ))
+    .unwrap();
+
+    let snapshot = cache.snapshot(&namespace);
+    assert!(snapshot.baseline("photo.jpg").is_some());
+    assert!(snapshot.observation("bucket", "sync/photo.jpg").is_some());
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
 fn uploads_an_empty_directory_as_a_prefixed_marker() {
     let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
     std::fs::create_dir_all(root.join("empty")).unwrap();
@@ -219,6 +265,14 @@ fn downloads_a_relative_key_to_its_local_root() {
         std::fs::read(root.join("folder/photo.jpg")).unwrap(),
         b"remote"
     );
+    let modified = std::fs::metadata(root.join("folder/photo.jpg"))
+        .unwrap()
+        .modified()
+        .unwrap()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    assert_eq!(modified, 100);
     std::fs::remove_dir_all(&root).unwrap();
 }
 

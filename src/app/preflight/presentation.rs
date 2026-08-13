@@ -65,7 +65,7 @@ impl From<ReviewItem> for PreflightItemPresentation {
 }
 
 fn details(item: &ReviewItem) -> String {
-    [
+    let endpoints = [
         item.source.as_ref().map(|entry| describe("Source", entry)),
         item.destination
             .as_ref()
@@ -74,7 +74,25 @@ fn details(item: &ReviewItem) -> String {
     .into_iter()
     .flatten()
     .collect::<Vec<_>>()
-    .join(" · ")
+    .join(" · ");
+    match comparison_reason(item) {
+        Some(reason) => format!("{endpoints} · {reason}"),
+        None => endpoints,
+    }
+}
+
+fn comparison_reason(item: &ReviewItem) -> Option<&'static str> {
+    let source = item.source.as_ref()?;
+    let destination = item.destination.as_ref()?;
+    if source.byte_size != destination.byte_size {
+        return Some("Sizes differ");
+    }
+    match item.status {
+        ReviewStatus::Changed | ReviewStatus::WillOverwrite | ReviewStatus::Warning => {
+            Some("Modification times differ")
+        }
+        _ => None,
+    }
 }
 
 fn describe(label: &str, entry: &crate::preflight::review::ReviewEntryDetails) -> String {

@@ -6,6 +6,7 @@ mod operations;
 mod platform;
 mod preflight;
 mod providers;
+mod sync_cache;
 mod validation;
 
 pub use capabilities::CapabilityError;
