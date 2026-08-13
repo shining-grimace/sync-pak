@@ -1,0 +1,73 @@
+import { AppNotification } from "../models.slint";
+import { DangerCard, SuccessCard } from "cards.slint";
+import { ErrorHeadingLabel } from "error-heading-label.slint";
+import { ErrorLabel } from "error-label.slint";
+import { CompactCardPrimaryActionButton } from "action-buttons.slint";
+
+component NotificationCard inherits Rectangle {
+    in property <AppNotification> notification;
+    callback dismiss(int);
+    callback activate(int);
+    opacity: root.notification.fading ? 0 : 1;
+    height: root.notification.height;
+    animate opacity { duration: 500ms; }
+    // When a faded card is removed, the VerticalLayout recalculates the cards
+    // below it. Animate their positions instead of changing this card's size.
+    animate y { duration: 500ms; }
+
+    card := Rectangle {
+        width: parent.width;
+        height: parent.height;
+        if root.notification.kind == 0: DangerCard {
+            width: parent.width;
+            ErrorHeadingLabel { text: "Action needed"; }
+            ErrorLabel { accessible-live-region: assertive; text: root.notification.message; }
+            if root.notification.action == 1: CompactCardPrimaryActionButton {
+                text: "Diagnostics";
+                clicked => { root.activate(root.notification.id); }
+            }
+        }
+        if root.notification.kind == 1: SuccessCard {
+            width: parent.width;
+            Text { text: "Update"; font-weight: 700; }
+            Text { accessible-live-region: polite; text: root.notification.message; wrap: word-wrap; }
+        }
+        close-button := Rectangle {
+            x: parent.width - 36px;
+            y: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 14px;
+            accessible-role: button;
+            accessible-label: "Dismiss notification";
+            accessible-action-default => {
+                root.dismiss(root.notification.id);
+            }
+            Text {
+                text: "×";
+                font-size: 22px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            TouchArea {
+                clicked => {
+                    root.dismiss(root.notification.id);
+                }
+            }
+        }
+    }
+}
+
+export component NotificationCenter inherits Rectangle {
+    in property <[AppNotification]> notifications;
+    callback dismiss(int);
+    callback activate(int);
+    height: root.notifications.length == 0 ? 0px : root.notifications[root.notifications.length - 1].offset + root.notifications[root.notifications.length - 1].height;
+    for notification[index] in root.notifications: NotificationCard {
+            y: notification.offset;
+            animate y { duration: 500ms; }
+            notification: notification;
+            dismiss(id) => { root.dismiss(id); }
+            activate(id) => { root.activate(id); }
+    }
+}

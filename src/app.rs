@@ -5,6 +5,7 @@ pub(crate) mod controller;
 pub(crate) mod diagnostics;
 pub(crate) mod folder_picker;
 pub(crate) mod form_validation;
+pub(crate) mod notifications;
 pub(crate) mod onboarding;
 pub(crate) mod preflight;
 pub(crate) mod providers;

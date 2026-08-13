@@ -5,6 +5,7 @@ use slint::ComponentHandle;
 use crate::{AppWindow, app::diagnostics as diagnostics_controller};
 
 pub(crate) fn initialize(window: &AppWindow) {
+    crate::app::notifications::configure(window);
     window.set_app_version(env!("CARGO_PKG_VERSION").into());
     let diagnostics = Rc::new(std::cell::RefCell::new(Default::default()));
     diagnostics_controller::configure(window, Rc::clone(&diagnostics));

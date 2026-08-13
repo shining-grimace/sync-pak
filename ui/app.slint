@@ -30,6 +30,7 @@ import {
     ConnectionRow,
     ActivityRow,
     PreflightRow,
+    AppNotification,
 } from "models.slint";
 import { DescriptionLabel } from "components/description-label.slint";
 import { ErrorLabel } from "components/error-label.slint";
@@ -41,6 +42,7 @@ import {
     NavMenuButton,
 } from "components/action-buttons.slint";
 import { MobileNavMenuButton } from "components/compact-action-buttons.slint";
+import { NotificationCenter } from "components/notification-center.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -106,13 +108,31 @@ export component AppWindow inherits Window {
     in-out property <bool> provider-bucket-list-empty: false;
     in-out property <string> status-message;
     in-out property <string> notice-message;
+    in-out property <int> provider-validation-focus;
+    in-out property <int> connection-validation-focus;
+    in-out property <[AppNotification]> notifications;
     in-out property <string> diagnostic-text;
     in-out property <bool> diagnostic-include-paths;
     in-out property <int> diagnostic-entry-count: 0;
     in-out property <string> diagnostic-copy-status;
     in-out property <int> diagnostic-return-page: 3;
     in-out property <bool> privacy-can-return-to-welcome: false;
+    callback queue-notification(string, int, int);
+    callback dismiss-notification(int);
+    callback activate-notification(int);
     private property <bool> confirmation-open: page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.provider-save-confirmation || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
+    changed status-message => {
+        if root.status-message != "" {
+            root.queue-notification(root.status-message, 0, 0);
+            root.status-message = "";
+        }
+    }
+    changed notice-message => {
+        if root.notice-message != "" {
+            root.queue-notification(root.notice-message, 1, 0);
+            root.notice-message = "";
+        }
+    }
     in-out property <string> pending-provider-id;
     in-out property <string> pending-provider-name;
     in-out property <int> pending-connection-count;
@@ -407,50 +427,11 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.status-message != "": DangerCard {
-                accessible-role: region;
-                accessible-label: "Action needed";
-                baseline-height: 58px;
-                ErrorHeadingLabel {
-                    text: "Action needed";
-                }
-
-                ErrorLabel {
-                    accessible-live-region: assertive;
-                    text: root.status-message;
-                }
-
-                if root.diagnostic-entry-count > 0: CardPrimaryActionButton {
-                    accessible-label: "View redacted diagnostics for this error";
-                    text: "Diagnostics";
-                    clicked => {
-                        root.show-diagnostics();
-                    }
-                }
-            }
-
-            if root.notice-message != "": SuccessCard {
-                accessible-role: region;
-                accessible-label: "Update";
-                baseline-height: 48px;
-                Text {
-                    text: "Update";
-                    color: Colors.success;
-                    font-weight: 700;
-                }
-
-                Text {
-                    accessible-live-region: polite;
-                    text: root.notice-message;
-                    color: Colors.success;
-                    wrap: word-wrap;
-                }
-            }
-
-            if root.active-activity-id != "" && !root.confirmation-open: InfoCard {
+            /* App notifications are overlaid below; keeping this layout page-only prevents jumps. */
+            if false: Rectangle {
+                visible: false;
                 accessible-role: region;
                 accessible-label: "Active operation " + root.active-activity-title;
-                baseline-height: 62px;
                 VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
                     Text {
@@ -539,6 +520,7 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.provider-form: ProviderFormPage {
+                validation-focus: root.provider-validation-focus;
                 provider-form-id <=> root.provider-form-id;
                 provider-form-name <=> root.provider-form-name;
                 provider-form-kind <=> root.provider-form-kind;
@@ -624,6 +606,7 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.connection-form: ConnectionFormPage {
+                validation-focus: root.connection-validation-focus;
                 connection-form-id <=> root.connection-form-id;
                 connection-form-name <=> root.connection-form-name;
                 connection-form-provider <=> root.connection-form-provider;
@@ -893,6 +876,33 @@ export component AppWindow inherits Window {
                             root.request-navigation(3);
                         }
                     }
+                }
+            }
+        }
+
+        NotificationCenter {
+            x: max(16px, (root.width - 440px) / 2);
+            y: 16px;
+            width: min(440px, root.width - 32px);
+            notifications: root.notifications;
+            dismiss(id) => { root.dismiss-notification(id); }
+            activate(id) => { root.activate-notification(id); }
+        }
+
+        if root.active-activity-id != "" && !root.confirmation-open: InfoCard {
+            x: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
+            y: root.height - self.preferred-height - 16px;
+            width: min(440px, root.width - self.x - 16px);
+            accessible-role: region;
+            accessible-label: "Active operation " + root.active-activity-title;
+            VerticalLayout {
+                spacing: Dimensions.card-element-spacing;
+                Text { text: root.active-activity-title; color: Colors.primary; font-weight: 700; wrap: word-wrap; }
+                Text { text: root.active-activity-progress; color: Colors.secondary; wrap: word-wrap; }
+                HorizontalLayout {
+                    spacing: Dimensions.card-element-spacing;
+                    CardPrimaryActionButton { text: "View Progress"; clicked => { root.show-activity-progress(root.active-activity-id); } }
+                    CardSecondaryActionButton { text: "Cancel"; clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); } }
                 }
             }
         }

@@ -26,6 +26,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     in property <bool> connection-providers-load-failed;
     in property <bool> folder-picker-open;
     in property <bool> connection-verifying;
+    in property <int> validation-focus;
     callback select-local-folder();
     callback select-connection-provider(int);
     callback retry-connection-providers();
@@ -33,6 +34,13 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     callback verify-connection();
     callback save-and-verify-connection();
     callback request-discard-connection();
+
+    changed validation-focus => {
+        if root.validation-focus == 1 { connection-name.focus(); }
+        if root.validation-focus == 2 { connection-provider.focus(); }
+        if root.validation-focus == 3 { connection-bucket.focus(); }
+        if root.validation-focus == 4 { connection-local.focus(); }
+    }
 
     HeadingLabel {
         text: root.connection-form-id == "" ? "New Connection" : "Edit " + root.connection-form-name;

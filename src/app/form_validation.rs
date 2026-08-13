@@ -61,6 +61,32 @@ pub(crate) fn connection(
     Ok(())
 }
 
+pub(crate) fn provider_focus(error: &str) -> i32 {
+    if error.starts_with("Provider name") {
+        1
+    } else if error.starts_with("Access key") || error.starts_with("Secret access") {
+        2
+    } else {
+        1
+    }
+}
+
+pub(crate) fn connection_focus(error: &str) -> i32 {
+    if error.starts_with("Connection name") {
+        1
+    } else if error.starts_with("Choose a provider") {
+        2
+    } else if error.starts_with("Bucket") {
+        3
+    } else if error.starts_with("Local folder") {
+        4
+    } else if error.starts_with("Enter a whole number") {
+        5
+    } else {
+        1
+    }
+}
+
 fn required(value: &str, label: &str) -> Result<(), String> {
     (!value.trim().is_empty())
         .then_some(())

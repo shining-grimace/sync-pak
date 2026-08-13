@@ -154,6 +154,7 @@ fn save(
         &retention,
     ) {
         window.set_connection_save_after_verification(false);
+        window.set_connection_validation_focus(form_validation::connection_focus(&error));
         window.set_status_message(error.into());
         return;
     }

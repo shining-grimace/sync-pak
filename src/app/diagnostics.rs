@@ -37,7 +37,7 @@ pub(crate) fn present(
 ) {
     record(log, StructuredError::new(summary, technical_details));
     window.set_diagnostic_entry_count(log.borrow().report().errors.len() as i32);
-    window.set_status_message(message.into());
+    crate::app::notifications::present_diagnostic(window, message);
 }
 
 pub(crate) fn present_with_safe_details(
@@ -52,7 +52,7 @@ pub(crate) fn present_with_safe_details(
         StructuredError::with_safe_details(summary, technical_details),
     );
     window.set_diagnostic_entry_count(log.borrow().report().errors.len() as i32);
-    window.set_status_message(message.into());
+    crate::app::notifications::present_diagnostic(window, message);
 }
 
 fn show(weak: &slint::Weak<AppWindow>, log: &SharedDiagnosticLog) {

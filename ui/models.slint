@@ -37,3 +37,13 @@ export struct PreflightRow {
     status: string,
     detail: string,
 }
+
+export struct AppNotification {
+    id: int,
+    message: string,
+    kind: int,
+    action: int,
+    fading: bool,
+    height: length,
+    offset: length,
+}

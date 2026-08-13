@@ -25,11 +25,17 @@ export component ProviderFormPage inherits CenteredPageRoot {
     in property <bool> provider-verifying;
     in property <[string]> provider-verified-buckets;
     in property <bool> provider-bucket-list-empty;
+    in property <int> validation-focus;
     callback toggle-provider-secret-visibility();
     callback request-discard-provider();
     callback request-save-provider();
     callback verify-provider();
     callback save-and-verify-provider();
+
+    changed validation-focus => {
+        if root.validation-focus == 1 { provider-name.focus(); }
+        if root.validation-focus == 2 { access-key.focus(); }
+    }
 
     vertical-stretch: 1;
     HeadingLabel {

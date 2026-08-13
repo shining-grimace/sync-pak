@@ -149,6 +149,12 @@ export component CardPrimaryActionButton inherits ActionButton {
     label-color: Colors.surface;
 }
 
+export component CompactCardPrimaryActionButton inherits CardPrimaryActionButton {
+    button-width: 92px;
+    button-height: 32px;
+    label-text-size: 14px;
+}
+
 export component CardSecondaryActionButton inherits ActionButton {
     button-width: Dimensions.card-action-button-width;
     fixed-width: true;

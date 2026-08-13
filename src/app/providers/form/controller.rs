@@ -173,6 +173,7 @@ fn verify(
         &endpoint,
     ) {
         window.set_provider_save_after_verification(false);
+        window.set_provider_validation_focus(form_validation::provider_focus(&error));
         window.set_status_message(error.into());
         return;
     }
@@ -301,6 +302,7 @@ fn save(
         &endpoint,
     ) {
         window.set_page(2);
+        window.set_provider_validation_focus(form_validation::provider_focus(&error));
         window.set_status_message(error.into());
         return;
     }
