@@ -107,6 +107,16 @@ impl<
     ) -> impl Future<Output = Result<(), Self::Error>> {
         async move { LocalRemoteTransfer::download(self, path, cancellation, jitter_seed).await }
     }
+
+    fn accept_existing(
+        &self,
+        path: &crate::inventory::RelativePath,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
+        async move {
+            self.record_accepted_pair(path).await;
+            Ok(())
+        }
+    }
 }
 
 impl<

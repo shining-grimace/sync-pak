@@ -38,6 +38,10 @@ impl AddOnlyTransfer for Transfer {
     ) -> impl Future<Output = Result<(), Self::Error>> {
         async { Ok(()) }
     }
+
+    fn accept_existing(&self, _: &RelativePath) -> impl Future<Output = Result<(), Self::Error>> {
+        async { Ok(()) }
+    }
 }
 
 struct Observer;

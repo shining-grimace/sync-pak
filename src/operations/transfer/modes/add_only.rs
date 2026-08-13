@@ -25,6 +25,9 @@ pub trait AddOnlyTransfer {
         cancellation: &CancellationToken,
         jitter_seed: u64,
     ) -> impl Future<Output = Result<(), Self::Error>>;
+
+    fn accept_existing(&self, path: &RelativePath)
+    -> impl Future<Output = Result<(), Self::Error>>;
 }
 
 /// Executes the copy and skip actions of an add-only plan in their planned order.
@@ -99,7 +102,10 @@ async fn execute_action<T: AddOnlyTransfer>(
     jitter_seed: u64,
 ) -> Result<(), AddOnlyActionError<T::Error>> {
     match action {
-        PlannedAction::SkipChanged { .. } => Ok(()),
+        PlannedAction::SkipChanged { path } => transfer
+            .accept_existing(path)
+            .await
+            .map_err(AddOnlyActionError::Transfer),
         PlannedAction::Copy { path, from, to } => match (direction, from, to) {
             (Direction::Upload, Endpoint::Source, Endpoint::Destination)
             | (Direction::BothWays, Endpoint::Source, Endpoint::Destination) => transfer

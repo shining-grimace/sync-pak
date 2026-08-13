@@ -14,13 +14,14 @@ use crate::{
     operations::transfer::multipart_file::MultipartFileUploadError,
     operations::transfer::paths::{LocalTransferRoot, RemoteTransferPrefix},
     operations::transfer::upload::UploadError,
-    sync_cache::{CacheNamespace, SyncCache},
+    sync_cache::{CacheNamespace, CacheSnapshot, SyncCache},
 };
 
 #[derive(Clone)]
 pub(crate) struct TransferCache {
     cache: SyncCache,
     namespace: CacheNamespace,
+    snapshot: CacheSnapshot,
 }
 
 /// Transfers individual validated inventory paths between one local root and provider prefix.
@@ -55,7 +56,12 @@ impl<'a, P, S> LocalRemoteTransfer<'a, P, S> {
     }
 
     pub fn with_cache(mut self, cache: SyncCache, namespace: CacheNamespace) -> Self {
-        self.cache = Some(TransferCache { cache, namespace });
+        let snapshot = cache.snapshot(&namespace);
+        self.cache = Some(TransferCache {
+            cache,
+            namespace,
+            snapshot,
+        });
         self
     }
 }

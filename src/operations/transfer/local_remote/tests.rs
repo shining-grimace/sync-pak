@@ -20,7 +20,7 @@ use crate::{
         ObjectMetadataReader, ObjectPrefixChecker, ObjectReader, ObjectWriteMetadata, ObjectWriter,
         ProviderError, ProviderResult, ReadObject, UploadedPart,
     },
-    sync_cache::{CacheNamespace, SyncCache},
+    sync_cache::{CacheNamespace, RemoteIdentity, RemoteObservation, SyncCache},
 };
 
 use super::{LocalRemoteTransfer, LocalRemoteTransferError};
@@ -32,6 +32,7 @@ struct Provider {
     missing_reads: Mutex<Vec<String>>,
     existing_prefixes: Mutex<Vec<String>>,
     source_modified: Mutex<Option<i64>>,
+    metadata_reads: Mutex<usize>,
 }
 
 impl ObjectWriter for Provider {
@@ -76,6 +77,7 @@ impl ObjectReader for Provider {
 
 impl ObjectMetadataReader for Provider {
     async fn metadata(&self, _: &str, _: &str) -> ProviderResult<ObjectMetadata> {
+        *self.metadata_reads.lock().unwrap() += 1;
         Ok(ObjectMetadata {
             byte_size: 6,
             modified_unix_seconds: Some(100),
@@ -223,6 +225,56 @@ fn records_a_verified_baseline_after_a_successful_upload() {
     let snapshot = cache.snapshot(&namespace);
     assert!(snapshot.baseline("photo.jpg").is_some());
     assert!(snapshot.observation("bucket", "sync/photo.jpg").is_some());
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn records_an_equal_sized_pre_existing_pair_as_accepted() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    std::fs::write(root.join("photo.jpg"), b"local!").unwrap();
+    let cache = SyncCache::for_configuration(&root.join("state/config.json")).unwrap();
+    let namespace = CacheNamespace::from_stored("test-namespace".into());
+    cache.record_observations(&[RemoteObservation {
+        namespace: namespace.clone(),
+        bucket: "bucket".into(),
+        key: "sync/photo.jpg".into(),
+        identity: RemoteIdentity {
+            byte_size: 6,
+            modified_unix_seconds: Some(100),
+            entity_tag: Some("etag".into()),
+        },
+        source_modified_unix_seconds: None,
+    }]);
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+    let transfer = transfer(&provider, &root, &policy).with_cache(cache.clone(), namespace.clone());
+
+    block_on(transfer.record_accepted_pair(&RelativePath::new("photo.jpg").unwrap()));
+
+    let snapshot = cache.snapshot(&namespace);
+    let baseline = snapshot.baseline("photo.jpg").unwrap();
+    assert_eq!(baseline.local.byte_size, 6);
+    assert_eq!(baseline.remote.byte_size, 6);
+    assert!(snapshot.observation("bucket", "sync/photo.jpg").is_some());
+    assert_eq!(*provider.metadata_reads.lock().unwrap(), 0);
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn does_not_accept_a_pre_existing_pair_with_different_sizes() {
+    let root = std::env::temp_dir().join(format!("sync-pak-transfer-{}", Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    std::fs::write(root.join("photo.jpg"), b"short").unwrap();
+    let cache = SyncCache::for_configuration(&root.join("state/config.json")).unwrap();
+    let namespace = CacheNamespace::from_stored("test-namespace".into());
+    let provider = Provider::default();
+    let policy = RetryPolicy::default();
+    let transfer = transfer(&provider, &root, &policy).with_cache(cache.clone(), namespace.clone());
+
+    block_on(transfer.record_accepted_pair(&RelativePath::new("photo.jpg").unwrap()));
+
+    assert!(cache.snapshot(&namespace).baseline("photo.jpg").is_none());
     std::fs::remove_dir_all(&root).unwrap();
 }
 

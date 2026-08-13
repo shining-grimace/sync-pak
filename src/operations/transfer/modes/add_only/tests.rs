@@ -49,6 +49,19 @@ impl AddOnlyTransfer for Transfer {
             Ok(())
         }
     }
+
+    fn accept_existing(
+        &self,
+        path: &RelativePath,
+    ) -> impl Future<Output = Result<(), Self::Error>> {
+        async move {
+            self.0
+                .lock()
+                .unwrap()
+                .push(format!("accept:{}", path.as_str()));
+            Ok(())
+        }
+    }
 }
 
 struct Observer;
@@ -114,4 +127,24 @@ fn download_direction_dispatches_source_to_destination_as_a_download() {
     .unwrap();
 
     assert_eq!(transfer.0.lock().unwrap().as_slice(), ["download:remote"]);
+}
+
+#[test]
+fn changed_existing_pairs_are_accepted_when_the_run_executes() {
+    let transfer = Transfer::default();
+    let action = PlannedAction::SkipChanged {
+        path: RelativePath::new("existing").unwrap(),
+    };
+
+    block_on(execute_add_only_actions(
+        Direction::BothWays,
+        &[action],
+        &transfer,
+        &CancellationToken::default(),
+        &Observer,
+        1,
+    ))
+    .unwrap();
+
+    assert_eq!(transfer.0.lock().unwrap().as_slice(), ["accept:existing"]);
 }
