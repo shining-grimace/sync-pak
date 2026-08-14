@@ -18,6 +18,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
     in property <bool> can-retry;
     callback retry();
     callback dismiss();
+    fill-height: true;
     HeadingLabel {
         text: "Result: " + root.title;
         wrap: word-wrap;
@@ -70,6 +71,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
     }
     if root.details.length > 0: VerticalLayout {
         spacing: Dimensions.element-gap;
+        vertical-stretch: 1;
         SectionHeadingLabel {
             text: "Action outcomes";
             font-weight: 700;
@@ -77,7 +79,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
 
         ListView {
             accessible-label: "Action outcomes";
-            height: 240px;
+            vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;
             for detail in root.details: ListItem {
                 width: parent.width;

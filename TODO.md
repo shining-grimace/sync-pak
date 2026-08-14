@@ -1,6 +1,5 @@
 
-- After a successful run, the Result screen has the issue fixed in various other screens where the action button ("Activity") is not at the bottom of the screen, but rather in the middle vertically, and hence the scrolling list view above it (listing the "Action outcomes") isn't stretching to fill as much area as it should have
-- Notifications should work on desktop platforms just like they do on Android (apparently they exist already but aren't wired in yet)
+- The card that appears at the bottom when an activity is running but the user navigated somewhere else looks crap; it should be modelled instead on the notifications which appear at the top
 - Set up release config for Android
 - Target latest Android
 - Bump Rust and Android dependencies where possible
