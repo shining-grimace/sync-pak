@@ -41,7 +41,7 @@ import {
     NavMenuButton,
 } from "components/action-buttons.slint";
 import { MobileNavMenuButton } from "components/compact-action-buttons.slint";
-import { NotificationCenter } from "components/notification-center.slint";
+import { ActiveOperationNotice, NotificationCenter } from "components/notification-center.slint";
 
 export global Page {
     out property <int> welcome: 0;
@@ -802,25 +802,14 @@ export component AppWindow inherits Window {
             activate(id) => { root.activate-notification(id); }
         }
 
-        if root.active-activity-id != "" && !root.confirmation-open && root.page != Page.activity: InfoCard {
-            x: root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px;
+        if root.active-activity-id != "" && !root.confirmation-open && root.page != Page.activity: ActiveOperationNotice {
+            x: max(16px, (root.width - 440px) / 2);
             y: root.height - self.preferred-height - 16px;
-            width: min(440px, root.width - self.x - 16px);
-            accessible-role: region;
-            accessible-label: "Active operation " + root.active-activity-title;
-            VerticalLayout {
-                spacing: Dimensions.card-element-spacing;
-                Text { text: root.active-activity-title; color: Colors.primary; font-weight: 700; wrap: word-wrap; }
-                Text { text: root.active-activity-progress; color: Colors.secondary; wrap: word-wrap; }
-                HorizontalLayout {
-                    spacing: Dimensions.card-element-spacing;
-                    CardSecondaryActionButton {
-                        text: root.active-activity-cancelling ? "Cancelling…" : "Cancel";
-                        enabled: !root.active-activity-cancelling;
-                        clicked => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); }
-                    }
-                }
-            }
+            width: min(440px, root.width - 32px);
+            title: root.active-activity-title;
+            progress: root.active-activity-progress;
+            cancelling: root.active-activity-cancelling;
+            cancel => { root.request-cancel-activity(root.active-activity-id, root.active-activity-title); }
         }
 
         if root.width >= Dimensions.desktop-layout-breakpoint: InfoCard {

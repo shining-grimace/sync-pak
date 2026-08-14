@@ -1,5 +1,4 @@
 
-- The card that appears at the bottom when an activity is running but the user navigated somewhere else looks crap; it should be modelled instead on the notifications which appear at the top
 - Set up release config for Android
 - Target latest Android
 - Bump Rust and Android dependencies where possible
@@ -8,4 +7,4 @@
 - Review UI theming
 - Revise the roadmap's later stages to include prep of marketing material (think what are going to be the most popular workflows, think how they're made easy assuming they are, and how can we market those facts)
 - Make sure the roadmap's key points are all implemented
-- See where beta versions can be release; Google Play bein a likely candidate
+- See where beta versions can be released; Google Play being a likely candidate

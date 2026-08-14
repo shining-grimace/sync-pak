@@ -1,5 +1,5 @@
 import { AppNotification } from "../models.slint";
-import { DangerCard, SuccessCard } from "cards.slint";
+import { DangerCard, InfoCard, SuccessCard } from "cards.slint";
 import { ErrorHeadingLabel } from "error-heading-label.slint";
 import { ErrorLabel } from "error-label.slint";
 import { CompactCardPrimaryActionButton } from "action-buttons.slint";
@@ -69,5 +69,34 @@ export component NotificationCenter inherits Rectangle {
             notification: notification;
             dismiss(id) => { root.dismiss(id); }
             activate(id) => { root.activate(id); }
+    }
+}
+
+export component ActiveOperationNotice inherits Rectangle {
+    in property <string> title;
+    in property <string> progress;
+    in property <bool> cancelling;
+    callback cancel();
+    height: 118px;
+
+    card := InfoCard {
+        width: parent.width;
+        height: parent.height;
+        accessible-role: region;
+        accessible-label: "Active operation " + root.title + ". " + root.progress;
+        Text {
+            text: root.title;
+            font-weight: 700;
+            wrap: word-wrap;
+        }
+        Text {
+            text: root.progress;
+            wrap: word-wrap;
+        }
+        CompactCardPrimaryActionButton {
+            text: root.cancelling ? "Cancelling…" : "Cancel";
+            enabled: !root.cancelling;
+            clicked => { root.cancel(); }
+        }
     }
 }
