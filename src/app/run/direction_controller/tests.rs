@@ -16,6 +16,8 @@ fn archive_connection() -> ConnectionConfig {
         remote_path: "daily".into(),
         local_path: "/photos".into(),
         mode: SyncMode::Archive,
+        allow_upload: true,
+        allow_download: true,
         keep_last_archives: Some(3),
         verified: false,
     }

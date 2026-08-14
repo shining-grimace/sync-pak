@@ -65,6 +65,8 @@ fn provider_deletion_removes_dependent_connections_and_credentials() {
             remote_path: String::new(),
             local_path: "/photos".to_owned(),
             mode: SyncMode::AddOnly,
+            allow_upload: true,
+            allow_download: true,
             keep_last_archives: None,
             verified: false,
         })
@@ -143,6 +145,8 @@ fn provider_and_connection_configuration_survive_a_restart() {
             remote_path: "camera".to_owned(),
             local_path: "/photos".to_owned(),
             mode: SyncMode::AddOnly,
+            allow_upload: true,
+            allow_download: true,
             keep_last_archives: None,
             verified: false,
         })
@@ -170,6 +174,8 @@ fn connection_verification_survives_a_restart() {
             remote_path: String::new(),
             local_path: "/photos".to_owned(),
             mode: SyncMode::AddOnly,
+            allow_upload: true,
+            allow_download: true,
             keep_last_archives: None,
             verified: false,
         })

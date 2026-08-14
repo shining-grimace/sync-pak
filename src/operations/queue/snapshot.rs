@@ -61,6 +61,8 @@ mod tests {
             remote_path: "phone".into(),
             local_path: "/pictures".into(),
             mode: SyncMode::Mirror,
+            allow_upload: true,
+            allow_download: true,
             keep_last_archives: None,
             verified: false,
         };

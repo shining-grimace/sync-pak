@@ -589,6 +589,12 @@ Everything described in this document is required for the first public release. 
 is divided into vertical milestones so risky platform behavior is tested early rather than
 left until packaging.
 
+Status assessment updated 2026-08-15. `Complete` means the milestone's required product
+functionality is implemented. Thorough behaviour, fault-injection, accessibility, and
+target-platform checks are deliberately deferred to the pre-release gate in
+[`docs/device-test-plan.md`](docs/device-test-plan.md); their absence does not keep an
+implementation milestone open.
+
 ## 1. Cross-platform Feasibility
 
 - Establish minimal Slint applications on Linux, Android, and Windows in continuous builds.
@@ -601,6 +607,10 @@ left until packaging.
 Exit criterion: every target can securely save a test credential and transfer a file while
 using its intended packaging/security model.
 
+Status: Complete. The intended platform adapters, package-build scaffolding, and authenticated
+provider-operation proof are implemented. Installed-package, sandbox, and physical-device
+checks recorded in `docs/feasibility.md` are pre-release validation work.
+
 ## 2. Domain and Persistence Foundation
 
 - Define versioned, serializable provider metadata and connection configurations.
@@ -612,6 +622,11 @@ using its intended packaging/security model.
 - Add redaction-safe structured errors and diagnostics.
 
 Exit criterion: configurations survive restart and migration without exposing credentials.
+
+Status: Complete. Versioned serializable configuration, atomic writes, validation, immutable
+IDs, protected credential references, and redacted diagnostics are implemented. This is the
+initial-release schema baseline: no older released or developer configuration schema exists to
+migrate. Any future schema change must provide its migration before that changed schema ships.
 
 ## 3. Provider Capability Layer
 
@@ -640,6 +655,10 @@ See `docs/provider-conformance.md`.
 
 Exit criterion: golden tests demonstrate every source/destination state produces the documented plan.
 
+Status: Complete. Inventory, comparison, collision preflight, and non-mutating add-only,
+mirror, and archive planning are implemented. The complete golden matrix and target-platform
+filesystem evidence are pre-release validation work.
+
 ## 5. Safe Transfer Executor
 
 - Implement temporary local downloads, provider-confirmed uploads, multipart cleanup, bounded retries,
@@ -653,6 +672,10 @@ Exit criterion: interruption and injected-failure tests never replace a good loc
 an incomplete file, never delete before required copies finish, and never prune archives
 before a new archive is stored successfully.
 
+Status: Complete. Add-only, mirror, archive, retry, cancellation, multipart cleanup,
+progress, and copy-before-delete execution are wired into the S3 operation executor. The
+full fault-injection and interruption matrix is pre-release validation work.
+
 ## 6. Queue and Background Execution
 
 - Implement the single-worker in-memory queue, immutable history snapshots, cancellation,
@@ -663,7 +686,12 @@ before a new archive is stored successfully.
 Exit criterion: queued operations execute in order and cancellation, app backgrounding, and
 configuration deletion behave as documented on all targets.
 
-## 7. Complete User Interface — Complete
+Status: Complete. The in-memory single-worker queue, immutable activity snapshots,
+cancellation/deletion coordination, progress models, Android foreground-execution bridge,
+and startup temporary cleanup are implemented. Cross-target app-backgrounding and
+configuration-deletion checks are pre-release validation work.
+
+## 7. Complete User Interface
 
 - Build welcome, connection, provider, direction, preflight, progress, activity, privacy,
   diagnostics, and confirmation screens using the source copy in this document.
@@ -676,6 +704,10 @@ Android layout, and destructive actions are never ambiguous.
 
 Device validation checklist: [`docs/device-test-plan.md`](docs/device-test-plan.md).
 
+Status: Complete. The documented screens and responsive/accessibility work are implemented.
+Small-layout, TalkBack, desktop keyboard, contrast, scalable-text, focus, and reduced-motion
+checks are pre-release validation work.
+
 ## 8. Privacy, Ads, and Release Integration
 
 - Publish the privacy policy and provider disclosures; audit logs, errors, clipboard actions,
@@ -687,6 +719,10 @@ Device validation checklist: [`docs/device-test-plan.md`](docs/device-test-plan.
 
 Exit criterion: release candidates pass privacy review and platform packaging tests.
 
+Status: Not started. The in-app privacy and diagnostics screens exist, but the privacy
+policy, consent/AdMob work, signed release packages, release CI, and package lifecycle
+testing are not complete.
+
 ## 9. Release Hardening
 
 - Run end-to-end matrices across all modes, directions, providers, and target platforms.
@@ -696,3 +732,6 @@ Exit criterion: release candidates pass privacy review and platform packaging te
   string extraction, and user documentation.
 - Release only when there are no known paths to silent data loss and every warning/error
   gives the user a concrete next action.
+
+Status: Not started. This milestone depends on the outstanding release integration and on
+the end-to-end, security, accessibility, licensing, documentation, and failure-matrix work.

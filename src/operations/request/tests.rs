@@ -31,6 +31,8 @@ fn config(mode: SyncMode) -> AppConfig {
             remote_path: String::new(),
             local_path: "/photos".into(),
             mode,
+            allow_upload: true,
+            allow_download: true,
             keep_last_archives: None,
             verified: false,
         }],
@@ -64,5 +66,27 @@ fn rejects_both_ways_for_non_additive_connections() {
             Direction::BothWays,
         ),
         Err(RunRequestError::BothWaysUnsupported)
+    );
+}
+
+#[test]
+fn rejects_directions_disabled_by_connection_settings() {
+    let mut config = config(SyncMode::AddOnly);
+    let connection_id = config.connections[0].id.as_str().to_owned();
+    config.connections[0].allow_upload = false;
+
+    assert_eq!(
+        RunRequest::from_config(&config, &connection_id, Direction::Upload),
+        Err(RunRequestError::DirectionNotAllowed)
+    );
+    assert_eq!(
+        RunRequest::from_config(&config, &connection_id, Direction::BothWays),
+        Err(RunRequestError::DirectionNotAllowed)
+    );
+
+    config.connections[0].allow_download = false;
+    assert_eq!(
+        RunRequest::from_config(&config, &connection_id, Direction::Download),
+        Err(RunRequestError::DirectionNotAllowed)
     );
 }

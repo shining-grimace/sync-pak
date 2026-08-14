@@ -91,6 +91,8 @@ mod tests {
                 remote_path: String::new(),
                 local_path: "/local".into(),
                 mode: SyncMode::AddOnly,
+                allow_upload: true,
+                allow_download: true,
                 keep_last_archives: None,
                 verified: false,
             },

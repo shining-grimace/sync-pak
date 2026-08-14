@@ -71,6 +71,8 @@ fn request(direction: Direction) -> RunRequest {
         remote_path: String::new(),
         local_path: "/photos".into(),
         mode: SyncMode::AddOnly,
+        allow_upload: true,
+        allow_download: true,
         keep_last_archives: None,
         verified: false,
     };

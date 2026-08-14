@@ -144,7 +144,9 @@ pub struct ConnectionConfig {
     pub remote_path: String,
     pub local_path: String,
     pub mode: SyncMode,
+    #[serde(default = "default_direction_allowed")]
     pub allow_upload: bool,
+    #[serde(default = "default_direction_allowed")]
     pub allow_download: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_last_archives: Option<u32>,
@@ -189,4 +191,8 @@ pub enum SyncMode {
     AddOnly,
     Mirror,
     Archive,
+}
+
+fn default_direction_allowed() -> bool {
+    true
 }
