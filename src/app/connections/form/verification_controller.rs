@@ -59,6 +59,14 @@ fn request(
     let local = window.get_connection_form_local();
     let mode = window.get_connection_form_mode();
     let retention = window.get_connection_form_retention();
+    if let Err(error) = form_validation::directions(
+        window.get_connection_form_allow_upload(),
+        window.get_connection_form_allow_download(),
+    ) {
+        window.set_connection_save_after_verification(false);
+        window.set_status_message(error.into());
+        return;
+    }
     if let Err(error) =
         form_validation::connection(&name, provider, &bucket, &local, mode, &retention)
     {
@@ -76,6 +84,8 @@ fn request(
         local,
         mode,
         retention,
+        window.get_connection_form_allow_upload(),
+        window.get_connection_form_allow_download(),
     ) {
         Ok(connection) => connection,
         Err(_) => {
@@ -133,6 +143,8 @@ fn verified(window: &AppWindow) {
             window.get_connection_form_local(),
             window.get_connection_form_mode(),
             window.get_connection_form_retention(),
+            window.get_connection_form_allow_upload(),
+            window.get_connection_form_allow_download(),
         );
     }
 }

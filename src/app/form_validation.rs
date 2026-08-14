@@ -61,6 +61,12 @@ pub(crate) fn connection(
     Ok(())
 }
 
+pub(crate) fn directions(allow_upload: bool, allow_download: bool) -> Result<(), String> {
+    (allow_upload || allow_download)
+        .then_some(())
+        .ok_or_else(|| "Choose at least one allowed direction.".to_owned())
+}
+
 pub(crate) fn provider_focus(error: &str) -> i32 {
     if error.starts_with("Provider name") {
         1

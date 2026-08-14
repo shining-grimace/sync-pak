@@ -40,7 +40,15 @@ pub(crate) fn configure(
     let save_configuration = Rc::clone(configuration);
     let save_diagnostics = Rc::clone(&diagnostics);
     window.on_save_connection(
-        move |name, provider, bucket, remote, local, mode, retention| {
+        move |name,
+              provider,
+              bucket,
+              remote,
+              local,
+              mode,
+              retention,
+              allow_upload,
+              allow_download| {
             save(
                 &weak,
                 Rc::clone(&save_configuration),
@@ -52,6 +60,8 @@ pub(crate) fn configure(
                 local,
                 mode,
                 retention,
+                allow_upload,
+                allow_download,
             )
         },
     );
@@ -143,8 +153,14 @@ fn save(
     local_path: SharedString,
     mode_index: i32,
     retention: SharedString,
+    allow_upload: bool,
+    allow_download: bool,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if let Err(error) = form_validation::directions(allow_upload, allow_download) {
+        window.set_status_message(error.into());
+        return;
+    }
     if let Err(error) = form_validation::connection(
         &name,
         provider_index,
@@ -169,6 +185,8 @@ fn save(
         local_path,
         mode_index,
         retention,
+        allow_upload,
+        allow_download,
     )
     .and_then(|mut draft| {
         let repository = ConnectionRepository::new(&configuration);

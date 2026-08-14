@@ -5,7 +5,7 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
-import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { PrimaryActionButton, SecondaryActionButton, ToggleButton } from "../components/action-buttons.slint";
 import { ActionGroup } from "../components/list-and-action-layouts.slint";
 import { ComboBox, LineEdit } from "../components/form-controls.slint";
 
@@ -17,6 +17,8 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     in-out property <string> connection-form-remote;
     in-out property <string> connection-form-local;
     in-out property <int> connection-form-mode;
+    in-out property <bool> connection-form-allow-upload;
+    in-out property <bool> connection-form-allow-download;
     in-out property <string> connection-form-retention;
     in property <[string]> provider-names;
     in property <[string]> provider-buckets;
@@ -30,7 +32,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     callback select-local-folder();
     callback select-connection-provider(int);
     callback retry-connection-providers();
-    callback save-connection(string, int, string, string, string, int, string);
+    callback save-connection(string, int, string, string, string, int, string, bool, bool);
     callback verify-connection();
     callback save-and-verify-connection();
     callback request-discard-connection();
@@ -241,6 +243,26 @@ export component ConnectionFormPage inherits CenteredPageRoot {
             text: "After a new archive is saved successfully, older archives made by this connection are deleted until this many remain.";
         }
     }
+    SectionHeadingLabel {
+        text: "Allowed directions";
+    }
+    DescriptionLabel {
+        text: "Choose which directions can be selected when this connection runs.";
+    }
+    HorizontalLayout {
+        spacing: Dimensions.element-gap;
+        ToggleButton {
+            text: "Upload";
+            selected: root.connection-form-allow-upload;
+            clicked => { root.connection-form-allow-upload = !root.connection-form-allow-upload; }
+        }
+        ToggleButton {
+            text: "Download";
+            selected: root.connection-form-allow-download;
+            enabled: root.connection-form-mode == 0 || !root.connection-form-allow-upload;
+            clicked => { root.connection-form-allow-download = !root.connection-form-allow-download; }
+        }
+    }
     ActionGroup {
         if root.connection-verifying: DescriptionLabel {
             accessible-live-region: polite;
@@ -260,7 +282,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
             text: "Save Unverified";
             enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && !root.connection-providers-load-failed && root.provider-names.length > 0;
             clicked => {
-                root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention);
+                root.save-connection(connection-name.text, connection-provider.current-index, connection-bucket.text, connection-remote.text, connection-local.text, connection-mode.current-index, root.connection-form-retention, root.connection-form-allow-upload, root.connection-form-allow-download);
             }
         }
 

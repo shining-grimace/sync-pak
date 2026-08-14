@@ -144,6 +144,8 @@ pub struct ConnectionConfig {
     pub remote_path: String,
     pub local_path: String,
     pub mode: SyncMode,
+    pub allow_upload: bool,
+    pub allow_download: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_last_archives: Option<u32>,
     pub verified: bool,
@@ -157,6 +159,8 @@ pub struct ConnectionDraft {
     pub remote_path: String,
     pub local_path: String,
     pub mode: SyncMode,
+    pub allow_upload: bool,
+    pub allow_download: bool,
     pub keep_last_archives: Option<u32>,
     pub verified: bool,
 }
@@ -171,6 +175,8 @@ impl ConnectionDraft {
             remote_path: self.remote_path,
             local_path: self.local_path,
             mode: self.mode,
+            allow_upload: self.allow_upload,
+            allow_download: self.allow_download,
             keep_last_archives: self.keep_last_archives,
             verified: self.verified,
         }

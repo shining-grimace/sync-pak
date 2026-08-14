@@ -18,6 +18,8 @@ pub(crate) fn reset(window: &AppWindow) {
     window.set_connection_form_remote(SharedString::default());
     window.set_connection_form_local(SharedString::default());
     window.set_connection_form_mode(0);
+    window.set_connection_form_allow_upload(true);
+    window.set_connection_form_allow_download(true);
     window.set_connection_form_retention("1".into());
     set_verified_buckets(window, None);
     window.set_connection_providers_loading(false);
@@ -68,6 +70,8 @@ pub(crate) fn populate(
     window.set_connection_form_remote(connection.remote_path.into());
     window.set_connection_form_local(connection.local_path.into());
     window.set_connection_form_mode(mode_index(connection.mode));
+    window.set_connection_form_allow_upload(connection.allow_upload);
+    window.set_connection_form_allow_download(connection.allow_download);
     window.set_connection_form_retention(
         connection
             .keep_last_archives
@@ -110,6 +114,8 @@ fn form_signature(window: &AppWindow) -> String {
             window.get_connection_form_local(),
             window.get_connection_form_mode(),
             window.get_connection_form_retention(),
+            window.get_connection_form_allow_upload(),
+            window.get_connection_form_allow_download(),
         )
     )
 }
@@ -165,6 +171,8 @@ pub(crate) fn draft(
     local_path: SharedString,
     mode_index: i32,
     retention: SharedString,
+    allow_upload: bool,
+    allow_download: bool,
 ) -> Result<ConnectionDraft, String> {
     let config = configuration.load().map_err(|error| error.to_string())?;
     let provider_id = provider_id(&config.providers, provider_index)?;
@@ -177,6 +185,8 @@ pub(crate) fn draft(
         remote_path: remote_path.to_string(),
         local_path: local_path.to_string(),
         mode,
+        allow_upload,
+        allow_download,
         keep_last_archives,
         verified: false,
     })

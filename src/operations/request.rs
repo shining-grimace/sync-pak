@@ -34,6 +34,13 @@ impl RunRequest {
         if direction == Direction::BothWays && connection.mode != SyncMode::AddOnly {
             return Err(RunRequestError::BothWaysUnsupported);
         }
+        if (direction == Direction::Upload && !connection.allow_upload)
+            || (direction == Direction::Download && !connection.allow_download)
+            || (direction == Direction::BothWays
+                && (!connection.allow_upload || !connection.allow_download))
+        {
+            return Err(RunRequestError::DirectionNotAllowed);
+        }
         Ok(Self {
             connection,
             provider,
@@ -47,6 +54,7 @@ pub enum RunRequestError {
     ConnectionNotFound,
     ProviderNotFound,
     BothWaysUnsupported,
+    DirectionNotAllowed,
 }
 
 impl fmt::Display for RunRequestError {
@@ -58,6 +66,9 @@ impl fmt::Display for RunRequestError {
             }
             Self::BothWaysUnsupported => {
                 formatter.write_str("Both ways is available only for add-only connections.")
+            }
+            Self::DirectionNotAllowed => {
+                formatter.write_str("This direction is not allowed by the connection settings.")
             }
         }
     }

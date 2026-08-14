@@ -15,6 +15,8 @@ export component RunDirectionPage inherits CenteredPageRoot {
     in property <string> archive-upload-details;
     in property <string> archive-download-details;
     in property <bool> allows-both-ways;
+    in property <bool> allows-upload;
+    in property <bool> allows-download;
     in property <bool> upload-selected;
     in property <bool> download-selected;
     callback set-upload-selected(bool);
@@ -52,6 +54,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
             accessible-label: root.upload-selected ? "Upload direction, selected" : "Select upload direction";
             text: "Upload";
             selected: root.upload-selected;
+            enabled: root.allows-upload;
             clicked => {
                 root.set-upload-selected(!root.upload-selected);
             }
@@ -60,7 +63,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
             accessible-label: root.download-selected ? "Download direction, selected" : "Select download direction";
             text: "Download";
             selected: root.download-selected;
-            enabled: root.allows-both-ways || !root.upload-selected;
+            enabled: root.allows-download && (root.allows-both-ways || !root.upload-selected);
             clicked => {
                 root.set-download-selected(!root.download-selected);
             }

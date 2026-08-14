@@ -157,6 +157,8 @@ export component AppWindow inherits Window {
     in-out property <string> connection-form-remote;
     in-out property <string> connection-form-local;
     in-out property <int> connection-form-mode;
+    in-out property <bool> connection-form-allow-upload: true;
+    in-out property <bool> connection-form-allow-download: true;
     in-out property <string> connection-form-retention: "1";
     in-out property <string> connection-form-original;
     in-out property <bool> connection-verifying: false;
@@ -171,6 +173,8 @@ export component AppWindow inherits Window {
     in-out property <string> run-archive-upload-details;
     in-out property <string> run-archive-download-details;
     in-out property <bool> run-allows-both-ways;
+    in-out property <bool> run-allows-upload;
+    in-out property <bool> run-allows-download;
     in-out property <int> run-direction: 0;
     in-out property <bool> run-upload-selected: true;
     in-out property <bool> run-download-selected: true;
@@ -230,7 +234,7 @@ export component AppWindow inherits Window {
     callback request-discard-provider();
     callback confirm-discard-provider();
     callback cancel-discard-provider();
-    callback save-connection(string, int, string, string, string, int, string);
+    callback save-connection(string, int, string, string, string, int, string, bool, bool);
     callback verify-connection();
     callback save-and-verify-connection();
     callback request-discard-connection();
@@ -539,6 +543,8 @@ export component AppWindow inherits Window {
                 connection-form-remote <=> root.connection-form-remote;
                 connection-form-local <=> root.connection-form-local;
                 connection-form-mode <=> root.connection-form-mode;
+                connection-form-allow-upload <=> root.connection-form-allow-upload;
+                connection-form-allow-download <=> root.connection-form-allow-download;
                 connection-form-retention <=> root.connection-form-retention;
                 provider-names: root.provider-names;
                 provider-buckets: root.provider-buckets;
@@ -557,8 +563,8 @@ export component AppWindow inherits Window {
                 retry-connection-providers => {
                     root.retry-connection-providers();
                 }
-                save-connection(name, provider, bucket, remote, local, mode, retention) => {
-                    root.save-connection(name, provider, bucket, remote, local, mode, retention);
+                save-connection(name, provider, bucket, remote, local, mode, retention, allow-upload, allow-download) => {
+                    root.save-connection(name, provider, bucket, remote, local, mode, retention, allow-upload, allow-download);
                 }
                 verify-connection => {
                     root.verify-connection();
@@ -686,6 +692,8 @@ export component AppWindow inherits Window {
                 archive-upload-details: root.run-archive-upload-details;
                 archive-download-details: root.run-archive-download-details;
                 allows-both-ways: root.run-allows-both-ways;
+                allows-upload: root.run-allows-upload;
+                allows-download: root.run-allows-download;
                 upload-selected: root.run-upload-selected;
                 download-selected: root.run-download-selected;
                 set-upload-selected(selected) => {
