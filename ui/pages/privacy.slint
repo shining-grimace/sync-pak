@@ -12,10 +12,12 @@ export component PrivacyPage inherits CenteredPageRoot {
     in-out property <int> appearance-preference;
     in property <bool> configuration-unavailable;
     in property <bool> can-return-to-welcome;
+    in property <bool> advertising-privacy-choices-available;
     callback apply-appearance-preference();
     callback change-appearance-preference(int);
     callback show-diagnostics();
     callback show-welcome();
+    callback show-advertising-privacy-choices();
 
     HeadingLabel {
         text: "Privacy & About";
@@ -143,6 +145,14 @@ export component PrivacyPage inherits CenteredPageRoot {
 
         DescriptionLabel {
             text: "SyncPak's privacy policy and open-source licence notices will be published before release.";
+        }
+    }
+
+    if root.advertising-privacy-choices-available: SecondaryActionButton {
+        accessible-label: "Manage advertising privacy choices";
+        text: "Advertising Privacy Choices";
+        clicked => {
+            root.show-advertising-privacy-choices();
         }
     }
 

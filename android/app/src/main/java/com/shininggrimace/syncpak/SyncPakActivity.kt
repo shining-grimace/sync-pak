@@ -6,7 +6,41 @@ import android.content.Intent
 import android.content.pm.PackageManager
 
 class SyncPakActivity : NativeActivity() {
+    private val adsController by lazy { AdsController(this) }
     private val documentTrees by lazy { DocumentTreeAccess(this) }
+
+    override fun onDestroy() {
+        adsController.destroy()
+        super.onDestroy()
+    }
+
+    fun setAdvertisingPlacement(placement: Int) {
+        runOnUiThread {
+            adsController.setPlacement(placement)
+        }
+    }
+
+    fun requestAdvertisingConsent() {
+        runOnUiThread {
+            adsController.start()
+        }
+    }
+
+    fun showAdvertisingPrivacyChoices() {
+        runOnUiThread {
+            adsController.showPrivacyChoices()
+        }
+    }
+
+    fun advertisingPrivacyChoicesAvailable(): Boolean = adsController.privacyChoicesAvailable
+
+    fun advertisingPrivacyChoicesAvailabilityChanged(available: Boolean) {
+        nativeAdvertisingPrivacyChoicesAvailabilityChanged(available)
+    }
+
+    fun advertisingBannerInsetChanged(heightDp: Int) {
+        nativeAdvertisingBannerInsetChanged(heightDp)
+    }
 
     fun pickFolder() {
         runOnUiThread {
@@ -92,5 +126,11 @@ class SyncPakActivity : NativeActivity() {
 
         @JvmStatic
         private external fun nativeFolderPickFailed()
+
+        @JvmStatic
+        private external fun nativeAdvertisingPrivacyChoicesAvailabilityChanged(available: Boolean)
+
+        @JvmStatic
+        private external fun nativeAdvertisingBannerInsetChanged(heightDp: Int)
     }
 }

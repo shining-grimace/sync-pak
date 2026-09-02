@@ -198,6 +198,8 @@ export component AppWindow inherits Window {
     in-out property <string> pending-cancel-activity-id;
     in-out property <string> pending-cancel-activity-name;
     in-out property <int> pending-navigation-page: -1;
+    in-out property <bool> advertising-privacy-choices-available: false;
+    in-out property <length> advertising-bottom-inset: 0px;
     callback show-providers();
     callback show-connections();
     callback show-add-provider();
@@ -205,6 +207,9 @@ export component AppWindow inherits Window {
     callback show-welcome();
     callback retry-configuration();
     callback show-privacy();
+    callback show-advertising-privacy-choices();
+    callback set-advertising-placement(int);
+    callback request-advertising-consent();
     callback apply-appearance-preference();
     callback change-appearance-preference(int);
     callback show-activity();
@@ -262,6 +267,38 @@ export component AppWindow inherits Window {
 
     init => {
         Palette.color-scheme = ColorScheme.unknown;
+    }
+    changed page => {
+        if root.page == Page.welcome {
+            root.request-advertising-consent();
+            root.set-advertising-placement(0);
+        } else if root.page == Page.providers && root.providers-total == 0 && !root.providers-load-failed {
+            root.set-advertising-placement(1);
+        } else if root.page == Page.connections && root.connections-total == 0 && !root.connections-load-failed {
+            root.set-advertising-placement(2);
+        } else {
+            root.set-advertising-placement(0);
+        }
+    }
+    changed connections-total => {
+        if root.page == Page.connections {
+            root.set-advertising-placement(root.connections-total == 0 && !root.connections-load-failed ? 2 : 0);
+        }
+    }
+    changed providers-total => {
+        if root.page == Page.providers {
+            root.set-advertising-placement(root.providers-total == 0 && !root.providers-load-failed ? 1 : 0);
+        }
+    }
+    changed providers-load-failed => {
+        if root.page == Page.providers {
+            root.set-advertising-placement(root.providers-total == 0 && !root.providers-load-failed ? 1 : 0);
+        }
+    }
+    changed connections-load-failed => {
+        if root.page == Page.connections {
+            root.set-advertising-placement(root.connections-total == 0 && !root.connections-load-failed ? 2 : 0);
+        }
     }
     apply-appearance-preference => {
         Colors.dark-mode = root.resolved-dark-mode;
@@ -348,7 +385,7 @@ export component AppWindow inherits Window {
             padding: 16px;
             padding-top: 16px + root.safe-area-insets.top;
             padding-right: 16px + root.safe-area-insets.right;
-            padding-bottom: 16px + root.safe-area-insets.bottom;
+            padding-bottom: 16px + root.safe-area-insets.bottom + root.advertising-bottom-inset;
             padding-left: (root.width >= Dimensions.desktop-layout-breakpoint ? 176px : 16px) + root.safe-area-insets.left;
             spacing: Dimensions.section-gap;
 
@@ -592,6 +629,7 @@ export component AppWindow inherits Window {
                 appearance-preference <=> root.appearance-preference;
                 configuration-unavailable: root.configuration-unavailable;
                 can-return-to-welcome: root.privacy-can-return-to-welcome;
+                advertising-privacy-choices-available: root.advertising-privacy-choices-available;
                 apply-appearance-preference => {
                     root.apply-appearance-preference();
                 }
@@ -603,6 +641,9 @@ export component AppWindow inherits Window {
                 }
                 show-welcome => {
                     root.show-welcome();
+                }
+                show-advertising-privacy-choices => {
+                    root.show-advertising-privacy-choices();
                 }
             }
 

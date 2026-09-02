@@ -1,10 +1,19 @@
 
+- Review the About screen for mentioning the app author and linking to the (not-yet-built at time of writing) website, and to the GitHub page suggesting that's where bug-fixes and improvements can be suggested
+- Mention in the Privacy screen where the app's data is being kept
+- On Android, add to the About screen a one-time purchase of "buy the developer a coffee"
+- Update `abiFilters` in `build.gradle.kts` to add x86_64 support needed by ChromeOS
+- Android: test that external storage drives work too
+- Bump target Android version to API 37
 - Set up release config for Android
 - Target latest Android
 - Bump Rust and Android dependencies where possible
+- Revise GitHub workflows: remove Flatpak and add Snap, or just remove the whole file
 - Create branding logo
 - Create privacy policy
 - Review UI theming
+- Add Google package to AdMob once published on Google Play
+- Add app-ads.txt to developer site once requirements are met
 - Revise the roadmap's later stages to include prep of marketing material (think what are going to be the most popular workflows, think how they're made easy assuming they are, and how can we market those facts)
 - Make sure the roadmap's key points are all implemented
 - See where beta versions can be released; Google Play being a likely candidate

@@ -11,6 +11,9 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false">
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-7040136510470731~9946661791" />
         <activity
             android:name=".SyncPakActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"

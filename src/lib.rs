@@ -27,6 +27,8 @@ pub fn run() -> Result<(), slint::PlatformError> {
     // shown. Initialise appearance-dependent UI only after that has happened.
     window.show()?;
     app::controller::initialize(&window);
+    #[cfg(target_os = "android")]
+    platform::android::advertising::configure(&window);
     slint::run_event_loop()?;
     window.hide()
 }
@@ -34,6 +36,10 @@ pub fn run() -> Result<(), slint::PlatformError> {
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub fn android_main(app: slint::android::AndroidApp) {
+    if let Err(error) = platform::android::advertising::initialize(app.clone()) {
+        eprintln!("Android advertising initialization failed: {error}");
+        return;
+    }
     if let Err(error) = platform::android::document_tree::access::initialize(app.clone()) {
         eprintln!("Android document-tree access initialization failed: {error}");
         return;

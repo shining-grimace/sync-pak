@@ -19,6 +19,24 @@ fn configure_navigation(window: &AppWindow) {
     let weak = window.as_weak();
     window.on_show_privacy(move || show_privacy(&weak));
     let weak = window.as_weak();
+    window.on_show_advertising_privacy_choices(move || {
+        if weak.upgrade().is_some() {
+            crate::platform::advertising::show_privacy_choices();
+        }
+    });
+    let weak = window.as_weak();
+    window.on_set_advertising_placement(move |placement| {
+        if weak.upgrade().is_some() {
+            crate::platform::advertising::set_placement(placement);
+        }
+    });
+    let weak = window.as_weak();
+    window.on_request_advertising_consent(move || {
+        if weak.upgrade().is_some() {
+            crate::platform::advertising::request_consent();
+        }
+    });
+    let weak = window.as_weak();
     window.on_show_activity(move || set_page(&weak, 9));
 
     let weak = window.as_weak();

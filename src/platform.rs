@@ -3,6 +3,31 @@ use std::sync::Arc;
 #[cfg(target_os = "android")]
 pub(crate) mod android;
 pub mod atomic_write;
+pub(crate) mod advertising {
+    #[cfg(target_os = "android")]
+    pub fn set_placement(placement: i32) {
+        super::android::advertising::set_placement(placement);
+    }
+
+    #[cfg(not(target_os = "android"))]
+    pub fn set_placement(_: i32) {}
+
+    #[cfg(target_os = "android")]
+    pub fn request_consent() {
+        super::android::advertising::request_consent();
+    }
+
+    #[cfg(not(target_os = "android"))]
+    pub fn request_consent() {}
+
+    #[cfg(target_os = "android")]
+    pub fn show_privacy_choices() {
+        super::android::advertising::show_privacy_choices();
+    }
+
+    #[cfg(not(target_os = "android"))]
+    pub fn show_privacy_choices() {}
+}
 #[cfg(test)]
 pub(crate) mod feasibility;
 pub mod notifications;

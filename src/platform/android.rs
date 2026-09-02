@@ -1,3 +1,4 @@
+pub(crate) mod advertising;
 pub(crate) mod document_tree;
 pub(crate) mod folder_picker;
 pub(crate) mod foreground_execution;
