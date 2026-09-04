@@ -1,6 +1,8 @@
 
 - Review the About screen for mentioning the app author and linking to the (not-yet-built at time of writing) website, and to the GitHub page suggesting that's where bug-fixes and improvements can be suggested
 - Mention in the Privacy screen where the app's data is being kept
+- Add the official Slint Attribution card to the About screen
+- Add a feature to import/export connections list; must figure out stable base for relative local paths and stable provider identifiers
 - On Android, add to the About screen a one-time purchase of "buy the developer a coffee"
 - Update `abiFilters` in `build.gradle.kts` to add x86_64 support needed by ChromeOS
 - Android: test that external storage drives work too
@@ -12,6 +14,7 @@
 - Create branding logo
 - Create privacy policy
 - Review UI theming
+- Consider transitions and animations
 - Add Google package to AdMob once published on Google Play
 - Add app-ads.txt to developer site once requirements are met
 - Revise the roadmap's later stages to include prep of marketing material (think what are going to be the most popular workflows, think how they're made easy assuming they are, and how can we market those facts)

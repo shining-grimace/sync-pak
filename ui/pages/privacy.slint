@@ -6,6 +6,7 @@ import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
 import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { HorizontalBox } from "std-widgets.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
     in property <string> app-version;
@@ -21,6 +22,74 @@ export component PrivacyPage inherits CenteredPageRoot {
 
     HeadingLabel {
         text: "Privacy & About";
+    }
+
+    VerticalLayout {
+        accessible-role: region;
+        accessible-label: "About";
+        spacing: Dimensions.element-gap;
+
+        SectionHeadingLabel {
+            text: "About";
+        }
+
+        DescriptionLabel {
+            text: "SyncPak version " + root.app-version;
+        }
+
+        DescriptionLabel {
+            text: "Designed and published by Thomas Reichert under the name Shining Grimace";
+        }
+
+        DescriptionLabel {
+            text: "Bug reports and feature requests should be submitted on the source code repository on GitHub.";
+        }
+
+        HorizontalLayout {
+            accessible-role: region;
+            accessible-label: "Source links";
+            spacing: Dimensions.element-gap;
+
+            SecondaryActionButton {
+                accessible-label: "Open SyncPak's website in your browser";
+                text: "Website";
+                clicked => {
+                    Platform.open-url("https://shininggrimace.com/syncpak")
+                }
+            }
+
+            SecondaryActionButton {
+                accessible-label: "Open SyncPak source code in your browser";
+                text: "Source Code";
+                clicked => {
+                    Platform.open-url("https://github.com/shining-grimace/sync-pak");
+                }
+            }
+        }
+    }
+
+    VerticalLayout {
+        accessible-role: region;
+        accessible-label: "Appearance";
+        spacing: Dimensions.element-gap;
+        SectionHeadingLabel {
+            text: "Appearance";
+        }
+
+        DescriptionLabel {
+            text: "Choose whether SyncPak follows your system appearance or always uses a light or dark theme.";
+        }
+
+        ComboBox {
+            accessible-label: "Appearance";
+            model: ["System default", "Light", "Dark"];
+            current-index <=> root.appearance-preference;
+            enabled: !root.configuration-unavailable;
+            selected => {
+                root.apply-appearance-preference();
+                root.change-appearance-preference(self.current-index);
+            }
+        }
     }
 
     InfoCard {
@@ -75,47 +144,27 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
-    DescriptionLabel {
-        text: "SyncPak " + root.app-version;
-    }
-
     VerticalLayout {
         accessible-role: region;
-        accessible-label: "Appearance";
+        accessible-label: "Privacy links";
         spacing: Dimensions.element-gap;
         SectionHeadingLabel {
-            text: "Appearance";
-        }
-
-        DescriptionLabel {
-            text: "Choose whether SyncPak follows your system appearance or always uses a light or dark theme.";
-        }
-
-        ComboBox {
-            accessible-label: "Appearance";
-            model: ["System default", "Light", "Dark"];
-            current-index <=> root.appearance-preference;
-            enabled: !root.configuration-unavailable;
-            selected => {
-                root.apply-appearance-preference();
-                root.change-appearance-preference(self.current-index);
-            }
-        }
-    }
-
-    VerticalLayout {
-        accessible-role: region;
-        accessible-label: "Privacy and source links";
-        spacing: Dimensions.element-gap;
-        SectionHeadingLabel {
-            text: "Links";
+            text: "Policy Links";
         }
 
         SecondaryActionButton {
-            accessible-label: "Open SyncPak source code in your browser";
-            text: "Source Code";
+            accessible-label: "Open SyncPak privacy policy in your browser";
+            text: "SyncPak Policy";
             clicked => {
-                Platform.open-url("https://github.com/shining-grimace/sync-pak");
+                Platform.open-url("");
+            }
+        }
+
+        SecondaryActionButton {
+            accessible-label: "Open Cloudflare privacy policy in your browser";
+            text: "Cloudflare Policy";
+            clicked => {
+                Platform.open-url("https://www.cloudflare.com/privacypolicy/");
             }
         }
 
@@ -141,10 +190,6 @@ export component PrivacyPage inherits CenteredPageRoot {
             clicked => {
                 Platform.open-url("https://www.amazon.com/gp/help/customer/display.html?nodeId=201909010");
             }
-        }
-
-        DescriptionLabel {
-            text: "SyncPak's privacy policy and open-source licence notices will be published before release.";
         }
     }
 
