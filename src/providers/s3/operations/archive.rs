@@ -59,7 +59,9 @@ pub(crate) async fn execute(
     let timestamp = utc_timestamp();
     let success = match request.direction {
         Direction::Upload => {
-            create_upload_archive(
+            // The archive helpers each contain a deep generic async transfer stack.
+            // Keep that stack behind a heap boundary so this dispatcher future stays small.
+            Box::pin(create_upload_archive(
                 request,
                 preflight,
                 transfer,
@@ -69,11 +71,11 @@ pub(crate) async fn execute(
                 history,
                 staging_directory,
                 jitter_seed,
-            )
+            ))
             .await
         }
         Direction::Download => {
-            create_download_archive(
+            Box::pin(create_download_archive(
                 preflight,
                 transfer,
                 &root,
@@ -82,7 +84,7 @@ pub(crate) async fn execute(
                 cancellation,
                 staging_directory,
                 jitter_seed,
-            )
+            ))
             .await
         }
         Direction::BothWays => false,
