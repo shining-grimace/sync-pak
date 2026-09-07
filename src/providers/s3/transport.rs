@@ -1,3 +1,5 @@
+use futures_util::FutureExt;
+
 use aws_config::BehaviorVersion;
 use aws_sdk_s3::{
     Client,
@@ -16,6 +18,7 @@ use crate::{
 
 use crate::providers::capabilities::ObjectMetadataReader;
 
+// Box SDK request futures at the transport boundary to bound enclosing future layout depth.
 pub struct S3Transport {
     pub(crate) client: Client,
 }
@@ -64,7 +67,7 @@ impl ObjectLister for S3Transport {
             if let Some(token) = continuation_token.as_deref() {
                 request = request.continuation_token(token);
             }
-            let response = request.send().await.map_err(provider_error)?;
+            let response = request.send().boxed().await.map_err(provider_error)?;
             objects.extend(
                 response
                     .contents()
@@ -97,6 +100,7 @@ impl ObjectReader for S3Transport {
             .bucket(bucket)
             .key(key)
             .send()
+            .boxed()
             .await
             .map_err(provider_error)?;
         let metadata = object_metadata(
@@ -127,6 +131,7 @@ impl ObjectMetadataReader for S3Transport {
             .bucket(bucket)
             .key(key)
             .send()
+            .boxed()
             .await
             .map_err(provider_error)?;
         object_metadata(
@@ -146,6 +151,7 @@ impl ObjectDeleter for S3Transport {
             .bucket(bucket)
             .key(key)
             .send()
+            .boxed()
             .await
             .map(|_| ())
             .map_err(provider_error)

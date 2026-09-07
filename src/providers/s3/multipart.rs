@@ -1,3 +1,5 @@
+use futures_util::FutureExt;
+
 use aws_sdk_s3::{
     primitives::ByteStream,
     types::{CompletedMultipartUpload, CompletedPart},
@@ -31,7 +33,7 @@ impl MultipartUploader for S3Transport {
                 modified.to_string(),
             );
         }
-        let response = upload.send().await.map_err(provider_error)?;
+        let response = upload.send().boxed().await.map_err(provider_error)?;
         Ok(MultipartUpload {
             id: response
                 .upload_id()
@@ -58,6 +60,7 @@ impl MultipartUploader for S3Transport {
             .part_number(part_number)
             .body(ByteStream::from(contents.to_vec()))
             .send()
+            .boxed()
             .await
             .map_err(provider_error)?;
         Ok(UploadedPart {
@@ -87,6 +90,7 @@ impl MultipartUploader for S3Transport {
                     .build(),
             )
             .send()
+            .boxed()
             .await
             .map(|_| ())
             .map_err(provider_error)
@@ -104,6 +108,7 @@ impl MultipartUploader for S3Transport {
             .key(key)
             .upload_id(&upload.id)
             .send()
+            .boxed()
             .await
             .map(|_| ())
             .map_err(provider_error)

@@ -1,8 +1,6 @@
-use std::path::PathBuf;
-
-use slint::ComponentHandle;
-
 use crate::{AppWindow, configuration::ConfigStore};
+use slint::ComponentHandle;
+use std::path::PathBuf;
 
 pub(crate) fn configure(window: &AppWindow) {
     let weak = window.as_weak();

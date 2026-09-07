@@ -11,7 +11,8 @@ import {
     PrimaryActionButton,
     SecondaryActionButton,
 } from "../components/action-buttons.slint";
-import { HorizontalBox } from "std-widgets.slint";
+import { MadeWithSlintButton } from "../components/made-with-slint.slint";
+import { AboutSlint, HorizontalBox } from "std-widgets.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
     in property <string> settings-directory;
@@ -37,16 +38,30 @@ export component PrivacyPage inherits CenteredPageRoot {
         accessible-label: "About";
         spacing: Dimensions.element-gap;
 
-        SectionHeadingLabel {
-            text: "About";
-        }
+        HorizontalLayout {
+            accessible-role: region;
+            accessible-label: "About the app";
+            spacing: Dimensions.element-gap;
 
-        DescriptionLabel {
-            text: "SyncPak version " + root.app-version;
-        }
+            VerticalLayout {
+                accessible-role: region;
+                accessible-label: "About the app";
+                spacing: Dimensions.element-gap;
 
-        DescriptionLabel {
-            text: "Designed and published by Thomas Reichert under the name Shining Grimace";
+                SectionHeadingLabel {
+                    text: "About";
+                }
+
+                DescriptionLabel {
+                    text: "SyncPak version " + root.app-version;
+                }
+
+                DescriptionLabel {
+                    text: "Designed and published by Thomas Reichert under the name Shining Grimace";
+                }
+            }
+
+            AboutSlint {}
         }
 
         DescriptionLabel {

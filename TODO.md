@@ -1,6 +1,4 @@
 
-- Mention in the Privacy screen where the app's data is being kept
-- Add the official Slint Attribution card to the About screen
 - Add a feature to import/export connections list; must figure out stable base for relative local paths and stable provider identifiers
 - On Android, add to the About screen a one-time purchase of "buy the developer a coffee"
 - Update `abiFilters` in `build.gradle.kts` to add x86_64 support needed by ChromeOS
