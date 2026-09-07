@@ -8,6 +8,7 @@ pub(crate) mod form_validation;
 pub(crate) mod notifications;
 pub(crate) mod onboarding;
 pub(crate) mod preflight;
+pub(crate) mod privacy;
 pub(crate) mod providers;
 pub(crate) mod run;
 pub(crate) mod startup;

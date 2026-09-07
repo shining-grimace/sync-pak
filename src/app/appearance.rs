@@ -83,6 +83,7 @@ fn save(
     config.appearance = preference;
     if configuration.save(&config).is_ok() {
         if let Some(window) = weak.upgrade() {
+            crate::app::privacy::refresh(&window);
             apply(&window, preference);
             refresh_system_appearance(window.as_weak(), preference, 20);
         }

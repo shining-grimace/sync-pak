@@ -14,6 +14,8 @@ import {
 import { HorizontalBox } from "std-widgets.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
+    in property <string> settings-directory;
+    callback open-settings-directory();
     in property <string> app-version;
     in property <string> syncpak-policy-url;
     in-out property <int> appearance-preference;
@@ -106,8 +108,34 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
+    if root.settings-directory != "": VerticalLayout {
+        accessible-role: region;
+        accessible-label: "Local Data";
+        spacing: Dimensions.element-gap;
+
+        SectionHeadingLabel {
+            text: "Local Data";
+        }
+
+        DescriptionLabel {
+            text: "Settings are being stored at:";
+        }
+
+        DescriptionLabel {
+            text: root.settings-directory;
+        }
+
+        PrimaryActionButton {
+            accessible-label: "Open settings directory in your file browser";
+            text: "Open Settings Directory";
+            clicked => {
+                root.open-settings-directory();
+            }
+        }
+    }
+
     SectionHeadingLabel {
-        text: "Privacy Information";
+        text: "Privacy Features";
     }
 
     InfoCard {

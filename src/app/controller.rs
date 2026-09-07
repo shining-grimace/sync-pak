@@ -11,6 +11,7 @@ pub(crate) fn initialize(window: &AppWindow) {
     let diagnostics = Rc::new(std::cell::RefCell::new(Default::default()));
     diagnostics_controller::configure(window, Rc::clone(&diagnostics));
     configure_navigation(window);
+    crate::app::privacy::configure(window);
     crate::app::startup::configure(window, diagnostics);
 }
 
@@ -62,6 +63,7 @@ fn show_privacy(weak: &slint::Weak<AppWindow>) {
     let can_return_to_welcome = window.get_page() == 0
         || (window.get_page() == 3 && window.get_privacy_can_return_to_welcome());
     window.set_privacy_can_return_to_welcome(can_return_to_welcome);
+    crate::app::privacy::refresh(&window);
     set_page(weak, 3);
 }
 

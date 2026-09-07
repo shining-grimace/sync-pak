@@ -107,6 +107,8 @@ export component AppWindow inherits Window {
     in-out property <int> diagnostic-entry-count: 0;
     in-out property <string> diagnostic-copy-status;
     in-out property <int> diagnostic-return-page: 3;
+    in-out property <string> settings-directory;
+    callback open-settings-directory();
     in-out property <bool> privacy-can-return-to-welcome: false;
     callback queue-notification(string, int, int);
     callback dismiss-notification(int);
@@ -626,6 +628,10 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.privacy: PrivacyPage {
+                settings-directory: root.settings-directory;
+                open-settings-directory => {
+                    root.open-settings-directory();
+                }
                 app-version: root.app-version;
                 syncpak-policy-url: root.syncpak-policy-url;
                 appearance-preference <=> root.appearance-preference;
