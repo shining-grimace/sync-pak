@@ -5,11 +5,17 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
-import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import {
+    ExpandedPrimaryActionButton,
+    ExpandedSecondaryActionButton,
+    PrimaryActionButton,
+    SecondaryActionButton,
+} from "../components/action-buttons.slint";
 import { HorizontalBox } from "std-widgets.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
     in property <string> app-version;
+    in property <string> syncpak-policy-url;
     in-out property <int> appearance-preference;
     in property <bool> configuration-unavailable;
     in property <bool> can-return-to-welcome;
@@ -50,7 +56,7 @@ export component PrivacyPage inherits CenteredPageRoot {
             accessible-label: "Source links";
             spacing: Dimensions.element-gap;
 
-            SecondaryActionButton {
+            ExpandedSecondaryActionButton {
                 accessible-label: "Open SyncPak's website in your browser";
                 text: "Website";
                 clicked => {
@@ -58,11 +64,19 @@ export component PrivacyPage inherits CenteredPageRoot {
                 }
             }
 
-            SecondaryActionButton {
+            ExpandedSecondaryActionButton {
                 accessible-label: "Open SyncPak source code in your browser";
                 text: "Source Code";
                 clicked => {
                     Platform.open-url("https://github.com/shining-grimace/sync-pak");
+                }
+            }
+
+            ExpandedPrimaryActionButton {
+                accessible-label: "View redacted diagnostics with credentials excluded";
+                text: "Diagnostics";
+                clicked => {
+                    root.show-diagnostics();
                 }
             }
         }
@@ -90,6 +104,10 @@ export component PrivacyPage inherits CenteredPageRoot {
                 root.change-appearance-preference(self.current-index);
             }
         }
+    }
+
+    SectionHeadingLabel {
+        text: "Privacy Information";
     }
 
     InfoCard {
@@ -156,15 +174,7 @@ export component PrivacyPage inherits CenteredPageRoot {
             accessible-label: "Open SyncPak privacy policy in your browser";
             text: "SyncPak Policy";
             clicked => {
-                Platform.open-url("");
-            }
-        }
-
-        SecondaryActionButton {
-            accessible-label: "Open Cloudflare privacy policy in your browser";
-            text: "Cloudflare Policy";
-            clicked => {
-                Platform.open-url("https://www.cloudflare.com/privacypolicy/");
+                Platform.open-url(root.syncpak-policy-url);
             }
         }
 
@@ -198,14 +208,6 @@ export component PrivacyPage inherits CenteredPageRoot {
         text: "Advertising Privacy Choices";
         clicked => {
             root.show-advertising-privacy-choices();
-        }
-    }
-
-    PrimaryActionButton {
-        accessible-label: "View redacted diagnostics with credentials excluded";
-        text: "View Diagnostics";
-        clicked => {
-            root.show-diagnostics();
         }
     }
 

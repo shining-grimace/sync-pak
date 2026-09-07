@@ -1,5 +1,4 @@
 
-- Review the About screen for mentioning the app author and linking to the (not-yet-built at time of writing) website, and to the GitHub page suggesting that's where bug-fixes and improvements can be suggested
 - Mention in the Privacy screen where the app's data is being kept
 - Add the official Slint Attribution card to the About screen
 - Add a feature to import/export connections list; must figure out stable base for relative local paths and stable provider identifiers

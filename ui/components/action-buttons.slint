@@ -163,6 +163,23 @@ export component CardSecondaryActionButton inherits ActionButton {
     label-color: Colors.primary;
 }
 
+export component ExpandedPrimaryActionButton inherits ActionButton {
+    button-width: 0px;
+    expand-width: true;
+    emphasized: true;
+    fill-color: Colors.primary;
+    outline-color: Colors.primary;
+    label-color: Colors.surface;
+}
+
+export component ExpandedSecondaryActionButton inherits ActionButton {
+    button-width: 0px;
+    expand-width: true;
+    fill-color: Colors.surface;
+    outline-color: Colors.primary;
+    label-color: Colors.primary;
+}
+
 component PageActionButton inherits HorizontalLayout {
     in property <string> text;
     in property <bool> enabled: true;

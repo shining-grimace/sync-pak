@@ -7,10 +7,21 @@ use crate::{AppWindow, app::diagnostics as diagnostics_controller};
 pub(crate) fn initialize(window: &AppWindow) {
     crate::app::notifications::configure(window);
     window.set_app_version(env!("CARGO_PKG_VERSION").into());
+    window.set_syncpak_policy_url(syncpak_policy_url().into());
     let diagnostics = Rc::new(std::cell::RefCell::new(Default::default()));
     diagnostics_controller::configure(window, Rc::clone(&diagnostics));
     configure_navigation(window);
     crate::app::startup::configure(window, diagnostics);
+}
+
+#[cfg(target_os = "android")]
+fn syncpak_policy_url() -> &'static str {
+    "https://shininggrimace.com/syncpak/android/privacy-policy"
+}
+
+#[cfg(not(target_os = "android"))]
+fn syncpak_policy_url() -> &'static str {
+    "https://shininggrimace.com/syncpak/desktop/privacy-policy"
 }
 
 fn configure_navigation(window: &AppWindow) {
