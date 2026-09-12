@@ -20,7 +20,7 @@ fn config(mode: SyncMode) -> AppConfig {
             region: Some("ap-southeast-2".into()),
         },
         credential_reference: crate::configuration::CredentialReference { provider_id },
-        verified: false,
+        verified: true,
     };
     AppConfig {
         connections: vec![ConnectionConfig {
@@ -34,7 +34,7 @@ fn config(mode: SyncMode) -> AppConfig {
             allow_upload: true,
             allow_download: true,
             keep_last_archives: None,
-            verified: false,
+            verified: true,
         }],
         providers: vec![provider],
         ..Default::default()

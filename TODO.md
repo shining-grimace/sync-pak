@@ -1,6 +1,10 @@
 
-- Add a feature to import/export connections list; must figure out stable base for relative local paths and stable provider identifiers
-- On Android, add to the About screen a one-time purchase of "buy the developer a coffee"
+- When configuring a Mirror connection, the Allowed Directions checkboxes have weird behaviours
+- The connections list cards don't mention allowed directions (they could)
+- The Connections list should have a list order toggle which persists in settings (sort oldest-to-newest or newest-to-oldest) and the filter should persist in settings too
+- I ought to test handling of connection paths with spaces and special characters
+- On Android, add to Settings a one-time purchase of "buy the developer a coffee"
+- Light mode needs testing everywhere; one place of broken theming is Diagnostics with invisible text
 - Update `abiFilters` in `build.gradle.kts` to add x86_64 support needed by ChromeOS
 - Android: test that external storage drives work too
 - Bump target Android version to API 37

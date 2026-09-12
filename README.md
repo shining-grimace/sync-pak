@@ -103,3 +103,10 @@ Produce a signed AAB and publish through Google Play (not ready yet).
 
 Public release:
 - Produce a signed MSIX for the Microsoft Store/direct install; the MSIX package is not implemented yet.
+
+## Portable connection lists
+
+Use **Settings → Import JSON** or **Export JSON** to move
+connections between devices. Local paths are relative to one saved Local Root (initially your home directory).
+Remote destinations match by provider type and bucket name; credentials stay on each device.
+See [connection lists](docs/connection-lists.md) for the JSON format and workflows.

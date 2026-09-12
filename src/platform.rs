@@ -3,6 +3,7 @@ use std::sync::Arc;
 #[cfg(target_os = "android")]
 pub(crate) mod android;
 pub mod atomic_write;
+pub mod list_file;
 pub(crate) mod advertising {
     #[cfg(target_os = "android")]
     pub fn set_placement(placement: i32) {

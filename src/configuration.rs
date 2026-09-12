@@ -3,6 +3,7 @@
 mod connections;
 mod credentials;
 mod diagnostics;
+pub mod lists;
 mod model;
 mod providers;
 mod store;

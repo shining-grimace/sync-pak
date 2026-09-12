@@ -13,18 +13,18 @@ const CONFIG_FILE: &str = "config.json";
 pub enum ConfigurationError {
     Invalid(ValidationErrors),
     Io(io::Error),
-    Parse(serde_json::Error),
+    Portable(String),
 }
 
 impl std::fmt::Display for ConfigurationError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Portable(error) => formatter.write_str(error),
             Self::Invalid(error) => write!(formatter, "The configuration is invalid: {error}"),
             Self::Io(error) => write!(
                 formatter,
                 "The configuration could not be accessed: {error}"
             ),
-            Self::Parse(_) => formatter.write_str("The configuration file is not valid JSON."),
         }
     }
 }
@@ -32,9 +32,9 @@ impl std::fmt::Display for ConfigurationError {
 impl std::error::Error for ConfigurationError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
+            Self::Portable(_) => None,
             Self::Invalid(error) => Some(error),
             Self::Io(error) => Some(error),
-            Self::Parse(error) => Some(error),
         }
     }
 }
@@ -72,13 +72,13 @@ impl ConfigStore {
 
     pub fn save(&self, config: &AppConfig) -> Result<(), ConfigurationError> {
         config.validate().map_err(ConfigurationError::Invalid)?;
-        let contents = serde_json::to_vec_pretty(config).map_err(ConfigurationError::Parse)?;
+        let contents = super::lists::encode(config).map_err(ConfigurationError::Portable)?;
         atomic_write(&self.path, &contents).map_err(ConfigurationError::Io)
     }
 
     fn decode(&self, contents: &[u8]) -> Result<AppConfig, ConfigurationError> {
         let config: AppConfig =
-            serde_json::from_slice(contents).map_err(ConfigurationError::Parse)?;
+            super::lists::decode(contents).map_err(ConfigurationError::Portable)?;
         config.validate().map_err(ConfigurationError::Invalid)?;
         Ok(config)
     }

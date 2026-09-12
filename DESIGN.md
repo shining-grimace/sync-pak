@@ -110,7 +110,7 @@ Permission prompts should be preceded by an explanation of why access is needed 
 will be accessible. Destructive mirror previews must show exactly which files will be
 overwritten or deleted. Logs and shareable diagnostics must redact credentials and avoid
 file paths by default, with an explicit warning before the user includes path details.
-The Privacy page should link to the published privacy policy, open-source code, licences,
+The Privacy page should link to published privacy policies; Settings contains open-source code and licence information,
 and relevant provider privacy policies.
 
 ## Sync Connection Presentation
@@ -280,15 +280,14 @@ a retry action where useful, and expandable redacted technical details.
 
 The application shell uses a sidebar on wide desktop windows and compact bottom or drawer
 navigation on narrow and Android layouts. Primary destinations are Connections, Providers,
-Activity, and Privacy & About. The currently active operation remains reachable from a
+Activity, and Settings. Privacy is accessible from Settings and Welcome. The currently active operation remains reachable from a
 snackbar and, on Android, the system notification.
 
 ## Welcome
 
 Shown on first use. It explains the local-to-provider model, credential storage, Android
 advertising disclosure where applicable, and the difference between add-only, mirror,
-and archive modes. Its primary action creates a provider; a secondary action opens Privacy
-& About. It should not request permissions before explaining them.
+and archive modes. Its primary action creates a provider; a secondary action opens Privacy. It should not request permissions before explaining them.
 
 ## Connections List
 
@@ -357,11 +356,15 @@ be removed; the active entry can be cancelled; completed entries expose their re
 details. `Clear completed` removes completed, failed, and cancelled entries only. A note
 explains that activity history is cleared when SyncPak exits.
 
-## Privacy & About
+## Settings and Privacy
 
-Contains the privacy presentation defined above, version and licence information, links to
-source code and policies, and Android consent controls where required. A diagnostics area
-can copy redacted app/version information and optionally include paths only after a warning.
+Settings contains About, portable connection-list import/export and Local Root editing,
+Appearance, Local Data, and a link to Privacy. Import JSON, Export JSON, and Edit Roots
+share one row. Local Root defaults to the home directory and is stored once for the app;
+remote roots are inferred by provider type and bucket name. About includes version information,
+source links, and Diagnostics. Privacy retains Privacy Features, Policy Links,
+and Android consent controls. See `docs/connection-lists.md` for the implemented
+JSON format, identity model, path resolution, and review workflows.
 
 ## Common Dialogs and States
 
@@ -561,9 +564,9 @@ plain-language message.
 - Cleanup warning: `SyncPak could not remove temporary data from an earlier operation.`
 - Technical disclosure: `Technical details are redacted where they may contain credentials.`
 
-## Privacy & About
+## Privacy
 
-- Title: `Privacy & About`
+- Title: `Privacy`
 - Direct transfer heading: `Direct transfers`
 - Direct transfer body: `Your files move directly between this device and the cloud provider
   you configured. SyncPak does not receive or host them.`
@@ -614,19 +617,19 @@ checks recorded in `docs/feasibility.md` are pre-release validation work.
 ## 2. Domain and Persistence Foundation
 
 - Define versioned, serializable provider metadata and connection configurations.
-- Implement atomic JSON writes, schema migration, validation, immutable provider and
+- Implement atomic JSON writes, validation, immutable provider and
   connection IDs, and secure-secret references.
 - Separate small modules for configuration, credential storage, filesystem access, provider
   capabilities, comparison/planning, execution, queueing, and UI models. Keep each focused
   on one responsibility and normally below 200 lines of code.
 - Add redaction-safe structured errors and diagnostics.
 
-Exit criterion: configurations survive restart and migration without exposing credentials.
+Exit criterion: configurations survive restart without exposing credentials.
 
 Status: Complete. Versioned serializable configuration, atomic writes, validation, immutable
 IDs, protected credential references, and redacted diagnostics are implemented. This is the
-initial-release schema baseline: no older released or developer configuration schema exists to
-migrate. Any future schema change must provide its migration before that changed schema ships.
+initial-release schema baseline, reset to version 1 for portable connection lists. Previous
+developer settings are intentionally unsupported; no migration code is implemented.
 
 ## 3. Provider Capability Layer
 

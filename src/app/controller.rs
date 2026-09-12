@@ -12,6 +12,7 @@ pub(crate) fn initialize(window: &AppWindow) {
     diagnostics_controller::configure(window, Rc::clone(&diagnostics));
     configure_navigation(window);
     crate::app::privacy::configure(window);
+    crate::app::settings::configure(window);
     crate::app::startup::configure(window, diagnostics);
 }
 
@@ -30,6 +31,23 @@ fn configure_navigation(window: &AppWindow) {
     window.on_show_welcome(move || set_page(&weak, 0));
     let weak = window.as_weak();
     window.on_show_privacy(move || show_privacy(&weak));
+    let weak = window.as_weak();
+    window.on_show_settings(move || {
+        if let Some(window) = weak.upgrade() {
+            crate::app::settings::refresh(&window);
+        }
+        set_page(&weak, 3);
+    });
+    let weak = window.as_weak();
+    window.on_privacy_back(move || {
+        if let Some(window) = weak.upgrade() {
+            if window.get_privacy_can_return_to_welcome() {
+                window.invoke_show_welcome();
+            } else {
+                window.invoke_show_settings();
+            }
+        }
+    });
     let weak = window.as_weak();
     window.on_show_advertising_privacy_choices(move || {
         if weak.upgrade().is_some() {
@@ -61,10 +79,10 @@ fn configure_navigation(window: &AppWindow) {
 fn show_privacy(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
     let can_return_to_welcome = window.get_page() == 0
-        || (window.get_page() == 3 && window.get_privacy_can_return_to_welcome());
+        || (window.get_page() == 18 && window.get_privacy_can_return_to_welcome());
     window.set_privacy_can_return_to_welcome(can_return_to_welcome);
     crate::app::privacy::refresh(&window);
-    set_page(weak, 3);
+    set_page(weak, 18);
 }
 
 fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
@@ -80,7 +98,11 @@ fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
 
 fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
     let Some(window) = weak.upgrade() else { return };
-    if navigation_is_blocked(window.get_page()) {
+    if navigation_is_blocked(window.get_page())
+        || (window.get_page() == 3
+            && (window.global::<crate::SettingsState>().get_mode() != 0
+                || window.global::<crate::SettingsState>().get_busy()))
+    {
         return;
     }
     match window.get_page() {
@@ -101,7 +123,7 @@ fn navigation_is_blocked(page: i32) -> bool {
 }
 
 fn configuration_unavailable_allows(page: i32) -> bool {
-    matches!(page, 0 | 3)
+    matches!(page, 0 | 3 | 18)
 }
 
 fn complete_pending_navigation(weak: &slint::Weak<AppWindow>) {
@@ -118,7 +140,8 @@ fn complete_pending_navigation(weak: &slint::Weak<AppWindow>) {
 fn navigate(window: &AppWindow, page: i32) {
     match page {
         1 => window.invoke_show_providers(),
-        3 => window.invoke_show_privacy(),
+        3 => window.invoke_show_settings(),
+        18 => window.invoke_show_privacy(),
         4 => window.invoke_show_connections(),
         9 => window.invoke_show_activity(),
         _ => {}

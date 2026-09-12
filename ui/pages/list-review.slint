@@ -1,0 +1,124 @@
+import { SettingsState } from "../settings-state.slint";
+import { Dimensions } from "../dimensions.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
+import { LineEdit, ComboBox } from "../components/form-controls.slint";
+import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { CheckBox } from "../components/check-box.slint";
+import { InfoCard } from "../components/cards.slint";
+import { CenteredPageColumn } from "../components/page-layouts.slint";
+import { ActionGroup, ContentGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
+
+export component ListReviewPage inherits CenteredPageColumn {
+    fill-height: true;
+    SectionHeadingLabel {
+        text: SettingsState.mode == 1 ? "Review Import" : SettingsState.mode == 2 ? "Review Export" : "Local Root";
+    }
+    if SettingsState.mode == 3: ContentGroup {
+        spacing: Dimensions.element-gap;
+        DescriptionLabel {
+            text: "The base folder for importing and exporting local paths. It defaults to your home directory. Changing this setting keeps configured connection folders in their current locations.";
+        }
+        LineEdit {
+            accessible-label: "Local Root";
+            text: SettingsState.local-root;
+            enabled: !SettingsState.busy;
+            edited => {
+                SettingsState.set-local(self.text);
+            }
+        }
+        SecondaryActionButton {
+            text: "Choose Folder";
+            accessible-label: "Choose Local Root folder";
+            enabled: !SettingsState.busy;
+            clicked => {
+                SettingsState.pick-local();
+            }
+        }
+        if SettingsState.root-error != "": ErrorLabel {
+            text: SettingsState.root-error;
+        }
+    }
+    if SettingsState.mode != 3: ContentGroup {
+        spacing: Dimensions.element-gap;
+        DescriptionLabel {
+            text: "Local Root: " + SettingsState.local-root;
+        }
+        DescriptionLabel {
+            text: SettingsState.mode == 2 ? "Select connections to export. Paths outside Local Root are incompatible. Credentials and device-specific folder paths are excluded." : "Local paths will be resolved beneath Local Root. Providers are matched by type and bucket name. Imported connections require verification before syncing.";
+        }
+    }
+    if SettingsState.mode != 3: ListView {
+        vertical-stretch: 1;
+        min-height: 0px;
+        vertical-scrollbar-policy: always-on;
+        horizontal-scrollbar-policy: always-off;
+        for connection[index] in SettingsState.connections: ListItem {
+            width: parent.width;
+            InfoCard {
+                accessible-role: list-item;
+                accessible-label: connection.name + ". " + connection.local;
+                vertical-stretch: 0;
+                CheckBox {
+                    text: connection.name;
+                    checked: connection.selected;
+                    enabled: !SettingsState.busy && connection.compatible;
+                    toggled => {
+                        SettingsState.select-connection(index, self.checked);
+                    }
+                }
+                DescriptionLabel {
+                    text: connection.local;
+                }
+                if connection.compatible: DescriptionLabel {
+                    text: connection.remote + "\n" + connection.detail;
+                }
+                if SettingsState.mode == 1: ComboBox {
+                    accessible-label: connection.name + " provider";
+                    enabled: !SettingsState.busy;
+                    model: SettingsState.provider-names;
+                    current-index: connection.provider;
+                    selected => {
+                        SettingsState.set-provider(index, self.current-index);
+                    }
+                }
+                if connection.conflict && SettingsState.mode == 1: ComboBox {
+                    accessible-label: connection.name + " duplicate handling";
+                    enabled: !SettingsState.busy;
+                    model: ["Skip existing connection", "Replace existing connection", "Import as copy"];
+                    current-index: connection.choice;
+                    selected => {
+                        SettingsState.set-conflict(index, self.current-index);
+                    }
+                }
+                if SettingsState.mode == 1 && connection.error != "": ErrorLabel {
+                    text: connection.error;
+                }
+            }
+        }
+    }
+    if SettingsState.mode == 3: Rectangle {
+        vertical-stretch: 1;
+    }
+    if SettingsState.error != "": ErrorLabel {
+        text: SettingsState.error;
+    }
+    ActionGroup {
+        vertical-stretch: 0;
+        SecondaryActionButton {
+            text: "Cancel";
+            enabled: !SettingsState.busy;
+            clicked => {
+                SettingsState.cancel();
+            }
+        }
+        PrimaryActionButton {
+            text: SettingsState.mode == 1 ? "Import Connections" : SettingsState.mode == 2 ? "Save JSON" : "Save Local Root";
+            enabled: !SettingsState.busy;
+            clicked => {
+                SettingsState.confirm();
+            }
+        }
+    }
+}

@@ -48,6 +48,7 @@ pub(crate) fn verify(
         &states,
         &sessions,
     );
+    let snapshot = std::fs::read(configuration.path()).ok();
     let (sender, receiver) = mpsc::sync_channel(1);
     let configuration_path = configuration.path().to_path_buf();
     let awaiting_id = connection_id.clone();
@@ -64,6 +65,7 @@ pub(crate) fn verify(
         states,
         sessions,
         awaiting_id,
+        snapshot,
         receiver,
     );
 }
@@ -76,6 +78,7 @@ fn poll(
     states: VerificationStates,
     sessions: SessionVerifications,
     connection_id: String,
+    snapshot: Option<Vec<u8>>,
     receiver: mpsc::Receiver<Result<(), VerificationFailure>>,
 ) {
     slint::Timer::single_shot(Duration::from_millis(50), move || {
@@ -86,6 +89,14 @@ fn poll(
         }
         match receiver.try_recv() {
             Ok(Ok(())) => {
+                if snapshot.is_none() || std::fs::read(configuration.path()).ok() != snapshot {
+                    states.borrow_mut().remove(&connection_id);
+                    window.set_notice_message(
+                        "Settings changed during verification. Verify the connection again.".into(),
+                    );
+                    refresh(&weak, &configuration, &diagnostics, &states, &sessions);
+                    return;
+                }
                 states.borrow_mut().remove(&connection_id);
                 sessions.borrow_mut().insert(connection_id.clone());
                 if !matches!(
@@ -135,6 +146,7 @@ fn poll(
                 states,
                 sessions,
                 connection_id,
+                snapshot,
                 receiver,
             ),
         }

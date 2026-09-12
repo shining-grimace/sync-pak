@@ -1,0 +1,90 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import { Palette } from "std-widgets.slint";
+
+export component CheckBox inherits Rectangle {
+    in property <string> text;
+    in property <bool> enabled: true;
+    in-out property <bool> checked;
+    callback toggled();
+
+    min-height: max(Dimensions.compact-action-button-height, content.preferred-height);
+    vertical-stretch: 0;
+    opacity: root.enabled ? 1 : 0.45;
+    forward-focus: keyboard;
+    accessible-role: checkbox;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-checkable: true;
+    accessible-checked <=> root.checked;
+    accessible-action-default => {
+        root.toggle();
+    }
+
+    function toggle() {
+        if root.enabled {
+            root.checked = !root.checked;
+            root.toggled();
+        }
+    }
+
+    content := HorizontalLayout {
+        spacing: Dimensions.element-gap;
+        padding: 4px;
+        Rectangle {
+            width: 20px;
+            min-height: 20px;
+            vertical-stretch: 1;
+            Rectangle {
+                width: 20px;
+                height: 20px;
+                y: (parent.height - self.height) / 2;
+                background: root.checked ? Colors.primary : Colors.surface;
+                border-color: Colors.primary;
+                border-width: 1px;
+                border-radius: 4px;
+                if root.checked: Path {
+                    width: parent.width;
+                    height: parent.height;
+                    viewbox-width: 20;
+                    viewbox-height: 20;
+                    stroke: Colors.surface;
+                    stroke-width: 2px;
+                    commands: "M 4 10 L 8 14 L 16 6";
+                }
+            }
+        }
+        Text {
+            text: root.text;
+            color: Palette.foreground;
+            font-size: Dimensions.text-size-description;
+            font-weight: 600;
+            wrap: word-wrap;
+            vertical-alignment: center;
+        }
+    }
+    TouchArea {
+        enabled: root.enabled;
+        clicked => {
+            keyboard.focus();
+            root.toggle();
+        }
+    }
+    keyboard := FocusScope {
+        width: 0px;
+        height: 0px;
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if event.text == Key.Space || event.text == "\n" {
+                root.toggle();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    if keyboard.has-focus && root.enabled: Rectangle {
+        border-color: Colors.primary;
+        border-width: 2px;
+        border-radius: 4px;
+    }
+}

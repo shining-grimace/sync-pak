@@ -49,45 +49,7 @@ fn rejects_an_older_schema() {
     .unwrap();
 
     assert!(ConfigStore::at(path).load().is_err());
-    assert_eq!(CURRENT_SCHEMA_VERSION, 4);
-}
-
-#[test]
-fn loads_connections_created_before_direction_settings() {
-    let path = test_path("missing-direction-settings");
-    fs::create_dir_all(path.parent().unwrap()).unwrap();
-    fs::write(
-        &path,
-        r#"{
-            "schema_version": 4,
-            "welcome_completed": true,
-            "appearance": "system",
-            "providers": [{
-                "id": "provider-id",
-                "name": "Cloud",
-                "kind": "aws-s3",
-                "options": { "region": "ap-southeast-2" },
-                "credential_reference": { "provider_id": "provider-id" },
-                "verified": true
-            }],
-            "connections": [{
-                "id": "connection-id",
-                "name": "Photos",
-                "provider_id": "provider-id",
-                "bucket": "backups",
-                "remote_path": "",
-                "local_path": "/photos",
-                "mode": "add-only",
-                "verified": true
-            }]
-        }"#,
-    )
-    .unwrap();
-
-    let connection = ConfigStore::at(path).load().unwrap().connections.remove(0);
-
-    assert!(connection.allow_upload);
-    assert!(connection.allow_download);
+    assert_eq!(CURRENT_SCHEMA_VERSION, 1);
 }
 
 #[test]

@@ -18,6 +18,12 @@ pub(crate) fn configure(
 ) {
     let states: VerificationStates = Default::default();
     let sessions: SessionVerifications = Default::default();
+    let cleared_sessions = Rc::clone(&sessions);
+    let cleared_states = Rc::clone(&states);
+    window.on_invalidate_connection_verifications(move || {
+        cleared_sessions.borrow_mut().clear();
+        cleared_states.borrow_mut().clear();
+    });
     let weak = window.as_weak();
     let show_configuration = Rc::clone(configuration);
     let show_diagnostics = Rc::clone(&diagnostics);

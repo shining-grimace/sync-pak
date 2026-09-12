@@ -41,6 +41,9 @@ impl RunRequest {
         {
             return Err(RunRequestError::DirectionNotAllowed);
         }
+        if !connection.verified {
+            return Err(RunRequestError::NotVerified);
+        }
         Ok(Self {
             connection,
             provider,
@@ -53,6 +56,7 @@ impl RunRequest {
 pub enum RunRequestError {
     ConnectionNotFound,
     ProviderNotFound,
+    NotVerified,
     BothWaysUnsupported,
     DirectionNotAllowed,
 }
@@ -60,6 +64,7 @@ pub enum RunRequestError {
 impl fmt::Display for RunRequestError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::NotVerified => formatter.write_str("Verify this connection before syncing."),
             Self::ConnectionNotFound => formatter.write_str("The connection no longer exists."),
             Self::ProviderNotFound => {
                 formatter.write_str("The connection's provider no longer exists.")

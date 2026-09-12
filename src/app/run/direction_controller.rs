@@ -192,6 +192,10 @@ fn show(
     });
     match run {
         Some((connection, remote_endpoint)) => {
+            if !connection.verified {
+                window.set_status_message("Verify this connection before syncing.".into());
+                return;
+            }
             let archive_upload_details = archive_details(&connection, Direction::Upload);
             let archive_download_details = archive_details(&connection, Direction::Download);
             window.set_status_message(SharedString::default());

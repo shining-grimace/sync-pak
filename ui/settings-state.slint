@@ -1,0 +1,35 @@
+export struct SettingsConnectionRow {
+    id: string,
+    name: string,
+    detail: string,
+    local: string,
+    remote: string,
+    error: string,
+    compatible: bool,
+    selected: bool,
+    conflict: bool,
+    choice: int,
+    provider: int,
+}
+
+export global SettingsState {
+    in-out property <int> mode: 0;
+    in-out property <bool> busy: false;
+    in-out property <bool> has-connections: false;
+    in-out property <string> error;
+    in-out property <string> notice;
+    in-out property <string> local-root;
+    in-out property <string> root-error;
+    in-out property <[SettingsConnectionRow]> connections;
+    in-out property <[string]> provider-names;
+    callback import-file();
+    callback export-list();
+    callback edit-roots();
+    callback cancel();
+    callback confirm();
+    callback set-local(string);
+    callback pick-local();
+    callback set-provider(int, int);
+    callback select-connection(int, bool);
+    callback set-conflict(int, int);
+}

@@ -12,3 +12,5 @@ pub(crate) mod privacy;
 pub(crate) mod providers;
 pub(crate) mod run;
 pub(crate) mod startup;
+
+pub(crate) mod settings;

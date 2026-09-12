@@ -17,12 +17,12 @@ pub(crate) fn configure(
 ) {
     let configuration = match ConfigStore::for_current_platform() {
         Ok(configuration) => Rc::new(configuration),
-        Err(_) => {
+        Err(error) => {
             show_unavailable(
                 window,
                 diagnostics,
                 "Configuration could not be opened",
-                "configuration directory unavailable",
+                error.to_string(),
                 "SyncPak could not access its configuration. Check its storage location and try again.",
             );
             return;
@@ -108,11 +108,11 @@ pub(crate) fn configure(
                 )
             }
         }
-        Err(_) => show_unavailable(
+        Err(error) => show_unavailable(
             window,
             diagnostics,
             "Configuration could not be loaded",
-            "configuration load failed",
+            error.to_string(),
             "SyncPak could not load its configuration. Check the file and try again.",
         ),
     }
@@ -184,11 +184,17 @@ fn show_unavailable(
     window: &AppWindow,
     diagnostics: crate::app::diagnostics::SharedDiagnosticLog,
     summary: &'static str,
-    technical_details: &'static str,
+    technical_details: String,
     message: &'static str,
 ) {
     window.set_configuration_unavailable(true);
-    diagnostics_controller::present(window, &diagnostics, summary, technical_details, message);
+    diagnostics_controller::present_with_safe_details(
+        window,
+        &diagnostics,
+        summary,
+        technical_details,
+        message,
+    );
     let weak = window.as_weak();
     window.on_retry_configuration(move || {
         if let Some(window) = weak.upgrade() {

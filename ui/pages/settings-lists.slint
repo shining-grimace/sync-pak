@@ -1,0 +1,47 @@
+import { SettingsState } from "../settings-state.slint";
+import { Dimensions } from "../dimensions.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
+import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
+
+export component ConnectionListsSection inherits VerticalLayout {
+    in property <bool> enabled: true;
+    spacing: Dimensions.element-gap;
+    SectionHeadingLabel {
+        text: "Connection Lists";
+    }
+    DescriptionLabel {
+        text: "Import or export connections as JSON. Local paths are relative to this device's Local Root; remote paths use the provider type and bucket name.";
+    }
+    if SettingsState.error != "": ErrorLabel {
+        text: SettingsState.error;
+    }
+    if SettingsState.notice != "": DescriptionLabel {
+        text: SettingsState.notice;
+    }
+    HorizontalLayout {
+        spacing: Dimensions.element-gap;
+        ExpandedPrimaryActionButton {
+            text: "Import JSON";
+            enabled: root.enabled && !SettingsState.busy;
+            clicked => {
+                SettingsState.import-file();
+            }
+        }
+        ExpandedSecondaryActionButton {
+            text: "Export JSON";
+            enabled: root.enabled && !SettingsState.busy && SettingsState.has-connections;
+            clicked => {
+                SettingsState.export-list();
+            }
+        }
+        ExpandedSecondaryActionButton {
+            text: "Edit Root";
+            enabled: root.enabled && !SettingsState.busy;
+            clicked => {
+                SettingsState.edit-roots();
+            }
+        }
+    }
+}

@@ -61,7 +61,7 @@ fn request(direction: Direction) -> RunRequest {
             region: Some("ap-southeast-2".into()),
         },
         credential_reference: CredentialReference { provider_id },
-        verified: false,
+        verified: true,
     };
     let connection = ConnectionConfig {
         id: ConnectionId::new(),
@@ -74,7 +74,7 @@ fn request(direction: Direction) -> RunRequest {
         allow_upload: true,
         allow_download: true,
         keep_last_archives: None,
-        verified: false,
+        verified: true,
     };
     RunRequest::from_config(
         &AppConfig {

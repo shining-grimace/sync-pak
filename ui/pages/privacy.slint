@@ -1,152 +1,19 @@
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { Dimensions } from "../dimensions.slint";
-import { ComboBox } from "../components/form-controls.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
-import {
-    ExpandedPrimaryActionButton,
-    ExpandedSecondaryActionButton,
-    PrimaryActionButton,
-    SecondaryActionButton,
-} from "../components/action-buttons.slint";
-import { MadeWithSlintButton } from "../components/made-with-slint.slint";
-import { AboutSlint, HorizontalBox } from "std-widgets.slint";
+import { SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
-    in property <string> settings-directory;
-    callback open-settings-directory();
-    in property <string> app-version;
     in property <string> syncpak-policy-url;
-    in-out property <int> appearance-preference;
-    in property <bool> configuration-unavailable;
-    in property <bool> can-return-to-welcome;
     in property <bool> advertising-privacy-choices-available;
-    callback apply-appearance-preference();
-    callback change-appearance-preference(int);
-    callback show-diagnostics();
-    callback show-welcome();
+    callback back();
     callback show-advertising-privacy-choices();
 
     HeadingLabel {
-        text: "Privacy & About";
-    }
-
-    VerticalLayout {
-        accessible-role: region;
-        accessible-label: "About";
-        spacing: Dimensions.element-gap;
-
-        HorizontalLayout {
-            accessible-role: region;
-            accessible-label: "About the app";
-            spacing: Dimensions.element-gap;
-
-            VerticalLayout {
-                accessible-role: region;
-                accessible-label: "About the app";
-                spacing: Dimensions.element-gap;
-
-                SectionHeadingLabel {
-                    text: "About";
-                }
-
-                DescriptionLabel {
-                    text: "SyncPak version " + root.app-version;
-                }
-
-                DescriptionLabel {
-                    text: "Designed and published by Thomas Reichert under the name Shining Grimace";
-                }
-            }
-
-            AboutSlint {}
-        }
-
-        DescriptionLabel {
-            text: "Bug reports and feature requests should be submitted on the source code repository on GitHub.";
-        }
-
-        HorizontalLayout {
-            accessible-role: region;
-            accessible-label: "Source links";
-            spacing: Dimensions.element-gap;
-
-            ExpandedSecondaryActionButton {
-                accessible-label: "Open SyncPak's website in your browser";
-                text: "Website";
-                clicked => {
-                    Platform.open-url("https://shininggrimace.com/syncpak")
-                }
-            }
-
-            ExpandedSecondaryActionButton {
-                accessible-label: "Open SyncPak source code in your browser";
-                text: "Source Code";
-                clicked => {
-                    Platform.open-url("https://github.com/shining-grimace/sync-pak");
-                }
-            }
-
-            ExpandedPrimaryActionButton {
-                accessible-label: "View redacted diagnostics with credentials excluded";
-                text: "Diagnostics";
-                clicked => {
-                    root.show-diagnostics();
-                }
-            }
-        }
-    }
-
-    VerticalLayout {
-        accessible-role: region;
-        accessible-label: "Appearance";
-        spacing: Dimensions.element-gap;
-        SectionHeadingLabel {
-            text: "Appearance";
-        }
-
-        DescriptionLabel {
-            text: "Choose whether SyncPak follows your system appearance or always uses a light or dark theme.";
-        }
-
-        ComboBox {
-            accessible-label: "Appearance";
-            model: ["System default", "Light", "Dark"];
-            current-index <=> root.appearance-preference;
-            enabled: !root.configuration-unavailable;
-            selected => {
-                root.apply-appearance-preference();
-                root.change-appearance-preference(self.current-index);
-            }
-        }
-    }
-
-    if root.settings-directory != "": VerticalLayout {
-        accessible-role: region;
-        accessible-label: "Local Data";
-        spacing: Dimensions.element-gap;
-
-        SectionHeadingLabel {
-            text: "Local Data";
-        }
-
-        DescriptionLabel {
-            text: "Settings are being stored at:";
-        }
-
-        DescriptionLabel {
-            text: root.settings-directory;
-        }
-
-        PrimaryActionButton {
-            accessible-label: "Open settings directory in your file browser";
-            text: "Open Settings Directory";
-            clicked => {
-                root.open-settings-directory();
-            }
-        }
+        text: "Privacy";
     }
 
     SectionHeadingLabel {
@@ -254,11 +121,11 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
-    if root.can-return-to-welcome: SecondaryActionButton {
-        accessible-label: "Back to welcome";
+    SecondaryActionButton {
+        accessible-label: "Back";
         text: "Back";
         clicked => {
-            root.show-welcome();
+            root.back();
         }
     }
 }

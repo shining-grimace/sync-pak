@@ -7,6 +7,10 @@ import android.content.pm.PackageManager
 
 class SyncPakActivity : NativeActivity() {
     private val adsController by lazy { AdsController(this) }
+    private val connectionLists by lazy { ConnectionListDocuments(this, ::nativeConnectionListResult) }
+
+    fun pickConnectionList(contents: String): Int = connectionLists.pick(contents)
+
     private val documentTrees by lazy { DocumentTreeAccess(this) }
 
     override fun onDestroy() {
@@ -91,6 +95,7 @@ class SyncPakActivity : NativeActivity() {
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (connectionLists.result(requestCode, resultCode, data)) return
         if (requestCode != PICK_FOLDER_REQUEST) {
             return
         }
@@ -112,6 +117,9 @@ class SyncPakActivity : NativeActivity() {
     }
 
     companion object {
+        @JvmStatic
+        private external fun nativeConnectionListResult(status: Int, contents: String)
+
         private const val PICK_FOLDER_REQUEST = 4101
 
         init {

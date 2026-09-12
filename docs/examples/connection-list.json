@@ -1,0 +1,20 @@
+{
+  "format": "syncpak-connection-list",
+  "version": 1,
+  "connections": [
+    {
+      "id": "0266d905-f882-4bed-b549-d3b6d08b051a",
+      "name": "Projects",
+      "local_path": "Projects",
+      "remote": {
+        "provider_kind": "aws-s3",
+        "bucket": "example-personal-backup",
+        "path": "projects"
+      },
+      "mode": "mirror",
+      "allow_upload": true,
+      "allow_download": true,
+      "keep_last_archives": null
+    }
+  ]
+}

@@ -3,6 +3,7 @@ mod credential_store;
 mod error;
 mod filesystem;
 mod folder_picker;
+pub mod list_file;
 mod notifications;
 
 pub use crate::operations::operation_progress::{OperationPhase, OperationProgress, RetryStatus};

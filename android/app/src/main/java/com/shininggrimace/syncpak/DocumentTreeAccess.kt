@@ -11,7 +11,7 @@ internal class DocumentTreeAccess(context: Context) {
 
     fun verify(value: String): Int = safely {
         val tree = Uri.parse(value)
-        val permission = resolver.persistedUriPermissions.firstOrNull { it.uri == tree }
+        val permission = resolver.persistedUriPermissions.firstOrNull { it.uri == tree.buildUpon().fragment(null).build() }
             ?: return@safely MISSING_PERMISSION
         if (!permission.isReadPermission || !permission.isWritePermission) {
             return@safely MISSING_PERMISSION
@@ -80,7 +80,13 @@ internal class DocumentTreeAccess(context: Context) {
 
     private fun root(tree: Uri): Document? {
         val id = DocumentsContract.getTreeDocumentId(tree)
-        return query(DocumentsContract.buildDocumentUriUsingTree(tree, id))
+        val base = tree.buildUpon().fragment(null).build()
+        var document = query(DocumentsContract.buildDocumentUriUsingTree(base, id)) ?: return null
+        // Descendant names are resolved through the provider, never appended to document IDs.
+        for (name in components(tree.encodedFragment ?: "") ?: return null) {
+            document = child(base, document, name) ?: return null
+        }
+        return document
     }
 
     private fun resolve(tree: Uri, path: String): Document? {

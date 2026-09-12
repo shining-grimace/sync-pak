@@ -3,6 +3,10 @@ import { Dimensions } from "dimensions.slint";
 import { Colors } from "colors.slint";
 import { WelcomePage } from "pages/welcome.slint";
 import { ProvidersPage } from "pages/providers.slint";
+import { SettingsPage } from "pages/settings.slint";
+import { ListReviewPage } from "pages/list-review.slint";
+import { SettingsState } from "settings-state.slint";
+export { SettingsState, SettingsConnectionRow } from "settings-state.slint";
 import { PrivacyPage } from "pages/privacy.slint";
 import { DiagnosticsPage } from "pages/diagnostics.slint";
 import {
@@ -47,7 +51,8 @@ export global Page {
     out property <int> welcome: 0;
     out property <int> providers: 1;
     out property <int> provider-form: 2;
-    out property <int> privacy: 3;
+    out property <int> settings: 3;
+    out property <int> privacy: 18;
     out property <int> connections: 4;
     out property <int> connection-form: 5;
     out property <int> provider-delete: 6;
@@ -113,7 +118,7 @@ export component AppWindow inherits Window {
     callback queue-notification(string, int, int);
     callback dismiss-notification(int);
     callback activate-notification(int);
-    private property <bool> confirmation-open: page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.provider-save-confirmation || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
+    private property <bool> confirmation-open: (page == Page.settings && (SettingsState.mode != 0 || SettingsState.busy)) || page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.provider-save-confirmation || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
     changed status-message => {
         if root.status-message != "" {
             root.queue-notification(root.status-message, 0, 0);
@@ -209,6 +214,9 @@ export component AppWindow inherits Window {
     callback show-add-connection();
     callback show-welcome();
     callback retry-configuration();
+    callback invalidate-connection-verifications();
+    callback show-settings();
+    callback privacy-back();
     callback show-privacy();
     callback show-advertising-privacy-choices();
     callback set-advertising-placement(int);
@@ -327,6 +335,14 @@ export component AppWindow inherits Window {
             focus-on-tab-navigation: false;
             capture-key-pressed(event) => {
                 if event.text == Key.Escape {
+                    if root.page == Page.settings && SettingsState.mode != 0 {
+                        SettingsState.cancel();
+                        return accept;
+                    }
+                    if root.page == Page.privacy {
+                        root.privacy-back();
+                        return accept;
+                    }
                     if root.page == Page.provider-delete {
                         root.cancel-provider-delete();
                         return accept;
@@ -440,9 +456,9 @@ export component AppWindow inherits Window {
                     }
 
                     NavMenuButton {
-                        accessible-label: root.page == 3 ? "About, selected" : "About";
-                        text: "About";
-                        selected: root.page == 3;
+                        accessible-label: (root.page == 3 || root.page == 18) ? "Settings, selected" : "Settings";
+                        text: "Settings";
+                        selected: root.page == 3 || root.page == 18;
                         enabled: !root.confirmation-open;
                         clicked => {
                             root.request-navigation(3);
@@ -627,17 +643,14 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.page == Page.privacy: PrivacyPage {
+            if root.page == Page.settings && SettingsState.mode == 0: SettingsPage {
                 settings-directory: root.settings-directory;
+                app-version: root.app-version;
+                appearance-preference <=> root.appearance-preference;
+                configuration-unavailable: root.configuration-unavailable;
                 open-settings-directory => {
                     root.open-settings-directory();
                 }
-                app-version: root.app-version;
-                syncpak-policy-url: root.syncpak-policy-url;
-                appearance-preference <=> root.appearance-preference;
-                configuration-unavailable: root.configuration-unavailable;
-                can-return-to-welcome: root.privacy-can-return-to-welcome;
-                advertising-privacy-choices-available: root.advertising-privacy-choices-available;
                 apply-appearance-preference => {
                     root.apply-appearance-preference();
                 }
@@ -647,8 +660,17 @@ export component AppWindow inherits Window {
                 show-diagnostics => {
                     root.show-diagnostics();
                 }
-                show-welcome => {
-                    root.show-welcome();
+                show-privacy => {
+                    root.show-privacy();
+                }
+            }
+            if root.page == Page.settings && SettingsState.mode != 0: ListReviewPage {}
+
+            if root.page == Page.privacy: PrivacyPage {
+                syncpak-policy-url: root.syncpak-policy-url;
+                advertising-privacy-choices-available: root.advertising-privacy-choices-available;
+                back => {
+                    root.privacy-back();
                 }
                 show-advertising-privacy-choices => {
                     root.show-advertising-privacy-choices();
@@ -830,9 +852,9 @@ export component AppWindow inherits Window {
                     }
 
                     MobileNavMenuButton {
-                        accessible-label: root.page == 3 ? "About, selected" : "About";
-                        text: "About";
-                        selected: root.page == 3;
+                        accessible-label: (root.page == 3 || root.page == 18) ? "Settings, selected" : "Settings";
+                        text: "Settings";
+                        selected: root.page == 3 || root.page == 18;
                         enabled: !root.confirmation-open;
                         clicked => {
                             root.request-navigation(3);
@@ -907,9 +929,9 @@ export component AppWindow inherits Window {
                 }
 
                 NavMenuButton {
-                    accessible-label: root.page == 3 ? "About, selected" : "About";
-                    text: "About";
-                    selected: root.page == 3;
+                    accessible-label: (root.page == 3 || root.page == 18) ? "Settings, selected" : "Settings";
+                    text: "Settings";
+                    selected: root.page == 3 || root.page == 18;
                     enabled: !root.confirmation-open;
                     clicked => {
                         root.request-navigation(3);

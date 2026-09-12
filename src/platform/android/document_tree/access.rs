@@ -94,7 +94,7 @@ pub fn delete(uri: &str, path: &RelativePath) -> io::Result<()> {
     )?)
 }
 
-fn call_one_string(method: &str, signature: &str, value: &str) -> io::Result<i32> {
+pub(crate) fn call_one_string(method: &str, signature: &str, value: &str) -> io::Result<i32> {
     let method = JNIString::from(method);
     let runtime_signature = signature
         .parse::<RuntimeMethodSignature>()

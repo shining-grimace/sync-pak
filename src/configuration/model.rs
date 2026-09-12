@@ -3,15 +3,16 @@ use uuid::Uuid;
 
 use super::validation::ValidationErrors;
 
-pub const CURRENT_SCHEMA_VERSION: u32 = 4;
+pub const CURRENT_SCHEMA_VERSION: u32 = 1;
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AppConfig {
     pub schema_version: u32,
     pub welcome_completed: bool,
     pub appearance: AppearancePreference,
     pub providers: Vec<ProviderConfig>,
     pub connections: Vec<ConnectionConfig>,
+    pub local_root: String,
 }
 
 impl Default for AppConfig {
@@ -22,6 +23,7 @@ impl Default for AppConfig {
             appearance: AppearancePreference::System,
             providers: Vec::new(),
             connections: Vec::new(),
+            local_root: super::lists::default_local_root(),
         }
     }
 }
@@ -144,9 +146,7 @@ pub struct ConnectionConfig {
     pub remote_path: String,
     pub local_path: String,
     pub mode: SyncMode,
-    #[serde(default = "default_direction_allowed")]
     pub allow_upload: bool,
-    #[serde(default = "default_direction_allowed")]
     pub allow_download: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_last_archives: Option<u32>,
@@ -191,8 +191,4 @@ pub enum SyncMode {
     AddOnly,
     Mirror,
     Archive,
-}
-
-fn default_direction_allowed() -> bool {
-    true
 }
