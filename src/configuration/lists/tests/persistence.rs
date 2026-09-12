@@ -61,3 +61,22 @@ fn failed_save_preserves_existing_file() {
     assert_eq!(std::fs::read(store.path()).unwrap(), original);
     std::fs::remove_dir_all(directory).unwrap();
 }
+
+#[test]
+fn connection_list_preferences_round_trip_and_default_for_existing_settings() {
+    let mut config = config();
+    config.connection_filter = 2;
+    config.connections_newest_first = true;
+    let bytes = encode(&config).unwrap();
+    assert_eq!(decode(&bytes).unwrap(), config);
+
+    let mut json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    json.as_object_mut().unwrap().remove("connection_filter");
+    json.as_object_mut()
+        .unwrap()
+        .remove("connections_newest_first");
+    let loaded = decode(&serde_json::to_vec(&json).unwrap()).unwrap();
+    assert_eq!(loaded.connection_filter, 0);
+    assert!(!loaded.connections_newest_first);
+    assert_eq!(loaded.connections, config.connections);
+}

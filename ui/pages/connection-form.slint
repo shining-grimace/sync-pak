@@ -247,20 +247,25 @@ export component ConnectionFormPage inherits CenteredPageRoot {
         text: "Allowed directions";
     }
     DescriptionLabel {
-        text: "Choose which directions can be selected when this connection runs.";
+        text: root.connection-form-mode == 0 ? "Choose which directions can be selected when this connection runs." : "Allow upload, download, or both. Choose one allowed direction for each run.";
     }
     HorizontalLayout {
         spacing: Dimensions.element-gap;
         ToggleButton {
             text: "Upload";
             selected: root.connection-form-allow-upload;
-            clicked => { root.connection-form-allow-upload = !root.connection-form-allow-upload; }
+            enabled: !root.connection-verifying && !root.folder-picker-open;
+            clicked => {
+                root.connection-form-allow-upload = !root.connection-form-allow-upload;
+            }
         }
         ToggleButton {
             text: "Download";
             selected: root.connection-form-allow-download;
-            enabled: root.connection-form-mode == 0 || !root.connection-form-allow-upload;
-            clicked => { root.connection-form-allow-download = !root.connection-form-allow-download; }
+            enabled: !root.connection-verifying && !root.folder-picker-open;
+            clicked => {
+                root.connection-form-allow-download = !root.connection-form-allow-download;
+            }
         }
     }
     ActionGroup {

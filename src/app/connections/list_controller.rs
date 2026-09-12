@@ -30,9 +30,6 @@ pub(crate) fn configure(
     let show_states = Rc::clone(&states);
     let show_sessions = Rc::clone(&sessions);
     window.on_show_connections(move || {
-        if let Some(window) = weak.upgrade() {
-            window.set_connection_filter(0);
-        }
         show_with_states(
             &weak,
             Rc::clone(&show_configuration),
@@ -42,23 +39,7 @@ pub(crate) fn configure(
         )
     });
 
-    let weak = window.as_weak();
-    let filter_configuration = Rc::clone(configuration);
-    let filter_diagnostics = Rc::clone(&diagnostics);
-    let filter_states = Rc::clone(&states);
-    let filter_sessions = Rc::clone(&sessions);
-    window.on_set_connection_filter(move |filter| {
-        if let Some(window) = weak.upgrade() {
-            window.set_connection_filter(filter.clamp(0, 3));
-        }
-        refresh(
-            &weak,
-            &filter_configuration,
-            &filter_diagnostics,
-            &filter_states,
-            &filter_sessions,
-        );
-    });
+    super::list_preferences::configure(window, configuration);
 
     let weak = window.as_weak();
     let verify_configuration = Rc::clone(configuration);
@@ -114,7 +95,12 @@ pub(crate) fn refresh(
 ) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
-        Ok(config) => {
+        Ok(mut config) => {
+            window.set_connection_filter(config.connection_filter);
+            window.set_connections_newest_first(config.connections_newest_first);
+            if config.connections_newest_first {
+                config.connections.reverse();
+            }
             window.set_connections_load_failed(false);
             window.set_connections_total(config.connections.len() as i32);
             window.set_providers_total(config.providers.len() as i32);
@@ -133,7 +119,17 @@ pub(crate) fn refresh(
                     ConnectionRow {
                         id: connection.id.as_str().into(),
                         name: connection.name.clone().into(),
-                        detail: mode_name(connection.mode).into(),
+                        detail: format!(
+                            "{} · {}",
+                            mode_name(connection.mode),
+                            match (connection.allow_upload, connection.allow_download) {
+                                (true, true) => "Upload & Download",
+                                (true, false) => "Upload only",
+                                (false, true) => "Download only",
+                                (false, false) => "No allowed directions",
+                            }
+                        )
+                        .into(),
                         verification: connection_list_verification_controller::status(
                             states,
                             sessions,

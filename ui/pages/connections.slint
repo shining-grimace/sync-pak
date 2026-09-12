@@ -11,6 +11,7 @@ import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import {
     FilterButton,
     NewActionButton,
+    SecondaryActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
 import {
@@ -24,10 +25,12 @@ export component ConnectionsPage inherits CenteredPageRoot {
     in property <int> connections-total;
     in property <int> providers-total;
     in-out property <int> connection-filter;
+    in-out property <bool> connections-newest-first;
     in property <bool> connections-load-failed;
     callback show-connections();
     callback show-add-provider();
     callback show-add-connection();
+    callback set-connections-newest-first(bool);
     callback set-connection-filter(int);
     callback request-run-connection(string);
     callback verify-saved-connection(string);
@@ -144,6 +147,14 @@ export component ConnectionsPage inherits CenteredPageRoot {
                         root.set-connection-filter(3);
                     }
                 }
+            }
+        }
+
+        SecondaryActionButton {
+            text: root.connections-newest-first ? "Newest to oldest ↓" : "Oldest to newest ↑";
+            accessible-label: root.connections-newest-first ? "Sorted newest to oldest. Switch to oldest to newest" : "Sorted oldest to newest. Switch to newest to oldest";
+            clicked => {
+                root.set-connections-newest-first(!root.connections-newest-first);
             }
         }
 

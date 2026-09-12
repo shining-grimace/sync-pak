@@ -8,6 +8,10 @@ struct SettingsFile {
     schema_version: u32,
     welcome_completed: bool,
     appearance: AppearancePreference,
+    #[serde(default)]
+    connection_filter: i32,
+    #[serde(default)]
+    connections_newest_first: bool,
     local_root: String,
     providers: Vec<ProviderConfig>,
     connections: Vec<ConnectionConfig>,
@@ -29,6 +33,8 @@ pub(crate) fn encode(config: &AppConfig) -> Result<Vec<u8>, String> {
         schema_version: config.schema_version,
         welcome_completed: config.welcome_completed,
         appearance: config.appearance,
+        connection_filter: config.connection_filter,
+        connections_newest_first: config.connections_newest_first,
         local_root: config.local_root.clone(),
         providers: config.providers.clone(),
         connections,
@@ -53,6 +59,8 @@ pub(crate) fn decode(bytes: &[u8]) -> Result<AppConfig, String> {
         schema_version: file.schema_version,
         welcome_completed: file.welcome_completed,
         appearance: file.appearance,
+        connection_filter: file.connection_filter.clamp(0, 3),
+        connections_newest_first: file.connections_newest_first,
         local_root: file.local_root,
         providers: file.providers,
         connections,

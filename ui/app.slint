@@ -81,6 +81,7 @@ export component AppWindow inherits Window {
     in-out property <int> connections-total;
     in-out property <int> providers-total;
     in-out property <int> connection-filter: 0;
+    in-out property <bool> connections-newest-first;
     in-out property <bool> connections-load-failed: false;
     in-out property <[ActivityRow]> activity-rows;
     in-out property <int> activity-clearable-count: 0;
@@ -274,6 +275,7 @@ export component AppWindow inherits Window {
     callback set-preflight-item-filter(int);
     callback cancel-run-direction();
     callback return-to-run-direction();
+    callback set-connections-newest-first(bool);
     callback set-connection-filter(int);
 
     init => {
@@ -563,6 +565,10 @@ export component AppWindow inherits Window {
                 connections-total: root.connections-total;
                 providers-total: root.providers-total;
                 connection-filter <=> root.connection-filter;
+                connections-newest-first <=> root.connections-newest-first;
+                set-connections-newest-first(value) => {
+                    root.set-connections-newest-first(value);
+                }
                 connections-load-failed: root.connections-load-failed;
                 show-connections => {
                     root.show-connections();

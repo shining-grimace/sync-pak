@@ -1,7 +1,4 @@
 
-- When configuring a Mirror connection, the Allowed Directions checkboxes have weird behaviours
-- The connections list cards don't mention allowed directions (they could)
-- The Connections list should have a list order toggle which persists in settings (sort oldest-to-newest or newest-to-oldest) and the filter should persist in settings too
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Light mode needs testing everywhere; one place of broken theming is Diagnostics with invisible text
@@ -13,8 +10,7 @@
 - Bump Rust and Android dependencies where possible
 - Revise GitHub workflows: remove Flatpak and add Snap, or just remove the whole file
 - Create branding logo
-- Create privacy policy
-- Review UI theming
+- Review light mode UI theming
 - Consider transitions and animations
 - Add Google package to AdMob once published on Google Play
 - Add app-ads.txt to developer site once requirements are met
