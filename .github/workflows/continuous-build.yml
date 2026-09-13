@@ -1,6 +1,7 @@
 name: Continuous build
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
@@ -42,18 +43,61 @@ jobs:
           sudo apt-get install --yes libfontconfig1-dev
       - run: cargo build --all-targets --features feasibility-probes --locked
 
-  flatpak:
-    runs-on: ubuntu-latest
+  appimage:
+    # Keep this baseline fixed: newer glibc builds cannot run on older hosts.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          bundle: sync-pak.flatpak
-          manifest-path: com.shininggrimace.SyncPak.yml
+          targets: x86_64-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@v2
+      - name: Install AppImage build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential pkg-config libfontconfig1-dev \
+            libwayland-client0 libwayland-cursor0 libwayland-egl1 libxkbcommon0 \
+            libxkbcommon-x11-0 libx11-6 libx11-xcb1 libxcursor1 libxi6 libxrandr2 \
+            libxinerama1 libxrender1 libxfixes3 libegl1 libgl1 \
+            curl python3 file desktop-file-utils xvfb dbus-x11 fonts-dejavu-core
+      - run: desktop-file-validate packaging/linux/com.shininggrimace.SyncPak.desktop
+      - run: bash appimage/build.sh
+      - name: Verify AppImage contents without FUSE
+        run: |
+          cd dist
+          sha256sum --check ./*.sha256
+          ./SyncPak-*-x86_64.AppImage --appimage-extract
+          test -x squashfs-root/AppRun
+          test -x squashfs-root/usr/bin/sync-pak
+          desktop-file-validate squashfs-root/com.shininggrimace.SyncPak.desktop
+      - name: Smoke-test packaged X11 startup
+        run: |
+          export XDG_CONFIG_HOME="$(mktemp -d)"
+          export WINIT_UNIX_BACKEND=x11
+          export LIBGL_ALWAYS_SOFTWARE=1
+          status=0
+          timeout 20s xvfb-run -a dbus-run-session -- \
+            ./dist/SyncPak-*-x86_64.AppImage --appimage-extract-and-run || status=$?
+          # A healthy GUI stays open until timeout; an early exit is a failure.
+          test "$status" -eq 124
       - uses: actions/upload-artifact@v4
         with:
-          name: syncpak-flatpak-feasibility-package
-          path: sync-pak.flatpak
+          name: syncpak-appimage-x86_64
+          path: |
+            dist/*.AppImage
+            dist/*.sha256
+          if-no-files-found: error
+
+  snap:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snapcore/action-build@v1
+        id: build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: syncpak-snap-amd64
+          path: ${{ steps.build.outputs.snap }}
           if-no-files-found: error
 
   android:

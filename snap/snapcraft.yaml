@@ -1,10 +1,11 @@
 name: sync-pak
 title: SyncPak
 version: '0.1.0'
-summary: Add-only folder copies between this device and cloud providers
+summary: Synchronise local folders with cloud storage
 description: |
   SyncPak is a cross-platform application for copying local folders directly
-  to cloud providers. This is a strictly confined feasibility package.
+  to cloud providers, with add-only, mirror, and archive operations.
+icon: packaging/linux/com.shininggrimace.SyncPak.svg
 base: core24
 confinement: strict
 grade: devel
@@ -15,6 +16,8 @@ platforms:
 apps:
   sync-pak:
     command: bin/sync-pak
+    extensions: [gnome]
+    desktop: usr/share/applications/com.shininggrimace.SyncPak.desktop
     environment:
       GTK_USE_PORTAL: '1'
     plugs:
@@ -32,6 +35,10 @@ parts:
     rust-cargo-parameters:
       - --locked
       - --release
+    override-build: |
+      craftctl default
+      install -Dm644 packaging/linux/com.shininggrimace.SyncPak.desktop "$CRAFT_PART_INSTALL/usr/share/applications/com.shininggrimace.SyncPak.desktop"
+      install -Dm644 packaging/linux/com.shininggrimace.SyncPak.svg "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/scalable/apps/com.shininggrimace.SyncPak.svg"
     build-packages:
       - libegl1-mesa-dev
       - libfontconfig1-dev

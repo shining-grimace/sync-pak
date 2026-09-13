@@ -1,5 +1,6 @@
 
 - I ought to test handling of connection paths with spaces and special characters
+- Delete the test probes for narrow provider testing
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Light mode needs testing everywhere; one place of broken theming is Diagnostics with invisible text
 - Update `abiFilters` in `build.gradle.kts` to add x86_64 support needed by ChromeOS
@@ -8,7 +9,6 @@
 - Set up release config for Android
 - Target latest Android
 - Bump Rust and Android dependencies where possible
-- Revise GitHub workflows: remove Flatpak and add Snap, or just remove the whole file
 - Create branding logo
 - Review light mode UI theming
 - Consider transitions and animations

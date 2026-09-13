@@ -73,17 +73,30 @@ To enable live-reloading `.slint` files while the app is running:
 
 ## Distributing
 
-### Flatpak
+### AppImage (general Linux)
 
-Requirements:
-- Flatpak
-- `org.flatpak.Builder`
-- The Freedesktop Rust SDK extension 
+Build the x86-64 AppImage on Ubuntu 22.04 with `bash appimage/build.sh` after
+installing the [AppImage build dependencies](appimage/README.md). The versioned
+AppImage and SHA-256 checksum are written to `dist/`. Continuous builds also
+provide a `syncpak-appimage-x86_64` artifact.
 
-See also [Flatpak instructions](flatpak/README.md) for testing processes.
+Download both files into the same directory, then run (substitute the version):
 
-Public release:
-- Submit a release manifest with metadata, icon, and stable source to Flathub (not ready yet).
+```sh
+sha256sum --check SyncPak-0.1.0-x86_64.AppImage.sha256
+chmod +x SyncPak-0.1.0-x86_64.AppImage
+./SyncPak-0.1.0-x86_64.AppImage
+```
+
+Targets maintained x86-64 Linux distributions with glibc 2.35 or newer, Wayland
+or X11, OpenGL/EGL drivers, an XDG desktop portal backend, and a Secret Service
+keyring. See [AppImage instructions](appimage/README.md) for host requirements,
+FUSE alternatives, updates, and release checks. AppImage runs with your normal
+user permissions.
+
+Public release: distribute the tested AppImage and checksum through GitHub
+Releases or direct downloads. Signing and public release publishing remain part
+of the release-integration milestone; CI artifacts are development builds.
 
 ### Snap
 

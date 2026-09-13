@@ -16,7 +16,7 @@ Run the core flow for every provider on every supported target, not merely one p
 
 | Providers | Target packages |
 | --- | --- |
-| Cloudflare R2, Backblaze B2, and AWS S3 | Linux Flatpak and Snap on supported desktop runtimes; Android 11+ ARM64 APK/AAB on a physical device; Windows 10+ installed MSIX |
+| Cloudflare R2, Backblaze B2, and AWS S3 | Linux x86-64 AppImage and AMD64 Snap on supported desktops; Android 11+ ARM64 APK/AAB on a physical device; Windows 10+ installed MSIX |
 
 Use the smallest supported Android layout and maximum font/display size. On desktop, run the
 keyboard checks without a mouse. Run Android accessibility checks with TalkBack enabled.
@@ -31,14 +31,34 @@ keyboard checks without a mouse. Run Android accessibility checks with TalkBack 
   behaviour.
 - **Sandbox and folder access:** Select a local folder through the native picker, relaunch,
   and complete a transfer. Revoke or remove that grant, then confirm the app reports a useful
-  recovery action without broad filesystem access. Check Flatpak and Snap interface/portal
-  connections, Android Storage Access Framework permission, and installed-MSIX access.
+  recovery action. Check Snap interface/portal connections, Android Storage Access
+  Framework permission, and installed-MSIX access. AppImage runs with normal user
+  permissions: test a missing or inaccessible folder, rather than assuming revoking a
+  portal grant revokes host filesystem access.
 - **Protected storage:** Save credentials, relaunch, and verify a provider without exposing
   secret values in UI, diagnostics, clipboard, logs, or configuration. Exercise unavailable
   protected storage where the package permits it and confirm there is no plaintext fallback.
 - **Notifications:** Check desktop notification delivery in installed Linux and Windows
   packages. On Android, grant and deny notification permission and confirm the foreground
   service remains understandable in both cases.
+
+## Linux package compatibility
+
+- Run AppImage on Ubuntu 22.04 (the build/glibc baseline), the current Ubuntu LTS,
+  and current Fedora; run Snap on Ubuntu 22.04 and the current Ubuntu LTS.
+  Exercise both Wayland and X11, fonts, scaling, and hardware graphics.
+- Verify the downloaded AppImage checksum, executable permission, normal FUSE launch,
+  and `--appimage-extract-and-run` on a host without FUSE. Run from a path containing
+  spaces and from a working directory other than the download directory.
+- Test AppImage in a clean desktop environment without Rust or build dependencies.
+  Confirm portal selection, host CA certificate validation during provider access,
+  Secret Service access, notifications, and the unavailable-service states.
+- Upgrade AppImage by replacing the file while the app is closed. Check configuration
+  and keyring persistence, then delete the AppImage and confirm data is retained as
+  documented. Do not store credentials alongside the portable executable.
+- Inspect Snap connections and test `password-manager-service` connected and disconnected.
+  Confirm the desktop launcher, graphics runtime, and persistent portal folder access work
+  under strict confinement without adding broad filesystem plugs.
 
 ## Core operation matrix
 

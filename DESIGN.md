@@ -6,8 +6,9 @@ This app, with stylised name "SyncPak", is a GUI tool for synchronising local di
 Vision: Create a free-to-use, no-nonsense, privacy-focused tool that's configured once and then syncs directories between places effortlessly.
 
 Target OSs (all supported in first release):
-- Linux distributions which still receive vendor security updates and can run the current
-  Flathub runtime, using Wayland or X11. Ubuntu 22.04 LTS and newer are the baseline for
+- Maintained x86-64 Linux distributions with glibc 2.35 or newer, using Wayland or X11.
+  AppImages are built on Ubuntu 22.04; they require host graphics drivers, an XDG desktop
+  portal backend, and a Secret Service keyring. Ubuntu 22.04 LTS and newer are the baseline for
   Snap testing; the current Ubuntu LTS and current Fedora release are tested for every
   release.
 - Android 11 and newer (API level 30+, ARM64 only)
@@ -20,7 +21,7 @@ Supported cloud providers:
 
 Intended distribution:
 - Snap (for Ubuntu)
-- Flathub (for other Linux distros)
+- AppImage (direct downloads for general Linux distributions)
 - Google Play (for Android)
 - A signed MSIX package through the Microsoft Store on Windows, with the same signed
   package also available for direct installation where practical. MSIX provides a
@@ -68,8 +69,9 @@ provider ID is generated once when the provider is created, is never changed or 
 and is used as the reference for retrieving the separate credential JSON from
 platform-backed secure storage:
 
-- Linux uses a Secret Service-compatible keyring available within the Snap or Flatpak
-  sandbox.
+- Linux uses a Secret Service-compatible keyring on the desktop session bus. AppImage
+  runs with normal user permissions; Snap accesses the service through its confined
+  password-manager-service interface.
 - Android generates a non-exportable encryption key in Android Keystore and stores only
   ciphertext in the app's private storage.
 - Windows uses a credential facility associated with the packaged application identity.
@@ -602,7 +604,7 @@ implementation milestone open.
 
 - Establish minimal Slint applications on Linux, Android, and Windows in continuous builds.
 - Prototype file/folder selection, protected credential storage, Android foreground-service
-  execution, desktop notifications, and MSIX/Snap/Flatpak sandbox access.
+  execution, desktop notifications, and MSIX/Snap sandbox access and AppImage host integration.
 - Prove basic authenticated list/upload/download/delete operations against test accounts for
   R2, B2, and S3.
 - Record provider and platform limitations that affect capability abstractions or UI copy.
@@ -716,7 +718,9 @@ checks are pre-release validation work.
 - Publish the privacy policy and provider disclosures; audit logs, errors, clipboard actions,
   and diagnostics for secret/path leakage.
 - Add Android consent handling and AdMob only after privacy-sensitive screens are excluded.
-- Produce signed Snap, Flatpak, Android, and MSIX packages using release CI.
+- Produce AppImage, Snap, Android, and MSIX packages using release CI, with signing
+  appropriate to each channel. Distribute AppImages and checksums through direct downloads
+  or GitHub Releases; publish Snap through the Snap Store.
 - Test clean install, upgrade, uninstall, credential persistence/removal, sandbox permissions,
   background operation, and provider access for every package.
 

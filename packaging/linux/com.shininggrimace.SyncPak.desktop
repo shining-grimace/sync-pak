@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SyncPak
+Comment=Synchronise local folders with cloud storage
+Exec=sync-pak
+Icon=com.shininggrimace.SyncPak
+Terminal=false
+Categories=Utility;FileTools;
+Keywords=sync;backup;cloud;
