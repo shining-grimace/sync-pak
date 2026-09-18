@@ -1,8 +1,7 @@
 
 - I ought to test handling of connection paths with spaces and special characters
-- Delete the test probes for narrow provider testing
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
-- Light mode needs testing everywhere; one place of broken theming is Diagnostics with invisible text
+- Light mode needs testing everywhere; it all looks good except Diagnostics textarea has a weirdly-coloured bottom border when focused
 - Update `abiFilters` in `build.gradle.kts` to add x86_64 support needed by ChromeOS
 - Android: test that external storage drives work too
 - Bump target Android version to API 37

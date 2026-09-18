@@ -1,10 +1,9 @@
 import { Palette } from "std-widgets.slint";
-import { Colors } from "../colors.slint";
+import { InputFrame } from "input-frame.slint";
 import { Dimensions } from "../dimensions.slint";
 import { InputPositionRefresh } from "../input-position-refresh.slint";
 
-export component LineEdit inherits Rectangle {
-    in property <bool> enabled: true;
+export component LineEdit inherits InputFrame {
     in property <string> font-family: "";
     in property <bool> font-italic: false;
     in property <length> font-size: 0px;
@@ -48,14 +47,7 @@ export component LineEdit inherits Rectangle {
 
     height: Dimensions.control-height;
     vertical-stretch: 0;
-    horizontal-stretch: 1;
-    min-width: 1px;
-    border-radius: Dimensions.input-border-radius;
-    border-width: 1px;
-    border-color: root.has-focus ? Colors.secondary : Colors.primary;
-    background: Palette.control-background;
-    opacity: root.enabled ? 1 : 0.55;
-    clip: true;
+    focused: root.has-focus;
     forward-focus: editor;
     accessible-role: text-input;
     accessible-enabled: root.enabled;
@@ -80,8 +72,8 @@ export component LineEdit inherits Rectangle {
     }
 
     text-clip := Rectangle {
-        x: 12px;
-        width: max(0px, parent.width - 24px);
+        x: root.content-padding;
+        width: max(0px, parent.width - 2 * root.content-padding);
         height: parent.height;
         clip: true;
 

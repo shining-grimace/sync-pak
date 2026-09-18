@@ -1,0 +1,167 @@
+import { Palette, ScrollView } from "std-widgets.slint";
+import { InputFrame } from "input-frame.slint";
+import { Dimensions } from "../dimensions.slint";
+import { InputPositionRefresh } from "../input-position-refresh.slint";
+
+export component TextEdit inherits InputFrame {
+    in property <bool> read-only: false;
+    in property <string> placeholder-text: "";
+    in property <string> font-family <=> editor.font-family;
+    in property <length> font-size <=> editor.font-size;
+    in property <int> font-weight <=> editor.font-weight;
+    in property <bool> font-italic <=> editor.font-italic;
+    in property <TextWrap> wrap: word-wrap;
+    in property <TextHorizontalAlignment> horizontal-alignment <=> editor.horizontal-alignment;
+    in-out property <string> text <=> editor.text;
+    out property <bool> has-focus: editor.has-focus;
+    private property <int> input-position-refresh-generation: InputPositionRefresh.generation;
+
+    callback edited(string);
+    callback key-pressed(KeyEvent) -> EventResult;
+    callback key-released(KeyEvent) -> EventResult;
+
+    public function set-selection-offsets(start: int, end: int) {
+        editor.set-selection-offsets(start, end);
+    }
+    public function select-all() {
+        editor.select-all();
+    }
+    public function clear-selection() {
+        editor.clear-selection();
+    }
+    public function cut() {
+        editor.cut();
+    }
+    public function copy() {
+        editor.copy();
+    }
+    public function paste() {
+        editor.paste();
+    }
+
+    min-height: Dimensions.control-height;
+    vertical-stretch: 1;
+    focused: root.has-focus;
+    forward-focus: editor;
+    accessible-role: text-input;
+    accessible-enabled: root.enabled;
+    accessible-value <=> root.text;
+    accessible-placeholder-text: root.placeholder-text;
+    accessible-read-only: root.read-only;
+    accessible-action-set-value(value) => {
+        if root.enabled && !root.read-only {
+            root.text = value;
+            root.edited(value);
+        }
+    }
+
+    changed input-position-refresh-generation => {
+        if editor.has-focus {
+            // Refresh Android selection handle geometry when an ancestor scrolls.
+            editor.set-selection-offsets(editor.anchor-position-byte-offset, editor.cursor-position-byte-offset);
+        }
+    }
+
+    ContextMenuArea {
+        enabled: root.enabled;
+        Menu {
+            MenuItem {
+                title: @tr("Cut");
+                enabled: root.enabled && !root.read-only;
+                activated => {
+                    root.cut();
+                }
+            }
+            MenuItem {
+                title: @tr("Copy");
+                enabled: root.enabled && root.text != "";
+                activated => {
+                    root.copy();
+                }
+            }
+            MenuItem {
+                title: @tr("Paste");
+                enabled: root.enabled && !root.read-only;
+                activated => {
+                    root.paste();
+                }
+            }
+            MenuItem {
+                title: @tr("Select All");
+                enabled: root.enabled && root.text != "";
+                activated => {
+                    root.select-all();
+                }
+            }
+        }
+
+        scroll := ScrollView {
+            x: root.content-padding;
+            y: root.content-padding;
+            width: max(0px, parent.width - 2 * root.content-padding);
+            height: max(0px, parent.height - 2 * root.content-padding);
+            viewport-width: root.wrap == TextWrap.no-wrap ? max(self.visible-width, editor.preferred-width) : self.visible-width;
+            viewport-height: max(self.visible-height, editor.preferred-height);
+
+            editor := TextInput {
+                width: scroll.viewport-width;
+                height: scroll.viewport-height;
+                enabled: root.enabled;
+                read-only: root.read-only;
+                single-line: false;
+                wrap: root.wrap;
+                color: Palette.foreground;
+                page-height: scroll.visible-height;
+                accessible-role: none;
+
+                edited => {
+                    root.edited(self.text);
+                }
+                key-pressed(event) => {
+                    root.key-pressed(event)
+                }
+                key-released(event) => {
+                    root.key-released(event)
+                }
+                cursor-position-changed(position) => {
+                    if position.x + scroll.viewport-x < 0px {
+                        scroll.viewport-x = min(0px, max(scroll.visible-width - self.width, -position.x));
+                    } else if position.x + scroll.viewport-x > scroll.visible-width - self.text-cursor-width {
+                        scroll.viewport-x = min(0px, max(scroll.visible-width - self.width, scroll.visible-width - position.x - self.text-cursor-width));
+                    }
+                    if position.y + scroll.viewport-y < 0px {
+                        scroll.viewport-y = min(0px, scroll.visible-height - position.y - line-metrics.preferred-height, max(scroll.visible-height - self.height, -position.y));
+                    } else if position.y + scroll.viewport-y > scroll.visible-height - line-metrics.preferred-height {
+                        scroll.viewport-y = min(0px, max(scroll.visible-height - self.height, scroll.visible-height - position.y - line-metrics.preferred-height));
+                    }
+                }
+            }
+        }
+    }
+
+    Text {
+        x: scroll.x;
+        y: scroll.y;
+        width: scroll.width;
+        height: scroll.height;
+        text: root.text == "" && editor.preedit-text == "" ? root.placeholder-text : "";
+        font-family: root.font-family;
+        font-size: root.font-size;
+        font-weight: root.font-weight;
+        font-italic: root.font-italic;
+        horizontal-alignment: root.horizontal-alignment;
+        wrap: root.wrap;
+        color: Palette.alternate-foreground;
+        accessible-role: none;
+    }
+
+    line-metrics := Text {
+        text: "M";
+        font-family: root.font-family;
+        font-size: root.font-size;
+        font-weight: root.font-weight;
+        font-italic: root.font-italic;
+        visible: false;
+        accessible-role: none;
+    }
+}

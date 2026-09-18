@@ -1,0 +1,19 @@
+import { Palette } from "std-widgets.slint";
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+
+// Shared appearance only; editors own focus, accessibility, and scrolling.
+export component InputFrame inherits Rectangle {
+    in property <bool> enabled: true;
+    in property <bool> focused: false;
+    out property <length> content-padding: 12px;
+
+    min-width: 1px;
+    horizontal-stretch: 1;
+    border-radius: Dimensions.input-border-radius;
+    border-width: 1px;
+    border-color: root.focused ? Colors.secondary : Colors.primary;
+    background: Palette.control-background;
+    opacity: root.enabled ? 1 : 0.55;
+    clip: true;
+}
