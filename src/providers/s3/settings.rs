@@ -41,7 +41,9 @@ impl S3Settings {
             return Err(ProviderError::InvalidRequest);
         }
         Ok(Self {
-            endpoint,
+            endpoint: endpoint
+                .as_deref()
+                .and_then(crate::providers::endpoint::normalize),
             force_path_style: !matches!(provider.kind, ProviderKind::AwsS3),
             region,
             request_checksums_when_required: matches!(provider.kind, ProviderKind::CloudflareR2),
@@ -86,6 +88,27 @@ mod tests {
             ))
             .is_err()
         );
+    }
+
+    #[test]
+    fn saved_custom_endpoints_are_normalized_for_every_provider() {
+        for kind in [
+            ProviderKind::AwsS3,
+            ProviderKind::BackblazeB2,
+            ProviderKind::CloudflareR2,
+        ] {
+            let settings = S3Settings::from_provider(&provider(
+                kind,
+                None,
+                Some(" s3.us-west-004.backblazeb2.com "),
+                Some("us-west-004"),
+            ))
+            .unwrap();
+            assert_eq!(
+                settings.endpoint.as_deref(),
+                Some("https://s3.us-west-004.backblazeb2.com")
+            );
+        }
     }
 
     fn provider(

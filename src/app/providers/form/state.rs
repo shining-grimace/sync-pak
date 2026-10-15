@@ -94,7 +94,7 @@ pub(crate) fn provider_options(
     ProviderOptions {
         account_id: optional(account_id),
         default_bucket: optional(default_bucket),
-        endpoint: optional(endpoint),
+        endpoint: crate::providers::endpoint::normalize(endpoint),
         region: optional(region),
     }
 }
@@ -117,6 +117,21 @@ pub(crate) fn provider_id(configuration: &ConfigStore, id: &str) -> Result<Provi
 #[cfg(test)]
 mod tests {
     use super::{is_current_verification, next_verification_generation};
+
+    #[test]
+    fn form_options_store_normalized_endpoints() {
+        let options = super::provider_options(
+            "",
+            "us-west-004",
+            "backups",
+            " s3.us-west-004.backblazeb2.com ",
+        );
+        assert_eq!(
+            options.endpoint.as_deref(),
+            Some("https://s3.us-west-004.backblazeb2.com")
+        );
+        assert_eq!(super::provider_options("", "", "", " ").endpoint, None);
+    }
 
     #[test]
     fn only_the_current_verification_attempt_can_update_a_form() {

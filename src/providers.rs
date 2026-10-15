@@ -1,6 +1,7 @@
 pub mod capabilities;
 #[cfg(any(test, feature = "provider-probes"))]
 pub mod conformance;
+pub(crate) mod endpoint;
 pub(crate) mod error;
 pub(crate) mod errors;
 #[cfg(any(test, feature = "provider-probes"))]

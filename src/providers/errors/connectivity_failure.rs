@@ -107,6 +107,9 @@ impl ProviderConnectivityFailure {
             Self::Transport(ProviderTransportError::TrustStoreUnavailable) => {
                 "Android system certificate trust store is unavailable"
             }
+            Self::Transport(ProviderTransportError::OpaqueTransport(detail)) => {
+                return format!("provider transport failed: {}", detail.as_str()).into();
+            }
             Self::Transport(ProviderTransportError::Unexpected) => {
                 "provider transport failed before an HTTP response"
             }
@@ -197,7 +200,9 @@ impl ProviderConnectivityFailure {
             Self::Transport(ProviderTransportError::TrustStoreUnavailable) => {
                 "Android did not provide a usable system certificate trust store. This is a device integration problem, not a provider configuration error. Open Diagnostics and report it."
             }
-            Self::Transport(ProviderTransportError::Unexpected) => {
+            Self::Transport(
+                ProviderTransportError::Unexpected | ProviderTransportError::OpaqueTransport(_),
+            ) => {
                 "The network transport failed before the provider returned a response. No credentials or settings rejection was received. Open Diagnostics and report this technical error."
             }
         }

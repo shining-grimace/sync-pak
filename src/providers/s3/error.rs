@@ -3,6 +3,7 @@ use std::error::Error;
 use aws_sdk_s3::error::{ConnectorError, ProvideErrorMetadata, SdkError};
 
 use crate::providers::capabilities::{ProviderError, ProviderTransportError};
+use crate::providers::errors::safe_transport_detail::SafeTransportDetail;
 
 #[cfg(any(target_os = "android", test))]
 use crate::providers::errors::endpoint_resolution::EndpointResolutionError;
@@ -85,7 +86,9 @@ fn connector_error(error: &ConnectorError) -> ProviderError {
     if let Some(error) = deepest_source::<std::io::Error>(error) {
         return io_error(error);
     }
-    transport_error(ProviderTransportError::Unexpected)
+    transport_error(ProviderTransportError::OpaqueTransport(
+        SafeTransportDetail::from_error_chain(error),
+    ))
 }
 
 fn io_error(error: &std::io::Error) -> ProviderError {
@@ -178,3 +181,6 @@ fn provider_error_code(code: &str) -> ProviderError {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod diagnostic_tests;

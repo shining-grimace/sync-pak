@@ -33,6 +33,7 @@ pub enum ProviderTransportError {
     NetworkPermissionDenied,
     NetworkUnreachable,
     OpaqueTlsIo(SafeTransportDetail),
+    OpaqueTransport(SafeTransportDetail),
     RustlsGeneralFailed,
     SecureRandomUnavailable,
     TlsAlertReceived,
