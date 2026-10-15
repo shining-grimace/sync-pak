@@ -22,6 +22,7 @@ pub(crate) fn configure(
     diagnostics: SharedDiagnosticLog,
     buckets: ProviderBucketCache,
 ) {
+    super::transport::configure(window, configuration);
     connection_form_verify_controller::configure(window, configuration, Rc::clone(&diagnostics));
     let weak = window.as_weak();
     let add_configuration = Rc::clone(configuration);
@@ -174,10 +175,19 @@ fn save(
         window.set_status_message(error.into());
         return;
     }
+    let transport = match super::transport::read(&window, &configuration) {
+        Ok(settings) => settings,
+        Err(error) => {
+            window.set_connection_save_after_verification(false);
+            window.set_status_message(error.into());
+            return;
+        }
+    };
     let edit_id = window.get_connection_form_id();
     let form_changed = is_dirty(&window);
     let result = draft(
         &configuration,
+        transport,
         name,
         provider_index,
         bucket,

@@ -7,7 +7,7 @@ use aws_sdk_s3::{
 };
 
 use crate::{
-    configuration::{ProviderConfig, ProviderCredentials},
+    configuration::{ProviderConfig, ProviderCredentials, TransportSettings},
     providers::capabilities::{
         ObjectDeleter, ObjectLister, ObjectMetadata, ObjectReader, ProviderError, ProviderResult,
         ReadObject, RemoteObject,
@@ -29,6 +29,24 @@ impl S3Transport {
         credentials: ProviderCredentials,
     ) -> ProviderResult<Self> {
         let settings = S3Settings::from_provider(provider)?;
+        Self::connect_settings(settings, credentials).await
+    }
+
+    /// Resolves the actual connection destination before building its client.
+    pub async fn connect_bucket(
+        provider: &ProviderConfig,
+        credentials: ProviderCredentials,
+        bucket: &str,
+        transport: Option<&TransportSettings>,
+    ) -> ProviderResult<Self> {
+        let settings = S3Settings::for_bucket(provider, Some(bucket), transport)?;
+        Self::connect_settings(settings, credentials).await
+    }
+
+    async fn connect_settings(
+        settings: S3Settings,
+        credentials: ProviderCredentials,
+    ) -> ProviderResult<Self> {
         let credentials = Credentials::new(
             credentials.access_key_id,
             credentials.secret_access_key,

@@ -1,3 +1,4 @@
+import { TransportFields } from "../components/transport-fields.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
@@ -26,6 +27,10 @@ export component ProviderFormPage inherits CenteredPageRoot {
     in property <[string]> provider-verified-buckets;
     in property <bool> provider-bucket-list-empty;
     in property <int> validation-focus;
+    in-out property <bool> provider-form-bucket-custom;
+    in-out property <string> provider-form-bucket-endpoint;
+    in-out property <string> provider-form-bucket-region;
+    pure callback infer-b2-region(string) -> string;
     callback toggle-provider-secret-visibility();
     callback request-discard-provider();
     callback request-save-provider();
@@ -96,54 +101,8 @@ export component ProviderFormPage inherits CenteredPageRoot {
             enabled: !root.provider-verifying;
         }
     }
-    if root.provider-form-kind != 0: VerticalLayout {
-        spacing: Dimensions.element-gap;
-        SectionHeadingLabel {
-            text: "Region";
-        }
-
-        LineEdit {
-            accessible-label: "Region";
-            placeholder-text: "For example, ap-southeast-2";
-            text <=> root.provider-form-region;
-            enabled: !root.provider-verifying;
-        }
-    }
-    SectionHeadingLabel {
-        text: "Default bucket (optional)";
-    }
-
-    LineEdit {
-        accessible-label: "Default bucket";
-        placeholder-text: "Used and locked for connections that select this provider";
-        text <=> root.provider-form-bucket;
-        enabled: !root.provider-verifying;
-    }
-
-    if root.provider-verified-buckets.length > 0: VerticalLayout {
-        spacing: Dimensions.element-gap;
-        DescriptionLabel {
-            text: "Verified available buckets";
-        }
-
-        ComboBox {
-            accessible-label: "Verified available buckets";
-            model: root.provider-verified-buckets;
-            enabled: !root.provider-verifying;
-            selected => {
-                root.provider-form-bucket = root.provider-verified-buckets[self.current-index];
-            }
-        }
-    }
-    if !root.provider-verifying && root.provider-bucket-list-empty: DescriptionLabel {
-        text: "These credentials verified successfully, but no buckets were visible. Enter a bucket manually if its access is restricted.";
-    }
-    DescriptionLabel {
-        text: "When set, new and edited connections using this provider use this bucket and cannot change it.";
-    }
-
     if root.provider-form-kind == 1: DescriptionLabel {
-        text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key. Enter its S3 endpoint under Advanced.";
+        text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key.";
     }
     SectionHeadingLabel {
         text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
@@ -191,6 +150,86 @@ export component ProviderFormPage inherits CenteredPageRoot {
         accessible-live-region: polite;
         text: "Make sure nobody else can see your screen. This value hides again in 15 seconds.";
     }
+    SectionHeadingLabel {
+        text: "Provider connection defaults";
+    }
+    DescriptionLabel {
+        text: "Used by connections that inherit this provider’s settings. You can leave these blank and configure individual connections later instead.";
+    }
+    TransportFields {
+        kind: root.provider-form-kind;
+        optional: true;
+        endpoint <=> root.provider-form-endpoint;
+        region <=> root.provider-form-region;
+        enabled: !root.provider-verifying;
+        infer-b2-region(value) => {
+            return root.infer-b2-region(value);
+        }
+    }
+    SectionHeadingLabel {
+        text: "Fixed bucket (optional)";
+    }
+
+    LineEdit {
+        accessible-label: "Fixed bucket";
+        placeholder-text: "Used and locked for connections that select this provider";
+        text <=> root.provider-form-bucket;
+        enabled: !root.provider-verifying;
+    }
+
+    if root.provider-verified-buckets.length > 0: VerticalLayout {
+        spacing: Dimensions.element-gap;
+        DescriptionLabel {
+            text: "Discovered buckets";
+        }
+
+        ComboBox {
+            accessible-label: "Discovered buckets";
+            model: root.provider-verified-buckets;
+            enabled: !root.provider-verifying;
+            selected => {
+                root.provider-form-bucket = root.provider-verified-buckets[self.current-index];
+            }
+        }
+    }
+    if !root.provider-verifying && root.provider-bucket-list-empty: DescriptionLabel {
+        text: "No bucket names were discovered. You can enter a bucket manually and check its access.";
+    }
+    DescriptionLabel {
+        text: "New connections use this bucket and cannot change it. Existing connections keep their saved bucket.";
+    }
+
+    DescriptionLabel {
+        text: "You can also enter a bucket manually. Listed buckets may have different access permissions.";
+    }
+    if root.provider-form-bucket != "": VerticalLayout {
+        spacing: Dimensions.element-gap;
+        SectionHeadingLabel {
+            text: "Fixed bucket connection settings";
+        }
+        ComboBox {
+            accessible-label: "Fixed bucket connection settings";
+            model: ["Use provider settings", "Configure for this bucket"];
+            current-index: root.provider-form-bucket-custom ? 1 : 0;
+            enabled: !root.provider-verifying;
+            selected => {
+                root.provider-form-bucket-custom = self.current-index == 1;
+            }
+        }
+        if root.provider-form-bucket-custom: TransportFields {
+            kind: root.provider-form-kind;
+            endpoint <=> root.provider-form-bucket-endpoint;
+            region <=> root.provider-form-bucket-region;
+            enabled: !root.provider-verifying;
+            infer-b2-region(value) => {
+                return root.infer-b2-region(value);
+            }
+        }
+        DescriptionLabel {
+            text: "These settings apply only to connections using the fixed bucket. Other saved buckets continue to use provider defaults.";
+        }
+    }
+
     SecondaryActionButton {
         accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings";
         text: root.provider-advanced-expanded ? "Hide Advanced" : "Advanced";
@@ -202,17 +241,6 @@ export component ProviderFormPage inherits CenteredPageRoot {
 
     if root.provider-advanced-expanded: VerticalLayout {
         spacing: Dimensions.element-gap;
-        SectionHeadingLabel {
-            text: "Custom endpoint";
-        }
-
-        LineEdit {
-            accessible-label: "Custom endpoint";
-            placeholder-text: "Optional S3-compatible endpoint";
-            text <=> root.provider-form-endpoint;
-            enabled: !root.provider-verifying;
-        }
-
         SectionHeadingLabel {
             text: "Session token";
         }
@@ -229,47 +257,51 @@ export component ProviderFormPage inherits CenteredPageRoot {
             text: "Use this only when your provider issued a temporary session credential.";
         }
     }
-    DescriptionLabel {
-        text: "Verify checks the credentials and lists available buckets without saving or changing cloud data.";
-    }
-
-    if root.provider-verifying: DescriptionLabel {
-        accessible-live-region: polite;
-        text: "Checking these settings without changing cloud data…";
-    }
-    ActionGroup {
-        SecondaryActionButton {
-            accessible-label: "Back to providers";
-            text: "Back";
-            clicked => {
-                root.request-discard-provider();
-            }
+    VerticalLayout {
+        padding-top: 2 * Dimensions.section-gap;
+        spacing: Dimensions.section-gap;
+        DescriptionLabel {
+            text: "Verify discovers bucket names and checks access to the fixed bucket when one is set. Connection verification checks the actual bucket and folder. Cloud data is unchanged.";
         }
 
-        SecondaryActionButton {
-            accessible-label: "Save " + root.provider-form-name + " without verifying";
-            text: "Save Unverified";
-            enabled: !root.provider-verifying;
-            clicked => {
-                root.request-save-provider();
-            }
+        if root.provider-verifying: DescriptionLabel {
+            accessible-live-region: polite;
+            text: "Checking these settings without changing cloud data…";
         }
-
-        SecondaryActionButton {
-            accessible-label: "Verify settings for " + root.provider-form-name;
-            text: "Verify";
-            enabled: !root.provider-verifying;
-            clicked => {
-                root.verify-provider();
+        ActionGroup {
+            SecondaryActionButton {
+                accessible-label: "Back to providers";
+                text: "Back";
+                clicked => {
+                    root.request-discard-provider();
+                }
             }
-        }
 
-        PrimaryActionButton {
-            accessible-label: "Save and verify " + root.provider-form-name;
-            text: root.provider-verifying ? "Verifying…" : "Save & Verify";
-            enabled: !root.provider-verifying;
-            clicked => {
-                root.save-and-verify-provider();
+            SecondaryActionButton {
+                accessible-label: "Save " + root.provider-form-name + " without verifying";
+                text: "Save Unverified";
+                enabled: !root.provider-verifying;
+                clicked => {
+                    root.request-save-provider();
+                }
+            }
+
+            SecondaryActionButton {
+                accessible-label: "Verify settings for " + root.provider-form-name;
+                text: "Verify";
+                enabled: !root.provider-verifying;
+                clicked => {
+                    root.verify-provider();
+                }
+            }
+
+            PrimaryActionButton {
+                accessible-label: "Save and verify " + root.provider-form-name;
+                text: root.provider-verifying ? "Verifying…" : "Save & Verify";
+                enabled: !root.provider-verifying;
+                clicked => {
+                    root.save-and-verify-provider();
+                }
             }
         }
     }

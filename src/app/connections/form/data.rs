@@ -1,16 +1,17 @@
+pub(crate) use super::draft::draft;
+
 use std::rc::Rc;
 
 use slint::{ModelRc, SharedString, VecModel};
 
 use crate::{
     AppWindow,
-    configuration::{
-        ConfigStore, ConnectionConfig, ConnectionDraft, ProviderConfig, ProviderId, SyncMode,
-    },
+    configuration::{ConfigStore, ConnectionConfig, ProviderConfig, SyncMode},
 };
 
 pub(crate) fn reset(window: &AppWindow) {
     invalidate_verification(window);
+    super::transport::reset(window);
     window.set_connection_form_id(SharedString::default());
     window.set_connection_form_name(SharedString::default());
     window.set_connection_form_provider(0);
@@ -63,6 +64,7 @@ pub(crate) fn populate(
     provider_index: usize,
 ) {
     set_provider_models(window, providers);
+    super::transport::populate(window, connection.transport.as_ref());
     window.set_connection_form_id(connection.id.as_str().into());
     window.set_connection_form_name(connection.name.into());
     window.set_connection_form_provider(provider_index as i32);
@@ -116,11 +118,19 @@ fn form_signature(window: &AppWindow) -> String {
             window.get_connection_form_retention(),
             window.get_connection_form_allow_upload(),
             window.get_connection_form_allow_download(),
+            (
+                window.get_connection_form_use_provider_settings(),
+                window.get_connection_form_endpoint(),
+                window.get_connection_form_region()
+            ),
         )
     )
 }
 
 pub(crate) fn set_provider_models(window: &AppWindow, providers: &[ProviderConfig]) {
+    window.set_connection_provider_generation(
+        window.get_connection_provider_generation().wrapping_add(1),
+    );
     window.set_provider_names(ModelRc::new(Rc::new(VecModel::from_iter(
         providers
             .iter()
@@ -161,37 +171,6 @@ fn provider_bucket(providers: &[ProviderConfig], index: i32) -> Option<&str> {
         .and_then(|provider| provider.options.default_bucket.as_deref())
 }
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn draft(
-    configuration: &ConfigStore,
-    name: SharedString,
-    provider_index: i32,
-    bucket: SharedString,
-    remote_path: SharedString,
-    local_path: SharedString,
-    mode_index: i32,
-    retention: SharedString,
-    allow_upload: bool,
-    allow_download: bool,
-) -> Result<ConnectionDraft, String> {
-    let config = configuration.load().map_err(|error| error.to_string())?;
-    let provider_id = provider_id(&config.providers, provider_index)?;
-    let mode = mode(mode_index)?;
-    let keep_last_archives = archive_retention(mode, &retention)?;
-    Ok(ConnectionDraft {
-        name: name.to_string(),
-        provider_id,
-        bucket: bucket.to_string(),
-        remote_path: remote_path.to_string(),
-        local_path: local_path.to_string(),
-        mode,
-        allow_upload,
-        allow_download,
-        keep_last_archives,
-        verified: false,
-    })
-}
-
 pub(crate) fn existing_id(
     configuration: &ConfigStore,
     id: &str,
@@ -206,42 +185,12 @@ pub(crate) fn existing_id(
         .ok_or_else(|| "The connection no longer exists.".to_owned())
 }
 
-fn provider_id(providers: &[ProviderConfig], index: i32) -> Result<ProviderId, String> {
-    usize::try_from(index)
-        .ok()
-        .and_then(|index| providers.get(index))
-        .map(|provider| provider.id.clone())
-        .ok_or_else(|| "Choose a provider.".to_owned())
-}
-
-fn mode(index: i32) -> Result<SyncMode, String> {
-    match index {
-        0 => Ok(SyncMode::AddOnly),
-        1 => Ok(SyncMode::Mirror),
-        2 => Ok(SyncMode::Archive),
-        _ => Err("Choose a mode.".to_owned()),
-    }
-}
-
 fn mode_index(mode: SyncMode) -> i32 {
     match mode {
         SyncMode::AddOnly => 0,
         SyncMode::Mirror => 1,
         SyncMode::Archive => 2,
     }
-}
-
-fn archive_retention(mode: SyncMode, input: &str) -> Result<Option<u32>, String> {
-    if !matches!(mode, SyncMode::Archive) {
-        return Ok(None);
-    }
-    input
-        .trim()
-        .parse::<u32>()
-        .ok()
-        .filter(|count| *count >= 1)
-        .map(Some)
-        .ok_or_else(|| "Enter a whole number of at least 1 for archive retention.".to_owned())
 }
 
 #[cfg(test)]

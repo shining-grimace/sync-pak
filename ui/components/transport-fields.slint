@@ -1,0 +1,46 @@
+import { Dimensions } from "../dimensions.slint";
+import { SectionHeadingLabel } from "section-heading-label.slint";
+import { DescriptionLabel } from "description-label.slint";
+import { LineEdit } from "form-controls.slint";
+
+export component TransportFields inherits VerticalLayout {
+    in property <int> kind;
+    in property <bool> enabled: true;
+    in property <bool> optional: false;
+    in-out property <string> endpoint;
+    in-out property <string> region;
+    pure callback infer-b2-region(string) -> string;
+    private property <string> inferred-region: root.kind == 1 ? root.infer-b2-region(root.endpoint) : "";
+
+    spacing: Dimensions.element-gap;
+    SectionHeadingLabel {
+        text: root.kind == 1 && !root.optional ? "S3 API endpoint" : "S3 API endpoint (optional)";
+    }
+    LineEdit {
+        accessible-label: "S3 API endpoint";
+        placeholder-text: root.kind == 1 ? "For example, s3.us-west-004.backblazeb2.com" : "Leave blank to use the standard endpoint";
+        text <=> root.endpoint;
+        enabled: root.enabled;
+    }
+    DescriptionLabel {
+        text: root.kind == 1 ? "Copy the endpoint from your bucket’s details in the Backblaze console. All buckets in this account share this endpoint." : (root.kind == 2 ? "Leave the endpoint blank to use AWS’s standard endpoint." : "Leave blank to use the account endpoint, or paste the S3 API endpoint shown by Cloudflare for your bucket.");
+    }
+    if root.kind == 1 && root.inferred-region != "": DescriptionLabel {
+        text: "Region: " + root.inferred-region + " (from endpoint)";
+    }
+    if root.kind == 2 || (root.kind == 1 && root.inferred-region == ""): VerticalLayout {
+        spacing: Dimensions.element-gap;
+        SectionHeadingLabel {
+            text: root.optional ? "Region (optional)" : "Region";
+        }
+        LineEdit {
+            accessible-label: "Region";
+            placeholder-text: root.kind == 1 ? "Signing region for a custom hostname" : "For example, ap-southeast-2";
+            text <=> root.region;
+            enabled: root.enabled;
+        }
+        DescriptionLabel {
+            text: root.kind == 2 ? "Choose the region containing this bucket." : "The region is filled in automatically for a standard Backblaze endpoint. For a custom hostname, enter its signing region.";
+        }
+    }
+}

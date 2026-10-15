@@ -15,6 +15,7 @@ pub(crate) fn config() -> AppConfig {
         name: "Cloud".into(),
         kind: ProviderKind::AwsS3,
         options: ProviderOptions {
+            default_bucket_transport: None,
             account_id: None,
             endpoint: None,
             region: Some("ap-southeast-2".into()),
@@ -27,6 +28,7 @@ pub(crate) fn config() -> AppConfig {
     };
     let root = std::env::temp_dir().join("syncpak-local-root");
     let connection = ConnectionConfig {
+        transport: None,
         id: ConnectionId::new(),
         name: "Photos".into(),
         provider_id: id,

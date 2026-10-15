@@ -75,8 +75,17 @@ fn request(
         window.set_status_message(error.into());
         return;
     }
+    let transport = match super::transport::read(&window, &configuration) {
+        Ok(settings) => settings,
+        Err(error) => {
+            window.set_connection_save_after_verification(false);
+            window.set_status_message(error.into());
+            return;
+        }
+    };
     let connection = match draft(
         &configuration,
+        transport,
         name,
         provider,
         bucket,
@@ -133,7 +142,9 @@ fn poll(
 
 fn verified(window: &AppWindow) {
     window.set_connection_verifying(false);
-    window.set_notice_message("Connection verified. Both paths are accessible.".into());
+    window.set_notice_message(
+        "Connection path checked. The local folder and cloud bucket/folder are accessible.".into(),
+    );
     if window.get_connection_save_after_verification() {
         window.invoke_save_connection(
             window.get_connection_form_name(),

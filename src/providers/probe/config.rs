@@ -80,6 +80,7 @@ impl ProbeConfig {
                 ProviderKind::CloudflareR2 => ConfigProviderKind::CloudflareR2,
             },
             options: ProviderOptions {
+                default_bucket_transport: None,
                 account_id: None,
                 default_bucket: Some(self.bucket.clone()),
                 endpoint: self.endpoint.clone(),

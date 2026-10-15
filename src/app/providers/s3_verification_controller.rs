@@ -58,13 +58,7 @@ fn poll(
                 window.set_provider_verified_buckets(ModelRc::new(std::rc::Rc::new(
                     VecModel::from_iter(verification.buckets.iter().cloned().map(Into::into)),
                 )));
-                window.set_notice_message(
-                    format!(
-                        "Provider verified. {} buckets available.",
-                        verification.buckets.len()
-                    )
-                    .into(),
-                );
+                window.set_notice_message(verification.summary().into());
                 if save_after_verification {
                     window.invoke_save_provider(
                         window.get_provider_form_name(),

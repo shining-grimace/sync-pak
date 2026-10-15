@@ -54,6 +54,7 @@ mod tests {
     #[test]
     fn snapshot_copies_non_secret_connection_details() {
         let connection = ConnectionConfig {
+            transport: None,
             id: ConnectionId::new(),
             name: "Photos".into(),
             provider_id: ProviderId::new(),

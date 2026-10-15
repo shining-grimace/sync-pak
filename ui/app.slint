@@ -68,6 +68,11 @@ export global Page {
     out property <int> activity-result: 16;
 }
 
+export struct TransportPreview {
+    kind: int,
+    summary: string,
+}
+
 export component AppWindow inherits Window {
     in-out property <int> page: 0;
     in-out property <string> app-version;
@@ -146,6 +151,10 @@ export component AppWindow inherits Window {
     in-out property <string> provider-form-secret-key;
     in-out property <string> provider-form-endpoint;
     in-out property <string> provider-form-session-token;
+    in-out property <bool> provider-form-bucket-custom: false;
+    in-out property <string> provider-form-bucket-endpoint;
+    in-out property <string> provider-form-bucket-region;
+    pure callback infer-b2-region(string) -> string;
     in-out property <string> provider-form-original;
     in-out property <bool> provider-secret-visible: false;
     in-out property <int> provider-secret-reveal-generation: 0;
@@ -169,6 +178,12 @@ export component AppWindow inherits Window {
     in-out property <bool> connection-form-allow-upload: true;
     in-out property <bool> connection-form-allow-download: true;
     in-out property <string> connection-form-retention: "1";
+    in-out property <int> connection-provider-generation;
+    in-out property <bool> connection-form-use-provider-settings: true;
+    in-out property <string> connection-form-endpoint;
+    in-out property <string> connection-form-region;
+    pure callback preview-connection-transport(int, string, bool, string, string, int) -> TransportPreview;
+    private property <TransportPreview> connection-transport-preview: root.preview-connection-transport(root.connection-form-provider, root.connection-form-bucket, root.connection-form-use-provider-settings, root.connection-form-endpoint, root.connection-form-region, root.connection-provider-generation);
     in-out property <string> connection-form-original;
     in-out property <bool> connection-verifying: false;
     in-out property <int> connection-verification-generation: 0;
@@ -518,6 +533,12 @@ export component AppWindow inherits Window {
                 provider-form-secret-key <=> root.provider-form-secret-key;
                 provider-form-endpoint <=> root.provider-form-endpoint;
                 provider-form-session-token <=> root.provider-form-session-token;
+                provider-form-bucket-custom <=> root.provider-form-bucket-custom;
+                provider-form-bucket-endpoint <=> root.provider-form-bucket-endpoint;
+                provider-form-bucket-region <=> root.provider-form-bucket-region;
+                infer-b2-region(value) => {
+                    return root.infer-b2-region(value);
+                }
                 provider-secret-visible <=> root.provider-secret-visible;
                 provider-advanced-expanded <=> root.provider-advanced-expanded;
                 provider-verifying: root.provider-verifying;
@@ -608,6 +629,14 @@ export component AppWindow inherits Window {
                 connection-form-allow-upload <=> root.connection-form-allow-upload;
                 connection-form-allow-download <=> root.connection-form-allow-download;
                 connection-form-retention <=> root.connection-form-retention;
+                connection-form-use-provider-settings <=> root.connection-form-use-provider-settings;
+                connection-form-endpoint <=> root.connection-form-endpoint;
+                connection-form-region <=> root.connection-form-region;
+                transport-kind: root.connection-transport-preview.kind;
+                transport-summary: root.connection-transport-preview.summary;
+                infer-b2-region(value) => {
+                    return root.infer-b2-region(value);
+                }
                 provider-names: root.provider-names;
                 provider-buckets: root.provider-buckets;
                 connection-verified-buckets: root.connection-verified-buckets;

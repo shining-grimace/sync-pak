@@ -116,6 +116,7 @@ fn execute(with_progress: bool) -> Vec<String> {
 fn snapshot(name: &str) -> ActivitySnapshot {
     ActivitySnapshot::from_connection(
         &ConnectionConfig {
+            transport: None,
             id: ConnectionId::new(),
             name: name.into(),
             provider_id: ProviderId::new(),

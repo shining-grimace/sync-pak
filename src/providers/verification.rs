@@ -10,29 +10,52 @@ pub(crate) mod panic;
 /// Non-secret provider information confirmed by read-only requests.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProviderVerification {
+    /// Discovered names are not proof that these credentials can access objects.
     pub buckets: Vec<String>,
+    /// Bucket whose access was checked directly, independently of discovery.
+    pub checked_bucket: Option<String>,
 }
 
-/// Verifies provider access and, when configured, confirms the selected bucket is visible.
+impl ProviderVerification {
+    pub(crate) fn summary(&self) -> String {
+        match self.checked_bucket {
+            Some(_) => format!(
+                "Fixed bucket access checked. {} bucket names discovered. Connection verification checks the folder.",
+                self.buckets.len()
+            ),
+            None => format!(
+                "{} bucket names discovered. Verify a connection to check bucket and folder access.",
+                self.buckets.len()
+            ),
+        }
+    }
+}
+
+/// Discovers bucket names and separately checks access to a configured bucket.
 pub async fn verify_provider<P: BucketAccessChecker + BucketLister>(
     provider: &P,
     configured_bucket: Option<&str>,
 ) -> Result<ProviderVerification, ProviderError> {
+    // Listing may include buckets this key cannot access, or omit accessible
+    // cross-account buckets. Test the supplied bucket directly in either case.
+    if let Some(bucket) = configured_bucket {
+        provider.check_bucket_access(bucket).await?;
+    }
     let buckets = match provider.list_buckets().await {
         Ok(buckets) => buckets,
         Err(ProviderError::PermissionDenied) => {
             let bucket = configured_bucket.ok_or(ProviderError::PermissionDenied)?;
-            provider.check_bucket_access(bucket).await?;
             return Ok(ProviderVerification {
                 buckets: vec![bucket.to_owned()],
+                checked_bucket: Some(bucket.to_owned()),
             });
         }
         Err(error) => return Err(error),
     };
-    if configured_bucket.is_some_and(|bucket| !buckets.iter().any(|item| item == bucket)) {
-        return Err(ProviderError::NotFound);
-    }
-    Ok(ProviderVerification { buckets })
+    Ok(ProviderVerification {
+        buckets,
+        checked_bucket: configured_bucket.map(str::to_owned),
+    })
 }
 
 #[cfg(test)]
@@ -63,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn keeps_visible_buckets_and_requires_a_configured_bucket() {
+    fn lists_visible_names_without_treating_them_as_access_permissions() {
         let provider = Provider {
             buckets: Ok(vec!["photos".into(), "backups".into()]),
             bucket_access: Ok(()),
@@ -73,11 +96,15 @@ mod tests {
             block_on(verify_provider(&provider, Some("backups"))),
             Ok(ProviderVerification {
                 buckets: vec!["photos".into(), "backups".into()],
+                checked_bucket: Some("backups".into()),
             })
         );
-        assert_eq!(
-            block_on(verify_provider(&provider, Some("missing"))),
-            Err(ProviderError::NotFound)
+        assert!(
+            block_on(verify_provider(
+                &provider,
+                Some("accessible-but-not-listed")
+            ))
+            .is_ok()
         );
     }
 
@@ -92,6 +119,7 @@ mod tests {
             block_on(verify_provider(&provider, Some("scoped-bucket"))),
             Ok(ProviderVerification {
                 buckets: vec!["scoped-bucket".into()],
+                checked_bucket: Some("scoped-bucket".into()),
             })
         );
     }
@@ -110,6 +138,20 @@ mod tests {
             block_on(verify_provider(&inaccessible, None)),
             Err(ProviderError::PermissionDenied)
         );
+    }
+
+    #[test]
+    fn a_listed_bucket_can_still_be_inaccessible() {
+        let provider = Provider {
+            buckets: Ok(vec!["photos".into()]),
+            bucket_access: Err(ProviderError::PermissionDenied),
+        };
+        assert_eq!(
+            block_on(verify_provider(&provider, Some("photos"))),
+            Err(ProviderError::PermissionDenied)
+        );
+        let discovery = block_on(verify_provider(&provider, None)).unwrap();
+        assert!(discovery.checked_bucket.is_none());
     }
 
     fn block_on<F: Future>(future: F) -> F::Output {

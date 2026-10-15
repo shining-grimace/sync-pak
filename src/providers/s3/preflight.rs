@@ -28,9 +28,14 @@ pub async fn collect_s3_connection_preflight<S: ProtectedCredentialStore>(
     let credentials = providers
         .load_credentials(&request.provider.id)
         .map_err(S3PreflightError::Credentials)?;
-    let transport = S3Transport::connect(&request.provider, credentials)
-        .await
-        .map_err(S3PreflightError::Provider)?;
+    let transport = S3Transport::connect_bucket(
+        &request.provider,
+        credentials,
+        &request.connection.bucket,
+        request.connection.transport.as_ref(),
+    )
+    .await
+    .map_err(S3PreflightError::Provider)?;
     let local = LocalFolderEndpoint::new(&request.connection.local_path, local_case_sensitivity);
     let local_inventory = local.collect().await.map_err(|error| {
         S3PreflightError::Inventory(EndpointPreflightError::SourceInventory(error))

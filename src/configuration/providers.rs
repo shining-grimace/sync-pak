@@ -34,3 +34,32 @@ impl ConfigStore {
         Ok(true)
     }
 }
+
+/// A successful check belongs to its credentials and resolved destination.
+/// Changing a provider must not leave a connection verified for an old route.
+pub(super) fn invalidate_changed_connections(
+    config: &mut super::AppConfig,
+    previous: &ProviderConfig,
+    replacement: &ProviderConfig,
+    credentials_changed: bool,
+) {
+    for connection in config
+        .connections
+        .iter_mut()
+        .filter(|connection| connection.provider_id == previous.id)
+    {
+        let bucket = Some(connection.bucket.as_str());
+        let custom = connection.transport.as_ref();
+        if credentials_changed
+            || previous.kind != replacement.kind
+            || previous.options.account_id != replacement.options.account_id
+            || previous.options.transport_for_bucket(bucket, custom)
+                != replacement.options.transport_for_bucket(bucket, custom)
+        {
+            connection.verified = false;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests;

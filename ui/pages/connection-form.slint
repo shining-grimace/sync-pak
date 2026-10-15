@@ -1,3 +1,4 @@
+import { TransportFields } from "../components/transport-fields.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
@@ -29,6 +30,12 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     in property <bool> folder-picker-open;
     in property <bool> connection-verifying;
     in property <int> validation-focus;
+    in-out property <bool> connection-form-use-provider-settings;
+    in-out property <string> connection-form-endpoint;
+    in-out property <string> connection-form-region;
+    in property <int> transport-kind;
+    in property <string> transport-summary;
+    pure callback infer-b2-region(string) -> string;
     callback select-local-folder();
     callback select-connection-provider(int);
     callback retry-connection-providers();
@@ -125,26 +132,26 @@ export component ConnectionFormPage inherits CenteredPageRoot {
         }
 
         connection-bucket := LineEdit {
-            accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider default" : "Bucket";
+            accessible-label: connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" ? "Bucket locked to the provider’s fixed bucket" : "Bucket";
             placeholder-text: "Bucket name";
             text <=> root.connection-form-bucket;
             enabled: !root.connection-verifying && !root.folder-picker-open && connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "";
         }
 
         if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket == root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
-            text: "This provider locks connections to its default bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
+            text: "This provider uses a fixed bucket: " + root.provider-buckets[connection-provider.current-index] + ".";
         }
         if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket != root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
-            text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider's current default bucket.";
+            text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider’s current fixed bucket.";
         }
         if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0: VerticalLayout {
             spacing: Dimensions.element-gap;
             DescriptionLabel {
-                text: "Buckets verified this session";
+                text: "Discovered buckets";
             }
 
             ComboBox {
-                accessible-label: "Buckets verified this session";
+                accessible-label: "Discovered buckets";
                 model: root.connection-verified-buckets;
                 enabled: !root.connection-verifying && !root.folder-picker-open;
                 selected => {
@@ -153,10 +160,38 @@ export component ConnectionFormPage inherits CenteredPageRoot {
             }
         }
         if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length == 0: DescriptionLabel {
-            text: "These credentials were verified, but no buckets were visible. Enter the bucket name manually if access is restricted.";
+            text: "No bucket names were discovered. Enter the bucket name manually and verify this connection to check its access.";
         }
         if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && !root.connection-bucket-list-checked: DescriptionLabel {
             text: "Enter the bucket name manually, or verify this provider to select buckets visible to its current credentials.";
+        }
+        if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "": DescriptionLabel {
+            text: "You can also enter a bucket manually. Listed buckets may have different access permissions.";
+        }
+        SectionHeadingLabel {
+            text: "Connection settings";
+        }
+        ComboBox {
+            accessible-label: "Connection settings source";
+            model: ["Use provider settings", "Configure for this connection"];
+            current-index: root.connection-form-use-provider-settings ? 0 : 1;
+            enabled: !root.connection-verifying && !root.folder-picker-open && !root.connection-providers-loading && root.transport-kind >= 0;
+            selected => {
+                root.connection-form-use-provider-settings = self.current-index == 0;
+            }
+        }
+        if !root.connection-form-use-provider-settings && root.transport-kind >= 0: TransportFields {
+            kind: root.transport-kind;
+            endpoint <=> root.connection-form-endpoint;
+            region <=> root.connection-form-region;
+            enabled: !root.connection-verifying && !root.folder-picker-open;
+            infer-b2-region(value) => {
+                return root.infer-b2-region(value);
+            }
+        }
+        DescriptionLabel {
+            accessible-live-region: polite;
+            text: root.transport-summary;
         }
         SectionHeadingLabel {
             text: "Remote folder";

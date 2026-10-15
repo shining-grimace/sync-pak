@@ -55,6 +55,7 @@ fn request(direction: Direction) -> RunRequest {
         name: "Cloud".into(),
         kind: ProviderKind::AwsS3,
         options: ProviderOptions {
+            default_bucket_transport: None,
             account_id: None,
             default_bucket: None,
             endpoint: None,
@@ -64,6 +65,7 @@ fn request(direction: Direction) -> RunRequest {
         verified: true,
     };
     let connection = ConnectionConfig {
+        transport: None,
         id: ConnectionId::new(),
         name: "Photos".into(),
         provider_id: provider.id.clone(),

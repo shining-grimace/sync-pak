@@ -11,7 +11,7 @@ use crate::{
     app::providers::form::credentials as provider_form_credentials,
     app::providers::form::state::{
         begin_verification, clear_transient_state, invalidate_verification, is_dirty, mark_clean,
-        provider_id, provider_kind, provider_kind_index, provider_options,
+        provider_id, provider_kind, provider_kind_index,
     },
     app::providers::list_controller as provider_list_controller,
     app::providers::save_error::ProviderPersistenceError,
@@ -28,6 +28,11 @@ pub(crate) fn configure(
     diagnostics: SharedDiagnosticLog,
     buckets: ProviderBucketCache,
 ) {
+    window.on_infer_b2_region(|value| {
+        crate::providers::endpoint::b2_region(&value)
+            .unwrap_or_default()
+            .into()
+    });
     let weak = window.as_weak();
     window.on_show_add_provider(move || show_add(&weak));
 
@@ -177,14 +182,31 @@ fn verify(
         window.set_status_message(error.into());
         return;
     }
+    let options = match super::transport::options(&window, kind) {
+        Ok(options) => options,
+        Err(error) => {
+            window.set_provider_save_after_verification(false);
+            window.set_status_message(error.into());
+            return;
+        }
+    };
     let provider = ProviderConfig {
         id: id.clone(),
         credential_reference: CredentialReference { provider_id: id },
         name: window.get_provider_form_name().to_string(),
         kind,
-        options: provider_options(&account, &region, &bucket, &endpoint),
+        options,
         verified: false,
     };
+    if let Err(error) = provider
+        .options
+        .transport_for_bucket(provider.options.default_bucket.as_deref(), None)
+        .resolve(kind, provider.options.account_id.as_deref())
+    {
+        window.set_provider_save_after_verification(false);
+        window.set_status_message(error.into());
+        return;
+    }
     window.set_provider_verified_buckets(ModelRc::new(Rc::new(VecModel::default())));
     window.set_provider_bucket_list_empty(false);
     let _generation = begin_verification(&window);
@@ -222,6 +244,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
         window.set_provider_form_region(SharedString::default());
         window.set_provider_form_bucket(SharedString::default());
         window.set_provider_form_endpoint(SharedString::default());
+        super::transport::reset(&window);
         clear_transient_state(&window);
         mark_clean(&window);
         window.set_page(2);
@@ -310,10 +333,19 @@ fn save(
         || edit_provider_id
             .as_ref()
             .is_some_and(|id| !is_dirty(&window) && was_verified(&configuration, id));
+    let options = match super::transport::options(&window, kind) {
+        Ok(options) => options,
+        Err(error) => {
+            window.set_page(2);
+            window.set_provider_save_after_verification(false);
+            window.set_status_message(error.into());
+            return;
+        }
+    };
     let draft = ProviderDraft {
         name: name.to_string(),
         kind,
-        options: provider_options(&account_id, &region, &default_bucket, &endpoint),
+        options,
         verified,
     };
     let result = (|| -> Result<_, ProviderPersistenceError> {
@@ -444,6 +476,7 @@ fn edit(
                     return;
                 }
             };
+            super::transport::populate(&window, &provider.options);
             window.set_provider_form_id(provider.id.as_str().into());
             window.set_provider_form_name(provider.name.into());
             window.set_provider_form_kind(provider_kind_index(provider.kind));

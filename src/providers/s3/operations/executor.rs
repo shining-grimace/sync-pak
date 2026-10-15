@@ -134,11 +134,17 @@ async fn execute_confirmed(
             ));
         }
     };
-    let transport =
-        match S3Transport::connect(&confirmed.request().provider, provider_credentials).await {
-            Ok(transport) => transport,
-            Err(error) => return Ok(failed(provider_message(error))),
-        };
+    let transport = match S3Transport::connect_bucket(
+        &confirmed.request().provider,
+        provider_credentials,
+        &confirmed.request().connection.bucket,
+        confirmed.request().connection.transport.as_ref(),
+    )
+    .await
+    {
+        Ok(transport) => transport,
+        Err(error) => return Ok(failed(provider_message(error))),
+    };
     let retry = RetryPolicy::default();
     let sleeper = TokioSleeper;
     let cache = crate::sync_cache::SyncCache::for_configuration(configuration_path);

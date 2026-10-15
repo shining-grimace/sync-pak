@@ -13,12 +13,15 @@ impl CacheNamespace {
     pub fn new(installation_id: &str, request: &RunRequest) -> Self {
         let provider = &request.provider;
         let connection = &request.connection;
+        let transport = provider
+            .options
+            .transport_for_bucket(Some(&connection.bucket), connection.transport.as_ref());
         Self(format!(
             "v1\ninstallation={installation_id}\nprovider={}\nkind={:?}\nendpoint={:?}\nregion={:?}\naccount={:?}\nbucket={}\nprefix={}\nconnection={}\nlocal={}",
             provider.id.as_str(),
             provider.kind,
-            provider.options.endpoint,
-            provider.options.region,
+            transport.endpoint,
+            transport.region,
             provider.options.account_id,
             connection.bucket,
             connection.remote_path,

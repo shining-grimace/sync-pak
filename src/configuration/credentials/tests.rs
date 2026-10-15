@@ -59,6 +59,7 @@ fn provider_deletion_removes_dependent_connections_and_credentials() {
     let provider = providers.create(provider_draft(), &secret()).unwrap();
     let connection = ConnectionRepository::new(&store)
         .create(ConnectionDraft {
+            transport: None,
             name: "Photos".to_owned(),
             provider_id: provider.id.clone(),
             bucket: "backup".to_owned(),
@@ -139,6 +140,7 @@ fn provider_and_connection_configuration_survive_a_restart() {
         .unwrap();
     let connection = ConnectionRepository::new(&store)
         .create(ConnectionDraft {
+            transport: None,
             name: "Photos".to_owned(),
             provider_id: provider.id.clone(),
             bucket: "backup".to_owned(),
@@ -168,6 +170,7 @@ fn connection_verification_survives_a_restart() {
         .unwrap();
     let connection = ConnectionRepository::new(&store)
         .create(ConnectionDraft {
+            transport: None,
             name: "Photos".to_owned(),
             provider_id: provider.id,
             bucket: "backup".to_owned(),
@@ -235,6 +238,7 @@ fn provider_draft() -> ProviderDraft {
         name: "Test provider".to_owned(),
         kind: ProviderKind::AwsS3,
         options: ProviderOptions {
+            default_bucket_transport: None,
             account_id: None,
             default_bucket: None,
             endpoint: None,

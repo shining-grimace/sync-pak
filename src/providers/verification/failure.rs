@@ -80,7 +80,7 @@ impl VerificationFailure {
                 "The provider rejected these credentials. Check the access key, secret, and session token."
             }
             Self::BucketNotVisible => {
-                "The configured default bucket is not visible to these credentials. Choose another bucket or update its access."
+                "The configured fixed bucket is not visible to these credentials. Choose another bucket or update its access."
             }
             Self::ClockSkew => {
                 "Your device clock differs too much from this provider. Enable automatic date and time before verifying again."
@@ -96,7 +96,7 @@ impl VerificationFailure {
                 "This Android build is not allowed to access the internet, so SyncPak cannot contact the provider. Open Diagnostics for details."
             }
             Self::PermissionDenied => {
-                "These credentials cannot list buckets. Enter a default bucket manually if the provider grants access only to that bucket."
+                "These credentials cannot list buckets or access the fixed bucket. Enter a fixed bucket manually when discovery is restricted, then check its access."
             }
             Self::RuntimeInitialization => {
                 "SyncPak could not initialise the provider verification runtime on this device. Open Diagnostics and report this error."

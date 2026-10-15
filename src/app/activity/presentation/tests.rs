@@ -11,6 +11,7 @@ use crate::{
 fn snapshot() -> ActivitySnapshot {
     ActivitySnapshot::from_connection(
         &ConnectionConfig {
+            transport: None,
             id: ConnectionId::new(),
             name: "Photos".into(),
             provider_id: ProviderId::new(),

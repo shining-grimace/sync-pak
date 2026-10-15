@@ -1,4 +1,7 @@
-use super::{ConfigStore, ConfigurationError, ConnectionConfig, ConnectionDraft, ConnectionId};
+use super::{
+    ConfigStore, ConfigurationError, ConnectionConfig, ConnectionId, ProviderId, SyncMode,
+    TransportSettings,
+};
 
 #[derive(Debug)]
 pub enum ConnectionError {
@@ -94,5 +97,39 @@ impl ConfigStore {
         connection.verified = true;
         self.save(&config)?;
         Ok(true)
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ConnectionDraft {
+    pub name: String,
+    pub provider_id: ProviderId,
+    pub bucket: String,
+    pub transport: Option<TransportSettings>,
+    pub remote_path: String,
+    pub local_path: String,
+    pub mode: SyncMode,
+    pub allow_upload: bool,
+    pub allow_download: bool,
+    pub keep_last_archives: Option<u32>,
+    pub verified: bool,
+}
+
+impl ConnectionDraft {
+    pub fn into_config(self, id: ConnectionId) -> ConnectionConfig {
+        ConnectionConfig {
+            id,
+            name: self.name,
+            provider_id: self.provider_id,
+            bucket: self.bucket,
+            transport: self.transport,
+            remote_path: self.remote_path,
+            local_path: self.local_path,
+            mode: self.mode,
+            allow_upload: self.allow_upload,
+            allow_download: self.allow_download,
+            keep_last_archives: self.keep_last_archives,
+            verified: self.verified,
+        }
     }
 }

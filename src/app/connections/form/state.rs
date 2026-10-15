@@ -39,7 +39,11 @@ pub(crate) fn select_provider(
 ) {
     let Some(window) = weak.upgrade() else { return };
     match configuration.load() {
-        Ok(config) => apply_provider_selection(&window, &config.providers, buckets, index),
+        Ok(config) => {
+            super::transport::reset(&window);
+            window.set_connection_form_bucket(Default::default());
+            apply_provider_selection(&window, &config.providers, buckets, index);
+        }
         Err(_) => provider_load_error(&window, diagnostics),
     }
 }

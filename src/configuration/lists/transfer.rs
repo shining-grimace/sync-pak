@@ -121,6 +121,7 @@ pub fn import_list(
             ));
         };
         let connection = ConnectionConfig {
+            transport: None,
             id: if existing.is_some() && choice == ConflictChoice::Copy {
                 ConnectionId::new()
             } else {

@@ -6,7 +6,7 @@ pub(crate) fn provider(
     secret_access_key: &str,
     kind: ProviderKind,
     account_id: &str,
-    region: &str,
+    _region: &str,
     default_bucket: &str,
     endpoint: &str,
 ) -> Result<(), String> {
@@ -14,14 +14,9 @@ pub(crate) fn provider(
     validate_name_length(name, "Provider name")?;
     required(access_key_id, "Access key ID")?;
     required(secret_access_key, "Secret access key")?;
-    match kind {
-        ProviderKind::CloudflareR2 => required(account_id, "Account ID"),
-        ProviderKind::BackblazeB2 => {
-            required(region, "Region")?;
-            required(endpoint, "Custom endpoint")
-        }
-        ProviderKind::AwsS3 => required(region, "Region"),
-    }?;
+    if kind == ProviderKind::CloudflareR2 && endpoint.trim().is_empty() {
+        required(account_id, "Account ID")?;
+    }
     validate_optional_bucket(default_bucket)
 }
 
@@ -148,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn provider_specific_metadata_is_required() {
+    fn r2_needs_an_account_while_routing_defaults_can_be_configured_later() {
         assert_eq!(
             provider(
                 "Provider",
@@ -173,7 +168,7 @@ mod tests {
                 "",
                 ""
             ),
-            Err("Region is required.".to_owned())
+            Ok(())
         );
         assert_eq!(
             provider(
@@ -186,7 +181,7 @@ mod tests {
                 "",
                 ""
             ),
-            Err("Custom endpoint is required.".to_owned())
+            Ok(())
         );
     }
 

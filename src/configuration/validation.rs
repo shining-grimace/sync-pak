@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::validation::validate_name_length;
 
-use super::{AppConfig, CURRENT_SCHEMA_VERSION, ProviderKind, SyncMode};
+use super::{AppConfig, CURRENT_SCHEMA_VERSION, SyncMode, TransportSettings};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ValidationErrors(Vec<String>);
@@ -34,6 +34,9 @@ pub(super) fn validate(config: &AppConfig) -> Result<(), ValidationErrors> {
         required(&connection.name, "Connection name", &mut errors);
         validate_name(&connection.name, "Connection name", &mut errors);
         required(&connection.bucket, "Bucket", &mut errors);
+        if let Some(transport) = &connection.transport {
+            validate_transport(transport, &mut errors);
+        }
         required(&connection.local_path, "Local folder", &mut errors);
         if !config
             .providers
@@ -78,17 +81,27 @@ fn validate_provider_options(provider: &super::ProviderConfig, errors: &mut Vec<
     {
         errors.push("Provider default bucket cannot be empty or have outer whitespace.".to_owned());
     }
-    match provider.kind {
-        ProviderKind::CloudflareR2 => required(
-            provider.options.account_id.as_deref().unwrap_or_default(),
-            "Cloudflare R2 account ID",
-            errors,
-        ),
-        ProviderKind::BackblazeB2 | ProviderKind::AwsS3 => required(
-            provider.options.region.as_deref().unwrap_or_default(),
-            "Provider region",
-            errors,
-        ),
+    // Incomplete defaults are valid for credentials-only providers. Verification
+    // and runs validate the complete settings for their actual destination.
+    validate_transport(&provider.options.transport_for_bucket(None, None), errors);
+    if let Some(transport) = &provider.options.default_bucket_transport {
+        if provider.options.default_bucket.is_none() {
+            errors.push("Default bucket transport settings require a default bucket.".to_owned());
+        }
+        validate_transport(transport, errors);
+    }
+}
+
+fn validate_transport(transport: &TransportSettings, errors: &mut Vec<String>) {
+    for (label, value) in [
+        ("Endpoint", &transport.endpoint),
+        ("Region", &transport.region),
+    ] {
+        if let Some(value) = value
+            && (value.trim().is_empty() || value != value.trim())
+        {
+            errors.push(format!("{label} cannot be empty or have outer whitespace."));
+        }
     }
 }
 

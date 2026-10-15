@@ -35,6 +35,7 @@ pub(crate) fn verify_saved(
     verify(
         configuration_path,
         ConnectionDraft {
+            transport: connection.transport,
             name: connection.name,
             provider_id: connection.provider_id,
             bucket: connection.bucket,
@@ -71,10 +72,14 @@ fn verify_remote(
         .build()
         .map_err(|_| VerificationFailure::Unexpected)?;
     let transport = runtime
-        .block_on(crate::providers::s3::transport::S3Transport::connect(
-            &provider,
-            credentials,
-        ))
+        .block_on(
+            crate::providers::s3::transport::S3Transport::connect_bucket(
+                &provider,
+                credentials,
+                &connection.bucket,
+                connection.transport.as_ref(),
+            ),
+        )
         .map_err(VerificationFailure::from)?;
     runtime
         .block_on(verify_remote_folder(

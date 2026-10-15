@@ -9,6 +9,7 @@ use super::selected_direction;
 
 fn archive_connection() -> ConnectionConfig {
     ConnectionConfig {
+        transport: None,
         id: ConnectionId::new(),
         name: "Photos".into(),
         provider_id: ProviderId::new(),

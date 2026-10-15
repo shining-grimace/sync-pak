@@ -14,6 +14,7 @@ fn config(mode: SyncMode) -> AppConfig {
         name: "Cloud".into(),
         kind: crate::configuration::ProviderKind::AwsS3,
         options: crate::configuration::ProviderOptions {
+            default_bucket_transport: None,
             account_id: None,
             default_bucket: None,
             endpoint: None,
@@ -24,6 +25,7 @@ fn config(mode: SyncMode) -> AppConfig {
     };
     AppConfig {
         connections: vec![ConnectionConfig {
+            transport: None,
             id: ConnectionId::new(),
             name: "Photos".into(),
             provider_id: provider.id.clone(),

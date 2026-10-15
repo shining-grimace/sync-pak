@@ -135,6 +135,10 @@ pub struct ProviderOptions {
     pub account_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_bucket: Option<String>,
+    /// Complete routing settings used only for the matching default bucket.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_bucket_transport: Option<super::TransportSettings>,
+    /// Account-wide endpoint, also used for bucket discovery.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -147,6 +151,9 @@ pub struct ConnectionConfig {
     pub name: String,
     pub provider_id: ProviderId,
     pub bucket: String,
+    /// None inherits provider settings; Some replaces endpoint and region together.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub transport: Option<super::TransportSettings>,
     pub remote_path: String,
     pub local_path: String,
     pub mode: SyncMode,
@@ -155,38 +162,6 @@ pub struct ConnectionConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_last_archives: Option<u32>,
     pub verified: bool,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ConnectionDraft {
-    pub name: String,
-    pub provider_id: ProviderId,
-    pub bucket: String,
-    pub remote_path: String,
-    pub local_path: String,
-    pub mode: SyncMode,
-    pub allow_upload: bool,
-    pub allow_download: bool,
-    pub keep_last_archives: Option<u32>,
-    pub verified: bool,
-}
-
-impl ConnectionDraft {
-    pub fn into_config(self, id: ConnectionId) -> ConnectionConfig {
-        ConnectionConfig {
-            id,
-            name: self.name,
-            provider_id: self.provider_id,
-            bucket: self.bucket,
-            remote_path: self.remote_path,
-            local_path: self.local_path,
-            mode: self.mode,
-            allow_upload: self.allow_upload,
-            allow_download: self.allow_download,
-            keep_last_archives: self.keep_last_archives,
-            verified: self.verified,
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]

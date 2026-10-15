@@ -94,13 +94,7 @@ fn await_verification(
                 states.borrow_mut().remove(&provider_id);
                 provider_bucket_cache::record(&buckets, &provider_id, verification.buckets.clone());
                 match configuration.record_provider_verification(&provider_id) {
-                    Ok(true) => window.set_notice_message(
-                        format!(
-                            "Provider verified. {} buckets available.",
-                            verification.buckets.len()
-                        )
-                        .into(),
-                    ),
+                    Ok(true) => window.set_notice_message(verification.summary().into()),
                     Ok(false) | Err(_) => diagnostics_controller::present(
                         &window,
                         &diagnostics,

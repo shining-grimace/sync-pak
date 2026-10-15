@@ -71,6 +71,7 @@ mod tests {
         let provider_id = ProviderId::new();
         RunRequest {
             connection: ConnectionConfig {
+                transport: None,
                 id: ConnectionId::new(),
                 name: "Photos".into(),
                 provider_id: provider_id.clone(),
@@ -89,6 +90,7 @@ mod tests {
                 name: "Cloud".into(),
                 kind: ProviderKind::AwsS3,
                 options: ProviderOptions {
+                    default_bucket_transport: None,
                     account_id: None,
                     default_bucket: None,
                     endpoint: None,

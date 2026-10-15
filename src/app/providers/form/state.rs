@@ -1,6 +1,6 @@
 use crate::{
     AppWindow,
-    configuration::{ConfigStore, ProviderId, ProviderKind, ProviderOptions},
+    configuration::{ConfigStore, ProviderId, ProviderKind},
 };
 use slint::{ModelRc, SharedString, VecModel};
 
@@ -64,6 +64,11 @@ fn form_signature(window: &AppWindow) -> String {
             window.get_provider_form_access_key(),
             !window.get_provider_form_secret_key().is_empty(),
             !window.get_provider_form_session_token().is_empty(),
+            (
+                window.get_provider_form_bucket_custom(),
+                window.get_provider_form_bucket_endpoint(),
+                window.get_provider_form_bucket_region()
+            ),
         )
     )
 }
@@ -85,24 +90,6 @@ pub(crate) fn provider_kind_index(kind: ProviderKind) -> i32 {
     }
 }
 
-pub(crate) fn provider_options(
-    account_id: &str,
-    region: &str,
-    default_bucket: &str,
-    endpoint: &str,
-) -> ProviderOptions {
-    ProviderOptions {
-        account_id: optional(account_id),
-        default_bucket: optional(default_bucket),
-        endpoint: crate::providers::endpoint::normalize(endpoint),
-        region: optional(region),
-    }
-}
-
-fn optional(value: &str) -> Option<String> {
-    (!value.trim().is_empty()).then(|| value.to_owned())
-}
-
 pub(crate) fn provider_id(configuration: &ConfigStore, id: &str) -> Result<ProviderId, String> {
     configuration
         .load()
@@ -117,21 +104,6 @@ pub(crate) fn provider_id(configuration: &ConfigStore, id: &str) -> Result<Provi
 #[cfg(test)]
 mod tests {
     use super::{is_current_verification, next_verification_generation};
-
-    #[test]
-    fn form_options_store_normalized_endpoints() {
-        let options = super::provider_options(
-            "",
-            "us-west-004",
-            "backups",
-            " s3.us-west-004.backblazeb2.com ",
-        );
-        assert_eq!(
-            options.endpoint.as_deref(),
-            Some("https://s3.us-west-004.backblazeb2.com")
-        );
-        assert_eq!(super::provider_options("", "", "", " ").endpoint, None);
-    }
 
     #[test]
     fn only_the_current_verification_attempt_can_update_a_form() {

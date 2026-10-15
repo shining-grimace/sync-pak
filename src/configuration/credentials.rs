@@ -185,6 +185,19 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
             Ok(config) => config,
             Err(error) => return self.restore(&provider_id, previous_secret, error),
         };
+        if let Some(previous) = config
+            .providers
+            .iter()
+            .find(|item| item.id == provider.id)
+            .cloned()
+        {
+            super::providers::invalidate_changed_connections(
+                &mut config,
+                &previous,
+                &provider,
+                previous_secret.as_deref() != Some(serialized.as_slice()),
+            );
+        }
         match config
             .providers
             .iter_mut()
