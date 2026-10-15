@@ -1,5 +1,5 @@
 [versions]
-androidGradlePlugin = "9.3.1"
+androidGradlePlugin = "9.3.3"
 tlsVerifier = "0.1.1" # Match version from Cargo.lock
 
 [libraries]

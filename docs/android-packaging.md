@@ -1,17 +1,18 @@
 # Android feasibility package
 
 SyncPak's Android feasibility build targets Android 11+ (`minSdkVersion` 30), targets API 36,
-compiles against Android 16 SDK 36.1, and includes only the ARM64 ABI. The package identity is
+compiles against Android 16 SDK 36.1, and includes the ARM64 and x86_64 ABIs. The package identity is
 `com.shininggrimace.syncpak`.
 
 ## Local debug build
 
-Install Rust's AArch64 Android target, Android SDK platform 36.1, Android build tools 36.0.0,
+Install Rust's AArch64 and x86_64 Android targets, Android SDK platform 36.1, Android build tools 36.0.0,
 a side-by-side Android NDK, and JDK 17 or newer. The build uses `ANDROID_NDK_HOME` or
 `ANDROID_NDK_ROOT` when set; otherwise it selects the highest installed NDK below the SDK.
 Set `ANDROID_HOME` if the SDK is not in `$HOME/Android/Sdk`, then run:
 
 ```text
+rustup target add aarch64-linux-android x86_64-linux-android
 JAVA_HOME=/path/to/android-studio/jbr ./android/gradlew --project-dir android :app:assembleDebug
 ```
 
@@ -22,6 +23,7 @@ because Android Studio does not necessarily export its bundled JDK to child proc
 though Gradle itself is already using that JDK.
 
 The debug APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`. This package
+includes native libraries for ARM64 devices and x86_64 emulators or ChromeOS devices. It
 is for device feasibility testing; it is not the release AAB and does not establish Google
 Play readiness.
 

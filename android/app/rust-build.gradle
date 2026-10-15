@@ -5,64 +5,79 @@ def generatedLibrariesRoot = layout.buildDirectory.dir("generated/rust-libs").ge
 android.sourceSets.main.jniLibs.srcDir(generatedLibrariesRoot)
 
 def repositoryRoot = rootProject.projectDir.parentFile
-def rustTarget = "aarch64-linux-android"
-def rustLibrary = new File(repositoryRoot, "target/${rustTarget}/debug/libsync_pak.so")
-def generatedLibraries = layout.buildDirectory.dir("generated/rust-libs/arm64-v8a")
 def androidSdkDirectory = androidComponents.sdkComponents.sdkDirectory
 
-def buildRustDebug = tasks.register("buildRustDebug", Exec) {
-    workingDir(repositoryRoot)
-    def cargoArguments = [
-        "cargo", "build", "--locked", "--lib", "--target", rustTarget,
-    ]
-    if (providers.gradleProperty("feasibilityProbes").orNull == "true") {
-        cargoArguments += ["--features", "feasibility-probes"]
-    }
-    commandLine(cargoArguments)
+def buildRustDebug = tasks.register("buildRustDebug")
+def stageRustDebug = tasks.register("stageRustDebug")
 
-    doFirst {
-        def sdkRoot = androidSdkDirectory.get().asFile.absolutePath
-        def ndkRoot = System.getenv("ANDROID_NDK_HOME")
-            ?: System.getenv("ANDROID_NDK_ROOT")
-            ?: new File(sdkRoot, "ndk").listFiles()
-                ?.findAll { it.directory }
-                ?.max { it.name }
-                ?.absolutePath
-        if (ndkRoot == null) {
-            throw new GradleException("No side-by-side Android NDK installation was found")
+def rustTargets = [
+    "arm64-v8a": "aarch64-linux-android",
+    "x86_64": "x86_64-linux-android",
+]
+
+rustTargets.each { abi, rustTarget ->
+    def taskSuffix = abi == "arm64-v8a" ? "Arm64" : "X86_64"
+    def targetEnvironment = rustTarget.replace("-", "_")
+    def rustLibrary = new File(repositoryRoot, "target/${rustTarget}/debug/libsync_pak.so")
+    def generatedLibraries = layout.buildDirectory.dir("generated/rust-libs/${abi}")
+
+    def buildRust = tasks.register("buildRustDebug${taskSuffix}", Exec) {
+        workingDir(repositoryRoot)
+        def cargoArguments = [
+            "cargo", "build", "--locked", "--lib", "--target", rustTarget,
+        ]
+        if (providers.gradleProperty("feasibilityProbes").orNull == "true") {
+            cargoArguments += ["--features", "feasibility-probes"]
         }
-        def osName = System.getProperty("os.name").toLowerCase()
-        def host = osName.contains("mac")
-            ? "darwin-x86_64"
-            : osName.contains("win") ? "windows-x86_64" : "linux-x86_64"
-        def commandSuffix = osName.contains("win") ? ".cmd" : ""
-        def binarySuffix = osName.contains("win") ? ".exe" : ""
-        def toolchain = "${ndkRoot}/toolchains/llvm/prebuilt/${host}/bin"
-        def linker = "${toolchain}/aarch64-linux-android30-clang${commandSuffix}"
-        def cxx = "${toolchain}/aarch64-linux-android30-clang++${commandSuffix}"
-        def ar = "${toolchain}/llvm-ar${binarySuffix}"
-        def javaHome = System.getProperty("java.home")
-        def path = [
-            toolchain,
-            new File(javaHome, "bin").absolutePath,
-            System.getenv("PATH") ?: "",
-        ].findAll { !it.empty }.join(File.pathSeparator)
-        environment("JAVA_HOME", javaHome)
-        environment("ANDROID_HOME", sdkRoot)
-        environment("ANDROID_SDK_ROOT", sdkRoot)
-        environment("ANDROID_PLATFORM", "android-36.1")
-        environment("CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER", linker)
-        environment("CC_aarch64_linux_android", linker)
-        environment("CXX_aarch64_linux_android", cxx)
-        environment("AR_aarch64_linux_android", ar)
-        environment("PATH", path)
-    }
-}
+        commandLine(cargoArguments)
 
-def stageRustDebug = tasks.register("stageRustDebug", Copy) {
-    dependsOn(buildRustDebug)
-    from(rustLibrary)
-    into(generatedLibraries)
+        doFirst {
+            def sdkRoot = androidSdkDirectory.get().asFile.absolutePath
+            def ndkRoot = System.getenv("ANDROID_NDK_HOME")
+                ?: System.getenv("ANDROID_NDK_ROOT")
+                ?: new File(sdkRoot, "ndk").listFiles()
+                    ?.findAll { it.directory }
+                    ?.max { it.name }
+                    ?.absolutePath
+            if (ndkRoot == null) {
+                throw new GradleException("No side-by-side Android NDK installation was found")
+            }
+            def osName = System.getProperty("os.name").toLowerCase()
+            def host = osName.contains("mac")
+                ? "darwin-x86_64"
+                : osName.contains("win") ? "windows-x86_64" : "linux-x86_64"
+            def commandSuffix = osName.contains("win") ? ".cmd" : ""
+            def binarySuffix = osName.contains("win") ? ".exe" : ""
+            def toolchain = "${ndkRoot}/toolchains/llvm/prebuilt/${host}/bin"
+            def linker = "${toolchain}/${rustTarget}${android.defaultConfig.minSdk}-clang${commandSuffix}"
+            def cxx = "${toolchain}/${rustTarget}${android.defaultConfig.minSdk}-clang++${commandSuffix}"
+            def ar = "${toolchain}/llvm-ar${binarySuffix}"
+            def javaHome = System.getProperty("java.home")
+            def path = [
+                toolchain,
+                new File(javaHome, "bin").absolutePath,
+                System.getenv("PATH") ?: "",
+            ].findAll { !it.empty }.join(File.pathSeparator)
+            environment("JAVA_HOME", javaHome)
+            environment("ANDROID_HOME", sdkRoot)
+            environment("ANDROID_SDK_ROOT", sdkRoot)
+            environment("ANDROID_PLATFORM", "android-36.1")
+            environment("CARGO_TARGET_${targetEnvironment.toUpperCase(java.util.Locale.ROOT)}_LINKER", linker)
+            environment("CC_${targetEnvironment}", linker)
+            environment("CXX_${targetEnvironment}", cxx)
+            environment("AR_${targetEnvironment}", ar)
+            environment("PATH", path)
+        }
+    }
+
+    def stageRust = tasks.register("stageRustDebug${taskSuffix}", Copy) {
+        dependsOn(buildRust)
+        from(rustLibrary)
+        into(generatedLibraries)
+    }
+
+    buildRustDebug.configure { dependsOn(buildRust) }
+    stageRustDebug.configure { dependsOn(stageRust) }
 }
 
 tasks.configureEach {
