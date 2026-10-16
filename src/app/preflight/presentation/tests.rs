@@ -90,3 +90,66 @@ fn presents_unchanged_files_without_a_start_action() {
     assert!(!presentation.has_planned_actions);
     assert_eq!(presentation.start_action, "No Action Needed");
 }
+
+#[test]
+fn folders_never_display_byte_sizes_or_size_comparison_reasons() {
+    let folder = |path, size| {
+        InventoryEntry::new(
+            RelativePath::new(path).unwrap(),
+            InventoryEntryKind::Directory,
+            size,
+            Some(1),
+        )
+    };
+    let source = Inventory::new([folder("existing", 4096), folder("new", 4096)]).unwrap();
+    let destination = Inventory::new([folder("existing", 0), folder("deleted", 0)]).unwrap();
+    let preflight = preflight(
+        SyncMode::Mirror,
+        Direction::Upload,
+        &source,
+        CaseSensitivity::Sensitive,
+        &destination,
+        CaseSensitivity::Sensitive,
+    )
+    .unwrap();
+    let presentation = PreflightPresentation::from(&preflight);
+    let detail = |path| {
+        presentation
+            .items
+            .iter()
+            .find(|item| item.path == path)
+            .unwrap()
+            .detail
+            .as_str()
+    };
+    assert_eq!(detail("existing"), "Source: folder · Destination: folder");
+    assert_eq!(detail("new"), "Source: folder");
+    assert_eq!(detail("deleted"), "Destination: folder");
+}
+
+#[test]
+fn folder_file_conflicts_report_types_instead_of_comparing_sizes() {
+    use crate::preflight::review::{ReviewEntryDetails, ReviewItem, ReviewStatus};
+    let folder = ReviewEntryDetails {
+        kind: InventoryEntryKind::Directory,
+        byte_size: 4096,
+        modified_unix_seconds: Some(1),
+    };
+    let file = ReviewEntryDetails {
+        kind: InventoryEntryKind::File,
+        byte_size: 12,
+        modified_unix_seconds: Some(1),
+    };
+    for (source, destination) in [(folder.clone(), file.clone()), (file, folder)] {
+        let item = super::PreflightItemPresentation::from(ReviewItem {
+            path: RelativePath::new("conflict").unwrap(),
+            status: ReviewStatus::Changed,
+            source: Some(source),
+            destination: Some(destination),
+        });
+        assert!(item.detail.ends_with("Entry types differ"));
+        assert!(!item.detail.contains("Sizes differ"));
+        assert!(!item.detail.contains("4096"));
+        assert!(item.detail.contains("file · 12 bytes"));
+    }
+}

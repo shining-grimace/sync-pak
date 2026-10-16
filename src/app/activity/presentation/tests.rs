@@ -132,3 +132,57 @@ fn presents_a_safe_failure_reason_for_work_that_never_started() {
         "Files changed since this review. Refresh the review before starting the operation."
     );
 }
+
+#[test]
+fn skipped_files_are_counted_once_at_the_end_of_results() {
+    let skip = |path| PlannedAction::SkipChanged {
+        path: RelativePath::new(path).unwrap(),
+    };
+    let copied = PlannedAction::Copy {
+        path: RelativePath::new("new.jpg").unwrap(),
+        from: Endpoint::Source,
+        to: Endpoint::Destination,
+    };
+    let mut progress =
+        ExecutionProgress::new([skip("existing-a.jpg"), copied, skip("existing-b.jpg")]);
+    while progress.start_next().is_some() {
+        assert!(progress.complete_current());
+    }
+    assert_eq!(
+        super::result_details(&progress.finish()),
+        ["Completed: new.jpg", "2 files skipped"]
+    );
+}
+
+#[test]
+fn an_all_skipped_run_shows_a_summary_without_file_rows() {
+    let mut progress = ExecutionProgress::new([PlannedAction::SkipChanged {
+        path: RelativePath::new("existing.jpg").unwrap(),
+    }]);
+    progress.start_next();
+    assert!(progress.complete_current());
+    assert_eq!(
+        super::result_details(&progress.finish()),
+        ["1 file skipped"]
+    );
+}
+
+#[test]
+fn uncompleted_skip_actions_are_not_counted_as_skipped_files() {
+    let mut progress = ExecutionProgress::new(["done", "failed", "pending"].map(|path| {
+        PlannedAction::SkipChanged {
+            path: RelativePath::new(path).unwrap(),
+        }
+    }));
+    progress.start_next();
+    assert!(progress.complete_current());
+    progress.start_next();
+    assert_eq!(
+        super::result_details(&progress.fail()),
+        [
+            "Incomplete: failed",
+            "Not started: pending",
+            "1 file skipped",
+        ]
+    );
+}

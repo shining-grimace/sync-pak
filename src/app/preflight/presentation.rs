@@ -94,6 +94,11 @@ fn details(item: &ReviewItem) -> String {
 fn comparison_reason(item: &ReviewItem) -> Option<&'static str> {
     let source = item.source.as_ref()?;
     let destination = item.destination.as_ref()?;
+    if matches!(source.kind, InventoryEntryKind::Directory)
+        || matches!(destination.kind, InventoryEntryKind::Directory)
+    {
+        return (source.kind != destination.kind).then_some("Entry types differ");
+    }
     if source.byte_size != destination.byte_size {
         return Some("Sizes differ");
     }
@@ -106,6 +111,9 @@ fn comparison_reason(item: &ReviewItem) -> Option<&'static str> {
 }
 
 fn describe(label: &str, entry: &crate::preflight::review::ReviewEntryDetails) -> String {
+    if matches!(entry.kind, InventoryEntryKind::Directory) {
+        return format!("{label}: folder");
+    }
     format!(
         "{label}: {} · {}",
         kind_label(&entry.kind),

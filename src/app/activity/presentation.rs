@@ -118,18 +118,37 @@ fn incomplete_summary(
 
 fn result_details(result: &crate::operations::execution::ExecutionResult) -> Vec<String> {
     let mut details = Vec::new();
-    details.extend(action_details("Completed", &result.completed));
+    let skipped = result
+        .completed
+        .iter()
+        .filter(|action| is_skip(action))
+        .count();
+    details.extend(action_details(
+        "Completed",
+        result.completed.iter().filter(|action| !is_skip(action)),
+    ));
     details.extend(action_details("Incomplete", &result.incomplete));
     details.extend(action_details("Not started", &result.not_started));
+    if skipped > 0 {
+        let files = if skipped == 1 { "file" } else { "files" };
+        details.push(format!("{skipped} {files} skipped"));
+    }
     details
 }
 
-fn action_details(
+fn is_skip(action: &crate::preflight::planning::PlannedAction) -> bool {
+    matches!(
+        action,
+        crate::preflight::planning::PlannedAction::SkipChanged { .. }
+    )
+}
+
+fn action_details<'a>(
     status: &str,
-    actions: &[crate::preflight::planning::PlannedAction],
+    actions: impl IntoIterator<Item = &'a crate::preflight::planning::PlannedAction>,
 ) -> Vec<String> {
     actions
-        .iter()
+        .into_iter()
         .map(|action| format!("{status}: {}", action_name(action)))
         .collect()
 }
