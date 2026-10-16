@@ -1,6 +1,7 @@
 package com.shininggrimace.syncpak
 
 import android.app.Application
+import android.content.res.Configuration
 import android.os.FileObserver
 import android.os.Handler
 import android.os.Looper
@@ -8,6 +9,11 @@ import java.io.File
 
 class SyncPakApplication : Application() {
     private var observer: FileObserver? = null
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        SyncWidgets.refresh(this)
+    }
     override fun onCreate() {
         super.onCreate()
         SyncNative.initialize(SyncPlatform(this), filesDir.absolutePath)

@@ -1,0 +1,5 @@
+<resources>
+    <color name="widget_primary">@color/widget_dark_primary</color>
+    <color name="widget_background">@color/widget_dark_background</color>
+    <color name="widget_disabled_primary">@color/widget_dark_disabled_primary</color>
+</resources>

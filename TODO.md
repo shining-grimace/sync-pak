@@ -1,6 +1,5 @@
 
 - I ought to test handling of connection paths with spaces and special characters
-- The Android widget would look nicer styled in SyncPak colours
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Android: test that external storage drives work too
 - Bump target Android version to API 37
@@ -9,6 +8,7 @@
 - New setting per connection: "Last Run" timestamp shown in the connections list
 - Android connection widget (runs in background if transfers don't use approval)
 - Bump Rust and Android dependencies where possible
+- Run Clippy
 - Create branding logo
 - Consider transitions and animations
 - Add Google package to AdMob once published on Google Play

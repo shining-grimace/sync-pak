@@ -34,6 +34,11 @@ Build with `./android/gradlew --project-dir android :app:assembleDebug`. The APK
 11. Interrupt the process during a run. On next startup, confirm interrupted history
     is reported and the sync is not silently repeated. Test notification permission
     denied and granted; saved results must remain accessible in either case.
+12. Select Light and Dark in the app's appearance settings, including selections
+    opposite to the phone's theme. Both widgets should use the app's primary colour
+    for their outlines, text and icons, with its app background as the fill. Select
+    System and switch the phone's theme with the app open and closed. Check disabled
+    Run buttons remain distinguishable and widget sizes remain unchanged.
 
 Automated validation covers Rust admission/eligibility and application-context
 registration, Android target compilation, Kotlin and RemoteViews resource compilation,

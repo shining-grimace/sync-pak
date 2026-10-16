@@ -1,0 +1,30 @@
+<resources>
+    <!-- Keep the palette aligned with ui/colors.slint. -->
+    <attr name="widgetPrimary" format="color" />
+    <attr name="widgetBackground" format="color" />
+    <attr name="widgetDisabledPrimary" format="color" />
+    <color name="widget_light_primary">#171512</color>
+    <color name="widget_light_background">#F3EFE3</color>
+    <color name="widget_light_disabled_primary">#73171512</color>
+    <color name="widget_dark_primary">#BC31FF</color>
+    <color name="widget_dark_background">#000000</color>
+    <color name="widget_dark_disabled_primary">#73BC31FF</color>
+    <color name="widget_primary">@color/widget_light_primary</color>
+    <color name="widget_background">@color/widget_light_background</color>
+    <color name="widget_disabled_primary">@color/widget_light_disabled_primary</color>
+    <style name="SyncPakWidget">
+        <item name="widgetPrimary">@color/widget_primary</item>
+        <item name="widgetBackground">@color/widget_background</item>
+        <item name="widgetDisabledPrimary">@color/widget_disabled_primary</item>
+    </style>
+    <style name="SyncPakWidget.Light">
+        <item name="widgetPrimary">@color/widget_light_primary</item>
+        <item name="widgetBackground">@color/widget_light_background</item>
+        <item name="widgetDisabledPrimary">@color/widget_light_disabled_primary</item>
+    </style>
+    <style name="SyncPakWidget.Dark">
+        <item name="widgetPrimary">@color/widget_dark_primary</item>
+        <item name="widgetBackground">@color/widget_dark_background</item>
+        <item name="widgetDisabledPrimary">@color/widget_dark_disabled_primary</item>
+    </style>
+</resources>

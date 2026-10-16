@@ -55,7 +55,11 @@ fn snapshot() -> Result<serde_json::Value, String> {
         );
     #[cfg(not(feature = "provider-s3"))]
     let active: Option<serde_json::Value> = None;
-    Ok(serde_json::json!({"connections": connections, "active": active}))
+    Ok(serde_json::json!({
+        "connections": connections,
+        "active": active,
+        "appearance": config.appearance,
+    }))
 }
 
 #[unsafe(no_mangle)]

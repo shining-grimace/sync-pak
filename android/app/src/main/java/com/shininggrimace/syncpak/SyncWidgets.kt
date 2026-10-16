@@ -39,7 +39,12 @@ object SyncWidgets {
         }
     }
     private fun render(context: Context, state: JSONObject, id: Int, compact: Boolean): RemoteViews {
-        val views = RemoteViews(context.packageName, if (compact) R.layout.widget_compact else R.layout.widget_sync)
+        val layout = when (state.optString("appearance", "system")) {
+            "light" -> if (compact) R.layout.widget_compact_light else R.layout.widget_sync_light
+            "dark" -> if (compact) R.layout.widget_compact_dark else R.layout.widget_sync_dark
+            else -> if (compact) R.layout.widget_compact else R.layout.widget_sync
+        }
+        val views = RemoteViews(context.packageName, layout)
         val selected = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).getString(id.toString(), null)
         val connections = state.optJSONArray("connections")
         val connection = (0 until (connections?.length() ?: 0)).map { connections!!.getJSONObject(it) }.find { it.getString("id") == selected }
