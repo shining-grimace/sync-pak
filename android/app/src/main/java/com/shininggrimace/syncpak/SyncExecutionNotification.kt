@@ -32,7 +32,7 @@ object SyncExecutionNotification {
         val openPendingIntent = PendingIntent.getActivity(
             context,
             0,
-            Intent(context, SyncPakActivity::class.java),
+            Intent(context, SyncPakActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val cancelPendingIntent = PendingIntent.getService(
@@ -72,10 +72,17 @@ object SyncExecutionNotification {
         )
     }
 
-    fun complete(context: Context, connectionName: String, summary: String) {
+    fun clearRunning(context: Context) {
+        context.getSystemService(NotificationManager::class.java).cancel(ID)
+    }
+
+    fun complete(context: Context, connectionName: String, summary: String, operationId: String? = null) {
         createChannel(context)
         val open = PendingIntent.getActivity(
-            context, 0, Intent(context, SyncPakActivity::class.java),
+            context, operationId?.hashCode() ?: 0, Intent(context, SyncPakActivity::class.java)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra("operation_id", operationId)
+                .setData(android.net.Uri.parse("syncpak://result/${operationId ?: "error"}")),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = Notification.Builder(context, CHANNEL_ID)
@@ -86,7 +93,7 @@ object SyncExecutionNotification {
             .setContentIntent(open)
             .setAutoCancel(true)
             .build()
-        context.getSystemService(NotificationManager::class.java).notify(ID + 1, notification)
+        context.getSystemService(NotificationManager::class.java).notify(operationId?.let { 0x10000000 or (it.hashCode() and 0x0fffffff) } ?: (ID + 1), notification)
     }
 
     private fun notificationText(

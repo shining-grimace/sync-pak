@@ -6,12 +6,41 @@ import android.content.Intent
 import android.content.pm.PackageManager
 
 class SyncPakActivity : NativeActivity() {
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        SyncResultNavigation.accept(intent)
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        SyncResultNavigation.accept(intent)
+    }
     private val adsController by lazy { AdsController(this) }
     private val connectionLists by lazy { ConnectionListDocuments(this, ::nativeConnectionListResult) }
 
     fun pickConnectionList(contents: String): Int = connectionLists.pick(contents)
 
     private val documentTrees by lazy { DocumentTreeAccess(this) }
+
+    override fun onResume() {
+        super.onResume()
+        adsController.resume()
+    }
+
+    override fun onPause() {
+        adsController.pause()
+        super.onPause()
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        adsController.windowAvailable()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) adsController.windowAvailable()
+    }
 
     override fun onDestroy() {
         adsController.destroy()

@@ -1,22 +1,13 @@
 use std::sync::{Arc, Mutex};
 
 use jni::{
-    EnvUnowned, JavaVM, jni_sig, jni_str,
-    objects::{Global, JClass, JObject},
+    EnvUnowned, jni_sig, jni_str,
+    objects::{JClass, JObject},
 };
-use slint::android::AndroidApp;
 
 use crate::{capabilities::CapabilityError, operations::operation_progress::OperationProgress};
 
-static ANDROID_APP: Mutex<Option<AndroidApp>> = Mutex::new(None);
 static CANCEL_HANDLER: Mutex<Option<Arc<dyn Fn() + Send + Sync>>> = Mutex::new(None);
-
-pub fn initialize(app: AndroidApp) -> Result<(), CapabilityError> {
-    *ANDROID_APP
-        .lock()
-        .map_err(|_| CapabilityError::Unexpected)? = Some(app);
-    Ok(())
-}
 
 #[cfg(feature = "feasibility-probes")]
 pub fn schedule_probe() {
@@ -60,6 +51,25 @@ pub fn update(connection_name: &str, progress: &OperationProgress) -> Result<(),
                 current_item.into(),
                 total_items.into(),
             ],
+        )?;
+        Ok(())
+    })
+}
+
+pub fn finish_operation(
+    connection_name: &str,
+    summary: &str,
+    operation_id: &str,
+) -> Result<(), CapabilityError> {
+    with_activity(|env, host| {
+        let name = env.new_string(connection_name)?;
+        let summary = env.new_string(summary)?;
+        let id = env.new_string(operation_id)?;
+        env.call_method(
+            host,
+            jni_str!("finishSyncOperation"),
+            jni_sig!("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"),
+            &[(&name).into(), (&summary).into(), (&id).into()],
         )?;
         Ok(())
     })
@@ -109,20 +119,7 @@ pub fn clear_cancel_handler() -> Result<(), CapabilityError> {
 fn with_activity(
     action: impl FnOnce(&mut jni::Env<'_>, &JObject<'_>) -> jni::errors::Result<()>,
 ) -> Result<(), CapabilityError> {
-    let app = ANDROID_APP
-        .lock()
-        .map_err(|_| CapabilityError::Unexpected)?
-        .clone()
-        .ok_or(CapabilityError::Unavailable)?;
-    let vm = JavaVM::singleton().map_err(|_| CapabilityError::Unavailable)?;
-
-    vm.attach_current_thread(|env| {
-        let raw_activity = app.activity_as_ptr() as jni::sys::jobject;
-        // SAFETY: AndroidApp guarantees this unowned global reference while `app` is alive.
-        let activity = unsafe { env.as_cast_raw::<Global<JObject>>(&raw_activity)? };
-        action(env, &activity)
-    })
-    .map_err(|_| CapabilityError::Unavailable)
+    super::context::with_host(action)
 }
 
 #[unsafe(no_mangle)]
@@ -134,6 +131,19 @@ pub extern "system" fn Java_com_shininggrimace_syncpak_SyncExecutionService_nati
 ) {
     unowned_env
         .with_env(|_| {
+            #[cfg(feature = "provider-s3")]
+            if let Ok(queue) = super::runtime::queue() {
+                if let Some(entry) = queue.activity().iter().find(|entry| {
+                    matches!(
+                        entry.state,
+                        crate::operations::queue::QueueState::Queued
+                            | crate::operations::queue::QueueState::Running
+                    )
+                }) {
+                    let _ = queue.cancel(entry.operation_id);
+                    return Ok::<(), jni::errors::Error>(());
+                }
+            }
             let handler = CANCEL_HANDLER
                 .lock()
                 .ok()

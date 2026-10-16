@@ -69,8 +69,8 @@ interpret the URI as a local path.
 ## Foreground execution
 
 Long-running Android transfers use a non-exported foreground service declared with the
-`dataSync` type and its type-specific permission. The Rust capability bridge starts it only
-from the visible activity. Its low-priority `Sync operations` notification opens SyncPak
+`dataSync` type and its type-specific permission. The Application-owned Rust capability bridge and widget Run PendingIntents start
+it without requiring an Activity. Its low-priority `Sync operations` notification opens SyncPak
 when tapped and offers a `Cancel` action; the service is not restarted automatically after
 Android stops it.
 

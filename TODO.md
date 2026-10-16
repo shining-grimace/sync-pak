@@ -1,6 +1,7 @@
 
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, when an error card is shown at the top (tested on new-provider form), it's partially underneath the status bar, and the close button cannot be tapped
+- On Android, in the New Provider form the Advanced button overlaps some description text
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Android: test that external storage drives work too
 - Bump target Android version to API 37

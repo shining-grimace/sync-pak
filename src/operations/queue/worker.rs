@@ -47,6 +47,16 @@ pub(crate) fn start<E: OperationExecutor + Send + Sync + 'static>(
             *active_connection
                 .lock()
                 .expect("active connection mutex poisoned") = None;
+            #[cfg(target_os = "android")]
+            let _ = crate::platform::android::context::with_host(|env, host| {
+                env.call_method(
+                    host,
+                    jni::jni_str!("widgetsChanged"),
+                    jni::jni_sig!("()V"),
+                    &[],
+                )?;
+                Ok(())
+            });
         }
     })
 }
@@ -86,7 +96,11 @@ fn execute<E: OperationExecutor>(
     if foreground.is_ok()
         && let Some(background) = background
     {
-        let _ = background.finish(&entry.snapshot.connection_name, &result.summary());
+        let _ = background.finish_operation(
+            &entry.snapshot.connection_name,
+            &result.summary(),
+            &entry.operation_id.to_string(),
+        );
     }
     if result.is_terminal() {
         result

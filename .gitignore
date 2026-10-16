@@ -8,3 +8,5 @@
 /stage/
 /*.snap
 /dist/
+/android/ndk-context/target/
+/android/ndk-context/Cargo.lock

@@ -147,6 +147,15 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             .collect()
     }
 
+    #[cfg(target_os = "android")]
+    pub fn report_history_error(&self, message: &str) {
+        self.queue
+            .0
+            .lock()
+            .expect("queue mutex poisoned")
+            .history_error = Some(message.into());
+    }
+
     pub fn take_history_error(&self) -> Option<String> {
         self.queue
             .0

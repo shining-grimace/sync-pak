@@ -55,6 +55,7 @@ windows-native-keyring-store = { version = "=1.1.0", default-features = false }
 slint = { version = "=1.17.1", default-features = false, features = ["backend-winit", "renderer-femtovg"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
+ndk-context = "=0.1.1"
 android-native-keyring-store = "=1.0.0"
 aws-smithy-runtime-api = { version = "=1.13.0", features = ["client", "http-1x"], optional = true }
 aws-smithy-types = { version = "=1.6.1", features = ["http-body-1-x"], optional = true }
@@ -77,3 +78,7 @@ required-features = ["feasibility-probes"]
 [[example]]
 name = "provider_operations"
 required-features = ["provider-probes"]
+
+# Service startup and NativeActivity both register the same process Application.
+[patch.crates-io]
+ndk-context = { path = "android/ndk-context" }

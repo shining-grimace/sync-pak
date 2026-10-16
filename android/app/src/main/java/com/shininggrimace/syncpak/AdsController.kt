@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
@@ -31,13 +32,33 @@ class AdsController(private val activity: Activity) {
     private var banner: AdView? = null
     private var advertisingContainer: LinearLayout? = null
     private var advertisingPopup: PopupWindow? = null
+    private var resumed = false
+    private var destroyed = false
+
+    fun resume() {
+        resumed = true
+        renderPlacement()
+    }
+
+    fun pause() {
+        resumed = false
+        removeAdvertising()
+    }
+
+    fun windowAvailable() {
+        renderPlacement()
+    }
+
+    private fun canShow(): Boolean = !destroyed && resumed &&
+        !activity.isFinishing && !activity.isDestroyed &&
+        activity.window.decorView.isAttachedToWindow && activity.window.decorView.windowToken != null
 
     val privacyChoicesAvailable: Boolean
         get() = consentInformation.privacyOptionsRequirementStatus ==
             ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
 
     fun start() {
-        if (consentRequested || consentRequestInProgress) {
+        if (destroyed || consentRequested || consentRequestInProgress) {
             return
         }
         consentRequestInProgress = true
@@ -47,10 +68,12 @@ class AdsController(private val activity: Activity) {
             activity,
             parameters,
             {
+                if (destroyed) return@requestConsentInfoUpdate
                 consentRequestInProgress = false
                 consentRequested = true
                 notifyPrivacyChoicesAvailability()
                 UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { formError ->
+                    if (destroyed) return@loadAndShowConsentFormIfRequired
                     notifyPrivacyChoicesAvailability()
                     if (formError == null) {
                         Log.i(LOG_TAG, "Advertising consent form completed or was not required")
@@ -61,6 +84,7 @@ class AdsController(private val activity: Activity) {
                 }
             },
             { error ->
+                if (destroyed) return@requestConsentInfoUpdate
                 consentRequestInProgress = false
                 // Do not initialize or request ads if a current consent decision cannot be obtained.
                 Log.w(LOG_TAG, "Advertising consent information could not be refreshed: ${error.message}")
@@ -75,21 +99,24 @@ class AdsController(private val activity: Activity) {
     }
 
     fun showPrivacyChoices() {
-        if (!privacyChoicesAvailable) {
+        if (!canShow() || !privacyChoicesAvailable) {
             return
         }
         UserMessagingPlatform.showPrivacyOptionsForm(activity) {
+            if (destroyed) return@showPrivacyOptionsForm
             notifyPrivacyChoicesAvailability()
             renderPlacement()
         }
     }
 
     fun destroy() {
+        destroyed = true
+        resumed = false
         removeAdvertising()
     }
 
     private fun initializeAdsIfPermitted() {
-        if (!consentInformation.canRequestAds() || mobileAdsInitialized) {
+        if (destroyed || !consentInformation.canRequestAds() || mobileAdsInitialized) {
             return
         }
         val configuration = MobileAds.getRequestConfiguration().toBuilder()
@@ -98,7 +125,7 @@ class AdsController(private val activity: Activity) {
         MobileAds.setRequestConfiguration(configuration)
         mobileAdsInitialized = true
         MobileAds.initialize(activity) {
-            renderPlacement()
+            activity.runOnUiThread { renderPlacement() }
         }
     }
 
@@ -120,7 +147,7 @@ class AdsController(private val activity: Activity) {
     }
 
     private fun renderPlacement() {
-        if (!mobileAdsInitialized || placement == Placement.HIDDEN) {
+        if (!canShow() || !mobileAdsInitialized || placement == Placement.HIDDEN) {
             removeAdvertising()
             return
         }
@@ -138,11 +165,13 @@ class AdsController(private val activity: Activity) {
             setAdSize(adSize)
             adListener = object : AdListener() {
                 override fun onAdLoaded() {
+                    if (destroyed || banner !== this@apply) return
                     logLoadedBannerLayout(container, this@apply)
                     reportContainerInset(container)
                 }
 
                 override fun onAdFailedToLoad(error: com.google.android.gms.ads.LoadAdError) {
+                    if (destroyed || banner !== this@apply) return
                     Log.w(
                         LOG_TAG,
                         "Banner ad failed to load: code=${error.code}, domain=${error.domain}, " +
@@ -173,7 +202,14 @@ class AdsController(private val activity: Activity) {
         banner = adView
         advertisingContainer = container
         advertisingPopup = popup
-        popup.showAtLocation(activity.window.decorView, Gravity.BOTTOM, 0, 0)
+        try {
+            popup.showAtLocation(activity.window.decorView, Gravity.BOTTOM, 0, 0)
+        } catch (error: WindowManager.BadTokenException) {
+            // The window can be revoked between checking its token and adding the popup.
+            Log.w(LOG_TAG, "Advertising window is no longer available", error)
+            removeAdvertising()
+            return
+        }
         reportContainerInset(container)
         adView.loadAd(AdRequest.Builder().build())
     }
@@ -205,26 +241,31 @@ class AdsController(private val activity: Activity) {
     }
 
     private fun removeBannerButKeepFooter() {
-        banner?.let { view ->
+        val previousBanner = banner
+        banner = null
+        previousBanner?.let { view ->
             (view.parent as? ViewGroup)?.removeView(view)
             view.destroy()
         }
-        banner = null
         advertisingContainer?.let(::reportContainerInset)
     }
 
     private fun removeAdvertising() {
-        banner?.destroy()
-        advertisingPopup?.dismiss()
+        val previousBanner = banner
+        val previousPopup = advertisingPopup
         banner = null
         advertisingContainer = null
         advertisingPopup = null
+        previousBanner?.destroy()
+        previousPopup?.dismiss()
         reportBannerInset(0)
     }
 
     private fun reportContainerInset(container: LinearLayout) {
         container.post {
-            reportBannerInset((container.height / activity.resources.displayMetrics.density).roundToInt())
+            if (!destroyed && advertisingContainer === container && container.isAttachedToWindow) {
+                reportBannerInset((container.height / activity.resources.displayMetrics.density).roundToInt())
+            }
         }
     }
 
@@ -235,6 +276,7 @@ class AdsController(private val activity: Activity) {
     }
 
     private fun reportBannerInset(heightDp: Int) {
+        if (destroyed) return
         (activity as SyncPakActivity).advertisingBannerInsetChanged(heightDp)
     }
 

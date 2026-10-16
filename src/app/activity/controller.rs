@@ -114,6 +114,8 @@ fn schedule_refresh<E: OperationExecutor + Send + Sync + 'static>(
         refresh(&weak, &queue);
         if let Some(window) = weak.upgrade() {
             announce_activity(&window, &queue, &announced);
+            #[cfg(target_os = "android")]
+            crate::platform::android::result_navigation::show_requested(&window);
         }
         schedule_refresh(weak, queue, announced);
     });

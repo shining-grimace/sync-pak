@@ -1,9 +1,11 @@
 use std::{
-    env, fs, io,
+    fs, io,
     path::{Path, PathBuf},
 };
 
 use crate::platform::atomic_write::atomic_write;
+#[cfg(not(target_os = "android"))]
+use std::env;
 
 use super::{AppConfig, ValidationErrors};
 
@@ -93,8 +95,7 @@ fn config_directory() -> Option<PathBuf> {
     }
     #[cfg(target_os = "android")]
     {
-        env::var_os("ANDROID_DATA")
-            .map(|root| PathBuf::from(root).join("data/com.shininggrimace.syncpak/files"))
+        crate::platform::android::context::files_directory()
     }
     #[cfg(all(not(target_os = "windows"), not(target_os = "android")))]
     {

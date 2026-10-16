@@ -9,3 +9,6 @@ pub mod retry;
 pub mod transfer;
 
 pub mod run_coordinator;
+
+#[cfg(any(test, target_os = "android"))]
+pub mod widget_connections;

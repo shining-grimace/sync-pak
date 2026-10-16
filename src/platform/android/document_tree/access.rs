@@ -1,12 +1,10 @@
-use std::{fs::File, io, sync::Mutex};
+use std::{fs::File, io};
 
 use jni::{
-    JavaVM,
-    objects::{Global, JObject, JString},
+    objects::{JObject, JString},
     signature::RuntimeMethodSignature,
     strings::JNIString,
 };
-use slint::android::AndroidApp;
 
 use crate::{
     inventory::{Inventory, InventoryEntry, RelativePath},
@@ -15,13 +13,6 @@ use crate::{
         DocumentEntry, DocumentMetadata, status, unavailable,
     },
 };
-
-static ANDROID_APP: Mutex<Option<AndroidApp>> = Mutex::new(None);
-
-pub fn initialize(app: AndroidApp) -> io::Result<()> {
-    *ANDROID_APP.lock().map_err(|_| unavailable())? = Some(app);
-    Ok(())
-}
 
 pub fn verify(uri: &str) -> io::Result<()> {
     status(call_one_string(
@@ -162,17 +153,5 @@ fn call_json(
 fn with_activity<T>(
     action: impl FnOnce(&mut jni::Env<'_>, &JObject<'_>) -> jni::errors::Result<T>,
 ) -> io::Result<T> {
-    let app = ANDROID_APP
-        .lock()
-        .map_err(|_| unavailable())?
-        .clone()
-        .ok_or_else(unavailable)?;
-    let vm = JavaVM::singleton().map_err(|_| unavailable())?;
-    vm.attach_current_thread(|env| {
-        let raw_activity = app.activity_as_ptr() as jni::sys::jobject;
-        // SAFETY: AndroidApp guarantees this unowned global reference while `app` is alive.
-        let activity = unsafe { env.as_cast_raw::<Global<JObject>>(&raw_activity)? };
-        action(env, &activity)
-    })
-    .map_err(|_| unavailable())
+    super::super::context::with_host(action).map_err(|_| unavailable())
 }

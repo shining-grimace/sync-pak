@@ -127,29 +127,31 @@ fn configure_operation_queue(
         crate::providers::s3::operations::executor::S3OperationExecutor,
     >,
 > {
-    let executor = Arc::new(
-        crate::providers::s3::operations::executor::S3OperationExecutor::new(
-            configuration.path().to_owned(),
-        ),
-    );
     #[cfg(target_os = "android")]
-    let background: Option<Arc<dyn crate::capabilities::BackgroundExecution + Send + Sync>> =
-        Some(Arc::new(crate::platform::PlatformBackgroundExecution));
+    let queue = crate::platform::android::runtime::queue()
+        .expect("Android operation runtime initialization failed");
     #[cfg(not(target_os = "android"))]
-    let background = None;
-    let history_path = configuration.path().with_file_name("activity.json");
-    let queue = match crate::operations::queue::background::BackgroundQueue::persistent(
-        Arc::clone(&executor),
-        background,
-        history_path,
-    ) {
-        Ok(queue) => queue,
-        Err(_) => {
-            window.set_status_message("Activity history could not be loaded. New results are available for this session only.".into());
-            make_operation_queue(executor)
-        }
+    let queue = {
+        let executor = Arc::new(
+            crate::providers::s3::operations::executor::S3OperationExecutor::new(
+                configuration.path().to_owned(),
+            ),
+        );
+        let background = None;
+        let history_path = configuration.path().with_file_name("activity.json");
+        let queue = match crate::operations::queue::background::BackgroundQueue::persistent(
+            Arc::clone(&executor),
+            background,
+            history_path,
+        ) {
+            Ok(queue) => queue,
+            Err(_) => {
+                window.set_status_message("Activity history could not be loaded. New results are available for this session only.".into());
+                make_operation_queue(executor)
+            }
+        };
+        Arc::new(queue)
     };
-    let queue = Arc::new(queue);
     crate::app::activity::controller::configure(window, Arc::clone(&queue));
     crate::app::run::start_controller::configure(
         window,
@@ -162,18 +164,6 @@ fn configure_operation_queue(
         configuration.path().into(),
     );
     queue
-}
-
-#[cfg(all(feature = "provider-s3", target_os = "android"))]
-fn make_operation_queue(
-    executor: Arc<crate::providers::s3::operations::executor::S3OperationExecutor>,
-) -> crate::operations::queue::background::BackgroundQueue<
-    crate::providers::s3::operations::executor::S3OperationExecutor,
-> {
-    crate::operations::queue::background::BackgroundQueue::with_background_execution(
-        executor,
-        Arc::new(crate::platform::PlatformBackgroundExecution),
-    )
 }
 
 #[cfg(all(feature = "provider-s3", not(target_os = "android")))]

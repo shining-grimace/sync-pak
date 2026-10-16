@@ -40,26 +40,8 @@ pub fn android_main(app: slint::android::AndroidApp) {
         eprintln!("Android advertising initialization failed: {error}");
         return;
     }
-    if let Err(error) = platform::android::document_tree::access::initialize(app.clone()) {
-        eprintln!("Android document-tree access initialization failed: {error}");
-        return;
-    }
     if let Err(error) = platform::android::folder_picker::initialize(app.clone()) {
         eprintln!("Android folder picker initialization failed: {error}");
-        return;
-    }
-    #[cfg(feature = "provider-s3")]
-    {
-        if let Err(error) = platform::android::s3::certificate_verifier::initialize(&app) {
-            eprintln!("Android certificate verifier initialization failed: {error}");
-        }
-    }
-    if let Err(error) = platform::android::foreground_execution::initialize(app.clone()) {
-        eprintln!("Android foreground execution initialization failed: {error}");
-        return;
-    }
-    if let Err(error) = platform::android::network_access::initialize(app.clone()) {
-        eprintln!("Android network access check initialization failed: {error}");
         return;
     }
     if let Err(error) = slint::android::init(app) {
