@@ -911,9 +911,9 @@ export component AppWindow inherits Window {
         }
 
         NotificationCenter {
-            x: max(16px, (root.width - 440px) / 2);
-            y: 16px;
-            width: min(440px, root.width - 32px);
+            x: root.safe-area-insets.left + max(16px, (root.width - root.safe-area-insets.left - root.safe-area-insets.right - 440px) / 2);
+            y: root.safe-area-insets.top + 16px;
+            width: min(440px, max(0px, root.width - root.safe-area-insets.left - root.safe-area-insets.right - 32px));
             notifications: root.notifications;
             dismiss(id) => { root.dismiss-notification(id); }
             activate(id) => { root.activate-notification(id); }
