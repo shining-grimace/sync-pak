@@ -7,7 +7,6 @@
 - Set up release config for Android
 - Target latest Android
 - New setting per connection: approve transfers
-- On the new/edit Provider form, the Reveal button should be a small square button with an eye icon, and the text input next to it filling the rest of the row's width (albeit with a small margin between those two elements)
 - After a successful sync, clicking on View Results shows the results, which should include a total of how many files were skipped rather than listing all skipped files
 - Android connection widget (runs in background if transfers don't use approval)
 - Bump Rust and Android dependencies where possible

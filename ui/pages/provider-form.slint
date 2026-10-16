@@ -1,3 +1,4 @@
+import { SecretVisibilityButton } from "../components/secret-visibility-button.slint";
 import { ProviderSummaryLabel } from "../components/provider-guidance.slint";
 import { TransportFields } from "../components/transport-fields.slint";
 import { Colors } from "../colors.slint";
@@ -124,12 +125,9 @@ export component ProviderFormPage inherits CenteredPageRoot {
         text: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
     }
 
-    GridLayout {
+    HorizontalLayout {
         spacing: Dimensions.element-gap;
         LineEdit {
-            row: 0;
-            col: 0;
-            colspan: root.width < Dimensions.narrow-layout-breakpoint ? 2 : 1;
             accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
             placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
             text <=> root.provider-form-secret-key;
@@ -138,12 +136,9 @@ export component ProviderFormPage inherits CenteredPageRoot {
             enabled: !root.provider-verifying;
         }
 
-        SecondaryActionButton {
-            row: root.width < Dimensions.narrow-layout-breakpoint ? 1 : 0;
-            col: root.width < Dimensions.narrow-layout-breakpoint ? 0 : 1;
-            colspan: root.width < Dimensions.narrow-layout-breakpoint ? 2 : 1;
-            accessible-label: (root.provider-secret-visible ? "Hide " : "Reveal ") + (root.provider-form-kind == 1 ? "application key" : "secret access key");
-            text: root.provider-secret-visible ? "Hide" : "Reveal";
+        SecretVisibilityButton {
+            revealed: root.provider-secret-visible;
+            secret-name: root.provider-form-kind == 1 ? "application key" : "secret access key";
             enabled: !root.provider-verifying;
             clicked => {
                 root.toggle-provider-secret-visibility();
