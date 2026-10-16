@@ -1,3 +1,4 @@
+import { ProviderGuidanceCard } from "../components/provider-guidance.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ConnectionRow } from "../models.slint";
@@ -37,7 +38,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
     callback request-connection-edit(string);
     callback request-connection-delete(string);
     fill-height: true;
-    mouse-drag-pan-enabled: false;
+    mouse-drag-pan-enabled: !root.connections-load-failed && root.connections-total == 0;
 
     HorizontalLayout {
         spacing: Dimensions.element-gap;
@@ -184,6 +185,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                 }
             }
         }
+        if root.connections-total == 0: ProviderGuidanceCard {}
         if root.connections.length > 0: ListView {
             vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;

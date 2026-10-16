@@ -1,3 +1,4 @@
+import { ProviderSummaryLabel } from "../components/provider-guidance.slint";
 import { TransportFields } from "../components/transport-fields.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -86,6 +87,10 @@ export component ProviderFormPage inherits CenteredPageRoot {
         model: ["Cloudflare R2", "Backblaze B2", "AWS S3"];
         current-index <=> root.provider-form-kind;
         enabled: !root.provider-verifying;
+    }
+
+    ProviderSummaryLabel {
+        kind: root.provider-form-kind;
     }
 
     if root.provider-form-kind == 0: VerticalLayout {

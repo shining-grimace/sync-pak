@@ -2,7 +2,6 @@
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, when an error card is shown at the top (tested on new-provider form), it's partially underneath the status bar, and the close button cannot be tapped
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
-- Update `abiFilters` in `build.gradle.kts` to add x86_64 support needed by ChromeOS
 - Android: test that external storage drives work too
 - Bump target Android version to API 37
 - Set up release config for Android
@@ -17,11 +16,5 @@
 - Consider transitions and animations
 - Add Google package to AdMob once published on Google Play
 - Add app-ads.txt to developer site once requirements are met
-- Revise the roadmap's later stages to include prep of marketing material (think what are going to be the most popular workflows, think how they're made easy assuming they are, and how can we market those facts)
 - Make sure the roadmap's key points are all implemented
 - See where beta versions can be released; Google Play being a likely candidate
-
-In Provider form, advertise the strengths of each provider with a text label underneath the provider selection box, such as:
-- Cloudflare: ?
-- Backblaze: Secure storage at the lowest cost
-- AWS: The company trusted to run most of the world's internet services

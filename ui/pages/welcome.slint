@@ -1,3 +1,4 @@
+import { ProviderGuidanceCard } from "../components/provider-guidance.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
@@ -24,23 +25,13 @@ export component WelcomePage inherits CenteredPageRoot {
     }
 
     DescriptionLabel {
-        text: "SyncPak copies folders directly between this device and cloud providers you choose. SyncPak does not operate an intermediary file service.";
+        text: "SyncPak copies folders directly between this device and cloud providers you choose. Your provider credentials are protected using this device's secure storage and are sent only to that provider. SyncPak does not operate an intermediary file service";
         max-width: Dimensions.welcome-content-max-width;
     }
 
     Rectangle {
         height: 16px;
         background: transparent;
-    }
-
-    InfoCard {
-        accessible-role: region;
-        accessible-label: "Protected credentials";
-        max-width: Dimensions.welcome-content-max-width;
-        baseline-height: 92px;
-        DescriptionLabel {
-            text: "Your provider credentials are protected using this device's secure storage and are sent only to that provider.";
-        }
     }
 
     InfoCard {
@@ -63,6 +54,10 @@ export component WelcomePage inherits CenteredPageRoot {
         DescriptionLabel {
             text: "Archive — Create timestamped ZIP archives and keep the number you choose.";
         }
+    }
+
+    ProviderGuidanceCard {
+        max-width: Dimensions.welcome-content-max-width;
     }
 
     Rectangle {

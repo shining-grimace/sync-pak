@@ -1,0 +1,72 @@
+import { Dimensions } from "../dimensions.slint";
+import { InfoCard } from "cards.slint";
+import { DescriptionLabel } from "description-label.slint";
+import { SectionHeadingLabel } from "section-heading-label.slint";
+
+struct ProviderGuidance {
+    name: string,
+    headline: string,
+    description: string,
+    short-text: string,
+}
+
+// Keep the order aligned with the provider type selector: R2, B2, S3.
+global ProviderCopy {
+    out property <[ProviderGuidance]> options: [
+        {
+            name: "Cloudflare R2",
+            headline: "Download often, without bandwidth fees.",
+            description: "A good fit for files you regularly download or move between devices, with no charges for transferring data out.",
+            short-text: "Download often, without bandwidth fees. A good fit for files you regularly retrieve or move between devices.",
+        },
+        {
+            name: "Backblaze B2",
+            headline: "Affordable storage for backups and archives.",
+            description: "A good fit for keeping photo libraries, documents, and dated snapshots of your work in the cloud.",
+            short-text: "Affordable storage for backups and archives. A good fit for photo libraries, documents, and dated snapshots.",
+        },
+        {
+            name: "Amazon S3",
+            headline: "Established storage with a vast ecosystem.",
+            description: "A good fit if you already use AWS or want your files alongside existing AWS tools and workflows.",
+            short-text: "Established storage with a vast ecosystem. A good fit for existing AWS tools and workflows.",
+        },
+    ];
+}
+
+export component ProviderSummaryLabel inherits DescriptionLabel {
+    in property <int> kind;
+    text: root.kind >= 0 && root.kind < ProviderCopy.options.length ? ProviderCopy.options[root.kind].short-text : "";
+}
+
+export component ProviderGuidanceCard inherits InfoCard {
+    accessible-role: region;
+    accessible-label: "Your files. Your choice of cloud.";
+    vertical-stretch: 0;
+
+    SectionHeadingLabel {
+        text: "Your files. Your choice of cloud.";
+    }
+    DescriptionLabel {
+        text: "Connect your own cloud storage, then use SyncPak to copy, mirror, or archive your folders.";
+    }
+    for provider in ProviderCopy.options: VerticalLayout {
+        padding-top: Dimensions.element-gap;
+        spacing: Dimensions.card-element-spacing;
+        accessible-role: region;
+        accessible-label: provider.name;
+        SectionHeadingLabel {
+            text: provider.name;
+        }
+        DescriptionLabel {
+            text: provider.headline;
+            font-weight: 600;
+        }
+        DescriptionLabel {
+            text: provider.description;
+        }
+    }
+    DescriptionLabel {
+        text: "You’ll need an account and a storage bucket with your chosen provider. Provider charges apply separately from SyncPak.";
+    }
+}

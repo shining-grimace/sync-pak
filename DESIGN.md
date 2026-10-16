@@ -713,7 +713,7 @@ Status: Complete. The documented screens and responsive/accessibility work are i
 Small-layout, TalkBack, desktop keyboard, contrast, scalable-text, focus, and reduced-motion
 checks are pre-release validation work.
 
-## 8. Privacy, Ads, and Release Integration
+## 8. Privacy, Ads, Release Integration, and Marketing Preparation
 
 - Publish the privacy policy and provider disclosures; audit logs, errors, clipboard actions,
   and diagnostics for secret/path leakage.
@@ -723,12 +723,49 @@ checks are pre-release validation work.
   or GitHub Releases; publish Snap through the Snap Store.
 - Test clean install, upgrade, uninstall, credential persistence/removal, sandbox permissions,
   background operation, and provider access for every package.
+- Prepare the workflow positioning, demonstrations, and release materials below alongside
+  packaging, so the first public release has a clear explanation of who it helps.
 
-Exit criterion: release candidates pass privacy review and platform packaging tests.
+### Workflow positioning and marketing material
+
+Start with the following likely workflows, in provisional priority order. These are audience
+hypotheses to validate with beta users, not claims about measured popularity. For each one,
+confirm that the complete flow is straightforward on the advertised platforms; feed any
+setup friction back into the product and onboarding before presenting it as easy.
+
+| Likely workflow | What should make it easy | Message and demonstration to prepare |
+| --- | --- | --- |
+| Copy new photos, documents, and other personal files into a cloud bucket | Save a connection once, select a folder with the native picker, and run an add-only upload. Existing destination files are skipped rather than overwritten or deleted. | “Copy new files to your own cloud storage without overwriting what is already there.” Show first setup, a repeat run with newly added files, and a clear results summary. Explain that changed existing files are skipped too. |
+| Keep dated snapshots of projects, documents, or creative work | Archive mode creates timestamped ZIPs from a selected folder and applies the connection's keep-last-N setting after a new archive is saved successfully. | “Keep dated ZIP snapshots of your work, with the number of copies you choose.” Demonstrate creating two snapshots, finding an older one, downloading it, and extracting it with a standard ZIP tool. |
+| Bring cloud files onto another computer or Android device | Reuse saved provider credentials, choose a local folder and cloud path, and run a download. Additive both-ways runs can copy files that exist only on either side. | “Bring the files in your bucket onto your device through a simple graphical interface.” Show a download to a second device and explain how an explicit upload or download fits into a user's routine. |
+| Update a cloud copy of a working folder or a curated file collection | Mirror mode compares the selected source and destination and presents overwrites and deletions for confirmation before running. | “Review what will change before you mirror a folder.” Demonstrate an added, changed, and removed file in the review, then the resulting destination. This can cover project folders or collections used by other tools. |
+| Recreate a familiar set of connections on another device | Export selected connections as JSON, import them under that device's Local Root, select its provider bindings, and verify before syncing. Credentials remain device-local. | “Set up your connections once, then take their definitions to your other devices.” Show the import review and path mapping, including the separate credential and folder-access setup that each device still needs. |
+
+- Turn the validated workflows into a concise product page, a getting-started guide, and
+  provider-specific setup guides for R2, B2, and S3. Lead with the user's task and outcome;
+  explain provider credentials, endpoints, and bucket access at the point they are needed.
+- Prepare store listing copy, platform-specific screenshots with short benefit-led captions,
+  and short walkthrough clips. Prioritise the saved connection, native folder selection,
+  mirror review, archive retention, and readable results rather than screenshots of settings
+  alone. Use synthetic files and demo accounts throughout.
+- Prepare a consistent logo/icon, feature artwork required by the chosen stores, a small
+  press kit, and a release announcement. Keep editable source assets and an inventory of
+  which platform, workflow, and build each capture represents.
+- Make the distinction between a free-to-use app and the user's separately billed cloud
+  storage clear. Describe Android ads consistently with the app's privacy presentation.
+  Position support for the three providers without unsupported price or reliability rankings.
+- Keep the promises precise: runs are initiated manually; there is no scheduling or live
+  folder watching. Additive both-ways copying is not conflict-resolving document sync.
+  ZIP snapshots are not an in-app restore system, and SyncPak does not encrypt file contents
+  before transfer. Do not imply that mirror preserves deleted files or historical versions.
+
+Exit criterion: release candidates pass privacy review and platform packaging tests, and the
+workflow messaging and draft release materials are ready for validation against those builds.
 
 Status: Not started. The in-app privacy and diagnostics screens exist, but the privacy
 policy, consent/AdMob work, signed release packages, release CI, and package lifecycle
-testing are not complete.
+testing are not complete. Workflow validation and preparation of marketing assets are also
+outstanding.
 
 ## 9. Release Hardening
 
@@ -737,8 +774,21 @@ testing are not complete.
   credentials, permission loss, full disks, archive collisions, and mass mirror deletion.
 - Complete dependency/licence review, security review, accessibility audit, translation-ready
   string extraction, and user documentation.
+- Have beta users attempt the proposed marketing workflows using the draft guides. Record
+  which tasks they actually value, where setup or terminology causes confusion, and whether
+  they can reach the advertised result. Use that evidence to choose the lead workflow and
+  revise the product page, store copy, screenshots, and walkthroughs.
+- Rehearse every published demonstration on release candidates using realistic sample
+  folders, including a repeat run and retrieval of an archived snapshot. Confirm that each
+  claimed convenience works on the platform shown; fix product friction or narrow the claim.
+- Capture final screenshots and clips from the tested builds. Check that visible labels,
+  supported platforms/providers, download links, privacy disclosures, and setup instructions
+  match the release, and that the materials contain no real credentials or personal paths.
+- Assemble the final launch bundle: product/download page, store assets, quickstarts, press
+  kit, release notes, and announcement copy. Include these in release review before publishing.
 - Release only when there are no known paths to silent data loss and every warning/error
   gives the user a concrete next action.
 
 Status: Not started. This milestone depends on the outstanding release integration and on
-the end-to-end, security, accessibility, licensing, documentation, and failure-matrix work.
+the end-to-end, security, accessibility, licensing, documentation, failure-matrix, and
+workflow/marketing validation work.
