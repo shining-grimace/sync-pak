@@ -72,6 +72,13 @@ pub(crate) fn configure(
     let edit_diagnostics = Rc::clone(&diagnostics);
     let edit_buckets = Rc::clone(&buckets);
     window.on_request_connection_edit(move |id| {
+        if let Some(window) = weak.upgrade()
+            && window.get_busy_connection_id() == id
+            && !id.is_empty()
+        {
+            window.set_status_message("This connection is in use by a running operation.".into());
+            return;
+        }
         connection_form_state::show_edit(
             &weak,
             &edit_configuration,
@@ -197,6 +204,7 @@ fn save(
         retention,
         allow_upload,
         allow_download,
+        window.get_connection_form_show_preview(),
     )
     .and_then(|mut draft| {
         let repository = ConnectionRepository::new(&configuration);
@@ -216,15 +224,16 @@ fn save(
             connection_list_controller::show(weak, configuration, diagnostics);
             window.set_notice_message("Connection saved.".into());
         }
-        Err(_) => {
+        Err(error) => {
             window.set_connection_save_after_verification(false);
             diagnostics_controller::present(
                 &window,
                 &diagnostics,
                 "Connection could not be saved",
                 "connection save failed",
-                "SyncPak could not save this connection. Check configuration storage and try again.",
-            )
+                "SyncPak could not save this connection.",
+            );
+            window.set_status_message(error.into());
         }
     }
 }

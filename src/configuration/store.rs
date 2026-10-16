@@ -73,7 +73,9 @@ impl ConfigStore {
     pub fn save(&self, config: &AppConfig) -> Result<(), ConfigurationError> {
         config.validate().map_err(ConfigurationError::Invalid)?;
         let contents = super::lists::encode(config).map_err(ConfigurationError::Portable)?;
-        atomic_write(&self.path, &contents).map_err(ConfigurationError::Io)
+        super::run_guard::save(&self.path, config, || {
+            atomic_write(&self.path, &contents).map_err(ConfigurationError::Io)
+        })
     }
 
     fn decode(&self, contents: &[u8]) -> Result<AppConfig, ConfigurationError> {

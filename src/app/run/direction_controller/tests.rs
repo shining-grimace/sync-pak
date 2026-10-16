@@ -19,6 +19,7 @@ fn archive_connection() -> ConnectionConfig {
         mode: SyncMode::Archive,
         allow_upload: true,
         allow_download: true,
+        show_preview: true,
         keep_last_archives: Some(3),
         verified: false,
     }

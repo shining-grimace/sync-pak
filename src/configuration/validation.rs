@@ -31,6 +31,14 @@ pub(super) fn validate(config: &AppConfig) -> Result<(), ValidationErrors> {
         }
     }
     for connection in &config.connections {
+        if let Err(error) = super::validate_run_policy(
+            connection.mode,
+            connection.allow_upload,
+            connection.allow_download,
+            connection.show_preview,
+        ) {
+            errors.push(error);
+        }
         required(&connection.name, "Connection name", &mut errors);
         validate_name(&connection.name, "Connection name", &mut errors);
         required(&connection.bucket, "Bucket", &mut errors);

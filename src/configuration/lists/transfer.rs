@@ -36,6 +36,7 @@ pub fn portable(config: &AppConfig, c: &ConnectionConfig) -> Result<PortableConn
         mode: c.mode,
         allow_upload: c.allow_upload,
         allow_download: c.allow_download,
+        show_preview: c.show_preview,
         keep_last_archives: c.keep_last_archives,
     };
     ListDocument::new(vec![connection.clone()]).validate()?;
@@ -135,6 +136,7 @@ pub fn import_list(
             mode: incoming.mode,
             allow_upload: incoming.allow_upload,
             allow_download: incoming.allow_download,
+            show_preview: incoming.show_preview,
             keep_last_archives: incoming.keep_last_archives,
             verified: false,
         };

@@ -68,6 +68,11 @@ class SyncPakActivity : NativeActivity() {
         SyncExecutionNotification.update(this, connectionName, currentFile, totalFiles)
     }
 
+    fun finishSyncExecution(connectionName: String, summary: String) {
+        stopSyncExecution()
+        SyncExecutionNotification.complete(applicationContext, connectionName, summary)
+    }
+
     fun stopSyncExecution() {
         stopService(Intent(this, SyncExecutionService::class.java))
     }

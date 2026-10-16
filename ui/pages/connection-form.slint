@@ -1,3 +1,4 @@
+import { DangerCard } from "../components/cards.slint";
 import { TransportFields } from "../components/transport-fields.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -20,6 +21,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
     in-out property <int> connection-form-mode;
     in-out property <bool> connection-form-allow-upload;
     in-out property <bool> connection-form-allow-download;
+    in-out property <bool> connection-form-show-preview: true;
     in-out property <string> connection-form-retention;
     in property <[string]> provider-names;
     in property <[string]> provider-buckets;
@@ -256,7 +258,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
         text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
     }
     if connection-mode.current-index == 1: DescriptionLabel {
-        text: "Attempts to make the destination match the source. Overwrites and deletions are always shown for confirmation before the run starts. Any files or metadata that cannot be matched are listed when the operation finishes.";
+        text: "Attempts to make the destination match the source. Any files or metadata that cannot be matched are listed when the operation finishes.";
     }
     if connection-mode.current-index == 2: VerticalLayout {
         spacing: Dimensions.element-gap;
@@ -282,7 +284,7 @@ export component ConnectionFormPage inherits CenteredPageRoot {
         text: "Allowed directions";
     }
     DescriptionLabel {
-        text: root.connection-form-mode == 0 ? "Choose which directions can be selected when this connection runs." : "Allow upload, download, or both. Choose one allowed direction for each run.";
+        text: root.connection-form-show-preview ? (root.connection-form-mode == 0 ? "Choose which directions can be selected when this connection runs." : "Allow upload, download, or both. Choose one allowed direction for each run.") : (root.connection-form-mode == 0 ? "Sync runs automatically in the allowed directions." : "Choose one direction for automatic sync.");
     }
     HorizontalLayout {
         spacing: Dimensions.element-gap;
@@ -301,6 +303,31 @@ export component ConnectionFormPage inherits CenteredPageRoot {
             clicked => {
                 root.connection-form-allow-download = !root.connection-form-allow-download;
             }
+        }
+    }
+    SectionHeadingLabel {
+        text: "Show Preview";
+    }
+    DescriptionLabel {
+        text: "Show the preflight screen before running a sync to preview the file transfers that will occur";
+    }
+    ComboBox {
+        accessible-label: "Show Preview";
+        model: ["Show preview before sync", "Don't show preview"];
+        current-index: root.connection-form-show-preview ? 0 : 1;
+        enabled: !root.connection-verifying && !root.folder-picker-open;
+        selected => {
+            root.connection-form-show-preview = self.current-index == 0;
+        }
+    }
+    if !root.connection-form-show-preview && root.connection-form-mode != 0 && root.connection-form-allow-upload && root.connection-form-allow-download: ErrorLabel {
+        text: "Choose one allowed direction for Mirror or Archive when preview is disabled.";
+    }
+    if root.connection-form-mode == 1 && !root.connection-form-show-preview: DangerCard {
+        accessible-role: region;
+        accessible-label: "Mirror mode without preview";
+        ErrorLabel {
+            text: "Mirror mode can perform destructive changes, like deleting an entire directory if it does not exist on the mirrored source. Previewing changes before running sync is recommended for important files.";
         }
     }
     ActionGroup {

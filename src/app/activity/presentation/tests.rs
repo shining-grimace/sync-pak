@@ -21,6 +21,7 @@ fn snapshot() -> ActivitySnapshot {
             mode: SyncMode::AddOnly,
             allow_upload: true,
             allow_download: true,
+            show_preview: true,
             keep_last_archives: None,
             verified: false,
         },
@@ -48,7 +49,7 @@ fn presents_terminal_results_from_the_immutable_activity_snapshot() {
     );
     assert_eq!(presentation.status, "Completed");
     assert_eq!(presentation.progress_summary, "");
-    assert_eq!(presentation.result_summary, "0 items completed");
+    assert_eq!(presentation.result_summary, "No changes were needed.");
     assert!(!presentation.can_cancel);
     assert!(!presentation.can_remove);
 }
@@ -148,8 +149,10 @@ fn skipped_files_are_counted_once_at_the_end_of_results() {
     while progress.start_next().is_some() {
         assert!(progress.complete_current());
     }
+    let result = progress.finish();
+    assert_eq!(result.summary(), "1 item completed · 2 files skipped");
     assert_eq!(
-        super::result_details(&progress.finish()),
+        super::result_details(&result),
         ["Completed: new.jpg", "2 files skipped"]
     );
 }
@@ -161,10 +164,9 @@ fn an_all_skipped_run_shows_a_summary_without_file_rows() {
     }]);
     progress.start_next();
     assert!(progress.complete_current());
-    assert_eq!(
-        super::result_details(&progress.finish()),
-        ["1 file skipped"]
-    );
+    let result = progress.finish();
+    assert_eq!(result.summary(), "0 items completed · 1 file skipped");
+    assert_eq!(super::result_details(&result), ["1 file skipped"]);
 }
 
 #[test]

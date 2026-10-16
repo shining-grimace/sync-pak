@@ -22,6 +22,7 @@ pub struct PortableConnection {
     pub mode: SyncMode,
     pub allow_upload: bool,
     pub allow_download: bool,
+    pub show_preview: bool,
     pub keep_last_archives: Option<u32>,
 }
 

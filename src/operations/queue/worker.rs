@@ -30,12 +30,20 @@ pub(crate) fn start<E: OperationExecutor + Send + Sync + 'static>(
                 .expect("active connection mutex poisoned") =
                 Some(entry.plan.connection_id.clone());
             // Progress callbacks update the queue, so execution must not hold its mutex.
-            let result = execute(&*executor, background.as_deref(), &entry, &shared);
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                execute(&*executor, background.as_deref(), &entry, &shared)
+            })).unwrap_or_else(|_| {
+                if let Some(background) = background.as_deref() { let _ = background.stop(); }
+                ExecutionResult::failed_before_start_with_message("The operation stopped unexpectedly. Some files may have changed. Review the folders before trying again.")
+            });
             let (queue, _) = &*shared;
             let _ = queue
                 .lock()
                 .expect("queue mutex poisoned")
                 .finish(entry.operation_id, result);
+            if let Some(path) = &entry.configuration_path {
+                crate::configuration::run_guard::release(path, &entry.plan.connection_id);
+            }
             *active_connection
                 .lock()
                 .expect("active connection mutex poisoned") = None;
@@ -78,7 +86,7 @@ fn execute<E: OperationExecutor>(
     if foreground.is_ok()
         && let Some(background) = background
     {
-        let _ = background.stop();
+        let _ = background.finish(&entry.snapshot.connection_name, &result.summary());
     }
     if result.is_terminal() {
         result

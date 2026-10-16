@@ -95,11 +95,12 @@ fn request(
         retention,
         window.get_connection_form_allow_upload(),
         window.get_connection_form_allow_download(),
+        window.get_connection_form_show_preview(),
     ) {
         Ok(connection) => connection,
-        Err(_) => {
+        Err(error) => {
             window.set_connection_save_after_verification(false);
-            window.set_status_message("The connection settings are no longer available.".into());
+            window.set_status_message(error.into());
             return;
         }
     };

@@ -34,6 +34,20 @@ pub struct ConfirmedOperation {
 }
 
 impl ConfirmedOperation {
+    /// Saved no-preview policy authorizes this exact freshly collected plan.
+    pub fn from_automatic(request: RunRequest, preflight: Preflight) -> Result<Self, StartError> {
+        if request.connection.show_preview
+            || request.connection.mode != preflight.plan().mode()
+            || request.direction != preflight.plan().direction()
+        {
+            return Err(StartError::AcknowledgementRequired);
+        }
+        Ok(Self {
+            request,
+            preflight: ConfirmedPreflight::from_review(preflight, true)?,
+        })
+    }
+
     pub fn request(&self) -> &RunRequest {
         &self.request
     }
@@ -81,6 +95,7 @@ mod tests {
                 mode: SyncMode::Mirror,
                 allow_upload: true,
                 allow_download: true,
+                show_preview: true,
                 keep_last_archives: None,
                 verified: false,
             },
@@ -126,6 +141,18 @@ mod tests {
             CaseSensitivity::Sensitive,
         )
         .unwrap()
+    }
+
+    #[test]
+    fn saved_no_preview_policy_authorizes_destructive_plans_without_acknowledgement() {
+        let mut request = request();
+        assert_eq!(
+            super::ConfirmedOperation::from_automatic(request.clone(), preflight()),
+            Err(StartError::AcknowledgementRequired)
+        );
+        request.connection.show_preview = false;
+        let automatic = super::ConfirmedOperation::from_automatic(request, preflight()).unwrap();
+        assert!(automatic.preflight().destructive_confirmation().is_some());
     }
 
     #[test]

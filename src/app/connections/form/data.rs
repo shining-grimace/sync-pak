@@ -21,6 +21,7 @@ pub(crate) fn reset(window: &AppWindow) {
     window.set_connection_form_mode(0);
     window.set_connection_form_allow_upload(true);
     window.set_connection_form_allow_download(true);
+    window.set_connection_form_show_preview(true);
     window.set_connection_form_retention("1".into());
     set_verified_buckets(window, None);
     window.set_connection_providers_loading(false);
@@ -74,6 +75,7 @@ pub(crate) fn populate(
     window.set_connection_form_mode(mode_index(connection.mode));
     window.set_connection_form_allow_upload(connection.allow_upload);
     window.set_connection_form_allow_download(connection.allow_download);
+    window.set_connection_form_show_preview(connection.show_preview);
     window.set_connection_form_retention(
         connection
             .keep_last_archives
@@ -118,6 +120,7 @@ fn form_signature(window: &AppWindow) -> String {
             window.get_connection_form_retention(),
             window.get_connection_form_allow_upload(),
             window.get_connection_form_allow_download(),
+            window.get_connection_form_show_preview(),
             (
                 window.get_connection_form_use_provider_settings(),
                 window.get_connection_form_endpoint(),

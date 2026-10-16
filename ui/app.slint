@@ -177,6 +177,7 @@ export component AppWindow inherits Window {
     in-out property <int> connection-form-mode;
     in-out property <bool> connection-form-allow-upload: true;
     in-out property <bool> connection-form-allow-download: true;
+    in-out property <bool> connection-form-show-preview: true;
     in-out property <string> connection-form-retention: "1";
     in-out property <int> connection-provider-generation;
     in-out property <bool> connection-form-use-provider-settings: true;
@@ -282,6 +283,10 @@ export component AppWindow inherits Window {
     callback dismiss-activity-result();
     callback retry-activity-result();
     callback request-run-connection(string);
+    callback start-automatic-connection(string);
+    in-out property <string> busy-connection-id;
+    in-out property <string> busy-provider-id;
+    in-out property <bool> operation-busy;
     callback verify-saved-connection(string);
     callback set-run-upload-selected(bool);
     callback set-run-download-selected(bool);
@@ -503,6 +508,7 @@ export component AppWindow inherits Window {
 
             if root.page == Page.providers: ProvidersPage {
                 providers: root.providers;
+                busy-provider-id: root.busy-provider-id;
                 load-failed: root.providers-load-failed;
                 show-providers => {
                     root.show-providers();
@@ -583,6 +589,10 @@ export component AppWindow inherits Window {
 
             if root.page == Page.connections: ConnectionsPage {
                 connections: root.connections;
+                operation-busy: root.operation-busy;
+                show-activity-result(id) => {
+                    root.show-activity-result(id);
+                }
                 connections-total: root.connections-total;
                 providers-total: root.providers-total;
                 connection-filter <=> root.connection-filter;
@@ -628,6 +638,7 @@ export component AppWindow inherits Window {
                 connection-form-mode <=> root.connection-form-mode;
                 connection-form-allow-upload <=> root.connection-form-allow-upload;
                 connection-form-allow-download <=> root.connection-form-allow-download;
+                connection-form-show-preview <=> root.connection-form-show-preview;
                 connection-form-retention <=> root.connection-form-retention;
                 connection-form-use-provider-settings <=> root.connection-form-use-provider-settings;
                 connection-form-endpoint <=> root.connection-form-endpoint;

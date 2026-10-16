@@ -118,7 +118,16 @@ pub(crate) fn configure(
 
     let weak = window.as_weak();
     let edit_configuration = Rc::clone(configuration);
-    window.on_request_provider_edit(move |id| edit(&weak, &edit_configuration, &diagnostics, id));
+    window.on_request_provider_edit(move |id| {
+        if let Some(window) = weak.upgrade()
+            && window.get_busy_provider_id() == id
+            && !id.is_empty()
+        {
+            window.set_status_message("This provider is in use by a running operation.".into());
+            return;
+        }
+        edit(&weak, &edit_configuration, &diagnostics, id)
+    });
 }
 
 fn verify(

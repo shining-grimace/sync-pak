@@ -6,7 +6,7 @@
 - Bump target Android version to API 37
 - Set up release config for Android
 - Target latest Android
-- New setting per connection: approve transfers
+- New setting per connection: "Last Run" timestamp shown in the connections list
 - Android connection widget (runs in background if transfers don't use approval)
 - Bump Rust and Android dependencies where possible
 - Create branding logo

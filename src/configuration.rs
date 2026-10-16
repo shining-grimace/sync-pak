@@ -6,6 +6,7 @@ mod diagnostics;
 pub mod lists;
 mod model;
 mod providers;
+pub mod run_guard;
 mod store;
 mod transport;
 mod validation;
@@ -13,11 +14,11 @@ mod validation;
 pub use connections::{ConnectionDraft, ConnectionError, ConnectionRepository};
 pub use credentials::{CredentialError, ProviderCredentials, ProviderRepository};
 pub use diagnostics::{DiagnosticLog, StructuredError};
-pub use model::CURRENT_SCHEMA_VERSION;
 pub use model::{
     AppConfig, AppearancePreference, ConnectionConfig, ConnectionId, CredentialReference,
     ProviderConfig, ProviderId, ProviderKind, ProviderOptions, SyncMode,
 };
+pub use model::{CURRENT_SCHEMA_VERSION, validate_run_policy};
 pub use providers::{DeletedProvider, ProviderDraft};
 pub use store::{ConfigStore, ConfigurationError};
 pub use transport::TransportSettings;

@@ -4,7 +4,7 @@ use crate::{
 };
 
 /// Non-secret connection details retained with an in-memory activity entry.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ActivitySnapshot {
     pub connection_name: String,
     pub mode: SyncMode,
@@ -64,6 +64,7 @@ mod tests {
             mode: SyncMode::Mirror,
             allow_upload: true,
             allow_download: true,
+            show_preview: true,
             keep_last_archives: None,
             verified: false,
         };

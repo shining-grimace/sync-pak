@@ -80,3 +80,24 @@ fn connection_list_preferences_round_trip_and_default_for_existing_settings() {
     assert!(!loaded.connections_newest_first);
     assert_eq!(loaded.connections, config.connections);
 }
+
+#[test]
+fn preview_policy_is_required_and_round_trips_in_settings_and_portable_lists() {
+    let mut config = super::config();
+    config.connections[0].show_preview = false;
+    let bytes = crate::configuration::lists::encode(&config).unwrap();
+    assert!(
+        !crate::configuration::lists::decode(&bytes)
+            .unwrap()
+            .connections[0]
+            .show_preview
+    );
+    let mut value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    value["connections"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("show_preview");
+    assert!(crate::configuration::lists::decode(&serde_json::to_vec(&value).unwrap()).is_err());
+    let document = super::document(&config);
+    assert!(!document.connections[0].show_preview);
+}

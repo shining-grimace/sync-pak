@@ -1,10 +1,13 @@
 use std::collections::VecDeque;
 
 pub mod background;
+mod cancellation;
+pub mod history;
 pub mod progress_observer;
 #[cfg(test)]
 pub mod runner;
 pub mod snapshot;
+mod submission;
 pub(crate) mod worker;
 
 use uuid::Uuid;
@@ -20,7 +23,7 @@ use crate::{
 #[cfg(test)]
 use crate::operations::operation_progress::RetryStatus;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum QueueState {
     Queued,
     Running,
@@ -34,6 +37,8 @@ pub struct QueueEntry {
     pub operation_id: Uuid,
     pub plan: OperationPlan,
     pub confirmed_operation: Option<ConfirmedOperation>,
+    pub automatic_request: Option<crate::operations::request::RunRequest>,
+    pub configuration_path: Option<std::path::PathBuf>,
     pub snapshot: ActivitySnapshot,
     pub state: QueueState,
     pub progress: Option<OperationProgress>,
@@ -44,6 +49,8 @@ pub struct QueueEntry {
 #[derive(Default)]
 pub struct OperationQueue {
     entries: VecDeque<QueueEntry>,
+    history_path: Option<std::path::PathBuf>,
+    pub history_error: Option<String>,
 }
 
 impl OperationQueue {
@@ -73,12 +80,15 @@ impl OperationQueue {
             operation_id,
             plan,
             confirmed_operation,
+            automatic_request: None,
+            configuration_path: None,
             snapshot,
             state: QueueState::Queued,
             progress: None,
             result: None,
             cancellation_requested: false,
         });
+        self.persist();
         operation_id
     }
 
@@ -113,15 +123,6 @@ impl OperationQueue {
         true
     }
 
-    /// Marks a running entry as cancelling while the executor stops at its next safe point.
-    pub fn request_cancel(&mut self, operation_id: Uuid) -> Option<String> {
-        let entry = self.entries.iter_mut().find(|entry| {
-            entry.operation_id == operation_id && entry.state == QueueState::Running
-        })?;
-        entry.cancellation_requested = true;
-        Some(entry.plan.connection_id.clone())
-    }
-
     /// Adds retry status while retaining the latest phase, counts, and current path.
     #[cfg(test)]
     pub fn update_retry(&mut self, operation_id: Uuid, retry: RetryStatus) -> bool {
@@ -150,41 +151,8 @@ impl OperationQueue {
         };
         entry.state = state;
         entry.result = Some(result);
+        self.persist();
         true
-    }
-
-    /// Cancels a queued operation without starting it, retaining it in activity history.
-    pub fn cancel_queued(&mut self, operation_id: Uuid) -> bool {
-        let Some(entry) = self
-            .entries
-            .iter_mut()
-            .find(|entry| entry.operation_id == operation_id && entry.state == QueueState::Queued)
-        else {
-            return false;
-        };
-        entry.state = QueueState::Cancelled;
-        entry.result = Some(ExecutionResult::cancelled_before_start());
-        true
-    }
-
-    /// Removes queued work entirely, as requested from the Activity list.
-    pub fn remove_queued(&mut self, operation_id: Uuid) -> bool {
-        let Some(index) = self.entries.iter().position(|entry| {
-            entry.operation_id == operation_id && entry.state == QueueState::Queued
-        }) else {
-            return false;
-        };
-        self.entries.remove(index);
-        true
-    }
-
-    /// Removes queued work for a connection before its configuration is deleted.
-    pub fn remove_queued_for_connection(&mut self, connection_id: &str) -> usize {
-        let before = self.entries.len();
-        self.entries.retain(|entry| {
-            entry.state != QueueState::Queued || entry.plan.connection_id != connection_id
-        });
-        before - self.entries.len()
     }
 
     #[cfg(test)]
@@ -206,6 +174,7 @@ impl OperationQueue {
                 QueueState::Completed | QueueState::Failed | QueueState::Cancelled
             )
         });
+        self.persist();
         before - self.entries.len()
     }
 
@@ -235,198 +204,4 @@ fn terminal_queue_state(state: ExecutionState) -> Option<QueueState> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{OperationQueue, QueueState};
-    use crate::{
-        configuration::{ConnectionConfig, ConnectionId, ProviderId, SyncMode},
-        operations::execution::{ExecutionProgress, ExecutionState},
-        operations::queue::snapshot::ActivitySnapshot,
-        preflight::planning::{Direction, OperationPlan},
-    };
-
-    fn snapshot(name: &str) -> ActivitySnapshot {
-        ActivitySnapshot::from_connection(
-            &ConnectionConfig {
-                transport: None,
-                id: ConnectionId::new(),
-                name: name.into(),
-                provider_id: ProviderId::new(),
-                bucket: "bucket".into(),
-                remote_path: "path".into(),
-                local_path: "/local".into(),
-                mode: SyncMode::AddOnly,
-                allow_upload: true,
-                allow_download: true,
-                keep_last_archives: None,
-                verified: false,
-            },
-            "provider",
-            Direction::Upload,
-        )
-    }
-
-    #[test]
-    fn queue_preserves_submission_order() {
-        let mut queue = OperationQueue::default();
-        queue.push(
-            OperationPlan::new("first", SyncMode::AddOnly, Direction::Upload),
-            snapshot("First"),
-        );
-        queue.push(
-            OperationPlan::new("second", SyncMode::Mirror, Direction::Download),
-            snapshot("Second"),
-        );
-
-        let first = queue.take_next().unwrap();
-        assert_eq!(first.plan.connection_id, "first");
-        assert!(queue.take_next().is_none());
-        assert!(queue.finish(first.operation_id, ExecutionProgress::new([]).finish()));
-
-        assert_eq!(queue.take_next().unwrap().plan.connection_id, "second");
-        assert!(queue.is_empty());
-    }
-
-    #[test]
-    fn terminal_results_remain_in_the_activity_list() {
-        let mut queue = OperationQueue::default();
-        queue.push(
-            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Connection"),
-        );
-        let entry = queue.take_next().unwrap();
-        let result = ExecutionProgress::new([]).cancel();
-
-        assert!(queue.finish(entry.operation_id, result.clone()));
-
-        let stored = queue.entries().next().unwrap();
-        assert_eq!(stored.state, QueueState::Cancelled);
-        assert_eq!(stored.result.as_ref(), Some(&result));
-        assert_eq!(
-            stored.result.as_ref().unwrap().state,
-            ExecutionState::Cancelled
-        );
-    }
-
-    #[test]
-    fn queued_operation_can_be_cancelled_without_starting() {
-        let mut queue = OperationQueue::default();
-        let operation_id = queue.push(
-            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Connection"),
-        );
-
-        assert!(queue.cancel_queued(operation_id));
-
-        let entry = queue.entries().next().unwrap();
-        assert_eq!(entry.state, QueueState::Cancelled);
-        assert_eq!(
-            entry.result.as_ref().unwrap().state,
-            ExecutionState::Cancelled
-        );
-        assert!(queue.take_next().is_none());
-    }
-
-    #[test]
-    fn deleting_a_connection_removes_only_its_queued_work() {
-        let mut queue = OperationQueue::default();
-        queue.push(
-            OperationPlan::new("remove", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Remove"),
-        );
-        queue.push(
-            OperationPlan::new("keep", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Keep"),
-        );
-
-        assert_eq!(queue.remove_queued_for_connection("remove"), 1);
-
-        assert_eq!(queue.entries().count(), 1);
-        assert_eq!(queue.take_next().unwrap().plan.connection_id, "keep");
-    }
-
-    #[test]
-    fn activity_is_newest_first_and_can_clear_only_terminal_entries() {
-        let mut queue = OperationQueue::default();
-        let completed = queue.push(
-            OperationPlan::new("old", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Old"),
-        );
-        let entry = queue.take_next().unwrap();
-        assert_eq!(entry.operation_id, completed);
-        assert!(queue.finish(entry.operation_id, ExecutionProgress::new([]).finish()));
-        queue.push(
-            OperationPlan::new("new", SyncMode::AddOnly, Direction::Upload),
-            snapshot("New"),
-        );
-
-        assert_eq!(
-            queue
-                .activity()
-                .map(|entry| entry.snapshot.connection_name.as_str())
-                .collect::<Vec<_>>(),
-            ["New", "Old"]
-        );
-        assert_eq!(queue.clear_completed(), 1);
-        assert_eq!(queue.entries().count(), 1);
-        assert_eq!(queue.running(), None);
-    }
-
-    #[test]
-    fn queued_work_can_be_removed_without_creating_activity_history() {
-        let mut queue = OperationQueue::default();
-        let operation_id = queue.push(
-            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Connection"),
-        );
-
-        assert!(queue.remove_queued(operation_id));
-        assert!(queue.entries().next().is_none());
-        assert!(!queue.remove_queued(operation_id));
-    }
-
-    #[test]
-    fn running_work_retains_its_last_progress_snapshot_for_activity() {
-        let mut queue = OperationQueue::default();
-        queue.push(
-            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Connection"),
-        );
-        let entry = queue.take_next().unwrap();
-        let progress = crate::operations::operation_progress::OperationProgress {
-            completed_items: 1,
-            total_items: 2,
-            ..Default::default()
-        };
-
-        assert!(queue.update_progress(entry.operation_id, progress.clone()));
-        assert_eq!(queue.entries().next().unwrap().progress, Some(progress));
-    }
-
-    #[test]
-    fn retry_status_preserves_the_existing_progress_snapshot() {
-        let mut queue = OperationQueue::default();
-        queue.push(
-            OperationPlan::new("connection", SyncMode::AddOnly, Direction::Upload),
-            snapshot("Connection"),
-        );
-        let entry = queue.take_next().unwrap();
-        let retry = crate::operations::operation_progress::RetryStatus {
-            next_attempt: 2,
-            max_attempts: 4,
-            delay_millis: 250,
-        };
-
-        assert!(queue.update_retry(entry.operation_id, retry));
-        assert_eq!(
-            queue
-                .entries()
-                .next()
-                .unwrap()
-                .progress
-                .as_ref()
-                .unwrap()
-                .retry,
-            Some(retry)
-        );
-    }
-}
+mod tests;

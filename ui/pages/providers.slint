@@ -20,6 +20,7 @@ import { ContentGroup, ListItem, ListView } from "../components/list-and-action-
 
 export component ProvidersPage inherits CenteredPageRoot {
     in property <[ProviderRow]> providers;
+    in property <string> busy-provider-id;
     in property <bool> load-failed;
     callback show-providers();
     callback show-add-provider();
@@ -114,7 +115,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                         CompactCardPrimaryActionButton {
                             accessible-label: "Verify provider " + provider.name;
                             text: provider.verifying ? "Verifying…" : "Verify";
-                            enabled: !provider.verifying;
+                            enabled: !provider.verifying && provider.id != root.busy-provider-id;
                             clicked => {
                                 root.verify-saved-provider(provider.id);
                             }
@@ -123,6 +124,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                         CompactCardSecondaryActionButton {
                             accessible-label: "Edit provider " + provider.name;
                             text: "Edit";
+                            enabled: provider.id != root.busy-provider-id;
                             clicked => {
                                 root.request-provider-edit(provider.id);
                             }
@@ -131,6 +133,7 @@ export component ProvidersPage inherits CenteredPageRoot {
                         CompactCardSecondaryActionButton {
                             accessible-label: "Delete provider " + provider.name;
                             text: "Delete";
+                            enabled: provider.id != root.busy-provider-id;
                             clicked => {
                                 root.request-provider-delete(provider.id);
                             }

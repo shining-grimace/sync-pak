@@ -8,6 +8,12 @@ pub(super) fn validate(document: &ListDocument) -> Result<(), String> {
     }
     let mut ids = HashSet::new();
     for c in &document.connections {
+        crate::configuration::validate_run_policy(
+            c.mode,
+            c.allow_upload,
+            c.allow_download,
+            c.show_preview,
+        )?;
         uuid::Uuid::parse_str(c.id.as_str()).map_err(|_| "Invalid connection identity.")?;
         if !ids.insert(c.id.as_str()) {
             return Err("Duplicate connection identity.".into());

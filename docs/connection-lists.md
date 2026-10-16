@@ -54,6 +54,9 @@ Choose **Export JSON**, select compatible connections in the review, then **Save
 JSON**. Only the selected connections are exported. Credentials, local absolute
 paths, verification, activity, and appearance are excluded.
 
+Preview policy is included as the required `show_preview` boolean. Imported
+connections retain that policy but must be verified on the new device before running.
+
 Imports and root edits are staged until confirmation. Cancel or Escape leaves
 settings unchanged. A concurrent settings change causes the review to reject a
 stale save. Import changes are validated and saved atomically; importing never

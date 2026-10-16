@@ -9,4 +9,8 @@ pub trait BackgroundExecution {
         progress: &OperationProgress,
     ) -> Result<(), CapabilityError>;
     fn stop(&self) -> Result<(), CapabilityError>;
+    /// Ends background execution and reports an outcome without requiring an open window.
+    fn finish(&self, _connection_name: &str, _summary: &str) -> Result<(), CapabilityError> {
+        self.stop()
+    }
 }

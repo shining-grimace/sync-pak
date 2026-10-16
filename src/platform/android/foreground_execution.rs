@@ -65,6 +65,20 @@ pub fn update(connection_name: &str, progress: &OperationProgress) -> Result<(),
     })
 }
 
+pub fn finish(connection_name: &str, summary: &str) -> Result<(), CapabilityError> {
+    with_activity(|env, activity| {
+        let name = env.new_string(connection_name)?;
+        let summary = env.new_string(summary)?;
+        env.call_method(
+            activity,
+            jni_str!("finishSyncExecution"),
+            jni_sig!("(Ljava/lang/String;Ljava/lang/String;)V"),
+            &[(&name).into(), (&summary).into()],
+        )?;
+        Ok(())
+    })
+}
+
 pub fn stop() -> Result<(), CapabilityError> {
     with_activity(|env, activity| {
         env.call_method(

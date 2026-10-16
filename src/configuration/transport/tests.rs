@@ -66,6 +66,7 @@ fn overrides_round_trip_through_device_storage_and_connection_drafts() {
         mode: connection.mode,
         allow_upload: true,
         allow_download: false,
+        show_preview: true,
         keep_last_archives: None,
         verified: false,
     };

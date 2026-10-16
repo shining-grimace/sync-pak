@@ -55,6 +55,7 @@ fn drafts_keep_explicit_transport_settings_from_the_form() {
             "".into(),
             true,
             false,
+            true,
         )
         .unwrap();
         assert_eq!(draft.transport, connection.transport);

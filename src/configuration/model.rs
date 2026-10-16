@@ -159,9 +159,28 @@ pub struct ConnectionConfig {
     pub mode: SyncMode,
     pub allow_upload: bool,
     pub allow_download: bool,
+    pub show_preview: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_last_archives: Option<u32>,
     pub verified: bool,
+}
+
+/// Validates direction policy before settings can authorize an unattended run.
+pub fn validate_run_policy(
+    mode: SyncMode,
+    upload: bool,
+    download: bool,
+    show_preview: bool,
+) -> Result<(), String> {
+    if !upload && !download {
+        return Err("Choose at least one allowed sync direction.".into());
+    }
+    if !show_preview && mode != SyncMode::AddOnly && upload && download {
+        return Err(
+            "Choose one allowed direction for Mirror or Archive when preview is disabled.".into(),
+        );
+    }
+    Ok(())
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]

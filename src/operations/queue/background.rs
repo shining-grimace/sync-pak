@@ -1,3 +1,5 @@
+mod cancellation;
+mod lifecycle;
 use std::{
     sync::{
         Arc, Condvar, Mutex,
@@ -31,6 +33,7 @@ pub struct BackgroundQueue<E: OperationExecutor> {
 }
 
 impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
+    #[cfg(any(test, not(target_os = "android")))]
     pub fn new(executor: Arc<E>) -> Self {
         Self::new_with_background(executor, None)
     }
@@ -48,11 +51,35 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
         executor: Arc<E>,
         background: Option<Arc<dyn BackgroundExecution + Send + Sync>>,
     ) -> Self {
-        let queue = Arc::new((Mutex::new(OperationQueue::default()), Condvar::new()));
+        Self::with_queue(executor, background, OperationQueue::default())
+    }
+
+    /// Restores outcomes without restarting interrupted work. Usable by a future service host.
+    pub fn persistent(
+        executor: Arc<E>,
+        background: Option<Arc<dyn BackgroundExecution + Send + Sync>>,
+        path: std::path::PathBuf,
+    ) -> std::io::Result<Self> {
+        Ok(Self::with_queue(
+            executor,
+            background,
+            OperationQueue::restore(path)?,
+        ))
+    }
+
+    fn with_queue(
+        executor: Arc<E>,
+        background: Option<Arc<dyn BackgroundExecution + Send + Sync>>,
+        initial: OperationQueue,
+    ) -> Self {
+        let queue = Arc::new((Mutex::new(initial), Condvar::new()));
         let stopping = Arc::new(AtomicBool::new(false));
         let active_connection = Arc::new(Mutex::new(None));
         #[cfg(target_os = "android")]
-        install_android_cancellation(Arc::clone(&executor), Arc::clone(&active_connection));
+        lifecycle::install_android_cancellation(
+            Arc::clone(&executor),
+            Arc::clone(&active_connection),
+        );
         let worker = Some(crate::operations::queue::worker::start(
             background.clone(),
             Arc::clone(&executor),
@@ -80,63 +107,34 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
         operation_id
     }
 
-    /// Queues the exact reviewed operation that received any required confirmation.
-    pub fn enqueue_confirmed(
+    pub(crate) fn submit_automatic(
         &self,
-        confirmed_operation: ConfirmedOperation,
+        request: crate::operations::request::RunRequest,
         snapshot: ActivitySnapshot,
+        path: std::path::PathBuf,
     ) -> Uuid {
         let (queue, wake) = &*self.queue;
-        let operation_id = queue
+        let id = queue
             .lock()
             .expect("queue mutex poisoned")
-            .push_confirmed(confirmed_operation, snapshot);
+            .push_automatic(request, snapshot, path);
         wake.notify_one();
-        operation_id
+        id
     }
 
-    /// Requests cancellation of queued work immediately, or of the active executor.
-    pub fn cancel(&self, operation_id: Uuid) -> Result<bool, CapabilityError> {
-        let connection_id = {
-            let (queue, _) = &*self.queue;
-            let mut queue = queue.lock().expect("queue mutex poisoned");
-            if queue.cancel_queued(operation_id) {
-                return Ok(true);
-            }
-            queue.request_cancel(operation_id)
-        };
-        match connection_id {
-            Some(connection_id) => self.executor.cancel(&connection_id).map(|()| true),
-            None => Ok(false),
-        }
-    }
-
-    /// Removes waiting work without recording a cancelled result.
-    pub fn remove_queued(&self, operation_id: Uuid) -> bool {
-        let (queue, _) = &*self.queue;
-        queue
-            .lock()
-            .expect("queue mutex poisoned")
-            .remove_queued(operation_id)
-    }
-
-    /// Cancels active work and removes queued work before its connection is deleted.
-    pub fn cancel_for_connection(&self, connection_id: &str) -> Result<usize, CapabilityError> {
-        let active = {
-            let (queue, _) = &*self.queue;
-            let mut queue = queue.lock().expect("queue mutex poisoned");
-            let removed = queue.remove_queued_for_connection(connection_id);
-            (
-                removed,
-                queue
-                    .running()
-                    .is_some_and(|entry| entry.plan.connection_id == connection_id),
-            )
-        };
-        if active.1 {
-            self.executor.cancel(connection_id)?;
-        }
-        Ok(active.0)
+    pub(crate) fn submit_reviewed(
+        &self,
+        operation: ConfirmedOperation,
+        snapshot: ActivitySnapshot,
+        path: std::path::PathBuf,
+    ) -> Uuid {
+        let (queue, wake) = &*self.queue;
+        let mut queue = queue.lock().expect("queue mutex poisoned");
+        let id = queue.push_confirmed(operation, snapshot);
+        queue.set_configuration_path(id, path);
+        drop(queue);
+        wake.notify_one();
+        id
     }
 
     pub fn activity(&self) -> Vec<QueueEntry> {
@@ -149,6 +147,15 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             .collect()
     }
 
+    pub fn take_history_error(&self) -> Option<String> {
+        self.queue
+            .0
+            .lock()
+            .expect("queue mutex poisoned")
+            .history_error
+            .take()
+    }
+
     pub fn clear_completed(&self) -> usize {
         let (queue, _) = &*self.queue;
         queue
@@ -156,62 +163,6 @@ impl<E: OperationExecutor + Send + Sync + 'static> BackgroundQueue<E> {
             .expect("queue mutex poisoned")
             .clear_completed()
     }
-}
-
-impl<E: OperationExecutor + Send + Sync + 'static>
-    crate::operations::operation_cancellation::ConnectionOperationCanceller for BackgroundQueue<E>
-{
-    fn cancel_for_connection(&self, connection_id: &str) -> Result<usize, CapabilityError> {
-        Self::cancel_for_connection(self, connection_id)
-    }
-}
-
-impl<E: OperationExecutor> Drop for BackgroundQueue<E> {
-    fn drop(&mut self) {
-        if let Some(connection_id) = self.active_connection() {
-            let _ = self.executor.cancel(&connection_id);
-        }
-        self.stopping.store(true, Ordering::Release);
-        self.queue.1.notify_one();
-        if let Some(worker) = self.worker.take() {
-            let _ = worker.join();
-        }
-        #[cfg(target_os = "android")]
-        let _ = crate::platform::android::foreground_execution::clear_cancel_handler();
-    }
-}
-
-impl<E: OperationExecutor> BackgroundQueue<E> {
-    fn active_connection(&self) -> Option<String> {
-        self.active_connection
-            .lock()
-            .ok()
-            .and_then(|connection| connection.clone())
-            .or_else(|| {
-                self.queue.0.lock().ok().and_then(|queue| {
-                    queue
-                        .running()
-                        .map(|entry| entry.plan.connection_id.clone())
-                })
-            })
-    }
-}
-
-#[cfg(target_os = "android")]
-fn install_android_cancellation<E: OperationExecutor + Send + Sync + 'static>(
-    executor: Arc<E>,
-    active_connection: Arc<Mutex<Option<String>>>,
-) {
-    let handler = Arc::new(move || {
-        let connection_id = active_connection
-            .lock()
-            .ok()
-            .and_then(|connection| connection.clone());
-        if let Some(connection_id) = connection_id {
-            let _ = executor.cancel(&connection_id);
-        }
-    });
-    let _ = crate::platform::android::foreground_execution::set_cancel_handler(handler);
 }
 
 #[cfg(test)]

@@ -34,6 +34,15 @@ pub fn delete_connection<C: ConnectionOperationCanceller + ?Sized>(
     canceller: &C,
     connection_id: &ConnectionId,
 ) -> Result<crate::configuration::ConnectionConfig, ConnectionDeletionError> {
+    if crate::configuration::run_guard::active(configuration.path())
+        .is_some_and(|r| r.connection.id == *connection_id)
+    {
+        return Err(ConnectionDeletionError::Configuration(
+            ConnectionError::Configuration(crate::configuration::ConfigurationError::Portable(
+                "This connection is running and cannot be deleted.".into(),
+            )),
+        ));
+    }
     canceller
         .cancel_for_connection(connection_id.as_str())
         .map_err(ConnectionDeletionError::Cancellation)?;
@@ -68,6 +77,15 @@ pub fn delete_provider<C: ConnectionOperationCanceller + ?Sized, S: ProtectedCre
     canceller: &C,
     provider_id: &ProviderId,
 ) -> Result<DeletedProvider, ProviderDeletionError> {
+    if crate::configuration::run_guard::active(configuration.path())
+        .is_some_and(|r| r.provider.id == *provider_id)
+    {
+        return Err(ProviderDeletionError::Configuration(
+            crate::configuration::ConfigurationError::Portable(
+                "This provider is in use by a running operation.".into(),
+            ),
+        ));
+    }
     let connection_ids = configuration
         .load()
         .map_err(ProviderDeletionError::Configuration)?

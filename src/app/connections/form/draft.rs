@@ -16,10 +16,12 @@ pub(crate) fn draft(
     retention: SharedString,
     allow_upload: bool,
     allow_download: bool,
+    show_preview: bool,
 ) -> Result<ConnectionDraft, String> {
     let config = configuration.load().map_err(|error| error.to_string())?;
     let provider_id = provider_id(&config.providers, provider_index)?;
     let mode = mode(mode_index)?;
+    crate::configuration::validate_run_policy(mode, allow_upload, allow_download, show_preview)?;
     let keep_last_archives = archive_retention(mode, &retention)?;
     Ok(ConnectionDraft {
         transport,
@@ -31,6 +33,7 @@ pub(crate) fn draft(
         mode,
         allow_upload,
         allow_download,
+        show_preview,
         keep_last_archives,
         verified: false,
     })

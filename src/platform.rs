@@ -110,6 +110,9 @@ impl BackgroundExecution for PlatformBackgroundExecution {
     fn stop(&self) -> Result<(), CapabilityError> {
         stop_background_execution()
     }
+    fn finish(&self, connection_name: &str, summary: &str) -> Result<(), CapabilityError> {
+        crate::platform::android::foreground_execution::finish(connection_name, summary)
+    }
 }
 
 #[cfg(target_os = "linux")]

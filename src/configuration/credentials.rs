@@ -126,6 +126,8 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
     }
 
     pub fn delete(&self, id: &ProviderId) -> Result<DeletedProvider, CredentialError> {
+        let _edit = super::run_guard::edit_provider(self.configuration.path(), id.as_str())
+            .map_err(CredentialError::Configuration)?;
         let mut config = self
             .configuration
             .load()
@@ -170,6 +172,9 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
         provider: ProviderConfig,
         secret: &ProviderCredentials,
     ) -> Result<(), CredentialError> {
+        let _edit =
+            super::run_guard::edit_provider(self.configuration.path(), provider.id.as_str())
+                .map_err(CredentialError::Configuration)?;
         let provider_id = provider.id.clone();
         let serialized = serde_json::to_vec(secret).map_err(|_| CredentialError::Serialization)?;
         let previous_secret = match self.credentials.load(provider.id.as_str()) {

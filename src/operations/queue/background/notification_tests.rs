@@ -126,6 +126,7 @@ fn snapshot(name: &str) -> ActivitySnapshot {
             mode: SyncMode::AddOnly,
             allow_upload: true,
             allow_download: true,
+            show_preview: true,
             keep_last_archives: None,
             verified: false,
         },

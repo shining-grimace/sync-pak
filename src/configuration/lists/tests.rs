@@ -38,6 +38,7 @@ pub(crate) fn config() -> AppConfig {
         mode: SyncMode::Mirror,
         allow_upload: true,
         allow_download: false,
+        show_preview: true,
         keep_last_archives: None,
         verified: true,
     };

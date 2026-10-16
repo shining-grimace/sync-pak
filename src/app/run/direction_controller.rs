@@ -18,6 +18,15 @@ pub(crate) fn configure(
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
 ) {
+    #[cfg(not(feature = "provider-s3"))]
+    {
+        let weak = window.as_weak();
+        window.on_start_automatic_connection(move |_| {
+            if let Some(window) = weak.upgrade() {
+                window.set_status_message("This build cannot connect to cloud storage.".into());
+            }
+        });
+    }
     let weak = window.as_weak();
     let run_configuration = Rc::clone(configuration);
     let diagnostics_for_run = Rc::clone(&diagnostics);
@@ -174,6 +183,10 @@ fn show(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if crate::configuration::run_guard::active(configuration.path()).is_some() {
+        window.set_status_message("An operation is already running. Wait for it to finish.".into());
+        return;
+    }
     let run = configuration.load().ok().and_then(|config| {
         config
             .connections
@@ -194,6 +207,10 @@ fn show(
         Some((connection, remote_endpoint)) => {
             if !connection.verified {
                 window.set_status_message("Verify this connection before syncing.".into());
+                return;
+            }
+            if !connection.show_preview {
+                window.invoke_start_automatic_connection(id);
                 return;
             }
             let archive_upload_details = archive_details(&connection, Direction::Upload);

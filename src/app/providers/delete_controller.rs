@@ -23,6 +23,13 @@ pub(crate) fn configure(
     let request_config = Rc::clone(configuration);
     let request_diagnostics = Rc::clone(&diagnostics);
     window.on_request_provider_delete(move |id| {
+        if let Some(window) = weak.upgrade()
+            && window.get_busy_provider_id() == id
+            && !id.is_empty()
+        {
+            window.set_status_message("This provider is in use by a running operation.".into());
+            return;
+        }
         request_delete(&weak, &request_config, &request_diagnostics, id);
     });
 

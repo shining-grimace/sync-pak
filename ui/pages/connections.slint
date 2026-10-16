@@ -28,6 +28,8 @@ export component ConnectionsPage inherits CenteredPageRoot {
     in-out property <int> connection-filter;
     in-out property <bool> connections-newest-first;
     in property <bool> connections-load-failed;
+    in property <bool> operation-busy;
+    callback show-activity-result(string);
     callback show-connections();
     callback show-add-provider();
     callback show-add-connection();
@@ -273,11 +275,19 @@ export component ConnectionsPage inherits CenteredPageRoot {
                         }
                     }
 
+                    if !connection.running && connection.result-id != "": CompactCardSecondaryActionButton {
+                        text: "View Summary";
+                        accessible-label: "View latest sync summary for " + connection.name;
+                        clicked => {
+                            root.show-activity-result(connection.result-id);
+                        }
+                    }
                     HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
                         CompactCardPrimaryActionButton {
                             accessible-label: "Run connection " + connection.name;
-                            text: "Run";
+                            text: connection.running ? "Running..." : "Run";
+                            enabled: !root.operation-busy && !connection.running;
                             clicked => {
                                 root.request-run-connection(connection.id);
                             }
@@ -286,7 +296,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                         CompactCardSecondaryActionButton {
                             accessible-label: "Verify connection " + connection.name;
                             text: connection.verifying ? "Verifying…" : "Verify";
-                            enabled: !connection.verifying;
+                            enabled: !connection.verifying && !connection.running;
                             clicked => {
                                 root.verify-saved-connection(connection.id);
                             }
@@ -295,6 +305,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                         CompactCardSecondaryActionButton {
                             accessible-label: "Edit connection " + connection.name;
                             text: "Edit";
+                            enabled: !connection.running;
                             clicked => {
                                 root.request-connection-edit(connection.id);
                             }
@@ -303,6 +314,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                         CompactCardSecondaryActionButton {
                             accessible-label: "Delete connection " + connection.name;
                             text: "Delete";
+                            enabled: !connection.running;
                             clicked => {
                                 root.request-connection-delete(connection.id);
                             }

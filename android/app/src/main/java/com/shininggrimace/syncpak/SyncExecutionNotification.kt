@@ -72,6 +72,23 @@ object SyncExecutionNotification {
         )
     }
 
+    fun complete(context: Context, connectionName: String, summary: String) {
+        createChannel(context)
+        val open = PendingIntent.getActivity(
+            context, 0, Intent(context, SyncPakActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notification = Notification.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_sys_upload_done)
+            .setContentTitle(connectionName)
+            .setContentText(summary)
+            .setStyle(Notification.BigTextStyle().bigText(summary))
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .build()
+        context.getSystemService(NotificationManager::class.java).notify(ID + 1, notification)
+    }
+
     private fun notificationText(
         connectionName: String,
         currentFile: Int?,

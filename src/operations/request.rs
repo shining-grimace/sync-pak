@@ -14,6 +14,24 @@ pub struct RunRequest {
 }
 
 impl RunRequest {
+    pub fn automatic(config: &AppConfig, connection_id: &str) -> Result<Self, RunRequestError> {
+        let connection = config
+            .connections
+            .iter()
+            .find(|c| c.id.as_str() == connection_id)
+            .ok_or(RunRequestError::ConnectionNotFound)?;
+        if connection.show_preview {
+            return Err(RunRequestError::PreviewRequired);
+        }
+        let direction = match (connection.allow_upload, connection.allow_download) {
+            (true, false) => Direction::Upload,
+            (false, true) => Direction::Download,
+            (true, true) => Direction::BothWays,
+            _ => return Err(RunRequestError::DirectionNotAllowed),
+        };
+        Self::from_config(config, connection_id, direction)
+    }
+
     pub fn from_config(
         config: &AppConfig,
         connection_id: &str,
@@ -57,6 +75,7 @@ pub enum RunRequestError {
     ConnectionNotFound,
     ProviderNotFound,
     NotVerified,
+    PreviewRequired,
     BothWaysUnsupported,
     DirectionNotAllowed,
 }
@@ -64,6 +83,9 @@ pub enum RunRequestError {
 impl fmt::Display for RunRequestError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::PreviewRequired => {
+                formatter.write_str("This connection requires preview before syncing.")
+            }
             Self::NotVerified => formatter.write_str("Verify this connection before syncing."),
             Self::ConnectionNotFound => formatter.write_str("The connection no longer exists."),
             Self::ProviderNotFound => {

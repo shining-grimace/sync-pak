@@ -44,6 +44,7 @@ pub(crate) fn verify_saved(
             mode: connection.mode,
             allow_upload: connection.allow_upload,
             allow_download: connection.allow_download,
+            show_preview: connection.show_preview,
             keep_last_archives: connection.keep_last_archives,
             verified: false,
         },

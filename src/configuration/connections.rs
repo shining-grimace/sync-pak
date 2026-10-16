@@ -111,6 +111,7 @@ pub struct ConnectionDraft {
     pub mode: SyncMode,
     pub allow_upload: bool,
     pub allow_download: bool,
+    pub show_preview: bool,
     pub keep_last_archives: Option<u32>,
     pub verified: bool,
 }
@@ -128,6 +129,7 @@ impl ConnectionDraft {
             mode: self.mode,
             allow_upload: self.allow_upload,
             allow_download: self.allow_download,
+            show_preview: self.show_preview,
             keep_last_archives: self.keep_last_archives,
             verified: self.verified,
         }

@@ -1,6 +1,5 @@
 use crate::{
     configuration::SyncMode,
-    operations::execution::ExecutionState,
     operations::queue::{QueueEntry, QueueState},
     preflight::planning::Direction,
 };
@@ -22,7 +21,10 @@ pub struct ActivityPresentation {
 
 impl ActivityPresentation {
     pub fn from_entry(entry: &QueueEntry) -> Self {
-        let result_summary = entry.result.as_ref().map_or_else(String::new, summary);
+        let result_summary = entry.result.as_ref().map_or_else(
+            String::new,
+            crate::operations::execution::ExecutionResult::summary,
+        );
         let result_details = entry.result.as_ref().map_or_else(Vec::new, result_details);
         Self {
             operation_id: entry.operation_id.to_string(),
@@ -84,36 +86,6 @@ fn status(state: QueueState) -> &'static str {
         QueueState::Failed => "Failed",
         QueueState::Cancelled => "Cancelled",
     }
-}
-
-fn summary(result: &crate::operations::execution::ExecutionResult) -> String {
-    match result.state {
-        ExecutionState::Completed => format!("{} items completed", result.completed.len()),
-        ExecutionState::Failed => result
-            .failure_message
-            .clone()
-            .unwrap_or_else(|| incomplete_summary(result, "Failed")),
-        ExecutionState::Cancelled => incomplete_summary(result, "Cancelled"),
-        ExecutionState::Preparing | ExecutionState::Copying | ExecutionState::Finalizing => {
-            String::new()
-        }
-    }
-}
-
-fn incomplete_summary(
-    result: &crate::operations::execution::ExecutionResult,
-    state: &str,
-) -> String {
-    if result.completed.is_empty() && result.incomplete.is_empty() && result.not_started.is_empty()
-    {
-        return format!("{state} before starting");
-    }
-    format!(
-        "{} completed · {} incomplete · {} not started",
-        result.completed.len(),
-        result.incomplete.len(),
-        result.not_started.len()
-    )
 }
 
 fn result_details(result: &crate::operations::execution::ExecutionResult) -> Vec<String> {

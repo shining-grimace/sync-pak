@@ -31,7 +31,7 @@ pub(crate) fn inventory_message(error: EndpointPreflightError) -> &'static str {
     match error {
         EndpointPreflightError::SourceInventory(EndpointInventoryError::Local(_))
         | EndpointPreflightError::DestinationInventory(EndpointInventoryError::Local(_)) => {
-            "SyncPak could not reread the configured local folder immediately before copying. Check the folder permission, then refresh the review."
+            "SyncPak could not read the configured local folder. Check the folder permission, then run the connection again."
         }
         EndpointPreflightError::SourceInventory(EndpointInventoryError::Remote(
             RemoteInventoryError::Provider(error),
@@ -41,10 +41,10 @@ pub(crate) fn inventory_message(error: EndpointPreflightError) -> &'static str {
         )) => provider_message(error),
         EndpointPreflightError::SourceInventory(EndpointInventoryError::Remote(_))
         | EndpointPreflightError::DestinationInventory(EndpointInventoryError::Remote(_)) => {
-            "SyncPak could not reread the cloud folder immediately before copying. Check the provider connection, then refresh the review."
+            "SyncPak could not read the cloud folder. Check the provider connection, then run the connection again."
         }
         EndpointPreflightError::Preflight(_) => {
-            "SyncPak reread both folders but could not rebuild the transfer plan. Refresh the review and try again."
+            "SyncPak read both folders but could not prepare the transfer plan. Check the connection settings, then run it again."
         }
     }
 }

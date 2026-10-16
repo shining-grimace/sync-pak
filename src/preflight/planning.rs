@@ -8,14 +8,14 @@ use crate::preflight::plan_summary::summarize;
 
 pub use crate::preflight::plan_summary::PlanSummary;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Direction {
     Upload,
     Download,
     BothWays,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct OperationPlan {
     pub connection_id: String,
     pub mode: SyncMode,
@@ -32,13 +32,13 @@ impl OperationPlan {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Endpoint {
     Source,
     Destination,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum PlannedAction {
     Copy {
         path: RelativePath,

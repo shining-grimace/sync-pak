@@ -117,6 +117,9 @@ pub(crate) fn refresh(
                         .map(|provider| provider.name.as_str())
                         .unwrap_or("Unavailable provider");
                     ConnectionRow {
+                        running: crate::configuration::run_guard::active(configuration.path())
+                            .is_some_and(|r| r.connection.id == connection.id),
+                        result_id: Default::default(),
                         id: connection.id.as_str().into(),
                         name: connection.name.clone().into(),
                         detail: format!(

@@ -7,7 +7,7 @@ pub mod remote;
 use std::error::Error;
 use std::fmt;
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
 pub struct RelativePath(String);
 
 impl RelativePath {

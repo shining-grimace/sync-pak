@@ -35,6 +35,7 @@ fn config(mode: SyncMode) -> AppConfig {
             mode,
             allow_upload: true,
             allow_download: true,
+            show_preview: true,
             keep_last_archives: None,
             verified: true,
         }],
@@ -90,5 +91,36 @@ fn rejects_directions_disabled_by_connection_settings() {
     assert_eq!(
         RunRequest::from_config(&config, &connection_id, Direction::Download),
         Err(RunRequestError::DirectionNotAllowed)
+    );
+}
+
+#[test]
+fn automatic_runs_resolve_allowed_directions_and_require_saved_consent() {
+    let mut config = config(SyncMode::AddOnly);
+    let id = config.connections[0].id.as_str().to_owned();
+    assert_eq!(
+        RunRequest::automatic(&config, &id),
+        Err(RunRequestError::PreviewRequired)
+    );
+    config.connections[0].show_preview = false;
+    assert_eq!(
+        RunRequest::automatic(&config, &id).unwrap().direction,
+        Direction::BothWays
+    );
+    config.connections[0].allow_upload = false;
+    assert_eq!(
+        RunRequest::automatic(&config, &id).unwrap().direction,
+        Direction::Download
+    );
+    config.connections[0].allow_upload = true;
+    config.connections[0].allow_download = false;
+    assert_eq!(
+        RunRequest::automatic(&config, &id).unwrap().direction,
+        Direction::Upload
+    );
+    config.connections[0].verified = false;
+    assert_eq!(
+        RunRequest::automatic(&config, &id),
+        Err(RunRequestError::NotVerified)
     );
 }

@@ -31,7 +31,7 @@ export component ActivityPage inherits CenteredPageRoot {
         text: "Activity";
     }
     DescriptionLabel {
-        text: "Queued and completed operations appear here until SyncPak exits.";
+        text: "Running operations and saved results appear here. Results remain available after restarting SyncPak until you clear them.";
     }
     if root.activity-clearable-count > 0 : VerticalLayout {
         spacing: Dimensions.element-gap;
@@ -59,17 +59,17 @@ export component ActivityPage inherits CenteredPageRoot {
     }
     if !root.operation-running && root.activity-rows.length == 0 : InfoCard {
         accessible-role: region;
-        accessible-label: "No activity this time";
+        accessible-label: "No activity yet";
         baseline-height: 130px;
         VerticalLayout {
             spacing: Dimensions.card-element-spacing;
             alignment: center;
             SectionHeadingLabel {
-                text: "No activity this time";
+                text: "No activity yet";
                 horizontal-alignment: center;
             }
             DescriptionLabel {
-                text: "Queued and completed operations will appear here until SyncPak exits.";
+                text: "Run a connection to see its progress and saved results here.";
                 horizontal-alignment: center;
             }
         }
