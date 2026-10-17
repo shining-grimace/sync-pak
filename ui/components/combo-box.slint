@@ -67,13 +67,23 @@ export component ComboBox {
                 accessible-role: none;
             }
 
-            Text {
+            Rectangle {
                 width: 16px;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                text: "⌄";
-                color: Palette.foreground;
+                horizontal-stretch: 0;
                 accessible-role: none;
+
+                Path {
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                    width: 12px;
+                    height: 8px;
+                    viewbox-width: 12;
+                    viewbox-height: 8;
+                    commands: "M1 1 L6 6 L11 1";
+                    fill: transparent;
+                    stroke: Palette.foreground;
+                    stroke-width: 2px;
+                }
             }
         }
     }
