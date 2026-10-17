@@ -6,7 +6,6 @@
 - Set up release config for Android
 - Target latest Android
 - New setting per connection: "Last Run" timestamp shown in the connections list
-- Android connection widget (runs in background if transfers don't use approval)
 - Bump Rust and Android dependencies where possible
 - Run Clippy
 - Create branding logo

@@ -3,7 +3,7 @@ use crate::{
     app::activity::presentation::ActivityPresentation,
     operations::{execution::OperationExecutor, queue::background::BackgroundQueue},
 };
-use slint::{Model, ModelRc, SharedString, VecModel};
+use slint::{Model, SharedString};
 
 fn progress_percent(progress: &crate::operations::operation_progress::OperationProgress) -> i32 {
     progress
@@ -113,5 +113,8 @@ pub(super) fn refresh<E: OperationExecutor + Send + Sync + 'static>(
             can_view_result: activity.can_view_result,
         }
     });
-    window.set_activity_rows(ModelRc::new(std::rc::Rc::new(VecModel::from_iter(rows))));
+    window.set_activity_rows(super::rows::update(
+        window.get_activity_rows(),
+        rows.collect(),
+    ));
 }

@@ -4,3 +4,4 @@ pub mod presentation;
 pub(crate) mod result_controller;
 
 mod refresh;
+mod rows;
