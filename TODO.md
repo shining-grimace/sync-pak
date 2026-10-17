@@ -1,6 +1,5 @@
 
 - I ought to test handling of connection paths with spaces and special characters
-- Android: the Results screen has a list of results that isn't scrollable when it has more lines than fit in the content area
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Android: test that external storage drives work too
 - Bump target Android version to API 37

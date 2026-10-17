@@ -19,6 +19,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
     callback retry();
     callback dismiss();
     fill-height: true;
+    mouse-drag-pan-enabled: false;
     HeadingLabel {
         text: "Result: " + root.title;
         wrap: word-wrap;
