@@ -1,6 +1,5 @@
 
 - I ought to test handling of connection paths with spaces and special characters
-- Android: when multiple widgets are on the home screen, for different connections, and one of them is running, both look the same; the forground UI elements shouldn't change but should be lower opacity, and an extra line of text should appear showing "Another connection is running"
 - Android: the Results screen has a list of results that isn't scrollable when it has more lines than fit in the content area
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Android: test that external storage drives work too

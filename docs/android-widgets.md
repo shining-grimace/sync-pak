@@ -13,8 +13,12 @@ Build with `./android/gradlew --project-dir android :app:assembleDebug`. The APK
    the app name or explanation. Resize both. Check long names, large text, empty
    lists, and screen-reader labels. An empty widget should offer **Open SyncPak**.
 4. Close the app without force-stopping it. Tap Run on a widget. Confirm no app screen
-   opens, the foreground notification appears, and both widgets disable Run. Compact
-   should show only the running connection instead of its selected connection.
+   opens, the foreground notification appears, and all widgets disable Run. Widgets
+   selecting the active connection show Running; Compact replaces its connection
+   label with that running message. Widgets selecting other connections keep their
+   normal labels, dim their foreground elements, and show "Another connection is
+   running". Confirm their normal appearance returns when the run finishes. Repeat
+   with two widgets selecting the same connection; both should show Running.
 5. Open the app during a widget run. Confirm Activity contains the same operation,
    another run cannot start, and the active connection/provider cannot be modified.
    Navigate around and return home; the operation should continue.
