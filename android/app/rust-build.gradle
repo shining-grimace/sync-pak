@@ -61,7 +61,7 @@ rustTargets.each { abi, rustTarget ->
             environment("JAVA_HOME", javaHome)
             environment("ANDROID_HOME", sdkRoot)
             environment("ANDROID_SDK_ROOT", sdkRoot)
-            environment("ANDROID_PLATFORM", "android-36.1")
+            environment("ANDROID_PLATFORM", "android-37.0")
             environment("CARGO_TARGET_${targetEnvironment.toUpperCase(java.util.Locale.ROOT)}_LINKER", linker)
             environment("CC_${targetEnvironment}", linker)
             environment("CXX_${targetEnvironment}", cxx)

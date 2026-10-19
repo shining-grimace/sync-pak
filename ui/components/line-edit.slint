@@ -1,7 +1,6 @@
 import { Palette } from "std-widgets.slint";
 import { InputFrame } from "input-frame.slint";
 import { Dimensions } from "../dimensions.slint";
-import { InputPositionRefresh } from "../input-position-refresh.slint";
 
 export component LineEdit inherits InputFrame {
     in property <string> font-family: "";
@@ -14,7 +13,6 @@ export component LineEdit inherits InputFrame {
     in property <bool> read-only: false;
     in-out property <string> text: "";
     out property <bool> has-focus: editor.has-focus;
-    private property <int> input-position-refresh-generation: InputPositionRefresh.generation;
 
     callback accepted(string);
     callback edited(string);
@@ -57,18 +55,6 @@ export component LineEdit inherits InputFrame {
     accessible-action-set-value(value) => {
         root.text = value;
         root.edited(value);
-    }
-
-    changed input-position-refresh-generation => {
-        if editor.has-focus {
-            // Slint 1.17.1 does not refresh Android's native selection handle when only an
-            // ancestor viewport moves. Re-applying the unchanged selection refreshes its
-            // IME geometry without disturbing focus, composition, or the keyboard.
-            editor.set-selection-offsets(
-                editor.anchor-position-byte-offset,
-                editor.cursor-position_byte-offset,
-            );
-        }
     }
 
     text-clip := Rectangle {

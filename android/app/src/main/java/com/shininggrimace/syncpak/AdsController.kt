@@ -10,16 +10,20 @@ import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.libraries.ads.mobile.sdk.MobileAds
+import com.google.android.libraries.ads.mobile.sdk.banner.AdSize
+import com.google.android.libraries.ads.mobile.sdk.banner.AdView
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAd
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest
+import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
+import com.google.android.libraries.ads.mobile.sdk.common.RequestConfiguration
+import com.google.android.libraries.ads.mobile.sdk.initialization.InitializationConfig
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 /** Keeps advertising native, consent-first, and separate from the Slint UI. */
@@ -28,6 +32,7 @@ class AdsController(private val activity: Activity) {
     private var consentRequested = false
     private var consentRequestInProgress = false
     private var mobileAdsInitialized = false
+    private var mobileAdsInitializationInProgress = false
     private var placement = Placement.HIDDEN
     private var banner: AdView? = null
     private var advertisingContainer: LinearLayout? = null
@@ -116,16 +121,27 @@ class AdsController(private val activity: Activity) {
     }
 
     private fun initializeAdsIfPermitted() {
-        if (destroyed || !consentInformation.canRequestAds() || mobileAdsInitialized) {
+        if (destroyed || !consentInformation.canRequestAds() || mobileAdsInitialized ||
+            mobileAdsInitializationInProgress
+        ) {
             return
         }
-        val configuration = MobileAds.getRequestConfiguration().toBuilder()
-            .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_PG)
+        val configuration = RequestConfiguration.Builder()
+            .setMaxAdContentRating(RequestConfiguration.MaxAdContentRating.MAX_AD_CONTENT_RATING_PG)
             .build()
-        MobileAds.setRequestConfiguration(configuration)
-        mobileAdsInitialized = true
-        MobileAds.initialize(activity) {
-            activity.runOnUiThread { renderPlacement() }
+        val initConfig = InitializationConfig.Builder("ca-app-pub-7040136510470731~9946661791")
+            .setRequestConfiguration(configuration)
+            .build()
+        mobileAdsInitializationInProgress = true
+        thread(name = "SyncPakAdsInit") {
+            MobileAds.initialize(activity, initConfig) {
+                activity.runOnUiThread {
+                    if (destroyed) return@runOnUiThread
+                    mobileAdsInitializationInProgress = false
+                    mobileAdsInitialized = true
+                    renderPlacement()
+                }
+            }
         }
     }
 
@@ -160,27 +176,7 @@ class AdsController(private val activity: Activity) {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
         }
-        val adView = AdView(activity).apply {
-            adUnitId = BuildConfig.ADMOB_BANNER_AD_UNIT_ID
-            setAdSize(adSize)
-            adListener = object : AdListener() {
-                override fun onAdLoaded() {
-                    if (destroyed || banner !== this@apply) return
-                    logLoadedBannerLayout(container, this@apply)
-                    reportContainerInset(container)
-                }
-
-                override fun onAdFailedToLoad(error: com.google.android.gms.ads.LoadAdError) {
-                    if (destroyed || banner !== this@apply) return
-                    Log.w(
-                        LOG_TAG,
-                        "Banner ad failed to load: code=${error.code}, domain=${error.domain}, " +
-                            "message=${error.message}, responseInfo=${error.responseInfo}",
-                    )
-                    removeBannerButKeepFooter()
-                }
-            }
-        }
+        val adView = AdView(activity)
         container.addView(
             adView,
             LinearLayout.LayoutParams(
@@ -211,7 +207,31 @@ class AdsController(private val activity: Activity) {
             return
         }
         reportContainerInset(container)
-        adView.loadAd(AdRequest.Builder().build())
+        val adRequest = BannerAdRequest.Builder(BuildConfig.ADMOB_BANNER_AD_UNIT_ID, adSize).build()
+        adView.loadAd(
+            adRequest,
+            object : AdLoadCallback<BannerAd> {
+                override fun onAdLoaded(ad: BannerAd) {
+                    activity.runOnUiThread {
+                        if (destroyed || banner !== adView) return@runOnUiThread
+                        logLoadedBannerLayout(container, adView)
+                        reportContainerInset(container)
+                    }
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    activity.runOnUiThread {
+                        if (destroyed || banner !== adView) return@runOnUiThread
+                        Log.w(
+                            LOG_TAG,
+                            "Banner ad failed to load: code=${adError.code}, " +
+                                "message=${adError.message}, responseInfo=${adError.responseInfo}",
+                        )
+                        removeBannerButKeepFooter()
+                    }
+                }
+            },
+        )
     }
 
     private fun anchoredBannerSize(): AdSize {

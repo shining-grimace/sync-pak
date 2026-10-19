@@ -1,9 +1,13 @@
 [versions]
-androidGradlePlugin = "9.3.3"
+androidGradlePlugin = "9.4.1"
 tlsVerifier = "0.1.1" # Match version from Cargo.lock
+googleAds = "1.5.0"
+googleUmp = "4.0.0"
 
 [libraries]
 rustls-platform-verifier = { group = "rustls", name = "rustls-platform-verifier", version.ref = "tlsVerifier" }
+google-ads = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "googleAds" }
+google-ump = { group = "com.google.android.ump", name = "user-messaging-platform", version.ref = "googleUmp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

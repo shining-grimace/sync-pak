@@ -5,22 +5,27 @@ plugins {
 dependencies {
     // Keep this aligned with rustls-platform-verifier-android in Cargo.lock.
     implementation(libs.rustls.platform.verifier)
-    implementation("com.google.android.gms:play-services-ads:25.4.0")
-    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
+    implementation(libs.google.ads)
+    implementation(libs.google.ump)
+}
+
+configurations.configureEach {
+    exclude(group = "com.google.android.gms", module = "play-services-ads")
+    exclude(group = "com.google.android.gms", module = "play-services-ads-lite")
 }
 
 android {
     namespace = "com.shininggrimace.syncpak"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
+        version = release(37) {
+            minorApiLevel = 2
         }
     }
 
     defaultConfig {
         applicationId = "com.shininggrimace.syncpak"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
 
