@@ -73,4 +73,4 @@ android {
     }
 }
 
-apply(from = "rust-build.gradle")
+apply(from = "rust-build.gradle.kts")
