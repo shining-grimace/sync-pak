@@ -1,0 +1,42 @@
+# Rust resolves these Kotlin methods by their JVM names and signatures.
+-keep,allowoptimization class com.shininggrimace.syncpak.SyncPakActivity {
+    native <methods>;
+    public int pickConnectionList(java.lang.String);
+    public void pickFolder();
+    public void setAdvertisingPlacement(int);
+    public void requestAdvertisingConsent();
+    public void showAdvertisingPrivacyChoices();
+    public boolean advertisingPrivacyChoicesAvailable();
+}
+
+-keep,allowoptimization class com.shininggrimace.syncpak.SyncPlatform {
+    public android.content.Context applicationContext();
+    public boolean hasInternetPermission();
+    public int verifyFolder(java.lang.String);
+    public java.lang.String inventoryFolder(java.lang.String);
+    public java.lang.String folderEntryMetadata(java.lang.String, java.lang.String);
+    public int openFolderFileForRead(java.lang.String, java.lang.String);
+    public int openFolderFileForWrite(java.lang.String, java.lang.String);
+    public int createFolderPath(java.lang.String, java.lang.String);
+    public int deleteFolderEntry(java.lang.String, java.lang.String);
+    public void startSyncExecution(java.lang.String);
+    public void updateSyncExecution(java.lang.String, int, int);
+    public void finishSyncExecution(java.lang.String, java.lang.String);
+    public void finishSyncOperation(java.lang.String, java.lang.String, java.lang.String);
+    public void stopSyncExecution();
+    public java.lang.String peekRequestedResult();
+    public void clearRequestedResult(java.lang.String);
+    public void widgetsChanged();
+}
+
+# Exported Rust symbols include these class and native method names.
+-keep,allowoptimization class com.shininggrimace.syncpak.SyncNative {
+    native <methods>;
+}
+-keep,allowoptimization class com.shininggrimace.syncpak.SyncExecutionService {
+    native <methods>;
+}
+
+# Upstream TLS verifier guidance: JNI usage is invisible to R8, and the AAR
+# does not bundle consumer rules. Keep its classes, members, and descriptor types.
+-keep,includedescriptorclasses class org.rustls.platformverifier.** { *; }

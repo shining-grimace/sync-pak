@@ -1,4 +1,7 @@
 
+- On Android, the widget's connection picker has duplicated titles and doesn't match the device (or app) light/dark mode
+- I need to test Android's widget with zero connections available and with many (that make the list in the picker popup scrollable)
+- The Aus Post app has a nice example of a good design - image shown at the bottom of a list which is a symbol for the list items themselves - which matches what my original intention was for the connections list (a graph view which never got attention)
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Android: test that external storage drives work too

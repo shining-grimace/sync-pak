@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
 }
@@ -38,6 +41,20 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        create("release") {
+            val storeDir = "/home/thomas/Android/keystore"
+            val keystoreProperties = Properties().apply {
+                load(FileInputStream("$storeDir/grimace_keystore.properties.txt"))
+            }
+            val storeFileName = keystoreProperties.getProperty("keystore")
+            storeFile = file("$storeDir/$storeFileName")
+            storePassword = keystoreProperties.getProperty("storePassword")
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             buildConfigField(
@@ -53,6 +70,15 @@ android {
             )
         }
         getByName("release") {
+            isDebuggable = false
+            isJniDebuggable = false
+            signingConfig = signingConfigs.getByName("release")
+            optimization {
+                enable = true
+            }
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
             buildConfigField(
                 "String",
                 "ADMOB_BANNER_AD_UNIT_ID",
@@ -62,7 +88,7 @@ android {
             buildConfigField(
                 "String",
                 "UMP_TEST_DEVICE_HASHED_IDS",
-                "\"F878ADE974DAC3613A248205085FF743\""
+                "\"\""
             )
         }
     }
@@ -73,4 +99,4 @@ android {
     }
 }
 
-apply(from = "rust-build.gradle.kts")
+apply(from = file("rust-build.gradle.kts"))

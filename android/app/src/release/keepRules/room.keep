@@ -1,0 +1,6 @@
+# Room 2.2.5 (via the ads SDK) loads generated databases by reflection.
+# Its consumer rules keep database classes but omit their default constructors,
+# which R8 full mode can remove. Match the corrected AndroidX consumer rule.
+-keep class * extends androidx.room.RoomDatabase {
+    void <init>();
+}

@@ -1,5 +1,10 @@
 /.idea/
 /.kotlin/
 build/
-debug/
-release/
+/debug/
+/release/
+/keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
