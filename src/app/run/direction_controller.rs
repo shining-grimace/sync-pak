@@ -37,6 +37,9 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     window.on_set_run_upload_selected(move |selected| {
         if let Some(window) = weak.upgrade() {
+            if selected && !window.get_run_allows_both_ways() {
+                window.set_run_download_selected(false);
+            }
             window.set_run_upload_selected(selected);
         }
     });
@@ -44,6 +47,9 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     window.on_set_run_download_selected(move |selected| {
         if let Some(window) = weak.upgrade() {
+            if selected && !window.get_run_allows_both_ways() {
+                window.set_run_upload_selected(false);
+            }
             window.set_run_download_selected(selected);
         }
     });
@@ -223,11 +229,12 @@ fn show(
             window.set_run_remote_endpoint(remote_endpoint.into());
             window.set_run_archive_upload_details(archive_upload_details.into());
             window.set_run_archive_download_details(archive_download_details.into());
-            window.set_run_allows_both_ways(connection.mode == SyncMode::AddOnly);
+            let allows_both_ways = connection.mode == SyncMode::AddOnly;
+            window.set_run_allows_both_ways(allows_both_ways);
             window.set_run_allows_upload(connection.allow_upload);
             window.set_run_allows_download(connection.allow_download);
-            window.set_run_upload_selected(connection.allow_upload);
-            window.set_run_download_selected(connection.allow_download);
+            window.set_run_upload_selected(allows_both_ways && connection.allow_upload);
+            window.set_run_download_selected(allows_both_ways && connection.allow_download);
             window.set_page(10);
         }
         None => diagnostics_controller::present(

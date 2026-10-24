@@ -47,6 +47,9 @@ export component RunDirectionPage inherits CenteredPageRoot {
             text: root.archive-download-details;
         }
     }
+    if !root.allows-both-ways: DescriptionLabel {
+        text: "This connection type uses one source and one destination per run. Choose Upload or Download; selecting one clears the other.";
+    }
     HorizontalLayout {
         spacing: Dimensions.element-gap;
         vertical-stretch: 0;
@@ -63,7 +66,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
             accessible-label: root.download-selected ? "Download direction, selected" : "Select download direction";
             text: "Download";
             selected: root.download-selected;
-            enabled: root.allows-download && (root.allows-both-ways || !root.upload-selected);
+            enabled: root.allows-download;
             clicked => {
                 root.set-download-selected(!root.download-selected);
             }
