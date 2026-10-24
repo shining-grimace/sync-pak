@@ -2,10 +2,9 @@
 - On Android, test how a widget responds to a connection being deleted
 - I need to test Android's widget with many connections available (that make the list in the picker popup scrollable)
 - Update the app colours, making sure to update the Android widget theme colours (`res/values/widget_theme.xml`)
-- On the "Run ..." (choose directions) screen, the Download button looks inconsistently styled when both directions are selected on a Mirror connection, and in this state trying to start will show a confusing error message
 - On the preflight screen, unchanged files should be shown last, and should use lower opacity so they stand out as less relevant
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added
-- Welcome screen: starts off scrolled to the bottom
+- Welcome screen: starts off scrolled to the bottom; please fix
 - The Aus Post app has a nice example of a good design - image shown at the bottom of a list which is a symbol for the list items themselves - which matches what my original intention was for the connections list (a graph view which never got attention)
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"

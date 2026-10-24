@@ -80,18 +80,7 @@ export component WelcomePage inherits CenteredPageRoot {
 
         HorizontalLayout {
             alignment: center;
-            FocusScope {
-                width: 0px;
-                height: 0px;
-                focus-on-click: false;
-                focus-on-tab-navigation: false;
-                forward-focus: retry-configuration;
-                init => {
-                    self.focus();
-                }
-            }
-
-            retry-configuration := CardPrimaryActionButton {
+            CardPrimaryActionButton {
                 accessible-label: "Retry opening configuration storage";
                 text: "Retry";
                 clicked => {
@@ -102,18 +91,7 @@ export component WelcomePage inherits CenteredPageRoot {
     }
     if !root.configuration-unavailable: HorizontalLayout {
         alignment: center;
-        FocusScope {
-            width: 0px;
-            height: 0px;
-            focus-on-click: false;
-            focus-on-tab-navigation: false;
-            forward-focus: welcome-add-provider;
-            init => {
-                self.focus();
-            }
-        }
-
-        welcome-add-provider := PrimaryActionButton {
+        PrimaryActionButton {
             accessible-label: "Add your first provider";
             text: "Add Provider";
             clicked => {
