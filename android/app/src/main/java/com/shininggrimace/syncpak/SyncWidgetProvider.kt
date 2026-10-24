@@ -3,10 +3,9 @@ package com.shininggrimace.syncpak
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 
-open class SyncWidgetProvider : AppWidgetProvider() {
+class SyncWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) { SyncWidgets.refresh(context) }
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle) { SyncWidgets.refresh(context) }
     override fun onDeleted(context: Context, ids: IntArray) {
@@ -15,4 +14,3 @@ open class SyncWidgetProvider : AppWidgetProvider() {
         preferences.apply()
     }
 }
-class CompactSyncWidgetProvider : SyncWidgetProvider()

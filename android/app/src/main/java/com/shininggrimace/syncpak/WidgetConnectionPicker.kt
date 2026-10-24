@@ -12,8 +12,11 @@ import android.widget.*
 /** Shared setup/reconfiguration UI; selecting a connection never starts a run. */
 class WidgetConnectionPicker : Activity() {
     private var reload: (() -> Unit)? = null
+    private var appearance = "system"
     private var widgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     override fun onCreate(savedInstanceState: Bundle?) {
+        appearance = WidgetAppearance.preference(this)
+        setTheme(WidgetAppearance.pickerTheme(appearance))
         super.onCreate(savedInstanceState)
         setResult(RESULT_CANCELED)
         widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
@@ -23,7 +26,6 @@ class WidgetConnectionPicker : Activity() {
         }
         val padding = (20 * resources.displayMetrics.density).toInt()
         val panel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
-        panel.addView(TextView(this).apply { text = "Choose a SyncPak connection"; textSize = 22f })
         panel.addView(TextView(this).apply { text = "Only connections with Show Preview turned off are listed. Unverified connections must be verified in SyncPak before running."; setPadding(0, padding, 0, padding) })
         val emptyMessage = TextView(this).apply { visibility = android.view.View.GONE }
         panel.addView(emptyMessage)
@@ -41,6 +43,11 @@ class WidgetConnectionPicker : Activity() {
             val items = (0 until (connections?.length() ?: 0)).map { connections!!.getJSONObject(it) }
             runOnUiThread {
                 if (isFinishing || isDestroyed) return@runOnUiThread
+                WidgetAppearance.remember(this, state)
+                if (WidgetAppearance.preference(this) != appearance) {
+                    recreate()
+                    return@runOnUiThread
+                }
                 emptyMessage.visibility = android.view.View.GONE
                 list.visibility = android.view.View.VISIBLE
                 window.setLayout(width, height)

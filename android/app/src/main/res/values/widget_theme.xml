@@ -3,6 +3,10 @@
     <attr name="widgetPrimary" format="color" />
     <attr name="widgetBackground" format="color" />
     <attr name="widgetDisabledPrimary" format="color" />
+    <color name="widget_light_surface">#FFFAF0</color>
+    <color name="widget_light_secondary">#454039</color>
+    <color name="widget_dark_surface">#1C1A17</color>
+    <color name="widget_dark_secondary">#E4BDA3</color>
     <color name="widget_light_primary">#171512</color>
     <color name="widget_light_background">#F3EFE3</color>
     <color name="widget_light_disabled_primary">#73171512</color>

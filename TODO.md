@@ -1,10 +1,9 @@
 
-- On Android, the widget's connection picker has duplicated titles and doesn't match the device (or app) light/dark mode
+- On Android, test how a widget responds to a connection being deleted
 - I need to test Android's widget with many connections available (that make the list in the picker popup scrollable)
-- On the Connections screen, if a connection shows a View Summary button, it flickers while verifying any connection
+- Update the app colours, making sure to update the Android widget theme colours (`res/values/widget_theme.xml`)
 - On the "Run ..." (choose directions) screen, the Download button looks inconsistently styled when both directions are selected on a Mirror connection, and in this state trying to start will show a confusing error message
 - On the preflight screen, unchanged files should be shown last, and should use lower opacity so they stand out as less relevant
-- There are two widget sizes, but are they different enough for them to both be needed?
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added
 - Android: The text underneath the banner ads is too faint (looking in dark mode)
 - Android: The Slint logo is too big

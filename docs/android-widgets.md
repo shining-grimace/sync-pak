@@ -6,16 +6,15 @@ Build with `./android/gradlew --project-dir android :app:assembleDebug`. The APK
 1. Install the APK on a test device and configure verified upload-only, download-only,
    and both-ways Add Only connections. Use a disposable folder/bucket for transfers.
    Configure a separate preview-enabled connection and one unverified connection.
-2. Add **SyncPak** and **SyncPak Compact** from the launcher's widget picker. Select
-   different connections. Confirm the preview-enabled connection is omitted, the
-   picker explains the omission, and the unverified entry offers **Verify in app**.
-3. Check the standard widget's icon/name/explanation and compact widget's icon without
-   the app name or explanation. Resize both. Check long names, large text, empty
-   lists, and screen-reader labels. An empty widget should offer **Open SyncPak**.
+2. Confirm **SyncPak** is the only entry in the launcher's widget picker and defaults
+   to 2×1 cells. Add two instances and select different connections. Confirm the
+   preview-enabled connection is omitted, the picker explains the omission, and the unverified entry offers **Verify in app**.
+3. Check the widget's icon, app name, connection selector, Run button and explanation
+   fit at its default size. Resize it. Check long names, large text, empty lists, and screen-reader labels. An empty widget should offer **Open SyncPak**.
 4. Close the app without force-stopping it. Tap Run on a widget. Confirm no app screen
    opens, the foreground notification appears, and all widgets disable Run. Widgets
-   selecting the active connection show Running; Compact replaces its connection
-   label with that running message. Widgets selecting other connections keep their
+   selecting the active connection show Running in place of the explanation.
+   Widgets selecting other connections keep their
    normal labels, dim their foreground elements, and show "Another connection is
    running". Confirm their normal appearance returns when the run finishes. Repeat
    with two widgets selecting the same connection; both should show Running.
@@ -39,10 +38,16 @@ Build with `./android/gradlew --project-dir android :app:assembleDebug`. The APK
     is reported and the sync is not silently repeated. Test notification permission
     denied and granted; saved results must remain accessible in either case.
 12. Select Light and Dark in the app's appearance settings, including selections
-    opposite to the phone's theme. Both widgets should use the app's primary colour
+    opposite to the phone's theme. All widget instances should use the app's primary colour
     for their outlines, text and icons, with its app background as the fill. Select
     System and switch the phone's theme with the app open and closed. Check disabled
     Run buttons remain distinguishable and widget sizes remain unchanged.
+13. Open the connection picker with each app appearance selection (Light, Dark and
+    System), including selections opposite to the phone's theme. Check its background,
+    text, radio buttons and Open SyncPak button match the app palette. Confirm only
+    one heading, **Choose connection**, appears. Change appearance in the app while
+    the picker is in the background, then return and check it adopts the new theme.
+    Repeat immediately after restarting the process to exercise the cached preference.
 
 Automated validation covers Rust admission/eligibility and application-context
 registration, Android target compilation, Kotlin and RemoteViews resource compilation,

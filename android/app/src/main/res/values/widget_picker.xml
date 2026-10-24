@@ -1,0 +1,25 @@
+<resources>
+    <style name="SyncPakWidgetPicker" parent="SyncPakWidgetPicker.Light" />
+    <style name="SyncPakWidgetPicker.Light" parent="android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:windowBackground">@color/widget_light_surface</item>
+        <item name="android:colorBackground">@color/widget_light_surface</item>
+        <item name="android:textColorPrimary">@color/widget_light_secondary</item>
+        <item name="android:textColorSecondary">@color/widget_light_secondary</item>
+        <item name="android:colorAccent">@color/widget_light_primary</item>
+        <item name="android:colorControlNormal">@color/widget_light_secondary</item>
+        <item name="android:colorControlActivated">@color/widget_light_primary</item>
+        <item name="android:colorButtonNormal">@color/widget_light_surface</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+    <style name="SyncPakWidgetPicker.Dark" parent="android:style/Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/widget_dark_surface</item>
+        <item name="android:colorBackground">@color/widget_dark_surface</item>
+        <item name="android:textColorPrimary">@color/widget_dark_secondary</item>
+        <item name="android:textColorSecondary">@color/widget_dark_secondary</item>
+        <item name="android:colorAccent">@color/widget_dark_primary</item>
+        <item name="android:colorControlNormal">@color/widget_dark_secondary</item>
+        <item name="android:colorControlActivated">@color/widget_dark_primary</item>
+        <item name="android:colorButtonNormal">@color/widget_dark_surface</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+</resources>

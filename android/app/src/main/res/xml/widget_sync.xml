@@ -1,6 +1,6 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="250dp" android:minHeight="80dp" android:minResizeWidth="220dp" android:minResizeHeight="80dp"
-    android:targetCellWidth="4" android:targetCellHeight="2" android:resizeMode="horizontal|vertical"
+    android:minWidth="140dp" android:minHeight="38dp" android:minResizeWidth="110dp" android:minResizeHeight="38dp"
+    android:targetCellWidth="2" android:targetCellHeight="1" android:resizeMode="horizontal|vertical"
     android:initialLayout="@layout/widget_sync" android:previewLayout="@layout/widget_sync"
     android:configure="com.shininggrimace.syncpak.WidgetConnectionPicker" android:widgetFeatures="reconfigurable|configuration_optional"
     android:updatePeriodMillis="0" android:widgetCategory="home_screen" android:description="@string/widget_description" />

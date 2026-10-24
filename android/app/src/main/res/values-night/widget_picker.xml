@@ -1,0 +1,3 @@
+<resources>
+    <style name="SyncPakWidgetPicker" parent="SyncPakWidgetPicker.Dark" />
+</resources>

@@ -1,5 +1,5 @@
 <resources>
     <string name="widget_standard_name">SyncPak</string>
-    <string name="widget_compact_name">SyncPak Compact</string>
+    <string name="widget_picker_title">Choose connection</string>
     <string name="widget_description">Run a saved connection without opening SyncPak. Connections must have Show Preview turned off.</string>
 </resources>
