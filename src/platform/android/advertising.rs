@@ -64,6 +64,18 @@ pub fn set_placement(placement: i32) {
     });
 }
 
+pub fn set_footer_color(color: i32) {
+    let _ = with_activity(|env, activity| {
+        env.call_method(
+            activity,
+            jni_str!("setAdvertisingFooterColor"),
+            jni_sig!("(I)V"),
+            &[color.into()],
+        )?;
+        Ok(())
+    });
+}
+
 pub fn show_privacy_choices() {
     let _ = with_activity(|env, activity| {
         env.call_method(

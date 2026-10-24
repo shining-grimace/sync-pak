@@ -79,6 +79,7 @@ export component AppWindow inherits Window {
     in-out property <string> app-version;
     in-out property <string> syncpak-policy-url;
     in-out property <int> appearance-preference: 0;
+    in property <bool> is-android: false;
     in-out property <bool> resolved-dark-mode: false;
     in-out property <bool> configuration-unavailable: false;
     in-out property <[ProviderRow]> providers;
@@ -244,6 +245,7 @@ export component AppWindow inherits Window {
     callback show-privacy();
     callback show-advertising-privacy-choices();
     callback set-advertising-placement(int);
+    callback set-advertising-footer-color(brush);
     callback request-advertising-consent();
     callback apply-appearance-preference();
     callback change-appearance-preference(int);
@@ -343,6 +345,7 @@ export component AppWindow inherits Window {
     apply-appearance-preference => {
         Colors.dark-mode = root.resolved-dark-mode;
         Palette.color-scheme = root.appearance-preference == 1 ? ColorScheme.light : root.appearance-preference == 2 ? ColorScheme.dark : ColorScheme.unknown;
+        root.set-advertising-footer-color(Colors.secondary);
     }
     title: "SyncPak";
     preferred-width: 900px;
@@ -714,6 +717,7 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.settings && SettingsState.mode == 0: SettingsPage {
+                is-android: root.is-android;
                 settings-directory: root.settings-directory;
                 app-version: root.app-version;
                 appearance-preference <=> root.appearance-preference;

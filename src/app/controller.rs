@@ -5,6 +5,7 @@ use slint::ComponentHandle;
 use crate::{AppWindow, app::diagnostics as diagnostics_controller};
 
 pub(crate) fn initialize(window: &AppWindow) {
+    window.set_is_android(cfg!(target_os = "android"));
     crate::app::notifications::configure(window);
     window.set_app_version(env!("CARGO_PKG_VERSION").into());
     window.set_syncpak_policy_url(syncpak_policy_url().into());
@@ -27,6 +28,9 @@ fn syncpak_policy_url() -> &'static str {
 }
 
 fn configure_navigation(window: &AppWindow) {
+    window.on_set_advertising_footer_color(|brush| {
+        crate::platform::advertising::set_footer_color(brush.color().as_argb_encoded() as i32);
+    });
     let weak = window.as_weak();
     window.on_show_welcome(move || set_page(&weak, 0));
     let weak = window.as_weak();

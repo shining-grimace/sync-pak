@@ -16,6 +16,7 @@ import { SettingsState } from "../settings-state.slint";
 import { ConnectionListsSection } from "settings-lists.slint";
 
 export component SettingsPage inherits CenteredPageRoot {
+    in property <bool> is-android;
     in property <string> settings-directory;
     in property <string> app-version;
     in property <bool> configuration-unavailable;
@@ -59,7 +60,11 @@ export component SettingsPage inherits CenteredPageRoot {
                     }
                 }
 
-                AboutSlint {}
+                if root.is-android: AboutSlint {
+                    width: Dimensions.android-slint-attribution-width;
+                    horizontal-stretch: 0;
+                }
+                if !root.is-android: AboutSlint {}
             }
 
             DescriptionLabel {

@@ -18,6 +18,13 @@ pub(crate) mod android;
 pub mod atomic_write;
 pub mod list_file;
 pub(crate) mod advertising {
+    pub fn set_footer_color(color: i32) {
+        #[cfg(target_os = "android")]
+        super::android::advertising::set_footer_color(color);
+        #[cfg(not(target_os = "android"))]
+        let _ = color;
+    }
+
     #[cfg(target_os = "android")]
     pub fn set_placement(placement: i32) {
         super::android::advertising::set_placement(placement);

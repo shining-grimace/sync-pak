@@ -36,6 +36,7 @@ class AdsController(private val activity: Activity) {
     private var placement = Placement.HIDDEN
     private var banner: AdView? = null
     private var advertisingContainer: LinearLayout? = null
+    private var footerColor = activity.getColor(R.color.widget_light_secondary)
     private var advertisingPopup: PopupWindow? = null
     private var resumed = false
     private var destroyed = false
@@ -101,6 +102,13 @@ class AdsController(private val activity: Activity) {
     fun setPlacement(value: Int) {
         placement = Placement.from(value)
         renderPlacement()
+    }
+
+    fun setFooterColor(color: Int) {
+        footerColor = color
+        advertisingContainer?.let { container ->
+            (container.getChildAt(container.childCount - 1) as? TextView)?.setTextColor(color)
+        }
     }
 
     fun showPrivacyChoices() {
@@ -256,7 +264,7 @@ class AdsController(private val activity: Activity) {
         contentDescription = text
         gravity = Gravity.CENTER
         setPadding(24, 4, 24, 8)
-        setTextColor(Color.DKGRAY)
+        setTextColor(footerColor)
         textSize = 12f
     }
 

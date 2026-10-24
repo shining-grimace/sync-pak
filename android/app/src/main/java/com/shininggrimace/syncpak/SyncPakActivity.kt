@@ -53,6 +53,12 @@ class SyncPakActivity : NativeActivity() {
         }
     }
 
+    fun setAdvertisingFooterColor(color: Int) {
+        runOnUiThread {
+            adsController.setFooterColor(color)
+        }
+    }
+
     fun requestAdvertisingConsent() {
         runOnUiThread {
             adsController.start()
