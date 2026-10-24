@@ -1,7 +1,8 @@
-import { ScrollView } from "std-widgets.slint";
+import { ScrollArea } from "scroll-area.slint";
 import { Dimensions } from "../dimensions.slint";
 
-export component PageRoot inherits ScrollView {
+export component PageRoot inherits ScrollArea {
+    scrollbar-outset: Dimensions.scrollbar-width + Dimensions.scrollbar-gap;
     content-width: root.visible-width;
     vertical-scrollbar-policy: always-on;
     horizontal-scrollbar-policy: always-off;

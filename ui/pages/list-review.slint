@@ -55,7 +55,7 @@ export component ListReviewPage inherits CenteredPageColumn {
         vertical-scrollbar-policy: always-on;
         horizontal-scrollbar-policy: always-off;
         for connection[index] in SettingsState.connections: ListItem {
-            width: parent.width;
+            width: parent.visible-width;
             InfoCard {
                 accessible-role: list-item;
                 accessible-label: connection.name + ". " + connection.local;

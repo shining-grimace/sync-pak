@@ -1,0 +1,62 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+
+export component VerticalScrollBar inherits Rectangle {
+    in property <length> content-height;
+    in property <length> visible-height;
+    in property <bool> enabled: true;
+    in-out property <length> content-y;
+    callback scrolled();
+    private property <length> maximum: max(0px, root.content-height - root.visible-height);
+    private property <length> travel: max(0px, root.height - thumb.height);
+
+    width: Dimensions.scrollbar-width;
+    background: Colors.scrollbar-track;
+    border-radius: self.width / 2;
+
+    thumb := Rectangle {
+        width: parent.width;
+        height: min(root.height, max(Dimensions.scrollbar-min-thumb-height, root.height * root.visible-height / max(1px, root.content-height)));
+        y: root.maximum > 0px ? root.travel * min(1, max(0, -root.content-y / root.maximum)) : 0px;
+        border-radius: self.width / 2;
+        background: touch.has-hover || touch.pressed ? Colors.primary : Colors.scrollbar-thumb;
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled && root.maximum > 0px;
+        private property <length> grab-offset;
+
+        pointer-event(event) => {
+            if event.button == PointerEventButton.left && event.kind == PointerEventKind.down {
+                if self.mouse-y >= thumb.y && self.mouse-y <= thumb.y + thumb.height {
+                    self.grab-offset = self.mouse-y - thumb.y;
+                } else {
+                    self.grab-offset = thumb.height / 2;
+                    self.move-thumb();
+                }
+            }
+        }
+
+        function move-thumb() {
+            if root.travel > 0px {
+                root.content-y = -root.maximum * min(1, max(0, (self.mouse-y - self.grab-offset) / root.travel));
+                root.scrolled();
+            }
+        }
+
+        moved => {
+            if self.pressed {
+                self.move-thumb();
+            }
+        }
+
+        scroll-event(event) => {
+            if event.delta-y != 0px {
+                root.content-y = min(0px, max(-root.maximum, root.content-y + event.delta-y));
+                root.scrolled();
+                return accept;
+            }
+            return reject;
+        }
+    }
+}

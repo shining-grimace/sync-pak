@@ -1,0 +1,51 @@
+import { ScrollView } from "std-widgets.slint";
+import { Dimensions } from "../dimensions.slint";
+import { VerticalScrollBar } from "vertical-scrollbar.slint";
+
+export component ScrollArea inherits Rectangle {
+    in property <bool> enabled: true;
+    in property <bool> mouse-drag-pan-enabled: true;
+    in property <ScrollBarPolicy> vertical-scrollbar-policy: as-needed;
+    in property <ScrollBarPolicy> horizontal-scrollbar-policy <=> viewport.horizontal-scrollbar-policy;
+    // Pages can put the bar in their outer margin; nested lists keep it inside.
+    in property <length> scrollbar-outset: 0px;
+    out property <length> visible-width <=> viewport.visible-width;
+    out property <length> visible-height <=> viewport.visible-height;
+    in-out property <length> content-width <=> viewport.content-width;
+    in-out property <length> content-height <=> viewport.content-height;
+    in-out property <length> content-x <=> viewport.content-x;
+    in-out property <length> content-y <=> viewport.content-y;
+    callback scrolled <=> viewport.scrolled;
+    private property <bool> show-scrollbar: root.vertical-scrollbar-policy != ScrollBarPolicy.always-off && root.content-height > root.visible-height;
+
+    min-width: 50px;
+    min-height: 50px;
+    horizontal-stretch: 1;
+    vertical-stretch: 1;
+    preferred-width: 100%;
+    preferred-height: 100%;
+
+    viewport := ScrollView {
+        x: 0px;
+        y: 0px;
+        width: max(0px, parent.width - (root.vertical-scrollbar-policy != ScrollBarPolicy.always-off ? Dimensions.scrollbar-width + Dimensions.scrollbar-gap - root.scrollbar-outset : 0px));
+        height: parent.height;
+        enabled: root.enabled;
+        mouse-drag-pan-enabled: root.mouse-drag-pan-enabled;
+        vertical-scrollbar-policy: always-off;
+        horizontal-scrollbar-policy: always-off;
+        @children
+    }
+
+    if root.show-scrollbar: VerticalScrollBar {
+        x: root.width - self.width + root.scrollbar-outset;
+        height: viewport.visible-height;
+        enabled: root.enabled;
+        content-height: root.content-height;
+        visible-height: root.visible-height;
+        content-y <=> root.content-y;
+        scrolled => {
+            root.scrolled();
+        }
+    }
+}

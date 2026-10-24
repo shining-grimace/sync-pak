@@ -268,7 +268,7 @@ export component PreflightPage inherits CenteredPageRoot {
                 vertical-stretch: 1;
                 vertical-scrollbar-policy: always-on;
                 for item in root.visible-items: ListItem {
-                    width: parent.width;
+                    width: parent.visible-width;
                     accessible-role: list-item;
                     accessible-label: item.status + ": " + item.path + ". " + item.detail;
                     spacing: Dimensions.element-gap;

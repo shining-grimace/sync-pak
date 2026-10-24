@@ -1,8 +1,10 @@
-import { ListView as StandardListView } from "std-widgets.slint";
+import { ScrollArea } from "scroll-area.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 
-export component ListView inherits StandardListView {
+export component ListView inherits ScrollArea {
+    accessible-role: list;
+    accessible-orientation: vertical;
     mouse-drag-pan-enabled: true;
 }
 

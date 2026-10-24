@@ -83,7 +83,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
             vertical-stretch: 1;
             vertical-scrollbar-policy: always-on;
             for detail in root.details: ListItem {
-                width: parent.width;
+                width: parent.visible-width;
                 DescriptionLabel {
                     accessible-role: list-item;
                     text: detail;

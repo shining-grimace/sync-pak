@@ -79,7 +79,7 @@ export component ActivityPage inherits CenteredPageRoot {
         vertical-stretch: 1;
         vertical-scrollbar-policy: always-on;
         for activity in root.activity-rows : ListItem {
-            width: parent.width;
+            width: parent.visible-width;
             InfoCard {
                 width: parent.width;
                 accessible-role: list-item;
