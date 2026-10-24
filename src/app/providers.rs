@@ -7,3 +7,4 @@ pub(crate) mod list_verification_controller;
 pub(crate) mod s3_verification_controller;
 pub(crate) mod save_error;
 pub(crate) mod saved_verification;
+mod storage_error;

@@ -44,7 +44,7 @@ pub(crate) fn configure(
             &confirm_config,
             &confirm_diagnostics,
             &confirm_buckets,
-            confirm_canceller.as_deref(),
+            confirm_canceller.clone(),
         );
     });
 
@@ -53,6 +53,12 @@ pub(crate) fn configure(
     let cancel_diagnostics = Rc::clone(&diagnostics);
     let cancel_buckets = Rc::clone(&buckets);
     window.on_cancel_provider_delete(move || {
+        if weak
+            .upgrade()
+            .is_some_and(|window| window.get_provider_storage_busy())
+        {
+            return;
+        }
         crate::app::providers::list_controller::show(
             &weak,
             Rc::clone(&cancel_config),
@@ -69,6 +75,9 @@ fn request_delete(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_provider_storage_busy() {
+        return;
+    }
     match provider_and_dependents(configuration, id.as_str()) {
         Ok((provider, connections)) => {
             window.set_pending_provider_id(provider.id.as_str().into());
@@ -95,52 +104,73 @@ fn delete_provider(
     configuration: &Rc<ConfigStore>,
     diagnostics: &SharedDiagnosticLog,
     buckets: &ProviderBucketCache,
-    canceller: Option<&(dyn ConnectionOperationCanceller + Send + Sync)>,
+    canceller: Option<Arc<dyn ConnectionOperationCanceller + Send + Sync>>,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_provider_storage_busy() {
+        return;
+    }
     let pending_id = window.get_pending_provider_id();
-    let result = (|| -> Result<_, ProviderPersistenceError> {
-        let id = provider_id(configuration, pending_id.as_str())
-            .map_err(|_| ProviderPersistenceError::Other)?;
-        let store =
-            PlatformCredentialStore::new().map_err(ProviderPersistenceError::ProtectedStore)?;
-        match canceller {
-            Some(canceller) => crate::operations::operation_cancellation::delete_provider(
-                configuration,
-                &store,
-                canceller,
-                &id,
-            )
-            .map(|_| ())
-            .map_err(ProviderPersistenceError::from),
-            None => ProviderRepository::new(configuration, &store)
-                .delete(&id)
+    let worker_id = pending_id.to_string();
+    let worker_configuration = ConfigStore::at(configuration.path().to_owned());
+    let configuration = Rc::clone(configuration);
+    let diagnostics = Rc::clone(diagnostics);
+    let buckets = Rc::clone(buckets);
+    let weak = weak.clone();
+    super::form::storage_task::start(
+        &window,
+        move |interaction| {
+            let id = provider_id(&worker_configuration, &worker_id)
+                .map_err(|_| ProviderPersistenceError::Other)?;
+            let store = PlatformCredentialStore::with_interaction(interaction)
+                .map_err(ProviderPersistenceError::ProtectedStore)?;
+            match canceller.as_deref() {
+                Some(canceller) => crate::operations::operation_cancellation::delete_provider(
+                    &worker_configuration,
+                    &store,
+                    canceller,
+                    &id,
+                )
                 .map(|_| ())
                 .map_err(ProviderPersistenceError::from),
-        }
-    })();
-    match result {
-        Ok(_) => {
-            provider_bucket_cache::remove(buckets, pending_id.as_str());
-            crate::app::providers::list_controller::show(
-                weak,
-                Rc::clone(configuration),
-                Rc::clone(diagnostics),
-                Rc::clone(buckets),
-            );
-            window.set_notice_message("Provider deleted.".into());
-        }
-        Err(error) => {
-            let (summary, technical_details, message) = error.delete_presentation();
-            diagnostics_controller::present(
-                &window,
-                diagnostics,
-                summary,
-                technical_details,
-                message,
-            );
-        }
-    }
+                None => ProviderRepository::new(&worker_configuration, &store)
+                    .delete(&id)
+                    .map(|_| ())
+                    .map_err(ProviderPersistenceError::from),
+            }
+        },
+        move |window, result| match result {
+            Ok(_) => {
+                provider_bucket_cache::remove(&buckets, pending_id.as_str());
+                crate::app::providers::list_controller::show(
+                    &weak,
+                    Rc::clone(&configuration),
+                    Rc::clone(&diagnostics),
+                    Rc::clone(&buckets),
+                );
+                window.set_notice_message("Provider deleted.".into());
+            }
+            Err(error) => {
+                let (summary, technical_details, message) = error.delete_presentation();
+                if matches!(
+                    error,
+                    ProviderPersistenceError::ProtectedStore(
+                        crate::capabilities::CapabilityError::Cancelled
+                    )
+                ) {
+                    window.set_notice_message(message.into());
+                    return;
+                }
+                diagnostics_controller::present(
+                    window,
+                    &diagnostics,
+                    summary,
+                    technical_details,
+                    message,
+                );
+            }
+        },
+    );
 }
 
 fn provider_and_dependents(

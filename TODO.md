@@ -4,6 +4,8 @@
 - The Aus Post app has a nice example of a good design - image shown at the bottom of a list which is a symbol for the list items themselves - which matches what my original intention was for the connections list (a graph view which never got attention)
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
+- Review the About screen for mentioning the app author and linking to the SyncPak listing on the website, and to the GitHub page suggesting that's where bug-fixes and improvements can be suggested
+- Mention in the Privacy screen where the app's data is being kept
 - Android: test that external storage drives work too
 - Set up release config for Android
 - New setting per connection: "Last Run" timestamp shown in the connections list
@@ -12,5 +14,9 @@
 - Consider transitions and animations
 - Add Google package to AdMob once published on Google Play
 - Add app-ads.txt to developer site once requirements are met
+- Scrolling screens, like New Provider, have a scrollbar that's barely visible and clashes with the other UI
+- In the New Provider (and possibly others) screen, the action buttons at the bottom would fit better as a row
+- On New Provider, after clicking Save & Verify, the UI freezes (not sure if this is because I forgot the custom endpoint?); Verify on its own doesn't have an issue
+- On the New Provider screen, the order of validation doesn't match the UI order (will be told secret access key is required before account ID is required)
 - Make sure the roadmap's key points are all implemented
 - See where beta versions can be released; Google Play being a likely candidate

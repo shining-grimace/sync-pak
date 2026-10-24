@@ -38,6 +38,16 @@ keyboard checks without a mouse. Run Android accessibility checks with TalkBack 
 - **Protected storage:** Save credentials, relaunch, and verify a provider without exposing
   secret values in UI, diagnostics, clipboard, logs, or configuration. Exercise unavailable
   protected storage where the package permits it and confirm there is no plaintext fallback.
+  On Linux, also test a locked GNOME Keyring with no visible unlock prompt: Save & Verify
+  and Save Unverified must keep the window responsive, prevent duplicate submissions,
+  and explain that a desktop unlock dialog is expected. Cancel Credential Access must
+  dismiss the pending request without clearing the form or saving metadata. Leaving
+  the prompt unanswered must time out after two minutes; a nonresponsive service call
+  must time out after five seconds. Test missing service, missing default keyring,
+  denied access, prompt cancellation, and a collection that remains locked separately.
+  Unlock the keyring and retry; confirm exactly one provider is saved. Repeat while
+  editing and deleting an existing provider. Confirm credentials saved by earlier builds
+  can still be loaded and updated. Never lock or modify a production keyring for testing.
 - **Notifications:** Check desktop notification delivery in installed Linux and Windows
   packages. On Android, grant and deny notification permission and confirm the foreground
   service remains understandable in both cases.

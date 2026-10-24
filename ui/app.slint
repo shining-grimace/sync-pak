@@ -42,6 +42,7 @@ import { DangerCard, InfoCard, SuccessCard } from "components/cards.slint";
 import {
     CardPrimaryActionButton,
     CardSecondaryActionButton,
+    SecondaryActionButton,
     NavMenuButton,
 } from "components/action-buttons.slint";
 import { MobileNavMenuButton } from "components/compact-action-buttons.slint";
@@ -160,6 +161,11 @@ export component AppWindow inherits Window {
     in-out property <int> provider-secret-reveal-generation: 0;
     in-out property <bool> provider-advanced-expanded: false;
     in-out property <bool> provider-verifying: false;
+    in-out property <bool> provider-storage-busy: false;
+    in-out property <bool> provider-storage-waiting: false;
+    in-out property <bool> provider-storage-can-cancel: false;
+    in-out property <string> provider-storage-message;
+    callback cancel-provider-storage();
     in-out property <int> provider-verification-generation: 0;
     in-out property <bool> provider-save-after-verification: false;
     in-out property <string> pending-connection-id;
@@ -493,6 +499,20 @@ export component AppWindow inherits Window {
                 }
             }
 
+            if root.provider-storage-waiting: VerticalLayout {
+                spacing: Dimensions.element-gap;
+                DescriptionLabel {
+                    accessible-live-region: polite;
+                    text: root.provider-storage-message;
+                }
+                if root.provider-storage-can-cancel: SecondaryActionButton {
+                    text: "Cancel Credential Access";
+                    clicked => {
+                        root.cancel-provider-storage();
+                    }
+                }
+            }
+
             if root.page == Page.welcome: WelcomePage {
                 configuration-unavailable: root.configuration-unavailable;
                 retry-configuration => {
@@ -548,6 +568,7 @@ export component AppWindow inherits Window {
                 provider-secret-visible <=> root.provider-secret-visible;
                 provider-advanced-expanded <=> root.provider-advanced-expanded;
                 provider-verifying: root.provider-verifying;
+                provider-storage-busy: root.provider-storage-busy;
                 provider-verified-buckets: root.provider-verified-buckets;
                 provider-bucket-list-empty: root.provider-bucket-list-empty;
                 toggle-provider-secret-visibility => {
@@ -568,6 +589,7 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.provider-save-confirmation: ProviderSaveConfirmationPage {
+                busy: root.provider-storage-busy;
                 provider-name: root.provider-form-name;
                 cancel => {
                     root.cancel-save-provider();
@@ -773,6 +795,7 @@ export component AppWindow inherits Window {
 
 
             if root.page == Page.provider-delete: ProviderDeletePage {
+                busy: root.provider-storage-busy;
                 provider-name: root.pending-provider-name;
                 connection-count: root.pending-connection-count;
                 connections: root.pending-provider-connections;

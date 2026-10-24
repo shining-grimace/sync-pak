@@ -1,4 +1,5 @@
 mod background_execution;
+mod credential_interaction;
 mod credential_store;
 mod error;
 mod filesystem;
@@ -8,6 +9,7 @@ mod notifications;
 
 pub use crate::operations::operation_progress::{OperationPhase, OperationProgress, RetryStatus};
 pub use background_execution::BackgroundExecution;
+pub(crate) use credential_interaction::{CredentialInteraction, CredentialPhase};
 pub use credential_store::ProtectedCredentialStore;
 pub use error::CapabilityError;
 pub use filesystem::{FileMetadata, FileSystemAccess};

@@ -14,6 +14,8 @@ use crate::{
 
 use super::{ProviderCredentials, ProviderDraft, ProviderRepository};
 
+mod timeouts;
+
 #[derive(Default)]
 struct MemoryCredentials(Mutex<HashMap<String, Vec<u8>>>);
 

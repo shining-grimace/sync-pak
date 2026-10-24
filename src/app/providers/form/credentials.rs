@@ -1,5 +1,6 @@
 use crate::{
     app::providers::save_error::ProviderPersistenceError,
+    capabilities::CredentialInteraction,
     configuration::{ConfigStore, ProviderCredentials, ProviderId, ProviderRepository},
     platform::PlatformCredentialStore,
 };
@@ -7,8 +8,10 @@ use crate::{
 pub(crate) fn load(
     configuration: &ConfigStore,
     provider_id: &ProviderId,
+    interaction: CredentialInteraction,
 ) -> Result<ProviderCredentials, ProviderPersistenceError> {
-    let store = PlatformCredentialStore::new().map_err(ProviderPersistenceError::ProtectedStore)?;
+    let store = PlatformCredentialStore::with_interaction(interaction)
+        .map_err(ProviderPersistenceError::ProtectedStore)?;
     ProviderRepository::new(configuration, &store)
         .load_credentials(provider_id)
         .map_err(ProviderPersistenceError::from)
@@ -20,8 +23,11 @@ pub(crate) fn resolve(
     access_key_id: &str,
     secret_access_key: &str,
     session_token: &str,
+    interaction: CredentialInteraction,
 ) -> Result<ProviderCredentials, ProviderPersistenceError> {
-    let saved = provider_id.map(|id| load(configuration, id)).transpose()?;
+    let saved = provider_id
+        .map(|id| load(configuration, id, interaction))
+        .transpose()?;
     Ok(merge(
         saved.as_ref(),
         access_key_id,

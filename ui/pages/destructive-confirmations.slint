@@ -10,6 +10,7 @@ import { ActionGroup, ListItem, ListView } from "../components/list-and-action-l
 
 export component ProviderDeletePage inherits CenteredPageRoot {
     in property <string> provider-name;
+    in property <bool> busy;
     in property <int> connection-count;
     in property <[string]> connections;
     callback cancel();
@@ -62,6 +63,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
         SecondaryActionButton {
             accessible-label: "Keep provider " + root.provider-name;
             text: "Cancel";
+            enabled: !root.busy;
             clicked => {
                 root.cancel();
             }
@@ -69,7 +71,8 @@ export component ProviderDeletePage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Delete provider " + root.provider-name;
-            text: "Delete Provider";
+            text: root.busy ? "Deleting…" : "Delete Provider";
+            enabled: !root.busy;
             clicked => {
                 root.confirm();
             }

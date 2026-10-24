@@ -9,6 +9,22 @@ use crate::{
 
 pub(crate) fn credential_store_message(error: CapabilityError) -> &'static str {
     match error {
+        CapabilityError::UnlockTimedOut | CapabilityError::Locked => {
+            "Password storage was not unlocked. Unlock it in your desktop's password manager, then retry."
+        }
+        CapabilityError::Cancelled => "Credential access was cancelled.",
+        CapabilityError::ServiceMissing => {
+            "No desktop password service is available. Enable GNOME Keyring or KWallet, then retry."
+        }
+        CapabilityError::NotConfigured => {
+            "Password storage has no default keyring. Set one up in your desktop's password manager, then retry."
+        }
+        CapabilityError::AccessDenied => {
+            "Access to desktop password storage was denied. Check the app's permissions, then retry."
+        }
+        CapabilityError::TimedOut => {
+            "Protected credential storage did not respond. Check for an unlock prompt, then try again."
+        }
         CapabilityError::Busy => {
             "Protected credential storage was busy when the run started. Wait a moment, then try again."
         }

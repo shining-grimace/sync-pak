@@ -6,6 +6,7 @@ import { ActionGroup } from "../components/list-and-action-layouts.slint";
 
 export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     in property <string> provider-name;
+    in property <bool> busy;
     callback cancel();
     callback save();
 
@@ -21,6 +22,7 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
         SecondaryActionButton {
             accessible-label: "Continue editing provider " + root.provider-name;
             text: "Keep Editing";
+            enabled: !root.busy;
             clicked => {
                 root.cancel();
             }
@@ -28,7 +30,8 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
 
         PrimaryActionButton {
             accessible-label: "Save provider " + root.provider-name + " without verifying";
-            text: "Save Unverified";
+            text: root.busy ? "Saving…" : "Save Unverified";
+            enabled: !root.busy;
             clicked => {
                 root.save();
             }

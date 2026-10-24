@@ -36,6 +36,11 @@ impl From<crate::operations::operation_cancellation::ProviderDeletionError>
 
 impl ProviderPersistenceError {
     pub(crate) fn save_presentation(&self) -> (&'static str, &'static str, &'static str) {
+        if let Self::ProtectedStore(error) = self
+            && let Some(presentation) = super::storage_error::presentation(*error)
+        {
+            return presentation;
+        }
         match self {
             Self::ProtectedStore(CapabilityError::Busy) => (
                 "Protected credential storage is busy",
@@ -57,6 +62,11 @@ impl ProviderPersistenceError {
     }
 
     pub(crate) fn delete_presentation(&self) -> (&'static str, &'static str, &'static str) {
+        if let Self::ProtectedStore(error) = self
+            && let Some(presentation) = super::storage_error::presentation(*error)
+        {
+            return presentation;
+        }
         match self {
             Self::ProtectedStore(CapabilityError::Busy) => (
                 "Protected credential storage is busy",
@@ -94,7 +104,11 @@ mod tests {
                 .save_presentation();
 
         assert!(technical.contains("credential storage"));
-        assert!(message.contains("Unlock"));
+        if cfg!(target_os = "linux") {
+            assert!(message.contains("desktop session"));
+        } else {
+            assert!(message.contains("Unlock"));
+        }
         assert!(!message.contains("key"));
     }
 }

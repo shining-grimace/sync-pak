@@ -98,7 +98,8 @@ fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
 
 fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
     let Some(window) = weak.upgrade() else { return };
-    if navigation_is_blocked(window.get_page())
+    if window.get_provider_storage_busy()
+        || navigation_is_blocked(window.get_page())
         || (window.get_page() == 3
             && (window.global::<crate::SettingsState>().get_mode() != 0
                 || window.global::<crate::SettingsState>().get_busy()))

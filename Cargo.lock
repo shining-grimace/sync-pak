@@ -5722,10 +5722,12 @@ name = "sync-pak"
 version = "0.1.0"
 dependencies = [
  "android-native-keyring-store",
+ "async-io",
  "aws-config",
  "aws-sdk-s3",
  "aws-smithy-runtime-api",
  "aws-smithy-types",
+ "futures-lite",
  "futures-util",
  "hyper 1.10.1",
  "hyper-rustls 0.27.9",
@@ -5738,6 +5740,7 @@ dependencies = [
  "rusqlite",
  "rustls 0.23.42",
  "rustls-platform-verifier",
+ "secret-service",
  "serde",
  "serde_json",
  "slint",
@@ -5747,7 +5750,7 @@ dependencies = [
  "unicode-normalization",
  "uuid",
  "windows-native-keyring-store",
- "zbus-secret-service-keyring-store",
+ "zbus",
  "zip",
 ]
 
@@ -7531,17 +7534,6 @@ dependencies = [
  "zbus-lockstep",
  "zbus_xml",
  "zvariant",
-]
-
-[[package]]
-name = "zbus-secret-service-keyring-store"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ccede190ba363386a24e8021c7f3848393976609ec9f5d1f8c6c09ef37075b4"
-dependencies = [
- "keyring-core",
- "secret-service",
- "zbus",
 ]
 
 [[package]]

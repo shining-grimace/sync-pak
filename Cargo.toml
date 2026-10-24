@@ -45,7 +45,10 @@ notify-rust = "=4.18.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 rfd = { version = "=0.17.2", default-features = false, features = ["wayland", "xdg-portal"] }
-zbus-secret-service-keyring-store = { version = "=1.0.0", features = ["crypto-rust"] }
+secret-service = { version = "=5.2.0", features = ["rt-async-io-crypto-rust"] }
+zbus = { version = "=5.19.0", default-features = false, features = ["async-io"] }
+async-io = "=2.6.0"
+futures-lite = "=2.6.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 rfd = { version = "=0.17.2", default-features = false, features = ["common-controls-v6"] }

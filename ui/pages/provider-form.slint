@@ -26,6 +26,8 @@ export component ProviderFormPage inherits CenteredPageRoot {
     in-out property <bool> provider-secret-visible;
     in-out property <bool> provider-advanced-expanded;
     in property <bool> provider-verifying;
+    in property <bool> provider-storage-busy;
+    private property <bool> busy: root.provider-verifying || root.provider-storage-busy;
     in property <[string]> provider-verified-buckets;
     in property <bool> provider-bucket-list-empty;
     in property <int> validation-focus;
@@ -76,7 +78,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
         accessible-label: "Provider name";
         placeholder-text: "For example, Personal S3";
         text <=> root.provider-form-name;
-        enabled: !root.provider-verifying;
+        enabled: !root.busy;
     }
 
     SectionHeadingLabel {
@@ -87,7 +89,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
         accessible-label: "Provider type";
         model: ["Cloudflare R2", "Backblaze B2", "AWS S3"];
         current-index <=> root.provider-form-kind;
-        enabled: !root.provider-verifying;
+        enabled: !root.busy;
     }
 
     ProviderSummaryLabel {
@@ -104,7 +106,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
             accessible-label: "Cloudflare account ID";
             placeholder-text: "Cloudflare account ID";
             text <=> root.provider-form-account-id;
-            enabled: !root.provider-verifying;
+            enabled: !root.busy;
         }
     }
     if root.provider-form-kind == 1: DescriptionLabel {
@@ -118,7 +120,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
         accessible-label: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
         placeholder-text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";
         text <=> root.provider-form-access-key;
-        enabled: !root.provider-verifying;
+        enabled: !root.busy;
     }
 
     SectionHeadingLabel {
@@ -133,13 +135,13 @@ export component ProviderFormPage inherits CenteredPageRoot {
             text <=> root.provider-form-secret-key;
             input-type: root.provider-secret-visible ? text : password;
             horizontal-stretch: 1;
-            enabled: !root.provider-verifying;
+            enabled: !root.busy;
         }
 
         SecretVisibilityButton {
             revealed: root.provider-secret-visible;
             secret-name: root.provider-form-kind == 1 ? "application key" : "secret access key";
-            enabled: !root.provider-verifying;
+            enabled: !root.busy;
             clicked => {
                 root.toggle-provider-secret-visibility();
             }
@@ -161,7 +163,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
         optional: true;
         endpoint <=> root.provider-form-endpoint;
         region <=> root.provider-form-region;
-        enabled: !root.provider-verifying;
+        enabled: !root.busy;
         infer-b2-region(value) => {
             return root.infer-b2-region(value);
         }
@@ -174,7 +176,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
         accessible-label: "Fixed bucket";
         placeholder-text: "Used and locked for connections that select this provider";
         text <=> root.provider-form-bucket;
-        enabled: !root.provider-verifying;
+        enabled: !root.busy;
     }
 
     if root.provider-verified-buckets.length > 0: VerticalLayout {
@@ -186,7 +188,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
         ComboBox {
             accessible-label: "Discovered buckets";
             model: root.provider-verified-buckets;
-            enabled: !root.provider-verifying;
+            enabled: !root.busy;
             selected => {
                 root.provider-form-bucket = root.provider-verified-buckets[self.current-index];
             }
@@ -211,7 +213,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
             accessible-label: "Fixed bucket connection settings";
             model: ["Use provider settings", "Configure for this bucket"];
             current-index: root.provider-form-bucket-custom ? 1 : 0;
-            enabled: !root.provider-verifying;
+            enabled: !root.busy;
             selected => {
                 root.provider-form-bucket-custom = self.current-index == 1;
             }
@@ -220,7 +222,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
             kind: root.provider-form-kind;
             endpoint <=> root.provider-form-bucket-endpoint;
             region <=> root.provider-form-bucket-region;
-            enabled: !root.provider-verifying;
+            enabled: !root.busy;
             infer-b2-region(value) => {
                 return root.infer-b2-region(value);
             }
@@ -233,7 +235,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
     SecondaryActionButton {
         accessible-label: root.provider-advanced-expanded ? "Hide advanced provider settings" : "Show advanced provider settings";
         text: root.provider-advanced-expanded ? "Hide Advanced" : "Advanced";
-        enabled: !root.provider-verifying;
+        enabled: !root.busy;
         clicked => {
             root.provider-advanced-expanded = !root.provider-advanced-expanded;
         }
@@ -250,7 +252,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
             placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : "Optional temporary session token";
             text <=> root.provider-form-session-token;
             input-type: root.provider-secret-visible ? text : password;
-            enabled: !root.provider-verifying;
+            enabled: !root.busy;
         }
 
         DescriptionLabel {
@@ -272,6 +274,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
             SecondaryActionButton {
                 accessible-label: "Back to providers";
                 text: "Back";
+                enabled: !root.provider-storage-busy;
                 clicked => {
                     root.request-discard-provider();
                 }
@@ -280,7 +283,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
             SecondaryActionButton {
                 accessible-label: "Save " + root.provider-form-name + " without verifying";
                 text: "Save Unverified";
-                enabled: !root.provider-verifying;
+                enabled: !root.busy;
                 clicked => {
                     root.request-save-provider();
                 }
@@ -289,7 +292,7 @@ export component ProviderFormPage inherits CenteredPageRoot {
             SecondaryActionButton {
                 accessible-label: "Verify settings for " + root.provider-form-name;
                 text: "Verify";
-                enabled: !root.provider-verifying;
+                enabled: !root.busy;
                 clicked => {
                     root.verify-provider();
                 }
@@ -297,8 +300,8 @@ export component ProviderFormPage inherits CenteredPageRoot {
 
             PrimaryActionButton {
                 accessible-label: "Save and verify " + root.provider-form-name;
-                text: root.provider-verifying ? "Verifying…" : "Save & Verify";
-                enabled: !root.provider-verifying;
+                text: root.provider-storage-busy ? "Waiting…" : root.provider-verifying ? "Verifying…" : "Save & Verify";
+                enabled: !root.busy;
                 clicked => {
                     root.save-and-verify-provider();
                 }
