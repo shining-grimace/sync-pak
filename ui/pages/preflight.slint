@@ -324,8 +324,8 @@ export component PreflightPage inherits CenteredPageRoot {
                 text: root.start-action;
                 enabled: !root.loading && !root.failed && root.has-planned-actions && (!root.requires-mirror-confirmation || root.mirror-confirmed);
                 emphasized: root.has-planned-actions;
-                fill-color: root.has-planned-actions ? Colors.primary : Colors.surface;
-                label-color: root.has-planned-actions ? Colors.surface : Colors.primary;
+                fill-color: root.has-planned-actions ? Colors.primary-accent : Colors.background-trim;
+                label-color: root.has-planned-actions ? Colors.background-trim : Colors.primary-accent;
                 clicked => {
                     root.start-operation();
                 }

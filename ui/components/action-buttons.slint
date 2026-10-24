@@ -82,9 +82,9 @@ export component NavMenuButton inherits ActionButton {
 
     button-width: Dimensions.action-button-preferred-width;
     emphasized: root.selected;
-    fill-color: Colors.primary;
-    outline-color: Colors.primary;
-    label-color: Colors.surface;
+    fill-color: Colors.primary-accent;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.background-trim;
 }
 
 export component RadioButton inherits ActionButton {
@@ -92,9 +92,9 @@ export component RadioButton inherits ActionButton {
 
     button-width: Dimensions.radio-button-preferred-width;
     emphasized: root.selected;
-    fill-color: root.selected ? Colors.primary : Colors.surface;
-    outline-color: Colors.primary;
-    label-color: root.selected ? Colors.surface : Colors.primary;
+    fill-color: root.selected ? Colors.primary-accent : Colors.background-trim;
+    outline-color: Colors.primary-accent;
+    label-color: root.selected ? Colors.background-trim : Colors.primary-accent;
     accessible-role: radio-button;
     accessible-checkable: true;
     accessible-checked: root.selected;
@@ -107,9 +107,9 @@ export component FilterButton inherits ActionButton {
     button-height: Dimensions.compact-action-button-height;
     expand-width: true;
     emphasized: root.selected;
-    fill-color: root.selected ? Colors.primary : Colors.surface;
-    outline-color: Colors.primary;
-    label-color: root.selected ? Colors.surface : Colors.primary;
+    fill-color: root.selected ? Colors.primary-accent : Colors.background-trim;
+    outline-color: Colors.primary-accent;
+    label-color: root.selected ? Colors.background-trim : Colors.primary-accent;
     accessible-role: radio-button;
     accessible-checkable: true;
     accessible-checked: root.selected;
@@ -122,9 +122,9 @@ export component ToggleButton inherits ActionButton {
     button-height: Dimensions.compact-action-button-height;
     expand-width: true;
     emphasized: root.selected;
-    fill-color: root.selected ? Colors.primary : Colors.surface;
-    outline-color: Colors.primary;
-    label-color: root.selected ? Colors.surface : Colors.primary;
+    fill-color: root.selected ? Colors.primary-accent : Colors.background-trim;
+    outline-color: Colors.primary-accent;
+    label-color: root.selected ? Colors.background-trim : Colors.primary-accent;
     accessible-role: checkbox;
     accessible-checkable: true;
     accessible-checked: root.selected;
@@ -135,18 +135,18 @@ export component NewActionButton inherits ActionButton {
     button-height: Dimensions.compact-action-button-height;
     fixed-width: true;
     emphasized: true;
-    fill-color: Colors.primary;
-    outline-color: Colors.primary;
-    label-color: Colors.surface;
+    fill-color: Colors.primary-accent;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.background-trim;
 }
 
 export component CardPrimaryActionButton inherits ActionButton {
     button-width: Dimensions.card-action-button-width;
     fixed-width: true;
     emphasized: true;
-    fill-color: Colors.primary;
-    outline-color: Colors.primary;
-    label-color: Colors.surface;
+    fill-color: Colors.primary-accent;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.background-trim;
 }
 
 export component CompactCardPrimaryActionButton inherits CardPrimaryActionButton {
@@ -158,26 +158,26 @@ export component CompactCardPrimaryActionButton inherits CardPrimaryActionButton
 export component CardSecondaryActionButton inherits ActionButton {
     button-width: Dimensions.card-action-button-width;
     fixed-width: true;
-    fill-color: Colors.surface;
-    outline-color: Colors.primary;
-    label-color: Colors.primary;
+    fill-color: Colors.background-trim;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.primary-accent;
 }
 
 export component ExpandedPrimaryActionButton inherits ActionButton {
     button-width: 0px;
     expand-width: true;
     emphasized: true;
-    fill-color: Colors.primary;
-    outline-color: Colors.primary;
-    label-color: Colors.surface;
+    fill-color: Colors.primary-accent;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.background-trim;
 }
 
 export component ExpandedSecondaryActionButton inherits ActionButton {
     button-width: 0px;
     expand-width: true;
-    fill-color: Colors.surface;
-    outline-color: Colors.primary;
-    label-color: Colors.primary;
+    fill-color: Colors.background-trim;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.primary-accent;
 }
 
 component PageActionButton inherits HorizontalLayout {
@@ -219,13 +219,13 @@ component PageActionButton inherits HorizontalLayout {
 
 export component PrimaryActionButton inherits PageActionButton {
     emphasized: true;
-    fill-color: Colors.primary;
-    outline-color: Colors.primary;
-    label-color: Colors.surface;
+    fill-color: Colors.primary-accent;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.background-trim;
 }
 
 export component SecondaryActionButton inherits PageActionButton {
-    fill-color: Colors.surface;
-    outline-color: Colors.primary;
-    label-color: Colors.primary;
+    fill-color: Colors.background-trim;
+    outline-color: Colors.primary-accent;
+    label-color: Colors.primary-accent;
 }

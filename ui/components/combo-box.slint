@@ -48,7 +48,7 @@ export component ComboBox {
     Rectangle {
         border-radius: Dimensions.input-border-radius;
         border-width: 1px;
-        border-color: root.has-focus ? Colors.secondary : Colors.primary;
+        border-color: root.has-focus ? Colors.secondary-accent : Colors.primary-accent;
         background: Palette.control-background;
         opacity: root.enabled ? 1 : 0.55;
 
@@ -97,8 +97,8 @@ export component ComboBox {
         forward-focus: popup-focus;
 
         Rectangle {
-            background: Colors.surface;
-            border-color: Colors.primary;
+            background: Colors.background-trim;
+            border-color: Colors.primary-accent;
             border-width: 1px;
             border-radius: Dimensions.input-border-radius;
             clip: true;
@@ -122,13 +122,13 @@ export component ComboBox {
                         for value[index] in root.model: Rectangle {
                             height: Dimensions.compact-action-button-height;
                             vertical-stretch: 0;
-                            background: index == root.current-index ? Colors.primary : transparent;
+                            background: index == root.current-index ? Colors.primary-accent : transparent;
 
                             Text {
                                 x: 12px;
                                 width: parent.width - 24px;
                                 text: value;
-                                color: index == root.current-index ? Colors.surface : Colors.primary;
+                                color: index == root.current-index ? Colors.background-trim : Colors.primary-accent;
                                 vertical-alignment: center;
                                 overflow: elide;
                                 accessible-role: none;

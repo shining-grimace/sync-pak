@@ -345,14 +345,14 @@ export component AppWindow inherits Window {
     apply-appearance-preference => {
         Colors.dark-mode = root.resolved-dark-mode;
         Palette.color-scheme = root.appearance-preference == 1 ? ColorScheme.light : root.appearance-preference == 2 ? ColorScheme.dark : ColorScheme.unknown;
-        root.set-advertising-footer-color(Colors.secondary);
+        root.set-advertising-footer-color(Colors.secondary-accent);
     }
     title: "SyncPak";
     preferred-width: 900px;
     preferred-height: 620px;
     min-width: 360px;
     min-height: Dimensions.window-min-height;
-    background: Colors.app-background;
+    background: Colors.background;
 
     Rectangle {
         x: 0px;
@@ -446,7 +446,7 @@ export component AppWindow inherits Window {
                 spacing: Dimensions.element-gap;
                 Text {
                     text: "SYNCPAK";
-                    color: Colors.primary;
+                    color: Colors.primary-accent;
                     font-size: 17px;
                     font-weight: 800;
                     letter-spacing: 2px;
@@ -967,7 +967,7 @@ export component AppWindow inherits Window {
             height: root.height - 32px;
                 Text {
                     text: "SYNCPAK";
-                    color: Colors.primary;
+                    color: Colors.primary-accent;
                     font-size: 17px;
                     font-weight: 800;
                     letter-spacing: 2px;

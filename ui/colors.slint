@@ -1,14 +1,15 @@
 export global Colors {
     in-out property <bool> dark-mode: false;
-    out property <brush> app-background: dark-mode ? #000000 : #f3efe3;
-    out property <brush> surface: dark-mode ? #1c1a17 : #fffaf0;
-    out property <brush> primary: dark-mode ? #bc31ff : #171512;
-    out property <brush> secondary: dark-mode ? #e4bda3 : #454039;
-    out property <brush> scrollbar-thumb: dark-mode ? #a49aa9 : #766c61;
-    out property <brush> scrollbar-track: dark-mode ? #302a36 : #d9d1c6;
+
+    out property <brush> background: dark-mode ? #000000 : #f3efe3;
+    out property <brush> background-trim: dark-mode ? #1c1a17 : #fffaf0;
+    out property <brush> primary-accent: dark-mode ? #bc31ff : #171512;
+    out property <brush> secondary-accent: dark-mode ? #e4bda3 : #454039;
+    out property <brush> primary-trim: dark-mode ? #a49aa9 : #766c61;
+    out property <brush> secondary-trim: dark-mode ? #302a36 : #d9d1c6;
+
     out property <brush> danger: dark-mode ? #ffb4ab : #901c1c;
     out property <brush> danger-surface: dark-mode ? #5c1715 : #ffc0c0;
     out property <brush> success: dark-mode ? #87d89a : #1c801c;
     out property <brush> success-surface: dark-mode ? #183d24 : #c0f0c0;
-    out property <brush> progress-track: dark-mode ? #8cb9ca : #e2ddd4;
 }

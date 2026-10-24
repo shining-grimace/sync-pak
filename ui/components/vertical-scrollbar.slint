@@ -11,7 +11,7 @@ export component VerticalScrollBar inherits Rectangle {
     private property <length> travel: max(0px, root.height - thumb.height);
 
     width: Dimensions.scrollbar-width;
-    background: Colors.scrollbar-track;
+    background: Colors.secondary-trim;
     border-radius: self.width / 2;
 
     thumb := Rectangle {
@@ -19,7 +19,7 @@ export component VerticalScrollBar inherits Rectangle {
         height: min(root.height, max(Dimensions.scrollbar-min-thumb-height, root.height * root.visible-height / max(1px, root.content-height)));
         y: root.maximum > 0px ? root.travel * min(1, max(0, -root.content-y / root.maximum)) : 0px;
         border-radius: self.width / 2;
-        background: touch.has-hover || touch.pressed ? Colors.primary : Colors.scrollbar-thumb;
+        background: touch.has-hover || touch.pressed ? Colors.primary-accent : Colors.primary-trim;
     }
 
     touch := TouchArea {
