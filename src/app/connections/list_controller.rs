@@ -94,6 +94,7 @@ pub(crate) fn refresh(
     sessions: &SessionVerifications,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    window.set_connection_list_verifying(!states.borrow().is_empty());
     match configuration.load() {
         Ok(mut config) => {
             window.set_connection_filter(config.connection_filter);
@@ -158,7 +159,10 @@ pub(crate) fn refresh(
                             .into(),
                     }
                 });
-            window.set_connections(ModelRc::new(Rc::new(VecModel::from_iter(rows))));
+            window.set_connections(super::list_rows::update(
+                window.get_connections(),
+                rows.collect(),
+            ));
         }
         Err(_) => {
             window.set_connections_load_failed(true);

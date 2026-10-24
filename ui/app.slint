@@ -193,6 +193,7 @@ export component AppWindow inherits Window {
     private property <TransportPreview> connection-transport-preview: root.preview-connection-transport(root.connection-form-provider, root.connection-form-bucket, root.connection-form-use-provider-settings, root.connection-form-endpoint, root.connection-form-region, root.connection-provider-generation);
     in-out property <string> connection-form-original;
     in-out property <bool> connection-verifying: false;
+    in-out property <bool> connection-list-verifying: false;
     in-out property <int> connection-verification-generation: 0;
     in-out property <bool> connection-save-after-verification: false;
     in-out property <bool> folder-picker-open: false;
@@ -610,6 +611,7 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.connections: ConnectionsPage {
+                connection-list-verifying: root.connection-list-verifying;
                 connections: root.connections;
                 operation-busy: root.operation-busy;
                 show-activity-result(id) => {

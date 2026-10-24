@@ -29,6 +29,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
     in-out property <bool> connections-newest-first;
     in property <bool> connections-load-failed;
     in property <bool> operation-busy;
+    in property <bool> connection-list-verifying;
     callback show-activity-result(string);
     callback show-connections();
     callback show-add-provider();
@@ -278,6 +279,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                     if !connection.running && connection.result-id != "": CompactCardSecondaryActionButton {
                         text: "View Summary";
                         accessible-label: "View latest sync summary for " + connection.name;
+                        enabled: !root.connection-list-verifying;
                         clicked => {
                             root.show-activity-result(connection.result-id);
                         }
