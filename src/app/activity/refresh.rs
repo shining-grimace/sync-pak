@@ -59,6 +59,19 @@ pub(super) fn refresh<E: OperationExecutor + Send + Sync + 'static>(
             .find(|e| e.plan.connection_id == row.id.as_str() && e.result.is_some())
             .map_or_else(Default::default, |e| e.operation_id.to_string().into());
         if row.running != running || row.result_id != result_id {
+            if row.result_id != result_id
+                && let Some(entry) = activity
+                    .iter()
+                    .find(|e| e.operation_id.to_string() == result_id.as_str())
+                && let Some(path) = &entry.configuration_path
+                && let Ok(config) = crate::configuration::ConfigStore::at(path.clone()).load()
+                && let Some(connection) = config
+                    .connections
+                    .iter()
+                    .find(|c| c.id.as_str() == row.id.as_str())
+            {
+                row.last_run = crate::app::connections::last_run::label(connection.last_run).into();
+            }
             row.running = running;
             row.result_id = result_id;
             connections.set_row_data(index, row);

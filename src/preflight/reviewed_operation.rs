@@ -85,6 +85,7 @@ mod tests {
         let provider_id = ProviderId::new();
         RunRequest {
             connection: ConnectionConfig {
+                last_run: None,
                 transport: None,
                 id: ConnectionId::new(),
                 name: "Photos".into(),

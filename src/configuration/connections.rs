@@ -45,12 +45,13 @@ impl<'a> ConnectionRepository<'a> {
         draft: ConnectionDraft,
     ) -> Result<ConnectionConfig, ConnectionError> {
         let mut config = self.load()?;
-        let connection = draft.into_config(id.clone());
+        let mut connection = draft.into_config(id.clone());
         let existing = config
             .connections
             .iter_mut()
             .find(|item| &item.id == id)
             .ok_or(ConnectionError::NotFound)?;
+        connection.last_run = existing.last_run;
         *existing = connection.clone();
         self.save(&config)?;
         Ok(connection)
@@ -82,6 +83,24 @@ impl<'a> ConnectionRepository<'a> {
 }
 
 impl ConfigStore {
+    pub(crate) fn record_connection_run(
+        &self,
+        connection_id: &str,
+        timestamp: u64,
+    ) -> Result<bool, ConfigurationError> {
+        let mut config = self.load()?;
+        let Some(connection) = config
+            .connections
+            .iter_mut()
+            .find(|connection| connection.id.as_str() == connection_id)
+        else {
+            return Ok(false);
+        };
+        connection.last_run = Some(timestamp);
+        self.save(&config)?;
+        Ok(true)
+    }
+
     pub(crate) fn record_connection_verification(
         &self,
         connection_id: &str,
@@ -119,6 +138,7 @@ pub struct ConnectionDraft {
 impl ConnectionDraft {
     pub fn into_config(self, id: ConnectionId) -> ConnectionConfig {
         ConnectionConfig {
+            last_run: None,
             id,
             name: self.name,
             provider_id: self.provider_id,

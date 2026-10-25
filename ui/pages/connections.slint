@@ -276,12 +276,23 @@ export component ConnectionsPage inherits CenteredPageRoot {
                         }
                     }
 
-                    if !connection.running && connection.result-id != "": CompactCardSecondaryActionButton {
-                        text: "View Summary";
-                        accessible-label: "View latest sync summary for " + connection.name;
-                        enabled: !root.connection-list-verifying;
-                        clicked => {
-                            root.show-activity-result(connection.result-id);
+                    HorizontalLayout {
+                        spacing: Dimensions.card-element-spacing;
+                        DescriptionLabel {
+                            width: (parent.width - Dimensions.card-element-spacing) * 0.75;
+                            text: connection.last-run;
+                        }
+
+                        HorizontalLayout {
+                            width: (parent.width - Dimensions.card-element-spacing) * 0.25;
+                            if connection.result-id != "": CompactCardSecondaryActionButton {
+                                text: "View Summary";
+                                accessible-label: "View latest sync summary for " + connection.name;
+                                enabled: !root.connection-list-verifying;
+                                clicked => {
+                                    root.show-activity-result(connection.result-id);
+                                }
+                            }
                         }
                     }
                     HorizontalLayout {

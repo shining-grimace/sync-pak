@@ -77,6 +77,7 @@ impl OperationExecutor for BlockingExecutor {
 fn snapshot(name: &str) -> ActivitySnapshot {
     ActivitySnapshot::from_connection(
         &ConnectionConfig {
+            last_run: None,
             transport: None,
             id: ConnectionId::new(),
             name: name.into(),

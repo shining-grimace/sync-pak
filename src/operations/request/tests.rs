@@ -25,6 +25,7 @@ fn config(mode: SyncMode) -> AppConfig {
     };
     AppConfig {
         connections: vec![ConnectionConfig {
+            last_run: None,
             transport: None,
             id: ConnectionId::new(),
             name: "Photos".into(),

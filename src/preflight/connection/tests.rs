@@ -65,6 +65,7 @@ fn request(direction: Direction) -> RunRequest {
         verified: true,
     };
     let connection = ConnectionConfig {
+        last_run: None,
         transport: None,
         id: ConnectionId::new(),
         name: "Photos".into(),

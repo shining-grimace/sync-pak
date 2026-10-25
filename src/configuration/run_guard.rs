@@ -81,7 +81,12 @@ pub fn save<T>(
             .connections
             .iter()
             .find(|c| c.id == request.connection.id)
-            != Some(&request.connection)
+            .is_none_or(|connection| {
+                let mut running = request.connection.clone();
+                // Run metadata can be recorded while settings remain protected.
+                running.last_run = connection.last_run;
+                connection != &running
+            })
             || config
                 .providers
                 .iter()

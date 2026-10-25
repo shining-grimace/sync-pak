@@ -76,7 +76,10 @@ or `..`. Resolution never depends on the working directory or JSON file location
 
 The settings schema remains **version 1**, with one `local_root`, device-local
 providers, and connections. Local connection paths beneath Local Root are stored
-relatively and resolved on load. Incompatible destinations are stored absolutely
+relatively and resolved on load. Each stored connection may include `last_run`,
+a UTC Unix timestamp in seconds recording when its most recent run finished,
+including failed or cancelled runs. This device-local history is excluded from
+portable exports. The connections list displays it in the device’s local time. Incompatible destinations are stored absolutely
 so changing Local Root does not relocate them. No named-root tables, saved-list
 objects, migrations, or compatibility readers are included. Previous developer
 settings must be removed manually if they use the superseded schema.

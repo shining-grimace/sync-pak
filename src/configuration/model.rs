@@ -147,6 +147,9 @@ pub struct ProviderOptions {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ConnectionConfig {
+    /// UTC Unix seconds when the most recent run finished, regardless of outcome.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_run: Option<u64>,
     pub id: ConnectionId,
     pub name: String,
     pub provider_id: ProviderId,

@@ -5,6 +5,7 @@ use crate::configuration::{
 };
 use std::collections::BTreeMap;
 
+mod last_run;
 mod paths;
 mod persistence;
 
@@ -28,6 +29,7 @@ pub(crate) fn config() -> AppConfig {
     };
     let root = std::env::temp_dir().join("syncpak-local-root");
     let connection = ConnectionConfig {
+        last_run: None,
         transport: None,
         id: ConnectionId::new(),
         name: "Photos".into(),

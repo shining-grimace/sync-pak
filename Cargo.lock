@@ -5727,6 +5727,7 @@ dependencies = [
  "aws-sdk-s3",
  "aws-smithy-runtime-api",
  "aws-smithy-types",
+ "chrono",
  "futures-lite",
  "futures-util",
  "hyper 1.10.1",

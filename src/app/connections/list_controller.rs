@@ -121,6 +121,7 @@ pub(crate) fn refresh(
                         running: crate::configuration::run_guard::active(configuration.path())
                             .is_some_and(|r| r.connection.id == connection.id),
                         result_id: Default::default(),
+                        last_run: super::last_run::label(connection.last_run).into(),
                         id: connection.id.as_str().into(),
                         name: connection.name.clone().into(),
                         detail: format!(
