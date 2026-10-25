@@ -12,8 +12,9 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { ErrorHeadingLabel } from "../components/error-heading-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
 import { DangerCard, InfoCard } from "../components/cards.slint";
-import { FilterButton, PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { FilterButton, ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
 import {
+    FooterActionRow,
     ListItem,
     ListLoadingIndicator,
     ListView,
@@ -319,21 +320,6 @@ export component PreflightPage inherits CenteredPageRoot {
                 accessible-live-region: polite;
                 text: "Acknowledge the listed changes before this mirror can start.";
             }
-            PrimaryActionButton {
-                accessible-label: !root.has-planned-actions ? "No action needed" : (root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action);
-                text: root.start-action;
-                enabled: !root.loading && !root.failed && root.has-planned-actions && (!root.requires-mirror-confirmation || root.mirror-confirmed);
-                emphasized: root.has-planned-actions;
-                fill-color: root.has-planned-actions ? Colors.primary-accent : Colors.background-trim;
-                label-color: root.has-planned-actions ? Colors.background-trim : Colors.primary-accent;
-                clicked => {
-                    root.start-operation();
-                }
-            }
-
-            if root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
-                text: "Acknowledge the destructive changes above before starting.";
-            }
         }
     }
     MeasuredVerticalRegion {
@@ -348,27 +334,46 @@ export component PreflightPage inherits CenteredPageRoot {
                 self.focus();
             }
         }
-        preflight-back := SecondaryActionButton {
-            accessible-label: "Return to direction selection for " + root.connection-name;
-            text: "Back";
-            clicked => {
-                root.return-to-direction();
+        FooterActionRow {
+            preflight-back := ExpandedSecondaryActionButton {
+                width: Dimensions.new-action-button-width;
+                horizontal-stretch: 0;
+                accessible-label: "Return to direction selection for " + root.connection-name;
+                text: "Back";
+                clicked => {
+                    root.return-to-direction();
+                }
+            }
+
+            if root.failed: ExpandedPrimaryActionButton {
+                accessible-label: "Try the preflight check again";
+                text: "Try Again";
+                clicked => {
+                    root.begin-preflight();
+                }
+            }
+            if !root.loading && !root.failed: ExpandedSecondaryActionButton {
+                accessible-label: "Refresh the read-only preflight review";
+                text: "Refresh Review";
+                clicked => {
+                    root.begin-preflight();
+                }
+            }
+            if !root.loading && !root.failed: ExpandedPrimaryActionButton {
+                accessible-label: !root.has-planned-actions ? "No action needed" : (root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action);
+                text: root.start-action;
+                enabled: !root.loading && !root.failed && root.has-planned-actions && (!root.requires-mirror-confirmation || root.mirror-confirmed);
+                emphasized: root.has-planned-actions;
+                fill-color: root.has-planned-actions ? Colors.primary-accent : Colors.background-trim;
+                label-color: root.has-planned-actions ? Colors.background-trim : Colors.primary-accent;
+                clicked => {
+                    root.start-operation();
+                }
             }
         }
 
-        if root.failed: PrimaryActionButton {
-            accessible-label: "Try the preflight check again";
-            text: "Try Again";
-            clicked => {
-                root.begin-preflight();
-            }
-        }
-        if !root.loading && !root.failed: SecondaryActionButton {
-            accessible-label: "Refresh the read-only preflight review";
-            text: "Refresh Review";
-            clicked => {
-                root.begin-preflight();
-            }
+        if !root.loading && !root.failed && root.requires-mirror-confirmation && !root.mirror-confirmed: ErrorLabel {
+            text: "Acknowledge the destructive changes above before starting.";
         }
     }
 }

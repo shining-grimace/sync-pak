@@ -1,3 +1,4 @@
+import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 import { CheckBox } from "std-widgets.slint";
 import { TextEdit } from "../components/form-controls.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
@@ -5,7 +6,7 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
-import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
 
 export component DiagnosticsPage inherits CenteredPageRoot {
     in property <string> diagnostic-text;
@@ -53,25 +54,28 @@ export component DiagnosticsPage inherits CenteredPageRoot {
         wrap: word-wrap;
     }
 
-    PrimaryActionButton {
-        accessible-label: root.include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
-        text: root.include-paths ? "Copy with Paths" : "Copy Report";
-        clicked => {
-            report.select-all();
-            report.copy();
-            root.copy-status = root.include-paths ? "Diagnostics report with paths copied." : "Redacted diagnostics report copied.";
+    FooterActionRow {
+        ExpandedPrimaryActionButton {
+            accessible-label: root.include-paths ? "Copy diagnostics report with file and folder paths" : "Copy redacted diagnostics report";
+            text: root.include-paths ? "Copy with Paths" : "Copy Report";
+            clicked => {
+                report.select-all();
+                report.copy();
+                root.copy-status = root.include-paths ? "Diagnostics report with paths copied." : "Redacted diagnostics report copied.";
+            }
+        }
+
+        ExpandedSecondaryActionButton {
+            accessible-label: "Return to the previous screen";
+            text: "Back";
+            clicked => {
+                root.dismiss();
+            }
         }
     }
 
     if root.copy-status != "": SuccessLabel {
         accessible-live-region: polite;
         text: root.copy-status;
-    }
-    SecondaryActionButton {
-        accessible-label: "Return to the previous screen";
-        text: "Back";
-        clicked => {
-            root.dismiss();
-        }
     }
 }

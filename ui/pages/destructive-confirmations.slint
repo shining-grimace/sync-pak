@@ -5,8 +5,8 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { DangerCard } from "../components/cards.slint";
 import { Dimensions } from "../dimensions.slint";
-import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
-import { ActionGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
+import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
+import { FooterActionRow, ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ProviderDeletePage inherits CenteredPageRoot {
     in property <string> provider-name;
@@ -59,8 +59,8 @@ export component ProviderDeletePage inherits CenteredPageRoot {
             }
         }
     }
-    ActionGroup {
-        SecondaryActionButton {
+    FooterActionRow {
+        ExpandedSecondaryActionButton {
             accessible-label: "Keep provider " + root.provider-name;
             text: "Cancel";
             enabled: !root.busy;
@@ -69,7 +69,7 @@ export component ProviderDeletePage inherits CenteredPageRoot {
             }
         }
 
-        PrimaryActionButton {
+        ExpandedPrimaryActionButton {
             accessible-label: "Delete provider " + root.provider-name;
             text: root.busy ? "Deleting…" : "Delete Provider";
             enabled: !root.busy;
@@ -109,8 +109,8 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
         }
     }
 
-    ActionGroup {
-        SecondaryActionButton {
+    FooterActionRow {
+        ExpandedSecondaryActionButton {
             accessible-label: "Keep connection " + root.connection-name;
             text: "Cancel";
             clicked => {
@@ -118,7 +118,7 @@ export component ConnectionDeletePage inherits CenteredPageRoot {
             }
         }
 
-        PrimaryActionButton {
+        ExpandedPrimaryActionButton {
             accessible-label: "Delete connection " + root.connection-name;
             text: "Delete Connection";
             clicked => {
@@ -141,8 +141,8 @@ export component ActivityCancelPage inherits CenteredPageRoot {
         text: "Completed changes will not be undone. Work that has not started will be skipped.";
     }
 
-    ActionGroup {
-        SecondaryActionButton {
+    FooterActionRow {
+        ExpandedSecondaryActionButton {
             accessible-label: "Keep " + root.activity-name + " running";
             text: "Keep Running";
             clicked => {
@@ -150,7 +150,7 @@ export component ActivityCancelPage inherits CenteredPageRoot {
             }
         }
 
-        PrimaryActionButton {
+        ExpandedPrimaryActionButton {
             accessible-label: "Cancel operation " + root.activity-name;
             text: "Cancel Operation";
             clicked => {

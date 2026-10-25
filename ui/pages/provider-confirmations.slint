@@ -1,8 +1,8 @@
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
-import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
-import { ActionGroup } from "../components/list-and-action-layouts.slint";
+import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
+import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 
 export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     in property <string> provider-name;
@@ -18,8 +18,8 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
         text: "This provider may not work until its credentials and access are verified.";
     }
 
-    ActionGroup {
-        SecondaryActionButton {
+    FooterActionRow {
+        ExpandedSecondaryActionButton {
             accessible-label: "Continue editing provider " + root.provider-name;
             text: "Keep Editing";
             enabled: !root.busy;
@@ -28,7 +28,7 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
             }
         }
 
-        PrimaryActionButton {
+        ExpandedPrimaryActionButton {
             accessible-label: "Save provider " + root.provider-name + " without verifying";
             text: root.busy ? "Saving…" : "Save Unverified";
             enabled: !root.busy;
@@ -52,8 +52,8 @@ export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
         text: "Your changes to this provider have not been saved.";
     }
 
-    ActionGroup {
-        SecondaryActionButton {
+    FooterActionRow {
+        ExpandedSecondaryActionButton {
             accessible-label: "Continue editing provider " + root.provider-name;
             text: "Keep Editing";
             clicked => {
@@ -61,7 +61,7 @@ export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
             }
         }
 
-        PrimaryActionButton {
+        ExpandedPrimaryActionButton {
             accessible-label: "Discard changes to provider " + root.provider-name;
             text: "Discard Changes";
             clicked => {

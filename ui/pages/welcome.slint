@@ -1,3 +1,4 @@
+import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 import { ProviderGuidanceCard } from "../components/provider-guidance.slint";
 import { Dimensions } from "../dimensions.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
@@ -9,8 +10,8 @@ import { ErrorLabel } from "../components/error-label.slint";
 import { DangerCard, InfoCard } from "../components/cards.slint";
 import {
     CardPrimaryActionButton,
-    PrimaryActionButton,
-    SecondaryActionButton,
+    ExpandedPrimaryActionButton,
+    ExpandedSecondaryActionButton,
 } from "../components/action-buttons.slint";
 
 export component WelcomePage inherits CenteredPageRoot {
@@ -89,19 +90,16 @@ export component WelcomePage inherits CenteredPageRoot {
             }
         }
     }
-    if !root.configuration-unavailable: HorizontalLayout {
-        alignment: center;
-        PrimaryActionButton {
+    FooterActionRow {
+        if !root.configuration-unavailable: ExpandedPrimaryActionButton {
             accessible-label: "Add your first provider";
             text: "Add Provider";
             clicked => {
                 root.show-add-provider();
             }
         }
-    }
-    HorizontalLayout {
-        alignment: center;
-        SecondaryActionButton {
+
+        ExpandedSecondaryActionButton {
             accessible-label: "Read how SyncPak protects your privacy";
             text: "Privacy";
             clicked => {

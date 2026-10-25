@@ -4,11 +4,11 @@ import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { LineEdit, ComboBox } from "../components/form-controls.slint";
-import { PrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 import { CheckBox } from "../components/check-box.slint";
 import { InfoCard } from "../components/cards.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
-import { ActionGroup, ContentGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
+import { FooterActionRow, ContentGroup, ListItem, ListView } from "../components/list-and-action-layouts.slint";
 
 export component ListReviewPage inherits CenteredPageColumn {
     fill-height: true;
@@ -104,16 +104,16 @@ export component ListReviewPage inherits CenteredPageColumn {
     if SettingsState.error != "": ErrorLabel {
         text: SettingsState.error;
     }
-    ActionGroup {
+    FooterActionRow {
         vertical-stretch: 0;
-        SecondaryActionButton {
+        ExpandedSecondaryActionButton {
             text: "Cancel";
             enabled: !SettingsState.busy;
             clicked => {
                 SettingsState.cancel();
             }
         }
-        PrimaryActionButton {
+        ExpandedPrimaryActionButton {
             text: SettingsState.mode == 1 ? "Import Connections" : SettingsState.mode == 2 ? "Save JSON" : "Save Local Root";
             enabled: !SettingsState.busy;
             clicked => {

@@ -62,7 +62,9 @@ export component InlineLoadingIndicator inherits ListLoadingIndicator {
     vertical-stretch: 0;
 }
 
-export component ActionGroup inherits VerticalLayout {
+export component FooterActionRow inherits HorizontalLayout {
+    vertical-stretch: 0;
+    padding-top: Dimensions.section-gap;
     spacing: Dimensions.element-gap;
     @children
 }

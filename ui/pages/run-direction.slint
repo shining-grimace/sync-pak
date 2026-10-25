@@ -4,8 +4,8 @@ import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
-import { PrimaryActionButton, SecondaryActionButton, ToggleButton } from "../components/action-buttons.slint";
-import { ActionGroup } from "../components/list-and-action-layouts.slint";
+import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton, ToggleButton } from "../components/action-buttons.slint";
+import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 
 export component RunDirectionPage inherits CenteredPageRoot {
     in property <string> connection-name;
@@ -134,8 +134,8 @@ export component RunDirectionPage inherits CenteredPageRoot {
         text: "Cloud storage: " + root.remote-endpoint;
     }
 
-    ActionGroup {
-        SecondaryActionButton {
+    FooterActionRow {
+        ExpandedSecondaryActionButton {
             accessible-label: "Cancel run for " + root.connection-name;
             text: "Cancel";
             clicked => {
@@ -143,7 +143,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
             }
         }
 
-        PrimaryActionButton {
+        ExpandedPrimaryActionButton {
             accessible-label: root.upload-selected || root.download-selected ? "Continue to preflight for " + root.connection-name : "Select at least one transfer direction before reviewing the plan";
             text: "Review Plan";
             enabled: root.upload-selected || root.download-selected;

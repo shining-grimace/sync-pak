@@ -1,10 +1,11 @@
+import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { Dimensions } from "../dimensions.slint";
 import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
-import { SecondaryActionButton } from "../components/action-buttons.slint";
+import { ExpandedSecondaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 
 export component PrivacyPage inherits CenteredPageRoot {
     in property <string> syncpak-policy-url;
@@ -113,19 +114,22 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
-    if root.advertising-privacy-choices-available: SecondaryActionButton {
-        accessible-label: "Manage advertising privacy choices";
-        text: "Advertising Privacy Choices";
-        clicked => {
-            root.show-advertising-privacy-choices();
+    FooterActionRow {
+        if root.advertising-privacy-choices-available: ExpandedSecondaryActionButton {
+            horizontal-stretch: 2;
+            accessible-label: "Manage advertising privacy choices";
+            text: "Advertising Privacy Choices";
+            clicked => {
+                root.show-advertising-privacy-choices();
+            }
         }
-    }
 
-    SecondaryActionButton {
-        accessible-label: "Back";
-        text: "Back";
-        clicked => {
-            root.back();
+        ExpandedSecondaryActionButton {
+            accessible-label: "Back";
+            text: "Back";
+            clicked => {
+                root.back();
+            }
         }
     }
 }

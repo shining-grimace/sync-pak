@@ -1,3 +1,4 @@
+import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ComboBox } from "../components/form-controls.slint";
@@ -7,8 +8,6 @@ import { DescriptionLabel } from "../components/description-label.slint";
 import {
     ExpandedPrimaryActionButton,
     ExpandedSecondaryActionButton,
-    PrimaryActionButton,
-    SecondaryActionButton,
 } from "../components/action-buttons.slint";
 import { AboutSlint } from "std-widgets.slint";
 
@@ -146,21 +145,22 @@ export component SettingsPage inherits CenteredPageRoot {
             DescriptionLabel {
                 text: root.settings-directory;
             }
+        }
 
-            PrimaryActionButton {
+        FooterActionRow {
+            if root.settings-directory != "": ExpandedPrimaryActionButton {
                 accessible-label: "Open settings directory in your file browser";
                 text: "Open Settings Directory";
                 clicked => {
                     root.open-settings-directory();
                 }
             }
-        }
 
-
-        SecondaryActionButton {
-            text: "Privacy";
-            clicked => {
-                root.show-privacy();
+            ExpandedSecondaryActionButton {
+                text: "Privacy";
+                clicked => {
+                    root.show-privacy();
+                }
             }
         }
     }

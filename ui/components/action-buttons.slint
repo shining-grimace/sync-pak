@@ -36,6 +36,7 @@ component ActionButton inherits Rectangle {
     opacity: !root.enabled ? 0.45 : (button-touch.pressed ? 0.7 : (button-touch.has-hover ? 0.85 : 1));
 
     Text {
+        width: parent.width;
         text: root.text;
         color: root.label-color;
         font-size: root.label-text-size;
