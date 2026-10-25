@@ -3,13 +3,12 @@ import { ProviderSummaryLabel } from "../components/provider-guidance.slint";
 import { TransportFields } from "../components/transport-fields.slint";
 import { Dimensions } from "../dimensions.slint";
 import { PageRoot, CenteredPageColumn } from "../components/page-layouts.slint";
-import { HeadingLabel } from "../components/heading-label.slint";
+import { PageHeader } from "../components/page-header.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import {
     SecondaryActionButton,
-    CardSecondaryActionButton,
     ExpandedPrimaryActionButton,
     ExpandedSecondaryActionButton,
 } from "../components/action-buttons.slint";
@@ -54,22 +53,12 @@ export component ProviderFormPage inherits Rectangle {
         CenteredPageColumn {
             vertical-stretch: 0;
             padding-bottom: Dimensions.section-gap;
-            HorizontalLayout {
-                spacing: Dimensions.element-gap;
-                HeadingLabel {
-                    text: root.provider-form-id == "" ? "Add Provider" : "Edit " + root.provider-form-name;
-                    wrap: word-wrap;
-                }
-
-                CardSecondaryActionButton {
-                    button-width: Dimensions.new-action-button-width;
-                    button-height: Dimensions.compact-action-button-height;
-                    accessible-label: "Back to providers";
-                    text: "Back";
-                    enabled: !root.provider-storage-busy;
-                    clicked => {
-                        root.request-discard-provider();
-                    }
+            PageHeader {
+                title: root.provider-form-id == "" ? "Add Provider" : "Edit " + root.provider-form-name;
+                back-label: "Back to providers";
+                back-enabled: !root.provider-storage-busy;
+                back => {
+                    root.request-discard-provider();
                 }
             }
         }

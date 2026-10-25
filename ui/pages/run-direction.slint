@@ -1,10 +1,10 @@
+import { PageHeader } from "../components/page-header.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { Dimensions } from "../dimensions.slint";
-import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
-import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton, ToggleButton } from "../components/action-buttons.slint";
+import { ExpandedPrimaryActionButton, ToggleButton } from "../components/action-buttons.slint";
 import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 
 export component RunDirectionPage inherits CenteredPageRoot {
@@ -24,9 +24,12 @@ export component RunDirectionPage inherits CenteredPageRoot {
     callback cancel();
     callback begin-preflight();
 
-    HeadingLabel {
-        text: "Run " + root.connection-name;
-        wrap: word-wrap;
+    PageHeader {
+        title: "Run " + root.connection-name;
+        back-label: "Back to connections";
+        back => {
+            root.cancel();
+        }
     }
 
     DescriptionLabel {
@@ -85,7 +88,6 @@ export component RunDirectionPage inherits CenteredPageRoot {
         DescriptionLabel {
             text: "Use the local folder as the source and cloud storage as the destination.";
         }
-
     }
 
     if !root.upload-selected && root.download-selected: InfoCard {
@@ -100,7 +102,6 @@ export component RunDirectionPage inherits CenteredPageRoot {
         DescriptionLabel {
             text: "Use cloud storage as the source and the local folder as the destination.";
         }
-
     }
 
     if root.upload-selected && root.download-selected: InfoCard {
@@ -115,7 +116,6 @@ export component RunDirectionPage inherits CenteredPageRoot {
         DescriptionLabel {
             text: "Copy files found on only one side to the other. Changed files are skipped.";
         }
-
     }
 
     if !root.upload-selected && !root.download-selected: DescriptionLabel {
@@ -135,14 +135,6 @@ export component RunDirectionPage inherits CenteredPageRoot {
     }
 
     FooterActionRow {
-        ExpandedSecondaryActionButton {
-            accessible-label: "Cancel run for " + root.connection-name;
-            text: "Cancel";
-            clicked => {
-                root.cancel();
-            }
-        }
-
         ExpandedPrimaryActionButton {
             accessible-label: root.upload-selected || root.download-selected ? "Continue to preflight for " + root.connection-name : "Select at least one transfer direction before reviewing the plan";
             text: "Review Plan";

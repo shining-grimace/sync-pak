@@ -1,0 +1,35 @@
+import { Dimensions } from "../dimensions.slint";
+import { HeadingLabel } from "heading-label.slint";
+import { NewActionButton } from "action-buttons.slint";
+
+export component PageHeader inherits HorizontalLayout {
+    in property <string> title;
+    in property <string> back-label: "Back";
+    in property <bool> back-enabled: true;
+    in property <bool> focus-back: false;
+    callback back();
+
+    spacing: Dimensions.element-gap;
+    vertical-stretch: 0;
+    forward-focus: back-button;
+
+    changed focus-back => {
+        if root.focus-back {
+            back-button.focus();
+        }
+    }
+
+    HeadingLabel {
+        text: root.title;
+    }
+
+    back-button := NewActionButton {
+        text: "Back";
+        accessible-label: root.back-label;
+        enabled: root.back-enabled;
+        focus-on-init: root.focus-back;
+        clicked => {
+            root.back();
+        }
+    }
+}

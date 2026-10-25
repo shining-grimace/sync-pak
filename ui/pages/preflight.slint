@@ -5,7 +5,7 @@ import { Dimensions } from "../dimensions.slint";
 import { Colors } from "../colors.slint";
 import { PreflightRow } from "../models.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
-import { HeadingLabel } from "../components/heading-label.slint";
+import { PageHeader } from "../components/page-header.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
@@ -62,9 +62,13 @@ export component PreflightPage inherits CenteredPageRoot {
     callback begin-preflight();
     fill-height: true;
 
-    HeadingLabel {
-        text: root.failed ? "This Operation Cannot Start" : (root.loading ? "Checking Before Anything Changes" : (root.requires-mirror-confirmation ? "Review Mirror Changes" : "Ready to Start"));
-        wrap: word-wrap;
+    PageHeader {
+        title: root.failed ? "This Operation Cannot Start" : (root.loading ? "Checking Before Anything Changes" : (root.requires-mirror-confirmation ? "Review Mirror Changes" : "Ready to Start"));
+        back-label: "Back to direction selection for " + root.connection-name;
+        focus-back: root.loading || root.failed || root.items.length == 0;
+        back => {
+            root.return-to-direction();
+        }
     }
 
     DescriptionLabel {
@@ -322,29 +326,9 @@ export component PreflightPage inherits CenteredPageRoot {
             }
         }
     }
-    MeasuredVerticalRegion {
+    if !root.loading || root.failed: MeasuredVerticalRegion {
         spacing: Dimensions.element-gap;
-        if root.loading || root.failed || root.items.length == 0: FocusScope {
-            width: 0px;
-            height: 0px;
-            focus-on-click: false;
-            focus-on-tab-navigation: false;
-            forward-focus: preflight-back;
-            init => {
-                self.focus();
-            }
-        }
         FooterActionRow {
-            preflight-back := ExpandedSecondaryActionButton {
-                width: Dimensions.new-action-button-width;
-                horizontal-stretch: 0;
-                accessible-label: "Return to direction selection for " + root.connection-name;
-                text: "Back";
-                clicked => {
-                    root.return-to-direction();
-                }
-            }
-
             if root.failed: ExpandedPrimaryActionButton {
                 accessible-label: "Try the preflight check again";
                 text: "Try Again";

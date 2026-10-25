@@ -1,7 +1,7 @@
+import { PageHeader } from "../components/page-header.slint";
 import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { Dimensions } from "../dimensions.slint";
-import { HeadingLabel } from "../components/heading-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { InfoCard } from "../components/cards.slint";
@@ -13,8 +13,12 @@ export component PrivacyPage inherits CenteredPageRoot {
     callback back();
     callback show-advertising-privacy-choices();
 
-    HeadingLabel {
-        text: "Privacy";
+    PageHeader {
+        title: "Privacy";
+        back-label: "Back";
+        back => {
+            root.back();
+        }
     }
 
     SectionHeadingLabel {
@@ -114,21 +118,12 @@ export component PrivacyPage inherits CenteredPageRoot {
         }
     }
 
-    FooterActionRow {
-        if root.advertising-privacy-choices-available: ExpandedSecondaryActionButton {
-            horizontal-stretch: 2;
+    if root.advertising-privacy-choices-available: FooterActionRow {
+        ExpandedSecondaryActionButton {
             accessible-label: "Manage advertising privacy choices";
             text: "Advertising Privacy Choices";
             clicked => {
                 root.show-advertising-privacy-choices();
-            }
-        }
-
-        ExpandedSecondaryActionButton {
-            accessible-label: "Back";
-            text: "Back";
-            clicked => {
-                root.back();
             }
         }
     }

@@ -1,7 +1,7 @@
+import { PageHeader } from "../components/page-header.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
-import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
-import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
+import { ExpandedPrimaryActionButton } from "../components/action-buttons.slint";
 import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 
 export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
@@ -10,8 +10,13 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     callback cancel();
     callback save();
 
-    HeadingLabel {
-        text: "Save Without Verifying?";
+    PageHeader {
+        title: "Save Without Verifying?";
+        back-label: "Back to editing provider " + root.provider-name;
+        back-enabled: !root.busy;
+        back => {
+            root.cancel();
+        }
     }
 
     DescriptionLabel {
@@ -19,15 +24,6 @@ export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
     }
 
     FooterActionRow {
-        ExpandedSecondaryActionButton {
-            accessible-label: "Continue editing provider " + root.provider-name;
-            text: "Keep Editing";
-            enabled: !root.busy;
-            clicked => {
-                root.cancel();
-            }
-        }
-
         ExpandedPrimaryActionButton {
             accessible-label: "Save provider " + root.provider-name + " without verifying";
             text: root.busy ? "Saving…" : "Save Unverified";
@@ -44,8 +40,12 @@ export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
     callback cancel();
     callback confirm();
 
-    HeadingLabel {
-        text: "Discard Unsaved Changes?";
+    PageHeader {
+        title: "Discard Unsaved Changes?";
+        back-label: "Back to editing provider " + root.provider-name;
+        back => {
+            root.cancel();
+        }
     }
 
     DescriptionLabel {
@@ -53,14 +53,6 @@ export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
     }
 
     FooterActionRow {
-        ExpandedSecondaryActionButton {
-            accessible-label: "Continue editing provider " + root.provider-name;
-            text: "Keep Editing";
-            clicked => {
-                root.cancel();
-            }
-        }
-
         ExpandedPrimaryActionButton {
             accessible-label: "Discard changes to provider " + root.provider-name;
             text: "Discard Changes";

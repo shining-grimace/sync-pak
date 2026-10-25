@@ -22,7 +22,7 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
     let weak = window.as_weak();
     window.on_dismiss_activity_result(move || {
         if let Some(window) = weak.upgrade() {
-            window.set_page(9);
+            window.set_page(window.get_activity_result_return_page());
         }
     });
 
@@ -45,12 +45,14 @@ fn show<E: OperationExecutor + Send + Sync + 'static>(
         .find(|entry| entry.operation_id == operation_id)
     else {
         window.set_status_message("This activity result is no longer available.".into());
-        window.set_page(9);
         return;
     };
     let activity = ActivityPresentation::from_entry(&entry);
     if !activity.can_view_result {
         return;
+    }
+    if window.get_page() != 16 {
+        window.set_activity_result_return_page(window.get_page());
     }
     window.set_activity_result_title(activity.title.into());
     window.set_activity_result_status(activity.status.into());

@@ -2,13 +2,12 @@ import { DangerCard } from "../components/cards.slint";
 import { TransportFields } from "../components/transport-fields.slint";
 import { Dimensions } from "../dimensions.slint";
 import { PageRoot, CenteredPageColumn } from "../components/page-layouts.slint";
-import { HeadingLabel } from "../components/heading-label.slint";
+import { PageHeader } from "../components/page-header.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import {
     PrimaryActionButton,
-    CardSecondaryActionButton,
     ExpandedPrimaryActionButton,
     ExpandedSecondaryActionButton,
     ToggleButton,
@@ -62,21 +61,11 @@ export component ConnectionFormPage inherits Rectangle {
         CenteredPageColumn {
             vertical-stretch: 0;
             padding-bottom: Dimensions.section-gap;
-            HorizontalLayout {
-                spacing: Dimensions.element-gap;
-                HeadingLabel {
-                    text: root.connection-form-id == "" ? "New Connection" : "Edit " + root.connection-form-name;
-                    wrap: word-wrap;
-                }
-
-                CardSecondaryActionButton {
-                    button-width: Dimensions.new-action-button-width;
-                    button-height: Dimensions.compact-action-button-height;
-                    accessible-label: "Back to connections";
-                    text: "Back";
-                    clicked => {
-                        root.request-discard-connection();
-                    }
+            PageHeader {
+                title: root.connection-form-id == "" ? "New Connection" : "Edit " + root.connection-form-name;
+                back-label: "Back to connections";
+                back => {
+                    root.request-discard-connection();
                 }
             }
         }

@@ -72,7 +72,11 @@ component ActionButton inherits Rectangle {
     }
 
     if button-focus.has-focus && root.enabled: Rectangle {
-        border-color: root.label-color;
+        x: -3px;
+        y: -3px;
+        width: root.width + 6px;
+        height: root.height + 6px;
+        border-color: root.outline-color;
         border-width: 2px;
         border-radius: Dimensions.button-border-radius;
     }

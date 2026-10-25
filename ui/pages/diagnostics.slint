@@ -1,12 +1,12 @@
+import { PageHeader } from "../components/page-header.slint";
 import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 import { CheckBox } from "std-widgets.slint";
 import { TextEdit } from "../components/form-controls.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
-import { HeadingLabel } from "../components/heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { SuccessLabel } from "../components/success-label.slint";
-import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
+import { ExpandedPrimaryActionButton } from "../components/action-buttons.slint";
 
 export component DiagnosticsPage inherits CenteredPageRoot {
     in property <string> diagnostic-text;
@@ -16,8 +16,12 @@ export component DiagnosticsPage inherits CenteredPageRoot {
     callback set-include-paths(bool);
     callback dismiss();
 
-    HeadingLabel {
-        text: "Diagnostics";
+    PageHeader {
+        title: "Diagnostics";
+        back-label: "Back to the previous screen";
+        back => {
+            root.dismiss();
+        }
     }
 
     DescriptionLabel {
@@ -62,14 +66,6 @@ export component DiagnosticsPage inherits CenteredPageRoot {
                 report.select-all();
                 report.copy();
                 root.copy-status = root.include-paths ? "Diagnostics report with paths copied." : "Redacted diagnostics report copied.";
-            }
-        }
-
-        ExpandedSecondaryActionButton {
-            accessible-label: "Return to the previous screen";
-            text: "Back";
-            clicked => {
-                root.dismiss();
             }
         }
     }

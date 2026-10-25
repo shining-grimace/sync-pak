@@ -1,10 +1,10 @@
+import { PageHeader } from "../components/page-header.slint";
 import { SettingsState } from "../settings-state.slint";
 import { Dimensions } from "../dimensions.slint";
-import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { ErrorLabel } from "../components/error-label.slint";
 import { LineEdit, ComboBox } from "../components/form-controls.slint";
-import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
+import { ExpandedPrimaryActionButton, SecondaryActionButton } from "../components/action-buttons.slint";
 import { CheckBox } from "../components/check-box.slint";
 import { InfoCard } from "../components/cards.slint";
 import { CenteredPageColumn } from "../components/page-layouts.slint";
@@ -12,8 +12,13 @@ import { FooterActionRow, ContentGroup, ListItem, ListView } from "../components
 
 export component ListReviewPage inherits CenteredPageColumn {
     fill-height: true;
-    SectionHeadingLabel {
-        text: SettingsState.mode == 1 ? "Review Import" : SettingsState.mode == 2 ? "Review Export" : "Local Root";
+    PageHeader {
+        title: SettingsState.mode == 1 ? "Review Import" : SettingsState.mode == 2 ? "Review Export" : "Local Root";
+        back-label: "Back to Settings";
+        back-enabled: !SettingsState.busy;
+        back => {
+            SettingsState.cancel();
+        }
     }
     if SettingsState.mode == 3: ContentGroup {
         spacing: Dimensions.element-gap;
@@ -106,13 +111,7 @@ export component ListReviewPage inherits CenteredPageColumn {
     }
     FooterActionRow {
         vertical-stretch: 0;
-        ExpandedSecondaryActionButton {
-            text: "Cancel";
-            enabled: !SettingsState.busy;
-            clicked => {
-                SettingsState.cancel();
-            }
-        }
+
         ExpandedPrimaryActionButton {
             text: SettingsState.mode == 1 ? "Import Connections" : SettingsState.mode == 2 ? "Save JSON" : "Save Local Root";
             enabled: !SettingsState.busy;
