@@ -8,7 +8,6 @@
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Android: test that external storage drives work too
-- Run Clippy
 - Create branding logo
 - Consider transitions and animations
 - Add Google package to AdMob once published on Google Play

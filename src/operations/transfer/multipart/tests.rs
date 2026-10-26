@@ -49,10 +49,10 @@ impl MultipartUploader for Provider {
             return Err(ProviderError::Unavailable);
         }
         self.parts.lock().unwrap().push(contents.to_vec());
-        if part_number == 1 {
-            if let Some(token) = &self.cancel_after_first_part {
-                token.cancel();
-            }
+        if part_number == 1
+            && let Some(token) = &self.cancel_after_first_part
+        {
+            token.cancel();
         }
         Ok(UploadedPart {
             part_number,

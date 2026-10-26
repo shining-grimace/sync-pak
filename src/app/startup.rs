@@ -98,7 +98,7 @@ pub(crate) fn configure(
     }
     match configuration.load() {
         Ok(config) => {
-            crate::app::appearance::configure(&window, &configuration, config.appearance);
+            crate::app::appearance::configure(window, &configuration, config.appearance);
             record_temporary_cleanup_failures(&config, &diagnostics);
             if config.welcome_completed {
                 crate::app::connections::list_controller::show(

@@ -20,10 +20,10 @@ struct Recorder {
 impl PlannedActionExecutor for Recorder {
     fn execute_action(&self, action: &PlannedAction) -> Result<(), CapabilityError> {
         self.actions.lock().unwrap().push(action.clone());
-        if self.actions.lock().unwrap().len() == 1 {
-            if let Some(cancellation) = &self.cancellation {
-                cancellation.cancel();
-            }
+        if self.actions.lock().unwrap().len() == 1
+            && let Some(cancellation) = &self.cancellation
+        {
+            cancellation.cancel();
         }
         self.failure.map_or(Ok(()), Err)
     }

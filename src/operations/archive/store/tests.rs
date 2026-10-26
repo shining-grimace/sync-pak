@@ -8,8 +8,10 @@ use std::{
 use crate::{
     configuration::ConnectionId,
     inventory::{Inventory, InventoryEntry, InventoryEntryKind, RelativePath},
+    operations::archive::execution::ArchiveSource,
     operations::archive::prune::ArchiveRemover,
     operations::archive::retention::ArchiveRecord,
+    operations::archive::store::ArchiveRetention,
     operations::archive::upload::ArchiveUploader,
     operations::cancellation::CancellationToken,
     operations::transfer::paths::LocalTransferRoot,
@@ -63,14 +65,18 @@ fn prunes_only_after_the_new_archive_has_been_stored() {
     let old = record(&connection, "old.zip", "20260720-120000Z");
 
     let result = block_on(create_upload_and_prune_archive(
-        &LocalTransferRoot::new(&root),
-        &inventory(),
-        &root,
-        "20260721-120000Z",
-        &connection,
-        "Backup",
-        &[old.clone()],
-        1,
+        ArchiveSource {
+            source_root: &LocalTransferRoot::new(&root),
+            inventory: &inventory(),
+            staging_directory: &root,
+            timestamp: "20260721-120000Z",
+            connection_name: "Backup",
+        },
+        ArchiveRetention {
+            connection_id: &connection,
+            existing: std::slice::from_ref(&old),
+            keep_last: 1,
+        },
         &Uploader {
             fail: false,
             events: events.clone(),
@@ -95,14 +101,18 @@ fn failed_storage_never_starts_retention_pruning() {
 
     assert!(matches!(
         block_on(create_upload_and_prune_archive(
-            &LocalTransferRoot::new(&root),
-            &inventory(),
-            &root,
-            "20260721-120000Z",
-            &connection,
-            "Backup",
-            &[],
-            1,
+            ArchiveSource {
+                source_root: &LocalTransferRoot::new(&root),
+                inventory: &inventory(),
+                staging_directory: &root,
+                timestamp: "20260721-120000Z",
+                connection_name: "Backup"
+            },
+            ArchiveRetention {
+                connection_id: &connection,
+                existing: &[],
+                keep_last: 1
+            },
             &Uploader {
                 fail: true,
                 events: events.clone()

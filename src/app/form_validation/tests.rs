@@ -1,47 +1,47 @@
 mod provider_order;
 
-use super::{connection, provider};
+use super::{ProviderFields, connection, provider};
 use crate::{configuration::ProviderKind, validation::NAME_MAX_LENGTH};
 
 fn valid_provider(name: &str) -> Result<(), String> {
-    provider(
+    provider(ProviderFields {
         name,
-        "access",
-        "secret",
-        ProviderKind::AwsS3,
-        "",
-        "region",
-        "",
-        "",
-    )
+        access_key_id: "access",
+        secret_access_key: "secret",
+        kind: ProviderKind::AwsS3,
+        account_id: "",
+        region: "region",
+        default_bucket: "",
+        endpoint: "",
+    })
 }
 
 #[test]
 fn provider_credentials_are_required() {
     assert_eq!(
-        provider(
-            "Provider",
-            "",
-            "secret",
-            ProviderKind::AwsS3,
-            "",
-            "region",
-            "",
-            ""
-        ),
+        provider(ProviderFields {
+            name: "Provider",
+            access_key_id: "",
+            secret_access_key: "secret",
+            kind: ProviderKind::AwsS3,
+            account_id: "",
+            region: "region",
+            default_bucket: "",
+            endpoint: "",
+        }),
         Err("Access key ID is required.".to_owned())
     );
     assert_eq!(
-        provider(
-            "Provider",
-            "access",
-            "  ",
-            ProviderKind::AwsS3,
-            "",
-            "region",
-            "",
-            ""
-        ),
+        provider(ProviderFields {
+            name: "Provider",
+            access_key_id: "access",
+            secret_access_key: "  ",
+            kind: ProviderKind::AwsS3,
+            account_id: "",
+            region: "region",
+            default_bucket: "",
+            endpoint: "",
+        }),
         Err("Secret access key is required.".to_owned())
     );
 }
@@ -49,42 +49,42 @@ fn provider_credentials_are_required() {
 #[test]
 fn r2_needs_an_account_while_routing_defaults_can_be_configured_later() {
     assert_eq!(
-        provider(
-            "Provider",
-            "access",
-            "secret",
-            ProviderKind::CloudflareR2,
-            "",
-            "",
-            "",
-            ""
-        ),
+        provider(ProviderFields {
+            name: "Provider",
+            access_key_id: "access",
+            secret_access_key: "secret",
+            kind: ProviderKind::CloudflareR2,
+            account_id: "",
+            region: "",
+            default_bucket: "",
+            endpoint: "",
+        }),
         Err("Account ID is required.".to_owned())
     );
     assert_eq!(
-        provider(
-            "Provider",
-            "access",
-            "secret",
-            ProviderKind::AwsS3,
-            "",
-            "",
-            "",
-            ""
-        ),
+        provider(ProviderFields {
+            name: "Provider",
+            access_key_id: "access",
+            secret_access_key: "secret",
+            kind: ProviderKind::AwsS3,
+            account_id: "",
+            region: "",
+            default_bucket: "",
+            endpoint: "",
+        }),
         Ok(())
     );
     assert_eq!(
-        provider(
-            "Provider",
-            "access",
-            "secret",
-            ProviderKind::BackblazeB2,
-            "",
-            "",
-            "",
-            ""
-        ),
+        provider(ProviderFields {
+            name: "Provider",
+            access_key_id: "access",
+            secret_access_key: "secret",
+            kind: ProviderKind::BackblazeB2,
+            account_id: "",
+            region: "",
+            default_bucket: "",
+            endpoint: "",
+        }),
         Ok(())
     );
 }
@@ -92,16 +92,16 @@ fn r2_needs_an_account_while_routing_defaults_can_be_configured_later() {
 #[test]
 fn optional_bucket_cannot_have_outer_whitespace() {
     assert_eq!(
-        provider(
-            "Provider",
-            "access",
-            "secret",
-            ProviderKind::AwsS3,
-            "",
-            "region",
-            " bucket",
-            ""
-        ),
+        provider(ProviderFields {
+            name: "Provider",
+            access_key_id: "access",
+            secret_access_key: "secret",
+            kind: ProviderKind::AwsS3,
+            account_id: "",
+            region: "region",
+            default_bucket: " bucket",
+            endpoint: "",
+        }),
         Err("Bucket name cannot begin or end with whitespace.".to_owned())
     );
 }
@@ -166,7 +166,17 @@ fn credential_errors_match_each_providers_form_labels_and_focus() {
         ),
     ] {
         for (access, secret, expected) in [("", "", access_error), ("access", "  ", secret_error)] {
-            let error = provider("Cloud", access, secret, kind, "account", "", "", "").unwrap_err();
+            let error = provider(ProviderFields {
+                name: "Cloud",
+                access_key_id: access,
+                secret_access_key: secret,
+                kind,
+                account_id: "account",
+                region: "",
+                default_bucket: "",
+                endpoint: "",
+            })
+            .unwrap_err();
             assert_eq!(error, expected);
             assert_eq!(super::provider_focus(&error), 2);
         }

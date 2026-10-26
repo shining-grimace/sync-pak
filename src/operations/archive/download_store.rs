@@ -1,7 +1,6 @@
 use std::{error::Error, fmt, fs, path::Path};
 
 use crate::{
-    configuration::ConnectionId,
     inventory::{Inventory, InventoryError, RelativePath},
     operations::archive::download::{
         ArchiveDownloadError, ArchiveDownloader, download_and_create_archive,
@@ -9,26 +8,40 @@ use crate::{
     operations::archive::naming::{ArchiveNameError, archive_filename},
     operations::archive::prune::{ArchivePruneError, ArchiveRemover, prune_archives},
     operations::archive::retention::ArchiveRecord,
-    operations::archive::store::ArchiveStoreResult,
+    operations::archive::store::{ArchiveRetention, ArchiveStoreResult},
     operations::cancellation::CancellationToken,
     operations::transfer::paths::LocalTransferRoot,
 };
+
+/// Local staging, destination, and naming settings for a downloaded archive.
+pub struct ArchiveDestination<'a> {
+    pub staging_parent: &'a Path,
+    pub destination_root: &'a LocalTransferRoot,
+    pub timestamp: &'a str,
+    pub connection_name: &'a str,
+}
 
 /// Stores a downloaded archive locally, then applies its connection-scoped retention policy.
 pub async fn download_create_and_prune_archive<D: ArchiveDownloader, R: ArchiveRemover>(
     downloader: &D,
     inventory: &Inventory,
-    staging_parent: &Path,
-    destination_root: &LocalTransferRoot,
-    timestamp: &str,
-    connection_id: &ConnectionId,
-    connection_name: &str,
-    existing: &[ArchiveRecord],
-    keep_last: u32,
+    destination: ArchiveDestination<'_>,
+    retention: ArchiveRetention<'_>,
     remover: &R,
     cancellation: &CancellationToken,
     jitter_seed: u64,
 ) -> Result<ArchiveStoreResult, ArchiveDownloadStoreError<D::Error, R::Error>> {
+    let ArchiveDestination {
+        staging_parent,
+        destination_root,
+        timestamp,
+        connection_name,
+    } = destination;
+    let ArchiveRetention {
+        connection_id,
+        existing,
+        keep_last,
+    } = retention;
     let filename =
         archive_filename(timestamp, connection_name).map_err(ArchiveDownloadStoreError::Name)?;
     let relative = RelativePath::new(filename.clone()).map_err(ArchiveDownloadStoreError::Path)?;

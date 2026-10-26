@@ -23,36 +23,32 @@ struct Transfer(Mutex<Vec<String>>);
 impl MirrorTransfer for Transfer {
     type Error = Infallible;
 
-    fn copy(
+    async fn copy(
         &self,
         _: Direction,
         path: &RelativePath,
         _: bool,
         _: &CancellationToken,
         _: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.0
-                .lock()
-                .unwrap()
-                .push(format!("copy:{}", path.as_str()));
-            Ok(())
-        }
+    ) -> Result<(), Self::Error> {
+        self.0
+            .lock()
+            .unwrap()
+            .push(format!("copy:{}", path.as_str()));
+        Ok(())
     }
 
-    fn delete(
+    async fn delete(
         &self,
         _: Direction,
         path: &RelativePath,
         _: &CancellationToken,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.0
-                .lock()
-                .unwrap()
-                .push(format!("delete:{}", path.as_str()));
-            Ok(())
-        }
+    ) -> Result<(), Self::Error> {
+        self.0
+            .lock()
+            .unwrap()
+            .push(format!("delete:{}", path.as_str()));
+        Ok(())
     }
 }
 

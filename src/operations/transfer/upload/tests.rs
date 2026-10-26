@@ -14,7 +14,7 @@ use super::{
     upload_from_path_with_retry_and_cancellation,
 };
 use crate::operations::cancellation::CancellationToken;
-use crate::operations::retry::{RetryPolicy, RetrySleeper};
+use crate::operations::retry::{RetryContext, RetryPolicy, RetrySleeper};
 use crate::providers::capabilities::{
     ObjectWriteMetadata, ObjectWriter, ProviderError, ProviderResult,
 };
@@ -129,10 +129,12 @@ fn cancellation_after_a_retry_delay_prevents_another_upload_request() {
             "bucket",
             "key",
             &source,
-            &RetryPolicy::default(),
-            &CancellingSleeper(cancellation.clone()),
-            1,
-            &cancellation,
+            &RetryContext {
+                policy: &RetryPolicy::default(),
+                sleeper: &CancellingSleeper(cancellation.clone()),
+                jitter_seed: 1,
+                cancellation: &cancellation
+            },
         )),
         Err(UploadError::Cancelled)
     ));

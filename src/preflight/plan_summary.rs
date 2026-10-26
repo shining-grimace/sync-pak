@@ -58,11 +58,13 @@ impl PlanSummary {
 }
 
 pub(crate) fn summarize(actions: &[PlannedAction], comparison: &[ComparedEntry]) -> PlanSummary {
-    let mut summary = PlanSummary::default();
-    summary.unchanged = comparison
-        .iter()
-        .filter(|entry| entry.status == EntryStatus::Unchanged)
-        .count();
+    let mut summary = PlanSummary {
+        unchanged: comparison
+            .iter()
+            .filter(|entry| entry.status == EntryStatus::Unchanged)
+            .count(),
+        ..Default::default()
+    };
     for action in actions {
         match action {
             PlannedAction::Copy { path, from, .. } => {

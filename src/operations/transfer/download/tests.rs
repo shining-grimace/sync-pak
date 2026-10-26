@@ -15,7 +15,7 @@ use super::{
     download_to_path_with_retry_and_cancellation,
 };
 use crate::operations::cancellation::CancellationToken;
-use crate::operations::retry::{RetryPolicy, RetrySleeper};
+use crate::operations::retry::{RetryContext, RetryPolicy, RetrySleeper};
 use crate::providers::capabilities::{ObjectReader, ProviderError, ProviderResult};
 
 struct Reader(ProviderResult<Vec<u8>>);
@@ -143,10 +143,12 @@ fn cancellation_after_a_retry_delay_preserves_the_destination() {
             "bucket",
             "key",
             &destination,
-            &RetryPolicy::default(),
-            &CancellingSleeper(cancellation.clone()),
-            1,
-            &cancellation,
+            &RetryContext {
+                policy: &RetryPolicy::default(),
+                sleeper: &CancellingSleeper(cancellation.clone()),
+                jitter_seed: 1,
+                cancellation: &cancellation
+            },
         )),
         Err(DownloadError::Cancelled)
     ));

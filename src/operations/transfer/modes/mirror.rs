@@ -101,7 +101,7 @@ pub async fn execute_confirmed_mirror<T: MirrorTransfer, O: TransferProgressObse
             ));
             return Err(MirrorExecutionError::Action {
                 error,
-                result: progress.fail(),
+                result: Box::new(progress.fail()),
             });
         }
         progress.complete_current();

@@ -20,47 +20,38 @@ struct Transfer(Mutex<Vec<String>>);
 impl AddOnlyTransfer for Transfer {
     type Error = Infallible;
 
-    fn upload(
+    async fn upload(
         &self,
         path: &RelativePath,
         _: &CancellationToken,
         _: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.0
-                .lock()
-                .unwrap()
-                .push(format!("upload:{}", path.as_str()));
-            Ok(())
-        }
+    ) -> Result<(), Self::Error> {
+        self.0
+            .lock()
+            .unwrap()
+            .push(format!("upload:{}", path.as_str()));
+        Ok(())
     }
 
-    fn download(
+    async fn download(
         &self,
         path: &RelativePath,
         _: &CancellationToken,
         _: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.0
-                .lock()
-                .unwrap()
-                .push(format!("download:{}", path.as_str()));
-            Ok(())
-        }
+    ) -> Result<(), Self::Error> {
+        self.0
+            .lock()
+            .unwrap()
+            .push(format!("download:{}", path.as_str()));
+        Ok(())
     }
 
-    fn accept_existing(
-        &self,
-        path: &RelativePath,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.0
-                .lock()
-                .unwrap()
-                .push(format!("accept:{}", path.as_str()));
-            Ok(())
-        }
+    async fn accept_existing(&self, path: &RelativePath) -> Result<(), Self::Error> {
+        self.0
+            .lock()
+            .unwrap()
+            .push(format!("accept:{}", path.as_str()));
+        Ok(())
     }
 }
 

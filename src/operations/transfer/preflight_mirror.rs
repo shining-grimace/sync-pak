@@ -12,21 +12,26 @@ use crate::{
     preflight::destructive_confirmation::DestructiveConfirmation,
 };
 
+/// The current source and destination inventories checked against the reviewed plan.
+pub struct CurrentInventories<'a> {
+    pub source: &'a Inventory,
+    pub destination: &'a Inventory,
+}
+
 /// Executes a confirmed mirror plan only while both reviewed inventories remain unchanged.
 pub async fn execute_current_confirmed_mirror<
     T: MirrorTransfer,
     O: TransferProgressObserver + ?Sized,
 >(
     preflight: &Preflight,
-    source: &Inventory,
-    destination: &Inventory,
+    current: CurrentInventories<'_>,
     confirmation: Option<&DestructiveConfirmation>,
     transfer: &T,
     cancellation: &CancellationToken,
     observer: &O,
     jitter_seed: u64,
 ) -> Result<ExecutionResult, CurrentMirrorExecutionError<T::Error>> {
-    if !preflight.is_current(source, destination) {
+    if !preflight.is_current(current.source, current.destination) {
         return Err(CurrentMirrorExecutionError::Stale);
     }
     execute_confirmed_mirror(

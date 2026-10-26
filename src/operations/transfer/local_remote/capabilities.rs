@@ -1,12 +1,10 @@
-use std::future::Future;
-
 use crate::{
     operations::archive::download::ArchiveDownloader,
     operations::archive::prune::ArchiveRemover,
     operations::archive::retention::ArchiveRecord,
     operations::archive::upload::ArchiveUploader,
     operations::cancellation::CancellationToken,
-    operations::retry::RetrySleeper,
+    operations::retry::{RetryContext, RetrySleeper},
     operations::transfer::delete::{delete_local, delete_remote_with_retry_and_cancellation},
     operations::transfer::local_remote::{LocalRemoteTransfer, LocalRemoteTransferError},
     operations::transfer::modes::add_only::AddOnlyTransfer,
@@ -21,46 +19,44 @@ use crate::{
 impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'_, P, S> {
     type Error = LocalRemoteTransferError;
 
-    fn remove(
+    async fn remove(
         &self,
         archive: &ArchiveRecord,
         cancellation: &CancellationToken,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            let path = crate::inventory::RelativePath::new(&archive.location)
-                .map_err(LocalRemoteTransferError::ArchiveLocation)?;
-            delete_remote_with_retry_and_cancellation(
-                self.provider,
-                self.bucket,
-                &self.remote_prefix,
-                &path,
-                self.retry_policy,
-                self.sleeper,
-                0,
+    ) -> Result<(), Self::Error> {
+        let path = crate::inventory::RelativePath::new(&archive.location)
+            .map_err(LocalRemoteTransferError::ArchiveLocation)?;
+        delete_remote_with_retry_and_cancellation(
+            self.provider,
+            self.bucket,
+            &self.remote_prefix,
+            &path,
+            &RetryContext {
+                policy: self.retry_policy,
+                sleeper: self.sleeper,
+                jitter_seed: 0,
                 cancellation,
-            )
-            .await
-            .map_err(LocalRemoteTransferError::Delete)?;
-            self.invalidate_cache(&path);
-            Ok(())
-        }
+            },
+        )
+        .await
+        .map_err(LocalRemoteTransferError::Delete)?;
+        self.invalidate_cache(&path);
+        Ok(())
     }
 }
 
 impl<P: ObjectReader, S: RetrySleeper> ArchiveDownloader for LocalRemoteTransfer<'_, P, S> {
     type Error = LocalRemoteTransferError;
 
-    fn download(
+    async fn download(
         &self,
         source: &crate::inventory::RelativePath,
         destination: &std::path::Path,
         cancellation: &CancellationToken,
         jitter_seed: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.download_path(source, destination, cancellation, jitter_seed)
-                .await
-        }
+    ) -> Result<(), Self::Error> {
+        self.download_path(source, destination, cancellation, jitter_seed)
+            .await
     }
 }
 
@@ -69,17 +65,15 @@ impl<P: ObjectWriter + MultipartUploader + ObjectMetadataReader, S: RetrySleeper
 {
     type Error = LocalRemoteTransferError;
 
-    fn upload(
+    async fn upload(
         &self,
         source: &std::path::Path,
         destination: &crate::inventory::RelativePath,
         cancellation: &CancellationToken,
         jitter_seed: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.upload_path_auto(source, destination, cancellation, jitter_seed)
-                .await
-        }
+    ) -> Result<(), Self::Error> {
+        self.upload_path_auto(source, destination, cancellation, jitter_seed)
+            .await
     }
 }
 
@@ -90,32 +84,30 @@ impl<
 {
     type Error = LocalRemoteTransferError;
 
-    fn upload(
+    async fn upload(
         &self,
         path: &crate::inventory::RelativePath,
         cancellation: &CancellationToken,
         jitter_seed: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move { self.upload_auto(path, cancellation, jitter_seed).await }
+    ) -> Result<(), Self::Error> {
+        self.upload_auto(path, cancellation, jitter_seed).await
     }
 
-    fn download(
+    async fn download(
         &self,
         path: &crate::inventory::RelativePath,
         cancellation: &CancellationToken,
         jitter_seed: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move { LocalRemoteTransfer::download(self, path, cancellation, jitter_seed).await }
+    ) -> Result<(), Self::Error> {
+        LocalRemoteTransfer::download(self, path, cancellation, jitter_seed).await
     }
 
-    fn accept_existing(
+    async fn accept_existing(
         &self,
         path: &crate::inventory::RelativePath,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            self.record_accepted_pair(path).await;
-            Ok(())
-        }
+    ) -> Result<(), Self::Error> {
+        self.record_accepted_pair(path).await;
+        Ok(())
     }
 }
 
@@ -131,52 +123,50 @@ impl<
 {
     type Error = LocalRemoteTransferError;
 
-    fn copy(
+    async fn copy(
         &self,
         direction: Direction,
         path: &crate::inventory::RelativePath,
         _: bool,
         cancellation: &CancellationToken,
         jitter_seed: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            match direction {
-                Direction::Upload => self.upload_auto(path, cancellation, jitter_seed).await,
-                Direction::Download => {
-                    LocalRemoteTransfer::download(self, path, cancellation, jitter_seed).await
-                }
-                Direction::BothWays => Err(LocalRemoteTransferError::UnsupportedDirection),
+    ) -> Result<(), Self::Error> {
+        match direction {
+            Direction::Upload => self.upload_auto(path, cancellation, jitter_seed).await,
+            Direction::Download => {
+                LocalRemoteTransfer::download(self, path, cancellation, jitter_seed).await
             }
+            Direction::BothWays => Err(LocalRemoteTransferError::UnsupportedDirection),
         }
     }
 
-    fn delete(
+    async fn delete(
         &self,
         direction: Direction,
         path: &crate::inventory::RelativePath,
         cancellation: &CancellationToken,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            let result = match direction {
-                Direction::Upload => delete_remote_with_retry_and_cancellation(
-                    self.provider,
-                    self.bucket,
-                    &self.remote_prefix,
-                    path,
-                    self.retry_policy,
-                    self.sleeper,
-                    0,
+    ) -> Result<(), Self::Error> {
+        let result = match direction {
+            Direction::Upload => delete_remote_with_retry_and_cancellation(
+                self.provider,
+                self.bucket,
+                &self.remote_prefix,
+                path,
+                &RetryContext {
+                    policy: self.retry_policy,
+                    sleeper: self.sleeper,
+                    jitter_seed: 0,
                     cancellation,
-                )
-                .await
+                },
+            )
+            .await
+            .map_err(LocalRemoteTransferError::Delete),
+            Direction::Download => delete_local(&self.local_root, path, cancellation)
                 .map_err(LocalRemoteTransferError::Delete),
-                Direction::Download => delete_local(&self.local_root, path, cancellation)
-                    .map_err(LocalRemoteTransferError::Delete),
-                Direction::BothWays => Err(LocalRemoteTransferError::UnsupportedDirection),
-            };
-            result?;
-            self.invalidate_cache(path);
-            Ok(())
-        }
+            Direction::BothWays => Err(LocalRemoteTransferError::UnsupportedDirection),
+        };
+        result?;
+        self.invalidate_cache(path);
+        Ok(())
     }
 }

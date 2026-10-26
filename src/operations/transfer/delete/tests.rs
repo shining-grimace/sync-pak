@@ -10,7 +10,7 @@ use std::{
 use crate::{
     inventory::RelativePath,
     operations::cancellation::CancellationToken,
-    operations::retry::{RetryPolicy, RetrySleeper},
+    operations::retry::{RetryContext, RetryPolicy, RetrySleeper},
     operations::transfer::paths::{LocalTransferRoot, RemoteTransferPrefix},
     providers::capabilities::{ObjectDeleter, ProviderError, ProviderResult},
 };
@@ -115,10 +115,12 @@ fn retries_an_unavailable_remote_delete() {
         "bucket",
         &RemoteTransferPrefix::new("sync").unwrap(),
         &RelativePath::new("file").unwrap(),
-        &RetryPolicy::default(),
-        &sleeper,
-        1,
-        &CancellationToken::default(),
+        &RetryContext {
+            policy: &RetryPolicy::default(),
+            sleeper: &sleeper,
+            jitter_seed: 1,
+            cancellation: &CancellationToken::default(),
+        },
     ))
     .unwrap();
     assert_eq!(provider.0.load(Ordering::Relaxed), 2);

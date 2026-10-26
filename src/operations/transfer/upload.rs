@@ -1,11 +1,12 @@
+#[cfg(test)]
+use crate::operations::{cancellation::CancellationToken, retry::RetryPolicy};
 use std::error::Error;
 use std::fmt;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
 use crate::{
-    operations::cancellation::CancellationToken,
-    operations::retry::{NoopRetryObserver, RetryObserver, RetryPolicy, RetrySleeper},
+    operations::retry::{NoopRetryObserver, RetryContext, RetryObserver, RetrySleeper},
     operations::transfer::upload_contents::upload_contents_with_retry_and_cancellation_and_observer,
     providers::capabilities::{ObjectWriteMetadata, ObjectWriter, ProviderError},
 };
@@ -36,10 +37,7 @@ pub async fn upload_from_path_with_retry_and_cancellation_and_observer<
     bucket: &str,
     key: &str,
     source: &Path,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
     observer: &O,
 ) -> Result<(), UploadError> {
     let (contents, write_metadata) = read_upload_source(source)?;
@@ -49,10 +47,7 @@ pub async fn upload_from_path_with_retry_and_cancellation_and_observer<
         key,
         &contents,
         &write_metadata,
-        policy,
-        sleeper,
-        jitter_seed,
-        cancellation,
+        retry,
         observer,
     )
     .await
@@ -73,10 +68,12 @@ pub async fn upload_from_path_with_retry<T: ObjectWriter, S: RetrySleeper>(
         bucket,
         key,
         source,
-        policy,
-        sleeper,
-        jitter_seed,
-        &CancellationToken::default(),
+        &RetryContext {
+            policy,
+            sleeper,
+            jitter_seed,
+            cancellation: &CancellationToken::default(),
+        },
     )
     .await
 }
@@ -87,20 +84,14 @@ pub async fn upload_from_path_with_retry_and_cancellation<T: ObjectWriter, S: Re
     bucket: &str,
     key: &str,
     source: &Path,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
 ) -> Result<(), UploadError> {
     upload_from_path_with_retry_and_cancellation_and_observer(
         provider,
         bucket,
         key,
         source,
-        policy,
-        sleeper,
-        jitter_seed,
-        cancellation,
+        retry,
         &NoopRetryObserver,
     )
     .await

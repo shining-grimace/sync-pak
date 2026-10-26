@@ -1,15 +1,27 @@
 use crate::{configuration::ProviderKind, validation::validate_name_length};
 
-pub(crate) fn provider(
-    name: &str,
-    access_key_id: &str,
-    secret_access_key: &str,
-    kind: ProviderKind,
-    account_id: &str,
-    region: &str,
-    default_bucket: &str,
-    endpoint: &str,
-) -> Result<(), String> {
+pub(crate) struct ProviderFields<'a> {
+    pub name: &'a str,
+    pub access_key_id: &'a str,
+    pub secret_access_key: &'a str,
+    pub kind: ProviderKind,
+    pub account_id: &'a str,
+    pub region: &'a str,
+    pub default_bucket: &'a str,
+    pub endpoint: &'a str,
+}
+
+pub(crate) fn provider(fields: ProviderFields<'_>) -> Result<(), String> {
+    let ProviderFields {
+        name,
+        access_key_id,
+        secret_access_key,
+        kind,
+        account_id,
+        region,
+        default_bucket,
+        endpoint,
+    } = fields;
     required(name, "Provider name")?;
     validate_name_length(name, "Provider name")?;
     if kind == ProviderKind::CloudflareR2 && endpoint.trim().is_empty() {

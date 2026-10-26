@@ -86,7 +86,7 @@ pub async fn execute_add_only_actions<T: AddOnlyTransfer, O: TransferProgressObs
             ));
             return Err(AddOnlyExecutionError {
                 error,
-                result: progress.fail(),
+                result: Box::new(progress.fail()),
             });
         }
         progress.complete_current();
@@ -140,7 +140,7 @@ fn progress_event(
 #[derive(Debug)]
 pub struct AddOnlyExecutionError<E> {
     pub error: AddOnlyActionError<E>,
-    pub result: ExecutionResult,
+    pub result: Box<ExecutionResult>,
 }
 
 #[derive(Debug)]

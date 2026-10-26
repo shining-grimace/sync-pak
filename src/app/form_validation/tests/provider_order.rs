@@ -31,16 +31,16 @@ fn r2_reports_missing_fields_in_visual_order() {
         ),
     ] {
         assert_eq!(
-            provider(
+            provider(ProviderFields {
                 name,
-                access,
-                secret,
-                ProviderKind::CloudflareR2,
-                account,
-                "",
-                bucket,
-                ""
-            ),
+                access_key_id: access,
+                secret_access_key: secret,
+                kind: ProviderKind::CloudflareR2,
+                account_id: account,
+                region: "",
+                default_bucket: bucket,
+                endpoint: "",
+            }),
             Err(expected.into()),
         );
     }
@@ -49,29 +49,29 @@ fn r2_reports_missing_fields_in_visual_order() {
 #[test]
 fn r2_with_an_explicit_endpoint_does_not_require_an_account_id() {
     assert_eq!(
-        provider(
-            "Cloud",
-            "",
-            "",
-            ProviderKind::CloudflareR2,
-            "",
-            "",
-            "",
-            "https://example.com"
-        ),
+        provider(ProviderFields {
+            name: "Cloud",
+            access_key_id: "",
+            secret_access_key: "",
+            kind: ProviderKind::CloudflareR2,
+            account_id: "",
+            region: "",
+            default_bucket: "",
+            endpoint: "https://example.com",
+        }),
         Err("Access key ID is required.".into()),
     );
     assert_eq!(
-        provider(
-            "Cloud",
-            "access",
-            "secret",
-            ProviderKind::CloudflareR2,
-            "",
-            "",
-            "",
-            "https://example.com"
-        ),
+        provider(ProviderFields {
+            name: "Cloud",
+            access_key_id: "access",
+            secret_access_key: "secret",
+            kind: ProviderKind::CloudflareR2,
+            account_id: "",
+            region: "",
+            default_bucket: "",
+            endpoint: "https://example.com",
+        }),
         Ok(()),
     );
 }
@@ -84,16 +84,16 @@ fn provider_defaults_are_validated_before_the_fixed_bucket() {
         ProviderKind::AwsS3,
     ] {
         assert_eq!(
-            provider(
-                "Cloud",
-                "access",
-                "secret",
+            provider(ProviderFields {
+                name: "Cloud",
+                access_key_id: "access",
+                secret_access_key: "secret",
                 kind,
-                "account",
-                "",
-                " bucket",
-                "ftp://example.com"
-            ),
+                account_id: "account",
+                region: "",
+                default_bucket: " bucket",
+                endpoint: "ftp://example.com",
+            }),
             Err("S3 API endpoint must use HTTPS or HTTP.".into()),
         );
     }

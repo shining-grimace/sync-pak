@@ -1,3 +1,6 @@
+mod context;
+pub use context::RetryContext;
+
 use std::{future::Future, time::Duration};
 
 use crate::providers::capabilities::ProviderError;

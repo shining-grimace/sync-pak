@@ -1,10 +1,11 @@
+#[cfg(test)]
+use crate::operations::{cancellation::CancellationToken, retry::RetryPolicy};
 use std::error::Error;
 use std::fmt;
 use std::path::Path;
 
 use crate::{
-    operations::cancellation::CancellationToken,
-    operations::retry::{NoopRetryObserver, RetryObserver, RetryPolicy, RetrySleeper},
+    operations::retry::{NoopRetryObserver, RetryContext, RetryObserver, RetrySleeper},
     platform::atomic_write::atomic_write,
     providers::capabilities::{ObjectReader, ProviderError, ReadObject},
 };
@@ -33,21 +34,11 @@ pub async fn download_to_path_with_retry_and_cancellation_and_observer<
     bucket: &str,
     key: &str,
     destination: &Path,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
     observer: &O,
 ) -> Result<(), DownloadError> {
     let contents = download_contents_with_retry_and_cancellation_and_observer(
-        provider,
-        bucket,
-        key,
-        policy,
-        sleeper,
-        jitter_seed,
-        cancellation,
-        observer,
+        provider, bucket, key, retry, observer,
     )
     .await?;
     atomic_write(destination, &contents).map_err(DownloadError::Local)
@@ -57,11 +48,15 @@ pub async fn download_object_with_retry_and_cancellation<T: ObjectReader, S: Ret
     provider: &T,
     bucket: &str,
     key: &str,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
 ) -> Result<ReadObject, DownloadError> {
+    let RetryContext {
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+    } = *retry;
+
     let mut completed_attempts = 0;
     loop {
         cancellation.check().map_err(|_| DownloadError::Cancelled)?;
@@ -92,12 +87,16 @@ async fn download_contents_with_retry_and_cancellation_and_observer<
     provider: &T,
     bucket: &str,
     key: &str,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
     observer: &O,
 ) -> Result<Vec<u8>, DownloadError> {
+    let RetryContext {
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+    } = *retry;
+
     let mut completed_attempts = 0;
     loop {
         cancellation.check().map_err(|_| DownloadError::Cancelled)?;
@@ -136,10 +135,12 @@ pub async fn download_to_path_with_retry<T: ObjectReader, S: RetrySleeper>(
         bucket,
         key,
         destination,
-        policy,
-        sleeper,
-        jitter_seed,
-        &CancellationToken::default(),
+        &RetryContext {
+            policy,
+            sleeper,
+            jitter_seed,
+            cancellation: &CancellationToken::default(),
+        },
     )
     .await
 }
@@ -150,20 +151,14 @@ pub async fn download_to_path_with_retry_and_cancellation<T: ObjectReader, S: Re
     bucket: &str,
     key: &str,
     destination: &Path,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
 ) -> Result<(), DownloadError> {
     download_to_path_with_retry_and_cancellation_and_observer(
         provider,
         bucket,
         key,
         destination,
-        policy,
-        sleeper,
-        jitter_seed,
-        cancellation,
+        retry,
         &NoopRetryObserver,
     )
     .await

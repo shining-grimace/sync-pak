@@ -22,23 +22,23 @@ struct Transfer;
 impl MirrorTransfer for Transfer {
     type Error = Infallible;
 
-    fn copy(
+    async fn copy(
         &self,
         _: Direction,
         _: &RelativePath,
         _: bool,
         _: &CancellationToken,
         _: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async { Ok(()) }
+    ) -> Result<(), Self::Error> {
+        Ok(())
     }
-    fn delete(
+    async fn delete(
         &self,
         _: Direction,
         _: &RelativePath,
         _: &CancellationToken,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async { Ok(()) }
+    ) -> Result<(), Self::Error> {
+        Ok(())
     }
 }
 
@@ -66,8 +66,10 @@ fn stale_mirror_inventory_blocks_even_a_confirmed_destructive_plan() {
     assert!(matches!(
         block_on(execute_current_confirmed_mirror(
             &preflight,
-            &changed_source,
-            &original_destination,
+            crate::operations::transfer::preflight_mirror::CurrentInventories {
+                source: &changed_source,
+                destination: &original_destination
+            },
             Some(&confirmation),
             &Transfer,
             &CancellationToken::default(),

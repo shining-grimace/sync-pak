@@ -7,6 +7,7 @@ use std::{
 
 use crate::{
     inventory::{Inventory, InventoryEntry, InventoryEntryKind, RelativePath},
+    operations::archive::execution::ArchiveSource,
     operations::archive::upload::ArchiveUploader,
     operations::cancellation::CancellationToken,
     operations::transfer::paths::LocalTransferRoot,
@@ -44,11 +45,13 @@ fn uploads_a_portably_named_archive_and_removes_its_staging_file() {
     };
 
     let filename = block_on(create_and_upload_archive(
-        &LocalTransferRoot::new(&root),
-        &inventory(),
-        &root,
-        "20260721-123456Z",
-        "Café/backup",
+        ArchiveSource {
+            source_root: &LocalTransferRoot::new(&root),
+            inventory: &inventory(),
+            staging_directory: &root,
+            timestamp: "20260721-123456Z",
+            connection_name: "Café/backup",
+        },
         &uploader,
         &CancellationToken::default(),
         4,
@@ -71,11 +74,13 @@ fn failed_upload_retains_the_complete_staging_file() {
     };
 
     let error = block_on(create_and_upload_archive(
-        &LocalTransferRoot::new(&root),
-        &inventory(),
-        &root,
-        "20260721-123456Z",
-        "Backup",
+        ArchiveSource {
+            source_root: &LocalTransferRoot::new(&root),
+            inventory: &inventory(),
+            staging_directory: &root,
+            timestamp: "20260721-123456Z",
+            connection_name: "Backup",
+        },
         &uploader,
         &CancellationToken::default(),
         4,

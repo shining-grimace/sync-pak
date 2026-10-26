@@ -103,15 +103,13 @@ mod tests {
     impl ArchiveRemover for Remover {
         type Error = Infallible;
 
-        fn remove(
+        async fn remove(
             &self,
             archive: &ArchiveRecord,
             _: &CancellationToken,
-        ) -> impl Future<Output = Result<(), Self::Error>> {
-            async move {
-                self.0.lock().unwrap().push(archive.location.clone());
-                Ok(())
-            }
+        ) -> Result<(), Self::Error> {
+            self.0.lock().unwrap().push(archive.location.clone());
+            Ok(())
         }
     }
 

@@ -21,26 +21,26 @@ struct Transfer;
 impl AddOnlyTransfer for Transfer {
     type Error = Infallible;
 
-    fn upload(
+    async fn upload(
         &self,
         _: &RelativePath,
         _: &CancellationToken,
         _: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async { Ok(()) }
+    ) -> Result<(), Self::Error> {
+        Ok(())
     }
 
-    fn download(
+    async fn download(
         &self,
         _: &RelativePath,
         _: &CancellationToken,
         _: u64,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async { Ok(()) }
+    ) -> Result<(), Self::Error> {
+        Ok(())
     }
 
-    fn accept_existing(&self, _: &RelativePath) -> impl Future<Output = Result<(), Self::Error>> {
-        async { Ok(()) }
+    async fn accept_existing(&self, _: &RelativePath) -> Result<(), Self::Error> {
+        Ok(())
     }
 }
 

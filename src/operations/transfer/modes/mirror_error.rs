@@ -12,7 +12,7 @@ pub enum MirrorExecutionError<E> {
     Confirmation(ConfirmationError),
     Action {
         error: MirrorActionError<E>,
-        result: ExecutionResult,
+        result: Box<ExecutionResult>,
     },
 }
 

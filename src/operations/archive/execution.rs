@@ -9,17 +9,30 @@ use crate::{
     operations::transfer::paths::LocalTransferRoot,
 };
 
+/// Local input and naming settings for one archive.
+#[derive(Clone, Copy)]
+pub struct ArchiveSource<'a> {
+    pub source_root: &'a LocalTransferRoot,
+    pub inventory: &'a Inventory,
+    pub staging_directory: &'a Path,
+    pub timestamp: &'a str,
+    pub connection_name: &'a str,
+}
+
 /// Creates and uploads a timestamped ZIP archive, retaining its staging file on upload failure.
 pub async fn create_and_upload_archive<U: ArchiveUploader>(
-    source_root: &LocalTransferRoot,
-    inventory: &Inventory,
-    staging_directory: &Path,
-    timestamp: &str,
-    connection_name: &str,
+    source: ArchiveSource<'_>,
     uploader: &U,
     cancellation: &CancellationToken,
     jitter_seed: u64,
 ) -> Result<String, ArchiveExecutionError<U::Error>> {
+    let ArchiveSource {
+        source_root,
+        inventory,
+        staging_directory,
+        timestamp,
+        connection_name,
+    } = source;
     if cancellation.check().is_err() {
         return Err(ArchiveExecutionError::Cancelled);
     }

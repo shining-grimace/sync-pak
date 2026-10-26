@@ -47,10 +47,10 @@ pub(crate) fn configure(window: &AppWindow) {
         let action = find(&queue, id)
             .and_then(|row| queue.row_data(row))
             .map(|notice| notice.action);
-        if action == Some(DIAGNOSTICS_ACTION) {
-            if let Some(window) = weak.upgrade() {
-                window.invoke_show_diagnostics();
-            }
+        if action == Some(DIAGNOSTICS_ACTION)
+            && let Some(window) = weak.upgrade()
+        {
+            window.invoke_show_diagnostics();
         }
         fade(&queue, id);
     });

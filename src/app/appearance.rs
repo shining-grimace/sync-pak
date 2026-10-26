@@ -59,7 +59,7 @@ fn resolved_dark_mode(window: &AppWindow, preference: AppearancePreference) -> O
     match preference {
         AppearancePreference::Light => Some(false),
         AppearancePreference::Dark => Some(true),
-        AppearancePreference::System => match WindowInner::from_pub(&window.window())
+        AppearancePreference::System => match WindowInner::from_pub(window.window())
             .context()
             .color_scheme(None)
         {

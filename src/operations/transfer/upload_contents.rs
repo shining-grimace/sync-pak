@@ -1,6 +1,5 @@
 use crate::{
-    operations::cancellation::CancellationToken,
-    operations::retry::{NoopRetryObserver, RetryObserver, RetryPolicy, RetrySleeper},
+    operations::retry::{NoopRetryObserver, RetryContext, RetryObserver, RetrySleeper},
     operations::transfer::upload::UploadError,
     providers::capabilities::{ObjectWriteMetadata, ObjectWriter},
 };
@@ -11,10 +10,7 @@ pub async fn upload_contents_with_retry_and_cancellation<T: ObjectWriter, S: Ret
     key: &str,
     contents: &[u8],
     write_metadata: &ObjectWriteMetadata,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
 ) -> Result<(), UploadError> {
     upload_contents_with_retry_and_cancellation_and_observer(
         provider,
@@ -22,10 +18,7 @@ pub async fn upload_contents_with_retry_and_cancellation<T: ObjectWriter, S: Ret
         key,
         contents,
         write_metadata,
-        policy,
-        sleeper,
-        jitter_seed,
-        cancellation,
+        retry,
         &NoopRetryObserver,
     )
     .await
@@ -41,12 +34,16 @@ pub(crate) async fn upload_contents_with_retry_and_cancellation_and_observer<
     key: &str,
     contents: &[u8],
     write_metadata: &ObjectWriteMetadata,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
     observer: &O,
 ) -> Result<(), UploadError> {
+    let RetryContext {
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+    } = *retry;
+
     let mut completed_attempts = 0;
     loop {
         cancellation.check().map_err(|_| UploadError::Cancelled)?;

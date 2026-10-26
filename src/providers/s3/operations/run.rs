@@ -124,7 +124,7 @@ pub(super) async fn execute_request(
         .await
         {
             Ok(result) => Ok(result),
-            Err(error) => Ok(failed_action(error.error, error.result)),
+            Err(error) => Ok(failed_action(error.error, *error.result)),
         },
         SyncMode::Mirror => match execute_confirmed_mirror(
             confirmed.preflight().preflight().plan(),
@@ -137,7 +137,9 @@ pub(super) async fn execute_request(
         .await
         {
             Ok(result) => Ok(result),
-            Err(MirrorExecutionError::Action { error, result }) => Ok(failed_action(error, result)),
+            Err(MirrorExecutionError::Action { error, result }) => {
+                Ok(failed_action(error, *result))
+            }
             Err(_) => Err(CapabilityError::InvalidReference),
         },
         SyncMode::Archive => Ok(crate::providers::s3::operations::archive::execute(
@@ -145,8 +147,10 @@ pub(super) async fn execute_request(
             confirmed.preflight().preflight(),
             &transfer,
             cancellation,
-            &history,
-            history_directory,
+            super::archive::ArchiveStorage {
+                history: &history,
+                staging_directory: history_directory,
+            },
             observer,
             jitter_seed,
         )

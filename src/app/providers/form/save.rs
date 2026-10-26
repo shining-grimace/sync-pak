@@ -81,16 +81,16 @@ fn save_ready(
             }
         }
     };
-    if let Err(error) = form_validation::provider(
-        &name,
-        &credentials.access_key_id,
-        &credentials.secret_access_key,
+    if let Err(error) = form_validation::provider(form_validation::ProviderFields {
+        name: &name,
+        access_key_id: &credentials.access_key_id,
+        secret_access_key: &credentials.secret_access_key,
         kind,
-        &account_id,
-        &region,
-        &default_bucket,
-        &endpoint,
-    ) {
+        account_id: &account_id,
+        region: &region,
+        default_bucket: &default_bucket,
+        endpoint: &endpoint,
+    }) {
         window.set_page(2);
         window.set_provider_validation_focus(form_validation::provider_focus(&error));
         window.set_status_message(error.into());

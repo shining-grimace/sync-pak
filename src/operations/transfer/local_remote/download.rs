@@ -3,7 +3,7 @@ use std::path::Path;
 use crate::{
     inventory::RelativePath,
     operations::cancellation::CancellationToken,
-    operations::retry::RetrySleeper,
+    operations::retry::{RetryContext, RetrySleeper},
     operations::transfer::download::{
         DownloadError, download_object_with_retry_and_cancellation,
         download_to_path_with_retry_and_cancellation,
@@ -24,10 +24,12 @@ impl<P: ObjectPrefixChecker + ObjectReader, S: RetrySleeper> LocalRemoteTransfer
             self.provider,
             self.bucket,
             &key,
-            self.retry_policy,
-            self.sleeper,
-            jitter_seed,
-            cancellation,
+            &RetryContext {
+                policy: self.retry_policy,
+                sleeper: self.sleeper,
+                jitter_seed,
+                cancellation,
+            },
         )
         .await
         {
@@ -80,10 +82,12 @@ impl<P: ObjectReader, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
             self.bucket,
             &self.remote_prefix.resolve(relative),
             destination,
-            self.retry_policy,
-            self.sleeper,
-            jitter_seed,
-            cancellation,
+            &RetryContext {
+                policy: self.retry_policy,
+                sleeper: self.sleeper,
+                jitter_seed,
+                cancellation,
+            },
         )
         .await
         .map_err(LocalRemoteTransferError::Download)

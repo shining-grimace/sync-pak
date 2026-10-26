@@ -3,7 +3,7 @@ use std::{error::Error, fmt};
 use crate::{
     inventory::RelativePath,
     operations::cancellation::CancellationToken,
-    operations::retry::{RetryPolicy, RetrySleeper},
+    operations::retry::{RetryContext, RetrySleeper},
     operations::transfer::paths::{LocalTransferRoot, RemoteTransferPrefix},
     providers::capabilities::{ObjectDeleter, ProviderError},
 };
@@ -44,11 +44,15 @@ pub async fn delete_remote_with_retry_and_cancellation<T: ObjectDeleter, S: Retr
     bucket: &str,
     prefix: &RemoteTransferPrefix,
     relative: &RelativePath,
-    policy: &RetryPolicy,
-    sleeper: &S,
-    jitter_seed: u64,
-    cancellation: &CancellationToken,
+    retry: &RetryContext<'_, S>,
 ) -> Result<(), TransferDeleteError> {
+    let RetryContext {
+        policy,
+        sleeper,
+        jitter_seed,
+        cancellation,
+    } = *retry;
+
     let mut completed_attempts = 0;
     loop {
         cancellation

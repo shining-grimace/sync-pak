@@ -42,14 +42,14 @@ impl ActivityPresentation {
 }
 
 fn progress_summary(entry: &QueueEntry) -> String {
-    (entry.state == QueueState::Running)
-        .then(|| {
-            entry.progress.as_ref().map_or_else(
-                String::new,
-                crate::operations::operation_progress::OperationProgress::summary,
-            )
-        })
-        .unwrap_or_default()
+    if entry.state == QueueState::Running {
+        entry.progress.as_ref().map_or_else(
+            String::new,
+            crate::operations::operation_progress::OperationProgress::summary,
+        )
+    } else {
+        String::new()
+    }
 }
 
 fn detail(snapshot: &crate::operations::queue::snapshot::ActivitySnapshot) -> String {

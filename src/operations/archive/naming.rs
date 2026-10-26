@@ -38,10 +38,7 @@ fn sanitize_connection_name(connection_name: &str) -> String {
         })
         .collect::<String>();
     let name = name.trim_end_matches([' ', '.']);
-    (!name.is_empty())
-        .then_some(name)
-        .unwrap_or("Archive")
-        .into()
+    if !name.is_empty() { name } else { "Archive" }.into()
 }
 
 fn truncate_utf8(value: &str, maximum_bytes: usize) -> &str {

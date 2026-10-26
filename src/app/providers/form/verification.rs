@@ -64,16 +64,16 @@ fn verify_ready(
             }
         }
     };
-    if let Err(error) = form_validation::provider(
-        &window.get_provider_form_name(),
-        &credentials.access_key_id,
-        &credentials.secret_access_key,
+    if let Err(error) = form_validation::provider(form_validation::ProviderFields {
+        name: &window.get_provider_form_name(),
+        access_key_id: &credentials.access_key_id,
+        secret_access_key: &credentials.secret_access_key,
         kind,
-        &account,
-        &region,
-        &bucket,
-        &endpoint,
-    ) {
+        account_id: &account,
+        region: &region,
+        default_bucket: &bucket,
+        endpoint: &endpoint,
+    }) {
         window.set_provider_save_after_verification(false);
         window.set_provider_validation_focus(form_validation::provider_focus(&error));
         window.set_status_message(error.into());

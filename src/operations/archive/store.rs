@@ -1,14 +1,14 @@
-use std::{error::Error, fmt, path::Path};
+use std::{error::Error, fmt};
 
 use crate::{
     configuration::ConnectionId,
-    inventory::Inventory,
-    operations::archive::execution::{ArchiveExecutionError, create_and_upload_archive},
+    operations::archive::execution::{
+        ArchiveExecutionError, ArchiveSource, create_and_upload_archive,
+    },
     operations::archive::prune::{ArchivePruneError, ArchiveRemover, prune_archives},
     operations::archive::retention::ArchiveRecord,
     operations::archive::upload::ArchiveUploader,
     operations::cancellation::CancellationToken,
-    operations::transfer::paths::LocalTransferRoot,
 };
 
 /// A newly stored archive and any older archives removed by its retention policy.
@@ -18,33 +18,31 @@ pub struct ArchiveStoreResult {
     pub pruned: Vec<ArchiveRecord>,
 }
 
+/// Connection-scoped archive history and retention policy.
+pub struct ArchiveRetention<'a> {
+    pub connection_id: &'a ConnectionId,
+    pub existing: &'a [ArchiveRecord],
+    pub keep_last: u32,
+}
+
 /// Stores a remote archive, then applies its connection-scoped retention policy.
 pub async fn create_upload_and_prune_archive<U: ArchiveUploader, R: ArchiveRemover>(
-    source_root: &LocalTransferRoot,
-    inventory: &Inventory,
-    staging_directory: &Path,
-    timestamp: &str,
-    connection_id: &ConnectionId,
-    connection_name: &str,
-    existing: &[ArchiveRecord],
-    keep_last: u32,
+    source: ArchiveSource<'_>,
+    retention: ArchiveRetention<'_>,
     uploader: &U,
     remover: &R,
     cancellation: &CancellationToken,
     jitter_seed: u64,
 ) -> Result<ArchiveStoreResult, ArchiveStoreError<U::Error, R::Error>> {
-    let filename = create_and_upload_archive(
-        source_root,
-        inventory,
-        staging_directory,
-        timestamp,
-        connection_name,
-        uploader,
-        cancellation,
-        jitter_seed,
-    )
-    .await
-    .map_err(ArchiveStoreError::Store)?;
+    let ArchiveRetention {
+        connection_id,
+        existing,
+        keep_last,
+    } = retention;
+    let timestamp = source.timestamp;
+    let filename = create_and_upload_archive(source, uploader, cancellation, jitter_seed)
+        .await
+        .map_err(ArchiveStoreError::Store)?;
     let archive = ArchiveRecord {
         connection_id: connection_id.clone(),
         location: filename,

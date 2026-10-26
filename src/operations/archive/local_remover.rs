@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, future::Future};
+use std::{error::Error, fmt};
 
 use crate::{
     inventory::{InventoryError, RelativePath},
@@ -23,19 +23,17 @@ impl LocalArchiveRemover {
 impl ArchiveRemover for LocalArchiveRemover {
     type Error = LocalArchiveRemoveError;
 
-    fn remove(
+    async fn remove(
         &self,
         archive: &ArchiveRecord,
         cancellation: &CancellationToken,
-    ) -> impl Future<Output = Result<(), Self::Error>> {
-        async move {
-            let path =
-                RelativePath::new(&archive.location).map_err(LocalArchiveRemoveError::Location)?;
-            if !path.as_str().ends_with(".zip") {
-                return Err(LocalArchiveRemoveError::NotArchive(path));
-            }
-            delete_local(&self.root, &path, cancellation).map_err(LocalArchiveRemoveError::Delete)
+    ) -> Result<(), Self::Error> {
+        let path =
+            RelativePath::new(&archive.location).map_err(LocalArchiveRemoveError::Location)?;
+        if !path.as_str().ends_with(".zip") {
+            return Err(LocalArchiveRemoveError::NotArchive(path));
         }
+        delete_local(&self.root, &path, cancellation).map_err(LocalArchiveRemoveError::Delete)
     }
 }
 

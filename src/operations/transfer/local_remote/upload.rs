@@ -3,7 +3,7 @@ use std::{io::Read, path::Path, time::UNIX_EPOCH};
 use crate::{
     inventory::{InventoryEntryKind, RelativePath},
     operations::cancellation::CancellationToken,
-    operations::retry::RetrySleeper,
+    operations::retry::{RetryContext, RetrySleeper},
     operations::transfer::local_remote::{LocalRemoteTransfer, LocalRemoteTransferError},
     operations::transfer::multipart_file::{
         upload_file_with_cancellation, upload_reader_with_cancellation,
@@ -38,10 +38,12 @@ impl<P: ObjectWriter, S: RetrySleeper> LocalRemoteTransfer<'_, P, S> {
             &ObjectWriteMetadata {
                 source_modified_unix_seconds: metadata.modified_unix_seconds,
             },
-            self.retry_policy,
-            self.sleeper,
-            jitter_seed,
-            cancellation,
+            &RetryContext {
+                policy: self.retry_policy,
+                sleeper: self.sleeper,
+                jitter_seed,
+                cancellation,
+            },
         )
         .await
         .map_err(LocalRemoteTransferError::Upload)
@@ -69,10 +71,12 @@ impl<P: ObjectWriter + MultipartUploader + ObjectMetadataReader, S: RetrySleeper
                 &format!("{key}/"),
                 &[],
                 &write_metadata,
-                self.retry_policy,
-                self.sleeper,
-                jitter_seed,
-                cancellation,
+                &RetryContext {
+                    policy: self.retry_policy,
+                    sleeper: self.sleeper,
+                    jitter_seed,
+                    cancellation,
+                },
             )
             .await
             .map_err(LocalRemoteTransferError::Upload);
@@ -88,10 +92,12 @@ impl<P: ObjectWriter + MultipartUploader + ObjectMetadataReader, S: RetrySleeper
                     &key,
                     &contents,
                     &write_metadata,
-                    self.retry_policy,
-                    self.sleeper,
-                    jitter_seed,
-                    cancellation,
+                    &RetryContext {
+                        policy: self.retry_policy,
+                        sleeper: self.sleeper,
+                        jitter_seed,
+                        cancellation,
+                    },
                 )
                 .await
                 .map_err(LocalRemoteTransferError::Upload)
@@ -130,10 +136,12 @@ impl<P: ObjectWriter + MultipartUploader + ObjectMetadataReader, S: RetrySleeper
                 self.bucket,
                 &self.remote_prefix.resolve(relative),
                 source,
-                self.retry_policy,
-                self.sleeper,
-                jitter_seed,
-                cancellation,
+                &RetryContext {
+                    policy: self.retry_policy,
+                    sleeper: self.sleeper,
+                    jitter_seed,
+                    cancellation,
+                },
             )
             .await
             .map_err(LocalRemoteTransferError::Upload),
