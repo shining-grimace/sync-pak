@@ -26,14 +26,8 @@ pub(crate) fn options(window: &AppWindow, kind: ProviderKind) -> Result<Provider
         endpoint: defaults.endpoint,
         region: defaults.region,
     };
-    // A provider may save credentials before routing is known. Once routing is
-    // supplied, validate it; an explicitly configured fixed bucket must be complete.
-    let defaults = options.transport_for_bucket(None, None);
-    if defaults.endpoint.is_some() || defaults.region.is_some() {
-        defaults
-            .resolve(kind, options.account_id.as_deref())
-            .map_err(str::to_owned)?;
-    }
+    // Basic fields and provider defaults are validated in visual order by
+    // form_validation::provider before these fixed-bucket overrides.
     if let Some(settings) = &options.default_bucket_transport {
         settings
             .resolve(kind, options.account_id.as_deref())

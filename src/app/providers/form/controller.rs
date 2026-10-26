@@ -78,19 +78,17 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     window.on_request_save_provider(move || {
         if let Some(window) = weak.upgrade() {
-            crate::app::providers::form::secret_reveal::hide(&window);
-            window.set_status_message(SharedString::default());
-            window.set_page(13);
-        }
-    });
-
-    let weak = window.as_weak();
-    window.on_cancel_save_provider(move || {
-        if let Some(window) = weak.upgrade() {
-            if window.get_provider_storage_busy() {
+            if window.get_provider_storage_busy() || window.get_provider_verifying() {
                 return;
             }
-            window.set_page(2);
+            window.set_status_message(SharedString::default());
+            window.set_provider_save_after_verification(false);
+            window.invoke_save_provider(
+                window.get_provider_form_name(),
+                window.get_provider_form_kind(),
+                window.get_provider_form_access_key(),
+                window.get_provider_form_secret_key(),
+            );
         }
     });
 

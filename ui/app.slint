@@ -10,7 +10,6 @@ export { SettingsState, SettingsConnectionRow } from "settings-state.slint";
 import { PrivacyPage } from "pages/privacy.slint";
 import { DiagnosticsPage } from "pages/diagnostics.slint";
 import {
-    ProviderSaveConfirmationPage,
     ProviderDiscardConfirmationPage,
 } from "pages/provider-confirmations.slint";
 import {
@@ -63,7 +62,6 @@ export global Page {
     out property <int> run-direction: 10;
     out property <int> preflight: 11;
     out property <int> activity-cancel: 12;
-    out property <int> provider-save-confirmation: 13;
     out property <int> connection-discard-confirmation: 14;
     out property <int> provider-discard-confirmation: 15;
     out property <int> activity-result: 16;
@@ -127,7 +125,7 @@ export component AppWindow inherits Window {
     callback queue-notification(string, int, int);
     callback dismiss-notification(int);
     callback activate-notification(int);
-    private property <bool> confirmation-open: (page == Page.settings && (SettingsState.mode != 0 || SettingsState.busy)) || page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.provider-save-confirmation || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
+    private property <bool> confirmation-open: (page == Page.settings && (SettingsState.mode != 0 || SettingsState.busy)) || page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
     changed status-message => {
         if root.status-message != "" {
             root.queue-notification(root.status-message, 0, 0);
@@ -273,7 +271,6 @@ export component AppWindow inherits Window {
     callback retry-connection-providers();
     callback save-provider(string, int, string, string);
     callback request-save-provider();
-    callback cancel-save-provider();
     callback request-discard-provider();
     callback confirm-discard-provider();
     callback cancel-discard-provider();
@@ -404,10 +401,6 @@ export component AppWindow inherits Window {
                         root.dismiss-activity-result();
                         return accept;
                     }
-                    if root.page == Page.provider-save-confirmation {
-                        root.cancel-save-provider();
-                        return accept;
-                    }
                     if root.page == Page.connection-discard-confirmation {
                         root.cancel-discard-connection();
                         return accept;
@@ -466,9 +459,9 @@ export component AppWindow inherits Window {
                     }
 
                     NavMenuButton {
-                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
+                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15) ? "Providers, selected" : "Providers";
                         text: "Providers";
-                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15;
                         enabled: !root.confirmation-open && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(1);
@@ -590,17 +583,6 @@ export component AppWindow inherits Window {
                 }
                 save-and-verify-provider => {
                     root.save-and-verify-provider();
-                }
-            }
-
-            if root.page == Page.provider-save-confirmation: ProviderSaveConfirmationPage {
-                busy: root.provider-storage-busy;
-                provider-name: root.provider-form-name;
-                cancel => {
-                    root.cancel-save-provider();
-                }
-                save => {
-                    root.save-provider(root.provider-form-name, root.provider-form-kind, root.provider-form-access-key, root.provider-form-secret-key);
                 }
             }
 
@@ -908,9 +890,9 @@ export component AppWindow inherits Window {
                     }
 
                     MobileNavMenuButton {
-                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
+                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15) ? "Providers, selected" : "Providers";
                         text: "Providers";
-                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15;
                         enabled: !root.confirmation-open && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(1);
@@ -985,9 +967,9 @@ export component AppWindow inherits Window {
                 }
 
                 NavMenuButton {
-                    accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15) ? "Providers, selected" : "Providers";
+                    accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15) ? "Providers, selected" : "Providers";
                     text: "Providers";
-                    selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 13 || root.page == 15;
+                    selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15;
                     enabled: !root.confirmation-open && !root.configuration-unavailable;
                     clicked => {
                         root.request-navigation(1);

@@ -6,16 +6,27 @@ pub(crate) fn provider(
     secret_access_key: &str,
     kind: ProviderKind,
     account_id: &str,
-    _region: &str,
+    region: &str,
     default_bucket: &str,
     endpoint: &str,
 ) -> Result<(), String> {
     required(name, "Provider name")?;
     validate_name_length(name, "Provider name")?;
-    required(access_key_id, "Access key ID")?;
-    required(secret_access_key, "Secret access key")?;
     if kind == ProviderKind::CloudflareR2 && endpoint.trim().is_empty() {
         required(account_id, "Account ID")?;
+    }
+    let (access_label, secret_label) = match kind {
+        ProviderKind::BackblazeB2 => ("Key ID", "Application key"),
+        _ => ("Access key ID", "Secret access key"),
+    };
+    required(access_key_id, access_label)?;
+    required(secret_access_key, secret_label)?;
+    // Connection defaults appear above the fixed bucket in the form.
+    let defaults = super::transport_form::fields(kind, endpoint, region);
+    if defaults.endpoint.is_some() || defaults.region.is_some() {
+        defaults
+            .resolve(kind, Some(account_id))
+            .map_err(str::to_owned)?;
     }
     validate_optional_bucket(default_bucket)
 }
@@ -65,7 +76,11 @@ pub(crate) fn directions(allow_upload: bool, allow_download: bool) -> Result<(),
 pub(crate) fn provider_focus(error: &str) -> i32 {
     if error.starts_with("Provider name") {
         1
-    } else if error.starts_with("Access key") || error.starts_with("Secret access") {
+    } else if error.starts_with("Access key")
+        || error.starts_with("Secret access")
+        || error.starts_with("Key ID")
+        || error.starts_with("Application key")
+    {
         2
     } else {
         1
@@ -95,150 +110,4 @@ fn required(value: &str, label: &str) -> Result<(), String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{connection, provider};
-    use crate::{configuration::ProviderKind, validation::NAME_MAX_LENGTH};
-
-    fn valid_provider(name: &str) -> Result<(), String> {
-        provider(
-            name,
-            "access",
-            "secret",
-            ProviderKind::AwsS3,
-            "",
-            "region",
-            "",
-            "",
-        )
-    }
-
-    #[test]
-    fn provider_credentials_are_required() {
-        assert_eq!(
-            provider(
-                "Provider",
-                "",
-                "secret",
-                ProviderKind::AwsS3,
-                "",
-                "region",
-                "",
-                ""
-            ),
-            Err("Access key ID is required.".to_owned())
-        );
-        assert_eq!(
-            provider(
-                "Provider",
-                "access",
-                "  ",
-                ProviderKind::AwsS3,
-                "",
-                "region",
-                "",
-                ""
-            ),
-            Err("Secret access key is required.".to_owned())
-        );
-    }
-
-    #[test]
-    fn r2_needs_an_account_while_routing_defaults_can_be_configured_later() {
-        assert_eq!(
-            provider(
-                "Provider",
-                "access",
-                "secret",
-                ProviderKind::CloudflareR2,
-                "",
-                "",
-                "",
-                ""
-            ),
-            Err("Account ID is required.".to_owned())
-        );
-        assert_eq!(
-            provider(
-                "Provider",
-                "access",
-                "secret",
-                ProviderKind::AwsS3,
-                "",
-                "",
-                "",
-                ""
-            ),
-            Ok(())
-        );
-        assert_eq!(
-            provider(
-                "Provider",
-                "access",
-                "secret",
-                ProviderKind::BackblazeB2,
-                "",
-                "us-west-004",
-                "",
-                ""
-            ),
-            Ok(())
-        );
-    }
-
-    #[test]
-    fn optional_bucket_cannot_have_outer_whitespace() {
-        assert_eq!(
-            provider(
-                "Provider",
-                "access",
-                "secret",
-                ProviderKind::AwsS3,
-                "",
-                "region",
-                " bucket",
-                ""
-            ),
-            Err("Bucket name cannot begin or end with whitespace.".to_owned())
-        );
-    }
-
-    #[test]
-    fn connection_fields_and_archive_retention_are_required() {
-        assert_eq!(
-            connection("", 0, "bucket", "/folder", 0, ""),
-            Err("Connection name is required.".to_owned())
-        );
-        assert_eq!(
-            connection("Photos", 0, "bucket", "/folder", 2, "0"),
-            Err("Enter a whole number of at least 1 for archive retention.".to_owned())
-        );
-    }
-
-    #[test]
-    fn provider_name_must_not_exceed_the_shared_limit() {
-        assert_eq!(valid_provider(&"a".repeat(NAME_MAX_LENGTH)), Ok(()));
-        assert_eq!(
-            valid_provider(&"a".repeat(NAME_MAX_LENGTH + 1)),
-            Err("Provider name must not exceed 60 characters".to_owned())
-        );
-    }
-
-    #[test]
-    fn connection_name_must_not_exceed_the_shared_limit() {
-        assert_eq!(
-            connection(&"a".repeat(NAME_MAX_LENGTH), 0, "bucket", "/folder", 0, ""),
-            Ok(())
-        );
-        assert_eq!(
-            connection(
-                &"a".repeat(NAME_MAX_LENGTH + 1),
-                0,
-                "bucket",
-                "/folder",
-                0,
-                ""
-            ),
-            Err("Connection name must not exceed 60 characters".to_owned())
-        );
-    }
-}
+mod tests;

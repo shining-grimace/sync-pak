@@ -124,7 +124,7 @@ fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
 }
 
 fn navigation_is_blocked(page: i32) -> bool {
-    matches!(page, 6 | 7 | 12..=15)
+    matches!(page, 6 | 7 | 12 | 14 | 15)
 }
 
 fn configuration_unavailable_allows(page: i32) -> bool {
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn navigation_cannot_bypass_confirmation_pages() {
-        for page in [6, 7, 12, 13, 14, 15] {
+        for page in [6, 7, 12, 14, 15] {
             assert!(navigation_is_blocked(page));
         }
         for page in [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 16, 17] {

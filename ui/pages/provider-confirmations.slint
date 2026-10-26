@@ -4,37 +4,6 @@ import { DescriptionLabel } from "../components/description-label.slint";
 import { ExpandedPrimaryActionButton } from "../components/action-buttons.slint";
 import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 
-export component ProviderSaveConfirmationPage inherits CenteredPageRoot {
-    in property <string> provider-name;
-    in property <bool> busy;
-    callback cancel();
-    callback save();
-
-    PageHeader {
-        title: "Save Without Verifying?";
-        back-label: "Back to editing provider " + root.provider-name;
-        back-enabled: !root.busy;
-        back => {
-            root.cancel();
-        }
-    }
-
-    DescriptionLabel {
-        text: "This provider may not work until its credentials and access are verified.";
-    }
-
-    FooterActionRow {
-        ExpandedPrimaryActionButton {
-            accessible-label: "Save provider " + root.provider-name + " without verifying";
-            text: root.busy ? "Saving…" : "Save Unverified";
-            enabled: !root.busy;
-            clicked => {
-                root.save();
-            }
-        }
-    }
-}
-
 export component ProviderDiscardConfirmationPage inherits CenteredPageRoot {
     in property <string> provider-name;
     callback cancel();

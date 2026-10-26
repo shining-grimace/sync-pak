@@ -8,8 +8,6 @@
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Android: test that external storage drives work too
-- Set up release config for Android
-- New setting per connection: "Last Run" timestamp shown in the connections list
 - Run Clippy
 - Create branding logo
 - Consider transitions and animations
