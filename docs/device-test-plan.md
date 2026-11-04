@@ -46,8 +46,15 @@ keyboard checks without a mouse. Run Android accessibility checks with TalkBack 
   must time out after five seconds. Test missing service, missing default keyring,
   denied access, prompt cancellation, and a collection that remains locked separately.
   Unlock the keyring and retry; confirm exactly one provider is saved. Repeat while
-  editing and deleting an existing provider. Confirm credentials saved by earlier builds
-  can still be loaded and updated. Never lock or modify a production keyring for testing.
+  editing and deleting an existing provider. Confirm saved credentials can still be
+  loaded and updated after restarting SyncPak. Never lock or modify a production keyring for testing.
+  With KDE Wallet and GNOME Keyring both available, verify Plasma automatically selects
+  KDE Wallet and Welcome reports it without asking the user to choose. Settings must
+  show each service once even when D-Bus aliases share an owner. Change the preference,
+  then check existing providers still load, edit, and delete in their original store;
+  only newly saved providers should use the new choice. Stop the selected service in
+  an isolated test session and confirm SyncPak reports it unavailable without silently
+  switching stores. Exported lists must not include credential-store preferences.
 - **Notifications:** Check desktop notification delivery in installed Linux and Windows
   packages. On Android, grant and deny notification permission and confirm the foreground
   service remains understandable in both cases.

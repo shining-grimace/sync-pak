@@ -98,6 +98,7 @@ pub(crate) fn configure(
     }
     match configuration.load() {
         Ok(config) => {
+            crate::app::credential_provider::configure(window, Rc::clone(&configuration));
             crate::app::appearance::configure(window, &configuration, config.appearance);
             record_temporary_cleanup_failures(&config, &diagnostics);
             if config.welcome_completed {

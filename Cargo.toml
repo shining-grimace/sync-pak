@@ -83,6 +83,7 @@ required-features = ["feasibility-probes"]
 name = "provider_operations"
 required-features = ["provider-probes"]
 
-# Service startup and NativeActivity both register the same process Application.
 [patch.crates-io]
-ndk-context = { path = "android/ndk-context" }
+secret-service = { path = "vendor/secret-service" }
+# Service startup and NativeActivity both register the same process Application.
+ndk-context = { path = "vendor/ndk-context" }

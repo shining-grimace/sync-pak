@@ -1,4 +1,5 @@
 mod background_execution;
+mod credential_backend;
 mod credential_interaction;
 mod credential_store;
 mod error;
@@ -9,6 +10,7 @@ mod notifications;
 
 pub use crate::operations::operation_progress::{OperationPhase, OperationProgress, RetryStatus};
 pub use background_execution::BackgroundExecution;
+pub use credential_backend::CredentialBackend;
 pub(crate) use credential_interaction::{CredentialInteraction, CredentialPhase};
 pub use credential_store::ProtectedCredentialStore;
 pub use error::CapabilityError;

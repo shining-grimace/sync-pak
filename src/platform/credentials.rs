@@ -30,6 +30,37 @@ impl PlatformCredentialStore {
 }
 
 impl ProtectedCredentialStore for PlatformCredentialStore {
+    fn load_from(
+        &self,
+        backend: crate::capabilities::CredentialBackend,
+        id: &str,
+    ) -> Result<Vec<u8>, CapabilityError> {
+        if backend != crate::capabilities::CredentialBackend::System {
+            return Err(CapabilityError::Unsupported);
+        }
+        self.load(id)
+    }
+    fn save_to(
+        &self,
+        backend: crate::capabilities::CredentialBackend,
+        id: &str,
+        secret: &[u8],
+    ) -> Result<(), CapabilityError> {
+        if backend != crate::capabilities::CredentialBackend::System {
+            return Err(CapabilityError::Unsupported);
+        }
+        self.save(id, secret)
+    }
+    fn delete_from(
+        &self,
+        backend: crate::capabilities::CredentialBackend,
+        id: &str,
+    ) -> Result<(), CapabilityError> {
+        if backend != crate::capabilities::CredentialBackend::System {
+            return Err(CapabilityError::Unsupported);
+        }
+        self.delete(id)
+    }
     fn save(&self, provider_id: &str, credential_json: &[u8]) -> Result<(), CapabilityError> {
         self.entry(provider_id)?
             .set_secret(credential_json)

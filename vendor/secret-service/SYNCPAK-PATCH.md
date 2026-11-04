@@ -1,0 +1,1 @@
+Vendored secret-service 5.2.0 (MIT OR Apache-2.0). Adds connect_with_destination and propagates the chosen destination through async collections, items, and prompts. Blocking API is unchanged. Encryption and session negotiation are unchanged. Upstream: https://github.com/open-source-cooperative/secret-service-rs

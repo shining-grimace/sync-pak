@@ -14,6 +14,7 @@ use crate::{
 
 use super::{ProviderCredentials, ProviderDraft, ProviderRepository};
 
+mod backends;
 mod timeouts;
 
 #[derive(Default)]

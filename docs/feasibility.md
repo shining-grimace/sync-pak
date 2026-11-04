@@ -77,7 +77,15 @@ accepted; source builds alone do not meet its packaging/security-model exit crit
 
 - Ordinary JSON configuration contains provider metadata and immutable provider and
   connection IDs; the provider ID is the reference for credential JSON held only in
-  protected platform storage.
+  protected platform storage. Each cloud provider also records its credential-store
+  binding, so changing the device's preference only affects new cloud providers.
+- Linux discovers Secret Service providers without unlocking them, deduplicates D-Bus
+  aliases, and automatically prefers a configured provider for the current desktop.
+  Welcome displays the selected provider; Settings offers an override and refresh.
+  The preference stays in local settings and is excluded from exported connection lists.
+  Configuration remains schema version 1; no configuration or credential migration is
+  implemented. The vendored Secret Service patch adds endpoint selection while retaining
+  upstream encrypted session handling (see `vendor/secret-service/SYNCPAK-PATCH.md`).
 - There is no plaintext credential fallback. An unavailable keyring or keystore is a
   user-visible unavailable state.
 - Platform picker results must be rejected when they cannot be represented as UTF-8; paths

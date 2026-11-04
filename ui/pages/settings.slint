@@ -15,6 +15,13 @@ import { SettingsState } from "../settings-state.slint";
 import { ConnectionListsSection } from "settings-lists.slint";
 
 export component SettingsPage inherits CenteredPageRoot {
+    in property <[string]> credential-provider-names;
+    in-out property <int> credential-provider-index;
+    in property <string> credential-provider-summary;
+    in property <bool> credential-discovery-busy;
+    in property <bool> credential-storage-busy;
+    callback select-credential-provider(int);
+    callback refresh-credential-providers();
     in property <bool> is-android;
     in property <string> settings-directory;
     in property <string> app-version;
@@ -103,6 +110,35 @@ export component SettingsPage inherits CenteredPageRoot {
 
         ConnectionListsSection {
             enabled: !root.configuration-unavailable;
+        }
+
+        VerticalLayout {
+            spacing: Dimensions.element-gap;
+            SectionHeadingLabel {
+                text: "Credential storage";
+            }
+            DescriptionLabel {
+                text: root.credential-provider-summary;
+            }
+            DescriptionLabel {
+                text: "Choose where new cloud providers' credentials are stored on this device. Existing providers keep using their original credential store. This preference is not included in exported connection lists.";
+            }
+            ComboBox {
+                accessible-label: "Credential provider for new cloud providers";
+                model: root.credential-provider-names;
+                current-index <=> root.credential-provider-index;
+                enabled: !root.configuration-unavailable && !root.credential-discovery-busy && !root.credential-storage-busy && root.credential-provider-names.length > 0;
+                selected => {
+                    root.select-credential-provider(self.current-index);
+                }
+            }
+            ExpandedSecondaryActionButton {
+                text: root.credential-discovery-busy ? "Checking…" : "Refresh Credential Providers";
+                enabled: !root.configuration-unavailable && !root.credential-discovery-busy && !root.credential-storage-busy;
+                clicked => {
+                    root.refresh-credential-providers();
+                }
+            }
         }
 
         VerticalLayout {

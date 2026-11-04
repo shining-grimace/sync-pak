@@ -8,7 +8,10 @@ fn provider(default_bucket: Option<&str>) -> ProviderConfig {
     let id = ProviderId::new();
     ProviderConfig {
         id: id.clone(),
-        credential_reference: CredentialReference { provider_id: id },
+        credential_reference: CredentialReference {
+            backend: crate::capabilities::CredentialBackend::System,
+            provider_id: id,
+        },
         name: "Cloud".into(),
         kind: ProviderKind::AwsS3,
         options: ProviderOptions {

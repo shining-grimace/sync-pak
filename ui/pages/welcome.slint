@@ -16,6 +16,7 @@ import {
 
 export component WelcomePage inherits CenteredPageRoot {
     in property <bool> configuration-unavailable;
+    in property <string> credential-provider-summary;
     callback retry-configuration();
     callback show-add-provider();
     callback show-privacy();
@@ -33,6 +34,12 @@ export component WelcomePage inherits CenteredPageRoot {
     Rectangle {
         height: 16px;
         background: transparent;
+    }
+
+    DescriptionLabel {
+        accessible-live-region: polite;
+        text: root.credential-provider-summary;
+        max-width: Dimensions.welcome-content-max-width;
     }
 
     InfoCard {

@@ -23,6 +23,13 @@ pub(super) fn save(
     kind: i32,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_credential_discovery_busy() {
+        window.set_provider_save_after_verification(false);
+        window.set_status_message(
+            "Credential providers are still being checked. Try saving again in a moment.".into(),
+        );
+        return;
+    }
     if window.get_provider_storage_busy() || window.get_provider_verifying() {
         return;
     }

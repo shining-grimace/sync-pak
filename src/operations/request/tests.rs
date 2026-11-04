@@ -20,7 +20,10 @@ fn config(mode: SyncMode) -> AppConfig {
             endpoint: None,
             region: Some("ap-southeast-2".into()),
         },
-        credential_reference: crate::configuration::CredentialReference { provider_id },
+        credential_reference: crate::configuration::CredentialReference {
+            backend: crate::capabilities::CredentialBackend::System,
+            provider_id,
+        },
         verified: true,
     };
     AppConfig {

@@ -34,11 +34,15 @@ trait UnlockPrompt {
 
 pub(super) async fn unlock(
     connection: &zbus::Connection,
+    destination: &str,
     path: OwnedObjectPath,
     interaction: &CredentialInteraction,
 ) -> Result<(), CapabilityError> {
     let prompt_path = controlled(interaction, SERVICE_TIMEOUT, async {
-        let service = UnlockServiceProxy::new(connection)
+        let service = UnlockServiceProxy::builder(connection)
+            .destination(destination.to_owned())
+            .map_err(map_bus_error)?
+            .build()
             .await
             .map_err(map_bus_error)?;
         let (_, prompt) = service.unlock(vec![path]).await.map_err(map_bus_error)?;
@@ -52,6 +56,8 @@ pub(super) async fn unlock(
     // Subscribe before requesting the prompt so immediate completion is not lost.
     let (prompt, mut completed) = controlled(interaction, SERVICE_TIMEOUT, async {
         let prompt = UnlockPromptProxy::builder(connection)
+            .destination(destination.to_owned())
+            .map_err(map_bus_error)?
             .path(prompt_path)
             .map_err(map_bus_error)?
             .build()

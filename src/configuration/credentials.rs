@@ -67,12 +67,16 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
             .configuration
             .load()
             .map_err(CredentialError::Configuration)?;
-        if !config.providers.iter().any(|provider| provider.id == *id) {
-            return Err(CredentialError::NotFound);
-        }
+        let backend = config
+            .providers
+            .iter()
+            .find(|provider| provider.id == *id)
+            .ok_or(CredentialError::NotFound)?
+            .credential_reference
+            .backend;
         let serialized = self
             .credentials
-            .load(id.as_str())
+            .load_from(backend, id.as_str())
             .map_err(CredentialError::ProtectedStore)?;
         serde_json::from_slice(&serialized).map_err(|_| CredentialError::Serialization)
     }
@@ -86,6 +90,15 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
         let id = ProviderId::new();
         let provider = ProviderConfig {
             credential_reference: CredentialReference {
+                backend: self
+                    .configuration
+                    .load()
+                    .map_err(CredentialError::Configuration)?
+                    .credential_backend
+                    .or_else(|| self.credentials.default_backend())
+                    .ok_or(CredentialError::ProtectedStore(
+                        CapabilityError::NotConfigured,
+                    ))?,
                 provider_id: id.clone(),
             },
             id,
@@ -107,6 +120,16 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
         let provider = ProviderConfig {
             id: id.clone(),
             credential_reference: CredentialReference {
+                backend: self
+                    .configuration
+                    .load()
+                    .map_err(CredentialError::Configuration)?
+                    .providers
+                    .iter()
+                    .find(|provider| provider.id == *id)
+                    .ok_or(CredentialError::NotFound)?
+                    .credential_reference
+                    .backend,
                 provider_id: id.clone(),
             },
             name: draft.name,
@@ -148,16 +171,17 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
             .connections
             .retain(|connection| connection.provider_id != *id);
 
+        let backend = provider.credential_reference.backend;
         let secret = self
             .credentials
-            .load(id.as_str())
+            .load_from(backend, id.as_str())
             .map_err(CredentialError::ProtectedStore)?;
         self.credentials
-            .delete(id.as_str())
+            .delete_from(backend, id.as_str())
             .map_err(CredentialError::ProtectedStore)?;
         if let Err(error) = self.configuration.save(&config) {
             self.credentials
-                .save(id.as_str(), &secret)
+                .save_to(backend, id.as_str(), &secret)
                 .map_err(|_| CredentialError::RollbackFailed)?;
             return Err(CredentialError::Configuration(error));
         }
@@ -166,72 +190,9 @@ impl<'a, S: ProtectedCredentialStore> ProviderRepository<'a, S> {
             dependent_connection_ids,
         })
     }
-
-    fn save(
-        &self,
-        provider: ProviderConfig,
-        secret: &ProviderCredentials,
-    ) -> Result<(), CredentialError> {
-        let _edit =
-            super::run_guard::edit_provider(self.configuration.path(), provider.id.as_str())
-                .map_err(CredentialError::Configuration)?;
-        let provider_id = provider.id.clone();
-        let serialized = serde_json::to_vec(secret).map_err(|_| CredentialError::Serialization)?;
-        let previous_secret = match self.credentials.load(provider.id.as_str()) {
-            Ok(value) => Some(value),
-            Err(CapabilityError::NotFound) => None,
-            Err(error) => return Err(CredentialError::ProtectedStore(error)),
-        };
-        self.credentials
-            .save(provider_id.as_str(), &serialized)
-            .map_err(CredentialError::ProtectedStore)?;
-
-        let mut config = match self.configuration.load() {
-            Ok(config) => config,
-            Err(error) => return self.restore(&provider_id, previous_secret, error),
-        };
-        if let Some(previous) = config
-            .providers
-            .iter()
-            .find(|item| item.id == provider.id)
-            .cloned()
-        {
-            super::providers::invalidate_changed_connections(
-                &mut config,
-                &previous,
-                &provider,
-                previous_secret.as_deref() != Some(serialized.as_slice()),
-            );
-        }
-        match config
-            .providers
-            .iter_mut()
-            .find(|item| item.id == provider.id)
-        {
-            Some(existing) => *existing = provider,
-            None => config.providers.push(provider),
-        }
-        if let Err(error) = self.configuration.save(&config) {
-            return self.restore(&provider_id, previous_secret, error);
-        }
-        Ok(())
-    }
-
-    fn restore(
-        &self,
-        provider_id: &super::ProviderId,
-        previous_secret: Option<Vec<u8>>,
-        original_error: ConfigurationError,
-    ) -> Result<(), CredentialError> {
-        match previous_secret {
-            Some(secret) => self.credentials.save(provider_id.as_str(), &secret),
-            None => self.credentials.delete(provider_id.as_str()),
-        }
-        .map_err(|_| CredentialError::RollbackFailed)
-        .map(|_| ())?;
-        Err(CredentialError::Configuration(original_error))
-    }
 }
+
+mod persistence;
 
 #[cfg(test)]
 mod tests;

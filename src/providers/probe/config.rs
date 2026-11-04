@@ -70,6 +70,7 @@ impl ProbeConfig {
         let id = ProviderId::new();
         ProviderConfig {
             credential_reference: CredentialReference {
+                backend: crate::capabilities::CredentialBackend::System,
                 provider_id: id.clone(),
             },
             id,

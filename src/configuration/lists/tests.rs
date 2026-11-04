@@ -23,6 +23,7 @@ pub(crate) fn config() -> AppConfig {
             default_bucket: Some("photos-backup".into()),
         },
         credential_reference: CredentialReference {
+            backend: crate::capabilities::CredentialBackend::System,
             provider_id: id.clone(),
         },
         verified: true,

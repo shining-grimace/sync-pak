@@ -111,6 +111,12 @@ export component AppWindow inherits Window {
     in-out property <bool> provider-bucket-list-empty: false;
     in-out property <string> status-message;
     in-out property <string> notice-message;
+    in-out property <[string]> credential-provider-names;
+    in-out property <int> credential-provider-index: -1;
+    in-out property <string> credential-provider-summary: "Checking this device's credential providers…";
+    in-out property <bool> credential-discovery-busy: false;
+    callback select-credential-provider(int);
+    callback refresh-credential-providers();
     in-out property <int> provider-validation-focus;
     in-out property <int> connection-validation-focus;
     in-out property <[AppNotification]> notifications;
@@ -512,6 +518,7 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.welcome: WelcomePage {
+                credential-provider-summary: root.credential-provider-summary;
                 configuration-unavailable: root.configuration-unavailable;
                 retry-configuration => {
                     root.retry-configuration();
@@ -700,6 +707,17 @@ export component AppWindow inherits Window {
             }
 
             if root.page == Page.settings && SettingsState.mode == 0: SettingsPage {
+                credential-provider-names: root.credential-provider-names;
+                credential-provider-index <=> root.credential-provider-index;
+                credential-provider-summary: root.credential-provider-summary;
+                credential-discovery-busy: root.credential-discovery-busy;
+                credential-storage-busy: root.provider-storage-busy;
+                select-credential-provider(index) => {
+                    root.select-credential-provider(index);
+                }
+                refresh-credential-providers => {
+                    root.refresh-credential-providers();
+                }
                 is-android: root.is-android;
                 settings-directory: root.settings-directory;
                 app-version: root.app-version;

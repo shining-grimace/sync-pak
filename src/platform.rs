@@ -1,7 +1,10 @@
 #[cfg(target_os = "linux")]
 mod credential_deadline;
+pub(crate) mod credential_discovery;
 #[cfg(target_os = "linux")]
 mod credential_errors;
+#[cfg(target_os = "linux")]
+mod credential_operations;
 #[cfg(target_os = "linux")]
 mod credential_unlock;
 #[cfg(target_os = "linux")]

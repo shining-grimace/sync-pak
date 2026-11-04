@@ -61,7 +61,10 @@ fn request(direction: Direction) -> RunRequest {
             endpoint: None,
             region: Some("ap-southeast-2".into()),
         },
-        credential_reference: CredentialReference { provider_id },
+        credential_reference: CredentialReference {
+            backend: crate::capabilities::CredentialBackend::System,
+            provider_id,
+        },
         verified: true,
     };
     let connection = ConnectionConfig {

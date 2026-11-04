@@ -16,3 +16,5 @@ pub(crate) mod startup;
 pub(crate) mod settings;
 
 pub(crate) mod transport_form;
+
+mod credential_provider;

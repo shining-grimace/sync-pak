@@ -10,6 +10,7 @@ pub struct AppConfig {
     pub schema_version: u32,
     pub welcome_completed: bool,
     pub appearance: AppearancePreference,
+    pub credential_backend: Option<crate::capabilities::CredentialBackend>,
     pub connection_filter: i32,
     pub connections_newest_first: bool,
     pub providers: Vec<ProviderConfig>,
@@ -23,6 +24,7 @@ impl Default for AppConfig {
             schema_version: CURRENT_SCHEMA_VERSION,
             welcome_completed: false,
             appearance: AppearancePreference::System,
+            credential_backend: None,
             connection_filter: 0,
             connections_newest_first: false,
             providers: Vec::new(),
@@ -108,6 +110,7 @@ impl Default for ConnectionId {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct CredentialReference {
+    pub backend: crate::capabilities::CredentialBackend,
     pub provider_id: ProviderId,
 }
 

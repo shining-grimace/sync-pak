@@ -1,6 +1,23 @@
 use super::*;
 
 #[test]
+fn credential_preference_is_local_and_the_schema_stays_one() {
+    let mut config = config();
+    config.credential_backend = Some(crate::capabilities::CredentialBackend::Kde);
+    let settings = encode(&config).unwrap();
+    let loaded = decode(&settings).unwrap();
+    assert_eq!(loaded.credential_backend, config.credential_backend);
+    assert_eq!(loaded.schema_version, 1);
+    let portable = serde_json::to_value(document(&config)).unwrap();
+    assert!(portable.get("credential_backend").is_none());
+    assert!(
+        !serde_json::to_string(&portable)
+            .unwrap()
+            .contains("credential_reference")
+    );
+}
+
+#[test]
 fn settings_persist_one_root_and_infer_relative_connections() {
     let config = config();
     let bytes = encode(&config).unwrap();

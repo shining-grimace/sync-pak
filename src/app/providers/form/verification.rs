@@ -89,7 +89,10 @@ fn verify_ready(
     };
     let provider = ProviderConfig {
         id: id.clone(),
-        credential_reference: CredentialReference { provider_id: id },
+        credential_reference: CredentialReference {
+            backend: crate::capabilities::CredentialBackend::System,
+            provider_id: id,
+        },
         name: window.get_provider_form_name().to_string(),
         kind,
         options,
