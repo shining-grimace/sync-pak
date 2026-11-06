@@ -11,14 +11,15 @@ pub async fn collect_connection_preflight<L: InventoryEndpoint, R: InventoryEndp
     local: &L,
     remote: &R,
 ) -> Result<Preflight, EndpointPreflightError> {
-    match request.direction {
+    let preflight = match request.direction {
         Direction::Download => {
             collect_preflight(request.connection.mode, request.direction, remote, local).await
         }
         Direction::Upload | Direction::BothWays => {
             collect_preflight(request.connection.mode, request.direction, local, remote).await
         }
-    }
+    }?;
+    Ok(preflight.with_last_run(request.connection.last_run))
 }
 
 #[cfg(test)]

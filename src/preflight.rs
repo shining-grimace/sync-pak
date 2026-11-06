@@ -5,6 +5,7 @@ pub mod comparison;
 pub mod confirmed;
 pub mod connection;
 pub mod destructive_confirmation;
+mod last_run;
 pub mod mirror_selection;
 pub mod plan_summary;
 pub mod planning;

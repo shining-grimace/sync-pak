@@ -36,15 +36,19 @@ pub(crate) fn start<E: OperationExecutor + Send + Sync + 'static>(
                 if let Some(background) = background.as_deref() { let _ = background.stop(); }
                 ExecutionResult::failed_before_start_with_message("The operation stopped unexpectedly. Some files may have changed. Review the folders before trying again.")
             });
-            let timestamp_error = entry.configuration_path.as_ref().and_then(|path| {
-                let timestamp = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs();
-                crate::configuration::ConfigStore::at(path.clone())
-                    .record_connection_run(&entry.plan.connection_id, timestamp)
-                    .err()
-            });
+            let timestamp_error = entry
+                .configuration_path
+                .as_ref()
+                .filter(|_| result.state == crate::operations::execution::ExecutionState::Completed)
+                .and_then(|path| {
+                    let timestamp = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs();
+                    crate::configuration::ConfigStore::at(path.clone())
+                        .record_connection_run(&entry.plan.connection_id, timestamp)
+                        .err()
+                });
             let (queue, _) = &*shared;
             let mut queue = queue.lock().expect("queue mutex poisoned");
             if let Some(error) = timestamp_error {

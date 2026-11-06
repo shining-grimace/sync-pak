@@ -89,6 +89,14 @@ validation.
 
 Read-only (Add-only) previews preselect safe copies, with per-file Keep/Undo and
 section Keep All/Undo All controls. These choices never authorize overwrites or deletes.
-Files at matching paths with the same byte size are treated as in sync regardless
-of modification time. Preflight lists objects without downloading contents or fetching
+Files at matching paths are In Sync when sizes match and both known modification
+times either match each other exactly or are at or before the connection's last
+successful completion. Matching timestamps take precedence even on the first run.
+Otherwise, without a
+successful run, or with either timestamp missing or newer, they are conflicting.
+Timestamps are compared directly without clock adjustments. User decisions, including
+prefilled choices and leaving entries untouched, are final for that run.
+Zero-change reviews can be accepted and completed to advance this cutoff. Failed
+and cancelled runs never advance it. Changes during a run are intentionally ignored.
+Preflight lists objects without downloading contents or fetching
 per-file comparison metadata. No comparison history is needed for this rule.

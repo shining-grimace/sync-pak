@@ -54,17 +54,17 @@ fn last_run_is_optional_and_persists_through_connection_edits() {
     std::fs::remove_dir_all(directory).unwrap();
 }
 
-struct Executor(bool);
+struct Executor(u8);
 impl OperationExecutor for Executor {
     fn execute(
         &self,
         _: &QueueEntry,
         _: &dyn TransferProgressObserver,
     ) -> Result<ExecutionResult, crate::CapabilityError> {
-        Ok(if self.0 {
-            ExecutionProgress::new([]).finish()
-        } else {
-            ExecutionResult::failed_before_start()
+        Ok(match self.0 {
+            0 => ExecutionProgress::new([]).finish(),
+            1 => ExecutionResult::failed_before_start(),
+            _ => ExecutionResult::cancelled_before_start(),
         })
     }
     fn cancel(&self, _: &str) -> Result<(), crate::CapabilityError> {
@@ -73,17 +73,18 @@ impl OperationExecutor for Executor {
 }
 
 #[test]
-fn worker_persists_last_run_for_success_and_failure_even_after_history_is_cleared() {
-    for success in [true, false] {
+fn worker_updates_last_run_only_for_success_even_after_history_is_cleared() {
+    for outcome in 0..3 {
         let directory = std::env::temp_dir().join(uuid::Uuid::new_v4().to_string());
         let store = ConfigStore::at(directory.join("config.json"));
         let mut config = config();
         config.connections[0].show_preview = false;
+        config.connections[0].last_run = Some(1);
         store.save(&config).unwrap();
         let c = &config.connections[0];
         let request = RunRequest::automatic(&config, c.id.as_str()).unwrap();
         let snapshot = ActivitySnapshot::from_connection(c, "Cloud", request.direction);
-        let queue = BackgroundQueue::new(Arc::new(Executor(success)));
+        let queue = BackgroundQueue::new(Arc::new(Executor(outcome)));
         let before = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -102,7 +103,13 @@ fn worker_persists_last_run_for_success_and_failure_even_after_history_is_cleare
         assert!(queue.take_history_error().is_none());
         queue.clear_completed();
         drop(queue);
-        let timestamp = store.load().unwrap().connections[0].last_run.unwrap();
+        let timestamp = store.load().unwrap().connections[0].last_run;
+        if outcome != 0 {
+            assert_eq!(timestamp, Some(1));
+            std::fs::remove_dir_all(directory).unwrap();
+            continue;
+        }
+        let timestamp = timestamp.unwrap();
         assert!(timestamp >= before);
         assert!(
             timestamp

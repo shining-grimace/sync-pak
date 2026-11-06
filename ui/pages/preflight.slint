@@ -180,9 +180,9 @@ export component PreflightPage inherits CenteredPageRoot {
                 }
             }
             if !root.loading && !root.failed: ExpandedPrimaryActionButton {
-                accessible-label: !root.has-planned-actions ? "No action needed" : (root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action);
+                accessible-label: !root.has-planned-actions ? "Accept review without transferring files" : (root.requires-mirror-confirmation && !root.mirror-confirmed ? root.start-action + " is unavailable until destructive changes are acknowledged" : root.start-action);
                 text: root.start-action;
-                enabled: root.selection-error == "" && !root.loading && !root.failed && root.has-planned-actions && (!root.requires-mirror-confirmation || root.mirror-confirmed);
+                enabled: root.selection-error == "" && !root.loading && !root.failed && (!root.requires-mirror-confirmation || root.mirror-confirmed);
                 emphasized: root.has-planned-actions;
                 fill-color: root.has-planned-actions ? Colors.primary-accent : Colors.background-trim;
                 label-color: root.has-planned-actions ? Colors.background-trim : Colors.primary-accent;

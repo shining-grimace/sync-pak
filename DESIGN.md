@@ -177,10 +177,15 @@ If there are filesystem errors when running an operation, the precise error shou
 
 Every operation begins with a non-mutating inventory and preflight. Paths are compared as
 case-sensitive, normalized relative paths. A regular file is treated as unchanged when it
-has the same type and byte size on both sides, regardless of modification time.
+has the same type and byte size on both sides, and both modification times are known
+and either match exactly or are at or before the connection's last successful completion.
+Matching timestamps take precedence regardless of last_run. Otherwise first runs, missing
+timestamps, or either side being newer produce conflicts. Clock differences are not
+adjusted. Only successful runs update last_run, including approved zero-change runs.
+Decisions are final and changes during a run are ignored.
 Preflight does not download contents or consult comparison-history files to classify
 files. Modification times are displayed and preserved during transfers where supported,
-but do not determine whether a regular file is in sync. Symlinks compare link target
+and are compared against the successful-run cutoff. Symlinks compare link target
 text; directories compare as directories, and differing entry types remain conflicts.
 
 SyncPak does not calculate content hashes or download remote files merely to compare them.
@@ -332,8 +337,8 @@ it does not yet modify files.
 Shows inventory progress followed by three expandable sections: Isolated Files and
 Conflicting Versions in danger red, and In Sync in success green. Headers include
 counts. Each expanded section has local, action, and remote columns, with relative
-paths, modification times, and “Not present” for missing copies. Files at matching paths with the same byte size are In Sync regardless of
-modification time. Preflight does not read contents or use comparison history.
+paths, modification times, and “Not present” for missing copies. Files at matching paths with the same byte size are In Sync when both known
+modification times match exactly or are at or before the last successful run. Preflight does not read contents or use comparison history.
 Directories and symbolic links retain their existing type and target comparisons.
 
 Interactive Mirror starts with no actions selected. Isolated entries offer Keep

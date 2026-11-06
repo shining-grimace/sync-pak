@@ -50,7 +50,7 @@ impl From<&Preflight> for PreflightPresentation {
             planned_file_changes: summary.planned_file_changes(),
             has_planned_actions: !preflight.plan().actions().is_empty(),
             start_action: if preflight.plan().actions().is_empty() {
-                "No Action Needed"
+                "Accept Review"
             } else {
                 start_action(preflight.plan())
             },
@@ -104,7 +104,7 @@ fn comparison_reason(item: &ReviewItem) -> Option<&'static str> {
     }
     match item.status {
         ReviewStatus::Changed | ReviewStatus::WillOverwrite | ReviewStatus::Warning => {
-            Some("Modification times differ")
+            Some("Modified since the last successful run, or no comparison timestamp is available")
         }
         _ => None,
     }

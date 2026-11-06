@@ -88,7 +88,7 @@ fn presents_unchanged_files_without_a_start_action() {
     assert_eq!(presentation.unchanged, "1 unchanged");
     assert_eq!(presentation.planned_file_changes, 0);
     assert!(!presentation.has_planned_actions);
-    assert_eq!(presentation.start_action, "No Action Needed");
+    assert_eq!(presentation.start_action, "Accept Review");
 }
 
 #[test]

@@ -51,7 +51,7 @@ export component ReconciliationSection inherits VerticalLayout {
             }
         }
         DescriptionLabel {
-            text: root.rows.length + " files" + (root.section == 2 ? " · File sizes match; modification times and contents are not compared." : "");
+            text: root.rows.length + " files" + (root.section == 2 ? " · Sizes match; modification times match or both are at or before the last successful run." : "");
         }
         HorizontalLayout {
             padding-left: Dimensions.element-gap;

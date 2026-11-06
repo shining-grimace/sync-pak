@@ -115,3 +115,23 @@ fn download_inventories_remote_as_the_source() {
     assert!(remote_entry.source.is_some());
     assert!(remote_entry.destination.is_none());
 }
+
+#[test]
+fn connection_comparison_uses_its_successful_run_cutoff() {
+    let local = Endpoint(Inventory::new([file("same")]).unwrap());
+    let mut request = request(Direction::BothWays);
+    let mut remote_entry = file("same");
+    remote_entry.modified_unix_seconds = Some(2);
+    let remote = Endpoint(Inventory::new([remote_entry]).unwrap());
+    let first = block_on(collect_connection_preflight(&request, &local, &remote)).unwrap();
+    assert_eq!(
+        first.comparison()[0].status,
+        crate::preflight::comparison::EntryStatus::Changed
+    );
+    request.connection.last_run = Some(2);
+    let next = block_on(collect_connection_preflight(&request, &local, &remote)).unwrap();
+    assert_eq!(
+        next.comparison()[0].status,
+        crate::preflight::comparison::EntryStatus::Unchanged
+    );
+}
