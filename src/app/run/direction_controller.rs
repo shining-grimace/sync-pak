@@ -229,7 +229,7 @@ fn show(
             window.set_run_remote_endpoint(remote_endpoint.into());
             window.set_run_archive_upload_details(archive_upload_details.into());
             window.set_run_archive_download_details(archive_download_details.into());
-            let allows_both_ways = connection.mode == SyncMode::AddOnly;
+            let allows_both_ways = connection.mode != SyncMode::Archive;
             window.set_run_allows_both_ways(allows_both_ways);
             window.set_run_allows_upload(connection.allow_upload);
             window.set_run_allows_download(connection.allow_download);

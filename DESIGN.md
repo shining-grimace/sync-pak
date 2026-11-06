@@ -177,23 +177,15 @@ If there are filesystem errors when running an operation, the precise error shou
 
 Every operation begins with a non-mutating inventory and preflight. Paths are compared as
 case-sensitive, normalized relative paths. A regular file is treated as unchanged when it
-has the same type, byte size, and modification time on both sides. Modification times are
-compared at the coarsest precision supported by the two endpoints, with a tolerance of up
-to two seconds for filesystems with low timestamp precision. For remote objects, use a
-source modification time previously written by SyncPak when available, and otherwise use
-the provider's recorded last-modified time. During a copy, SyncPak preserves the source
-modification time as a local file time or remote object metadata where the destination
-supports it.
-
-If either modification time is unavailable, files of the same size are treated as changed
-rather than assumed equal. Add-only mode skips such files with a warning, while mirror
-mode includes them in the overwrite preview. For symlinks, the link target text is compared
-directly. Directory metadata and permissions are compared separately and handled on a
-best-effort basis.
+has the same type and byte size on both sides, regardless of modification time.
+Preflight does not download contents or consult comparison-history files to classify
+files. Modification times are displayed and preserved during transfers where supported,
+but do not determine whether a regular file is in sync. Symlinks compare link target
+text; directories compare as directories, and differing entry types remain conflicts.
 
 SyncPak does not calculate content hashes or download remote files merely to compare them.
 This keeps preflight quick and avoids unexpected bandwidth use, at the accepted cost that
-two files with the same size and modification time may be incorrectly treated as unchanged.
+two files with the same size may be treated as unchanged even when their contents differ.
 
 The UI uses the terms `New`, `Unchanged`, `Changed`, `Will overwrite`, `Will delete`,
 `Unsupported`, and `Warning`. Technical size and timestamp details belong in an expandable
@@ -330,18 +322,36 @@ files will not be touched. The destructive action repeats the provider name.
 
 ## Run Direction
 
-Shows Upload and Download for every mode, plus Both ways only for add-only mode. Each
+Shows Upload and Download for every mode, plus Both ways for Add-only and interactive Mirror. Each
 choice depicts source and destination explicitly. For archive mode it also shows the
 resulting ZIP destination and retention policy. Continue starts inventory and preflight;
 it does not yet modify files.
 
 ## Preflight and Mirror Confirmation
 
-Shows inventory progress followed by a categorized plan. Fatal issues prevent
-starting. Add-only and archive operations can start when preflight succeeds. Mirror plans
-separately list additions, overwrites, and deletions with counts, sizes, expandable paths,
-and a required confirmation checkbox. If there are no destructive actions, the mirror can
-start without the destructive confirmation.
+Shows inventory progress followed by three expandable sections: Isolated Files and
+Conflicting Versions in danger red, and In Sync in success green. Headers include
+counts. Each expanded section has local, action, and remote columns, with relative
+paths, modification times, and “Not present” for missing copies. Files at matching paths with the same byte size are In Sync regardless of
+modification time. Preflight does not read contents or use comparison history.
+Directories and symbolic links retain their existing type and target comparisons.
+
+Interactive Mirror starts with no actions selected. Isolated entries offer Keep
+(copy to the missing side) or Delete. Conflicting files offer Use Local or Use Remote.
+Selected choices show the projected result on both sides and replace buttons with
+Undo. Section headers offer bulk choices and Undo All. Counts and section membership
+remain based on the reviewed inventories. Unselected entries remain untouched.
+Upload permits changes only to remote; Download permits changes only to local.
+Both ways permits both. In Sync has no action buttons. Add-only copies start selected and offer Keep/Undo plus section Keep All/Undo All;
+overwrites and deletions remain unavailable, and differing versions are skipped. File/folder type collisions require manual
+resolution. Deleting a folder requires explicit deletion of all descendants.
+
+Selected overwrites and deletions require a final acknowledgement bound to the exact
+immutable plan. Changing selections clears acknowledgement; refreshing clears choices.
+Inventory changes invalidate the review independently of selected actions. Copies
+and overwrites complete before deletions. One-direction Mirror with preview disabled
+retains automatic source-authoritative behavior. Both ways Mirror requires preview
+and cannot execute unattended or through Android widgets. Archive remains one-direction.
 
 ## Operation Progress and Result
 
@@ -507,9 +517,8 @@ plain-language message.
 - Fatal heading: `This operation cannot start`
 - Fatal body: `Resolve the issues below, then run the connection again. No files were changed.`
 - Mirror title: `Review mirror changes`
-- Mirror warning: `SyncPak will attempt to make the destination match the source. Review
-  every overwrite and deletion before continuing. Any issues will be listed in the result.`
-- Mirror checkbox: `I understand that the listed destination files will be overwritten or deleted.`
+- Mirror warning: `Review every selected overwrite and deletion on both sides before continuing.`
+- Mirror checkbox: `I understand that the selected files will be overwritten or deleted.`
 - Counts: `{additions} new`, `{overwrites} overwrites`, `{deletions} deletions`, `{skipped} skipped`
 - Start actions: `Start upload`, `Start download`, `Create archive`, `Start mirror`
 

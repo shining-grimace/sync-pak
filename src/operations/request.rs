@@ -29,6 +29,9 @@ impl RunRequest {
             (true, true) => Direction::BothWays,
             _ => return Err(RunRequestError::DirectionNotAllowed),
         };
+        if direction == Direction::BothWays && connection.mode == SyncMode::Mirror {
+            return Err(RunRequestError::PreviewRequired);
+        }
         Self::from_config(config, connection_id, direction)
     }
 
@@ -49,7 +52,7 @@ impl RunRequest {
             .find(|provider| provider.id == connection.provider_id)
             .cloned()
             .ok_or(RunRequestError::ProviderNotFound)?;
-        if direction == Direction::BothWays && connection.mode != SyncMode::AddOnly {
+        if direction == Direction::BothWays && connection.mode == SyncMode::Archive {
             return Err(RunRequestError::BothWaysUnsupported);
         }
         if (direction == Direction::Upload && !connection.allow_upload)
@@ -92,7 +95,7 @@ impl fmt::Display for RunRequestError {
                 formatter.write_str("The connection's provider no longer exists.")
             }
             Self::BothWaysUnsupported => {
-                formatter.write_str("Both ways is available only for add-only connections.")
+                formatter.write_str("Both ways is unavailable for archive connections.")
             }
             Self::DirectionNotAllowed => {
                 formatter.write_str("This direction is not allowed by the connection settings.")

@@ -1,0 +1,132 @@
+import { Dimensions } from "../dimensions.slint";
+import { PreflightRow } from "../models.slint";
+import { DescriptionLabel } from "description-label.slint";
+import { SectionHeadingLabel } from "section-heading-label.slint";
+import { InfoCard } from "cards.slint";
+import { FilterButton } from "action-buttons.slint";
+import { ListView, ListItem } from "list-and-action-layouts.slint";
+
+export component PreflightChanges inherits VerticalLayout {
+    in property <[PreflightRow]> items;
+    in property <[PreflightRow]> visible-items;
+    in property <int> item-filter;
+    in property <int> planned-file-changes;
+    callback set-item-filter(int);
+    spacing: Dimensions.element-gap;
+            if root.items.length > 0: DescriptionLabel {
+                accessible-live-region: polite;
+                text: root.item-filter == 0 ? "Reviewing " + root.planned-file-changes + " planned file changes." : "Showing " + root.visible-items.length + " matching planned changes.";
+            }
+            VerticalLayout {
+                if root.items.length > 0: VerticalLayout {
+                    vertical-stretch: 0;
+                    accessible-role: region;
+                    accessible-label: "Filter planned file changes";
+                    spacing: Dimensions.element-gap;
+                    SectionHeadingLabel {
+                        text: "Show planned changes";
+                    }
+
+                    HorizontalLayout {
+                        spacing: Dimensions.element-gap;
+                        preflight-filter-all := FilterButton {
+                            accessible-label: root.item-filter == 0 ? "All planned changes, selected" : "Show all planned changes";
+                            text: "All";
+                            selected: root.item-filter == 0;
+                            clicked => {
+                                root.set-item-filter(0);
+                            }
+                        }
+
+                        FilterButton {
+                            accessible-label: root.item-filter == 1 ? "New files, selected" : "Show new files";
+                            text: "New";
+                            selected: root.item-filter == 1;
+                            clicked => {
+                                root.set-item-filter(1);
+                            }
+                        }
+
+                        FilterButton {
+                            accessible-label: root.item-filter == 2 ? "Overwrites, selected" : "Show overwrites";
+                            text: "Overwrites";
+                            selected: root.item-filter == 2;
+                            clicked => {
+                                root.set-item-filter(2);
+                            }
+                        }
+                        FilterButton {
+                            accessible-label: root.item-filter == 3 ? "Deletions, selected" : "Show deletions";
+                            text: "Deletions";
+                            selected: root.item-filter == 3;
+                            clicked => {
+                                root.set-item-filter(3);
+                            }
+                        }
+
+                        FilterButton {
+                            accessible-label: root.item-filter == 4 ? "Warnings, selected" : "Show warnings";
+                            text: "Warnings";
+                            selected: root.item-filter == 4;
+                            clicked => {
+                                root.set-item-filter(4);
+                            }
+                        }
+                    }
+
+                    FocusScope {
+                        width: 0px;
+                        height: 0px;
+                        focus-on-click: false;
+                        focus-on-tab-navigation: false;
+                        forward-focus: preflight-filter-all;
+                        init => {
+                            self.focus();
+                        }
+                    }
+                }
+            }
+            if root.visible-items.length > 0: ListView {
+                accessible-label: root.item-filter == 0 ? "All planned file changes" : (root.item-filter == 1 ? "Planned new files" : (root.item-filter == 2 ? "Planned overwrites" : (root.item-filter == 3 ? "Planned deletions" : "Planned warnings")));
+                vertical-stretch: 1;
+                vertical-scrollbar-policy: always-on;
+                for item in root.visible-items: ListItem {
+                    width: parent.visible-width;
+                    accessible-role: list-item;
+                    accessible-label: item.status + ": " + item.path + ". " + item.detail;
+                    spacing: Dimensions.element-gap;
+                    if root.width < Dimensions.narrow-layout-breakpoint: SectionHeadingLabel {
+                        text: item.status;
+                    }
+                    if root.width >= Dimensions.narrow-layout-breakpoint: HorizontalLayout {
+                        spacing: Dimensions.element-gap;
+                        DescriptionLabel {
+                            text: item.status;
+                            width: 110px;
+                        }
+
+                        DescriptionLabel {
+                            text: item.path;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    if root.width < Dimensions.narrow-layout-breakpoint: DescriptionLabel {
+                        text: item.path;
+                    }
+                    VerticalLayout {
+                        spacing: Dimensions.element-gap;
+                        DescriptionLabel {
+                            text: item.detail;
+                        }
+                    }
+                }
+            }
+            if root.items.length > 0 && root.visible-items.length == 0: InfoCard {
+                accessible-role: region;
+                accessible-label: "No entries in the selected planned change category";
+                baseline-height: 74px;
+                DescriptionLabel {
+                    text: root.item-filter == 1 ? "No new files are planned." : (root.item-filter == 2 ? "No overwrites are planned." : (root.item-filter == 3 ? "No deletions are planned." : "No warnings are listed in this review."));
+                }
+            }
+}

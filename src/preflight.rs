@@ -5,6 +5,7 @@ pub mod comparison;
 pub mod confirmed;
 pub mod connection;
 pub mod destructive_confirmation;
+pub mod mirror_selection;
 pub mod plan_summary;
 pub mod planning;
 pub mod review;
@@ -35,6 +36,25 @@ pub struct Preflight {
 }
 
 impl Preflight {
+    /// Compares reviewed inventories independently of user-selected actions.
+    pub fn same_inventory_as(&self, other: &Self) -> bool {
+        self.plan.mode() == other.plan.mode()
+            && self.plan.direction() == other.plan.direction()
+            && self.source == other.source
+            && self.destination == other.destination
+    }
+
+    pub(crate) fn with_mirror_actions(&self, actions: Vec<planning::PlannedAction>) -> Self {
+        let mut selected = self.clone();
+        selected.plan = TransferPlan::selected_mirror(
+            self.plan.mode(),
+            self.plan.direction(),
+            actions,
+            &self.comparison,
+        );
+        selected
+    }
+
     pub fn comparison(&self) -> &[ComparedEntry] {
         &self.comparison
     }

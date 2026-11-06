@@ -3,7 +3,12 @@ use std::rc::Rc;
 #[cfg(feature = "provider-s3")]
 use std::cell::RefCell;
 
-use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
+use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
+
+mod filters;
+use filters::filter_rows;
+#[cfg(test)]
+use filters::matches_filter;
 
 use crate::{
     AppWindow, PreflightRow,
@@ -24,6 +29,8 @@ thread_local! {
 
 /// Connects filtering controls to a derived, display-only preflight row model.
 pub(crate) fn configure(window: &AppWindow) {
+    #[cfg(feature = "provider-s3")]
+    super::mirror_controller::configure(window);
     let weak = window.as_weak();
     window.on_set_preflight_item_filter(move |filter| {
         if let Some(window) = weak.upgrade() {
@@ -35,6 +42,7 @@ pub(crate) fn configure(window: &AppWindow) {
 /// Clears the review model while read-only inventory collection is in progress.
 pub fn show_loading(window: &AppWindow) {
     clear_reviewed_operation();
+    window.set_preflight_selection_error("".into());
     window.set_preflight_generation(next_generation(window.get_preflight_generation()));
     window.set_preflight_loading(true);
     window.set_preflight_failed(false);
@@ -56,6 +64,13 @@ pub fn show_loading(window: &AppWindow) {
 
 /// Shows a completed, immutable preflight review without exposing credentials.
 pub fn show_review(window: &AppWindow, preflight: &Preflight) {
+    if preflight.plan().mode() == crate::configuration::SyncMode::AddOnly {
+        super::reconciliation::present(
+            window,
+            &crate::preflight::mirror_selection::MirrorSelection::new(preflight.clone()),
+            false,
+        );
+    }
     let presentation = PreflightPresentation::from(preflight);
     window.set_preflight_loading(false);
     window.set_preflight_failed(false);
@@ -78,9 +93,11 @@ pub fn show_review(window: &AppWindow, preflight: &Preflight) {
 /// Shows and retains the immutable review that may later be confirmed for queue submission.
 #[cfg(feature = "provider-s3")]
 pub(crate) fn show_reviewed(window: &AppWindow, request: RunRequest, preflight: &Preflight) {
-    REVIEWED_OPERATION.with(|review| {
-        *review.borrow_mut() = Some(ReviewedOperation::new(request, preflight.clone()));
-    });
+    if request.connection.mode != crate::configuration::SyncMode::Archive {
+        super::mirror_controller::begin(window, request, preflight);
+        return;
+    }
+    set_reviewed(Some(ReviewedOperation::new(request, preflight.clone())));
     show_review(window, preflight);
 }
 
@@ -104,6 +121,7 @@ pub(crate) fn take_confirmed(
 /// Shows a preflight failure without preserving an earlier connection's review items.
 pub fn show_failed(window: &AppWindow, message: &str) {
     clear_reviewed_operation();
+    window.set_preflight_selection_error("".into());
     window.set_preflight_loading(false);
     window.set_preflight_failed(true);
     window.set_preflight_failure_message(message.into());
@@ -125,11 +143,19 @@ pub fn show_failed(window: &AppWindow, message: &str) {
 /// Retires any in-flight inventory result when the person leaves its review.
 pub fn invalidate(window: &AppWindow) {
     clear_reviewed_operation();
+    window.set_preflight_selection_error("".into());
     window.set_preflight_generation(next_generation(window.get_preflight_generation()));
     window.set_preflight_loading(false);
 }
 
+#[cfg(feature = "provider-s3")]
+pub(crate) fn set_reviewed(operation: Option<ReviewedOperation>) {
+    REVIEWED_OPERATION.with(|review| *review.borrow_mut() = operation);
+}
+
 fn clear_reviewed_operation() {
+    #[cfg(feature = "provider-s3")]
+    super::mirror_controller::clear();
     #[cfg(feature = "provider-s3")]
     REVIEWED_OPERATION.with(|review| *review.borrow_mut() = None);
 }
@@ -167,48 +193,5 @@ fn set_filter(window: &AppWindow, filter: i32) {
     window.set_preflight_visible_items(filter_rows(&window.get_preflight_items(), filter));
 }
 
-fn filter_rows(rows: &ModelRc<PreflightRow>, filter: i32) -> ModelRc<PreflightRow> {
-    ModelRc::new(Rc::new(VecModel::from_iter(
-        rows.iter()
-            .filter(|item| matches_filter(item.status.as_str(), filter)),
-    )))
-}
-
-fn matches_filter(status: &str, filter: i32) -> bool {
-    match filter {
-        0 => true,
-        1 => status == "New",
-        2 => status == "Will overwrite",
-        3 => status == "Will delete",
-        4 => status == "Warning",
-        _ => false,
-    }
-}
-
 #[cfg(test)]
-mod tests {
-    use super::{is_current_generation, matches_filter, next_generation};
-
-    #[test]
-    fn only_the_current_preflight_attempt_can_publish_a_result() {
-        assert!(is_current_generation(4, 4));
-        assert!(!is_current_generation(4, 5));
-    }
-
-    #[test]
-    fn generation_advances_across_integer_wraparound() {
-        assert_eq!(next_generation(4), 5);
-        assert_eq!(next_generation(i32::MAX), i32::MIN);
-    }
-
-    #[test]
-    fn planned_rows_are_categorised_by_the_selected_filter() {
-        assert!(matches_filter("New", 1));
-        assert!(matches_filter("Will overwrite", 2));
-        assert!(matches_filter("Will delete", 3));
-        assert!(matches_filter("Warning", 4));
-        assert!(matches_filter("Unchanged", 0));
-        assert!(!matches_filter("Warning", 3));
-        assert!(!matches_filter("New", 8));
-    }
-}
+mod tests;

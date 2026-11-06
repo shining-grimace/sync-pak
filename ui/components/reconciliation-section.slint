@@ -1,0 +1,159 @@
+import { MirrorReviewRow } from "../models.slint";
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import { ExpandedSecondaryActionButton } from "action-buttons.slint";
+import { DescriptionLabel } from "description-label.slint";
+
+export component ReconciliationSection inherits VerticalLayout {
+    in property <string> title;
+    in property <int> section;
+    in property <[MirrorReviewRow]> rows;
+    in property <bool> interactive;
+    in property <bool> destructive: true;
+    in-out property <bool> expanded: false;
+    callback choose-file(string, int, int);
+    spacing: Dimensions.element-gap;
+    vertical-stretch: 0;
+
+    ExpandedSecondaryActionButton {
+        text: (root.expanded ? "▾ " : "▸ ") + root.title + " (" + root.rows.length + ")";
+        label-color: root.section == 2 ? Colors.success : Colors.danger;
+        outline-color: root.section == 2 ? Colors.success : Colors.danger;
+        accessible-label: root.title + ", " + root.rows.length + " files, " + (root.expanded ? "expanded" : "collapsed");
+        clicked => {
+            root.expanded = !root.expanded;
+        }
+    }
+    if root.expanded: VerticalLayout {
+        spacing: Dimensions.element-gap;
+        if root.interactive && (root.section == 0 || (root.section == 1 && root.destructive)) && root.rows.length > 0: DescriptionLabel {
+            text: "Apply to all eligible files";
+        }
+        if root.interactive && (root.section == 0 || (root.section == 1 && root.destructive)) && root.rows.length > 0: HorizontalLayout {
+            spacing: Dimensions.element-gap;
+            ExpandedSecondaryActionButton {
+                text: root.section == 0 ? "Keep All" : "Use Local";
+                clicked => {
+                    root.choose-file("", root.section, 1);
+                }
+            }
+            if root.destructive: ExpandedSecondaryActionButton {
+                text: root.section == 0 ? "Delete All" : "Use Remote";
+                clicked => {
+                    root.choose-file("", root.section, 2);
+                }
+            }
+            ExpandedSecondaryActionButton {
+                text: "Undo All";
+                clicked => {
+                    root.choose-file("", root.section, 0);
+                }
+            }
+        }
+        DescriptionLabel {
+            text: root.rows.length + " files" + (root.section == 2 ? " · File sizes match; modification times and contents are not compared." : "");
+        }
+        HorizontalLayout {
+            padding-left: Dimensions.element-gap;
+            padding-right: Dimensions.element-gap;
+            spacing: Dimensions.element-gap;
+            DescriptionLabel {
+                text: "Local";
+                min-width: 0px;
+                preferred-width: 0px;
+                horizontal-stretch: 1;
+            }
+            DescriptionLabel {
+                text: "Action";
+                width: 112px;
+                horizontal-alignment: center;
+            }
+            DescriptionLabel {
+                text: "Remote";
+                min-width: 0px;
+                preferred-width: 0px;
+                horizontal-stretch: 1;
+            }
+        }
+        for item in root.rows: Rectangle {
+            min-height: row-layout.min-height;
+            preferred-height: row-layout.preferred-height;
+            vertical-stretch: 0;
+            background: Colors.background-trim;
+            accessible-role: list-item;
+            accessible-label: item.path + ". Local: " + item.local-detail + ". Remote: " + item.remote-detail;
+            row-layout := HorizontalLayout {
+                padding: Dimensions.element-gap;
+                spacing: Dimensions.element-gap;
+                VerticalLayout {
+                    min-width: 0px;
+                    preferred-width: 0px;
+                    horizontal-stretch: 1;
+                    Text {
+                        text: item.path;
+                        wrap: word-wrap;
+                        color: item.local-changed ? (item.deleting ? Colors.danger : Colors.success) : Colors.primary-accent;
+                        font-size: Dimensions.text-size-description;
+                    }
+                    Text {
+                        text: item.local-detail;
+                        wrap: word-wrap;
+                        color: item.local-changed ? (item.deleting ? Colors.danger : Colors.success) : Colors.secondary-accent;
+                        font-size: Dimensions.text-size-description;
+                    }
+                }
+                VerticalLayout {
+                    width: 112px;
+                    spacing: Dimensions.element-gap;
+                    if !root.interactive || item.selected || (!root.destructive && root.section == 1): Text {
+                        text: item.action-label;
+                        color: item.deleting ? Colors.danger : (root.section == 2 ? Colors.success : Colors.secondary-accent);
+                        wrap: word-wrap;
+                        horizontal-alignment: center;
+                        font-size: Dimensions.text-size-description;
+                    }
+                    if root.interactive && (root.section == 0 || (root.section == 1 && root.destructive)) && !item.selected: ExpandedSecondaryActionButton {
+                        text: root.section == 0 ? "Keep" : "Use Local";
+                        enabled: item.can-first;
+                        accessible-label: self.text + ": " + item.path;
+                        clicked => {
+                            root.choose-file(item.path, root.section, 1);
+                        }
+                    }
+                    if root.destructive && root.interactive && root.section != 2 && !item.selected: ExpandedSecondaryActionButton {
+                        text: root.section == 0 ? "Delete" : "Use Remote";
+                        enabled: item.can-second;
+                        accessible-label: self.text + ": " + item.path;
+                        clicked => {
+                            root.choose-file(item.path, root.section, 2);
+                        }
+                    }
+                    if root.interactive && (root.section == 0 || (root.section == 1 && root.destructive)) && item.selected: ExpandedSecondaryActionButton {
+                        text: "Undo";
+                        accessible-label: "Undo choice for " + item.path;
+                        clicked => {
+                            root.choose-file(item.path, root.section, 0);
+                        }
+                    }
+                }
+                VerticalLayout {
+                    min-width: 0px;
+                    preferred-width: 0px;
+                    horizontal-stretch: 1;
+                    Text {
+                        text: item.path;
+                        wrap: word-wrap;
+                        color: item.remote-changed ? (item.deleting ? Colors.danger : Colors.success) : Colors.primary-accent;
+                        font-size: Dimensions.text-size-description;
+                    }
+                    Text {
+                        text: item.remote-detail;
+                        wrap: word-wrap;
+                        color: item.remote-changed ? (item.deleting ? Colors.danger : Colors.success) : Colors.secondary-accent;
+                        font-size: Dimensions.text-size-description;
+                    }
+                }
+            }
+        }
+    }
+}

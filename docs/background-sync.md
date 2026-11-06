@@ -4,8 +4,10 @@ New connections default to **Show preview before sync**. This keeps the directio
 selection and preflight review flow, including acknowledgement of destructive
 Mirror plans. **Don't show preview** makes Run submit work from Connections without
 changing pages. It uses the saved allowed directions: upload, download, or both
-for Add Only. Mirror and Archive require a single allowed direction when preview
-is disabled. The form warns about destructive Mirror operations.
+for Add Only. Interactive Mirror also supports both directions, with per-file
+approval. Mirror and Archive require a single allowed direction when preview
+is disabled. Bidirectional Mirror always requires preview and cannot run from
+an Android widget. The form warns about destructive Mirror operations.
 
 The required `show_preview` boolean is stored in settings and portable connection
 lists. There is no configuration migration or missing-field fallback.
@@ -13,6 +15,15 @@ lists. There is no configuration migration or missing-field fallback.
 Automatic runs still collect inventories and validate a transfer plan. Saved
 no-preview policy authorizes the freshly collected plan, including Mirror deletes
 and overwrites. Add Only still skips changed files; summaries report the skips.
+Interactive Mirror starts with no actions selected. Isolated files offer Keep or
+Delete; conflicting files offer Use Local or Use Remote, subject to the selected
+directions. Bulk controls apply only eligible choices, and Undo restores the
+reviewed state. Unselected files remain untouched. Any selected overwrite or
+deletion requires final acknowledgement bound to that exact plan. Refresh clears
+choices. Inventory changes between review and execution invalidate the review.
+One-direction no-preview Mirror deliberately retains the automatic source-authoritative
+policy above; it does not use interactive selection defaults.
+
 No-change runs complete with a “No changes were needed” result.
 
 ## Runtime ownership
@@ -75,3 +86,9 @@ used after the setting changes. Unfinished work is never automatically replayed.
 
 See [the widget device checklist](android-widgets.md) for launcher and cold-start
 validation.
+
+Read-only (Add-only) previews preselect safe copies, with per-file Keep/Undo and
+section Keep All/Undo All controls. These choices never authorize overwrites or deletes.
+Files at matching paths with the same byte size are treated as in sync regardless
+of modification time. Preflight lists objects without downloading contents or fetching
+per-file comparison metadata. No comparison history is needed for this rule.

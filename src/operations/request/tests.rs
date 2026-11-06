@@ -64,8 +64,8 @@ fn builds_a_non_secret_request_for_a_current_connection() {
 }
 
 #[test]
-fn rejects_both_ways_for_non_additive_connections() {
-    let config = config(SyncMode::Mirror);
+fn rejects_both_ways_for_archive_connections() {
+    let config = config(SyncMode::Archive);
     assert_eq!(
         RunRequest::from_config(
             &config,
@@ -126,5 +126,22 @@ fn automatic_runs_resolve_allowed_directions_and_require_saved_consent() {
     assert_eq!(
         RunRequest::automatic(&config, &id),
         Err(RunRequestError::NotVerified)
+    );
+}
+
+#[test]
+fn mirror_both_ways_requires_preview_and_both_permissions() {
+    let mut config = config(SyncMode::Mirror);
+    let id = config.connections[0].id.as_str().to_owned();
+    assert!(RunRequest::from_config(&config, &id, Direction::BothWays).is_ok());
+    config.connections[0].show_preview = false;
+    assert_eq!(
+        RunRequest::automatic(&config, &id),
+        Err(RunRequestError::PreviewRequired)
+    );
+    config.connections[0].allow_download = false;
+    assert_eq!(
+        RunRequest::automatic(&config, &id).unwrap().direction,
+        Direction::Upload
     );
 }

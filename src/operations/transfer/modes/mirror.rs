@@ -116,30 +116,45 @@ async fn apply_action<T: MirrorTransfer>(
     cancellation: &CancellationToken,
     jitter_seed: u64,
 ) -> Result<(), MirrorActionError<T::Error>> {
+    let forward = match direction {
+        Direction::BothWays => Direction::Upload,
+        direction => direction,
+    };
+    let reverse = match forward {
+        Direction::Upload => Direction::Download,
+        _ => Direction::Upload,
+    };
     match action {
-        PlannedAction::Copy {
-            path,
-            from: Endpoint::Source,
-            to: Endpoint::Destination,
-        } => transfer
-            .copy(direction, path, false, cancellation, jitter_seed)
-            .await
-            .map_err(MirrorActionError::Transfer),
-        PlannedAction::Overwrite {
-            path,
-            from: Endpoint::Source,
-            to: Endpoint::Destination,
-        } => transfer
-            .copy(direction, path, true, cancellation, jitter_seed)
-            .await
-            .map_err(MirrorActionError::Transfer),
-        PlannedAction::Delete {
-            path,
-            from: Endpoint::Destination,
-        } => transfer
-            .delete(direction, path, cancellation)
-            .await
-            .map_err(MirrorActionError::Transfer),
+        PlannedAction::Copy { path, from, to } | PlannedAction::Overwrite { path, from, to }
+            if from != to =>
+        {
+            let action_direction = if *from == Endpoint::Source {
+                forward
+            } else {
+                reverse
+            };
+            transfer
+                .copy(
+                    action_direction,
+                    path,
+                    matches!(action, PlannedAction::Overwrite { .. }),
+                    cancellation,
+                    jitter_seed,
+                )
+                .await
+                .map_err(MirrorActionError::Transfer)
+        }
+        PlannedAction::Delete { path, from } => {
+            let action_direction = if *from == Endpoint::Destination {
+                forward
+            } else {
+                reverse
+            };
+            transfer
+                .delete(action_direction, path, cancellation)
+                .await
+                .map_err(MirrorActionError::Transfer)
+        }
         _ => Err(MirrorActionError::Unsupported(action.clone())),
     }
 }
@@ -180,3 +195,6 @@ fn event(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod bidirectional_tests;

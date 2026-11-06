@@ -50,7 +50,9 @@ pub(super) async fn execute_request(
         Err(S3PreflightError::Provider(error)) => return Ok(failed(provider_message(error))),
         Err(S3PreflightError::Inventory(error)) => return Ok(failed(inventory_message(error))),
     };
-    if reviewed.is_some_and(|confirmed| current != *confirmed.preflight().preflight()) {
+    if reviewed
+        .is_some_and(|confirmed| !current.same_inventory_as(confirmed.preflight().preflight()))
+    {
         return Ok(failed(
             "Files changed since this review. Refresh the review before starting the operation.",
         ));

@@ -8,6 +8,8 @@ use crate::preflight::plan_summary::summarize;
 
 pub use crate::preflight::plan_summary::PlanSummary;
 
+mod selected;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Direction {
     Upload,
@@ -105,11 +107,12 @@ pub fn plan(
     direction: Direction,
     comparison: &[ComparedEntry],
 ) -> Result<TransferPlan, PlanError> {
-    if direction == Direction::BothWays && mode != SyncMode::AddOnly {
-        return Err(PlanError::BothWaysRequiresAddOnly);
+    if direction == Direction::BothWays && mode == SyncMode::Archive {
+        return Err(PlanError::BothWaysArchiveUnsupported);
     }
     let actions = match mode {
         SyncMode::AddOnly => plan_add_only(direction, comparison),
+        SyncMode::Mirror if direction == Direction::BothWays => Vec::new(),
         SyncMode::Mirror => plan_mirror(comparison),
         SyncMode::Archive => vec![PlannedAction::CreateArchive {
             from: Endpoint::Source,
@@ -177,14 +180,14 @@ fn copy(path: &RelativePath, from: Endpoint, to: Endpoint) -> PlannedAction {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PlanError {
-    BothWaysRequiresAddOnly,
+    BothWaysArchiveUnsupported,
 }
 
 impl fmt::Display for PlanError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             formatter,
-            "both-way operations are only available in add-only mode"
+            "both-way operations are unavailable in archive mode"
         )
     }
 }

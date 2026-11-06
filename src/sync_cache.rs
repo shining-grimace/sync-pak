@@ -41,6 +41,7 @@ impl SyncCache {
             .unwrap_or_default()
     }
 
+    #[cfg(test)]
     pub fn record_observations(&self, observations: &[RemoteObservation]) {
         if observations.is_empty() {
             return;

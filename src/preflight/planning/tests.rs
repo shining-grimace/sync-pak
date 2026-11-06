@@ -86,7 +86,7 @@ fn archive_has_a_non_mutating_creation_preview_and_rejects_both_ways() {
     );
     assert_eq!(archive.summary().archives(), 1);
     assert_eq!(
-        plan(SyncMode::Mirror, Direction::BothWays, &comparison()),
-        Err(PlanError::BothWaysRequiresAddOnly)
+        plan(SyncMode::Archive, Direction::BothWays, &comparison()),
+        Err(PlanError::BothWaysArchiveUnsupported)
     );
 }

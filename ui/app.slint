@@ -32,6 +32,7 @@ import {
     ConnectionRow,
     ActivityRow,
     PreflightRow,
+    MirrorReviewRow,
     AppNotification,
 } from "models.slint";
 import { DescriptionLabel } from "components/description-label.slint";
@@ -216,6 +217,11 @@ export component AppWindow inherits Window {
     in-out property <int> run-direction: 0;
     in-out property <bool> run-upload-selected: true;
     in-out property <bool> run-download-selected: true;
+    in-out property <[MirrorReviewRow]> preflight-isolated;
+    in-out property <[MirrorReviewRow]> preflight-conflicts;
+    in-out property <[MirrorReviewRow]> preflight-synced;
+    in-out property <string> preflight-selection-error;
+    callback choose-mirror-file(string, int, int);
     in-out property <bool> preflight-loading: false;
     in-out property <bool> preflight-failed: false;
     in-out property <string> preflight-failure-message;
@@ -862,6 +868,13 @@ export component AppWindow inherits Window {
                 local-endpoint: root.run-local-endpoint;
                 remote-endpoint: root.run-remote-endpoint;
                 direction: root.run-direction;
+                isolated: root.preflight-isolated;
+                conflicts: root.preflight-conflicts;
+                synced: root.preflight-synced;
+                selection-error: root.preflight-selection-error;
+                choose-file(path, section, action) => {
+                    root.choose-mirror-file(path, section, action);
+                }
                 loading: root.preflight-loading;
                 failed: root.preflight-failed;
                 failure-message: root.preflight-failure-message;

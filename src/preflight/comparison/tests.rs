@@ -16,10 +16,10 @@ fn entry(
 }
 
 #[test]
-fn compares_files_with_a_two_second_timestamp_tolerance() {
+fn equal_size_files_match_despite_widely_different_timestamps() {
     let source = Inventory::new([entry("é.txt", InventoryEntryKind::File, 9, Some(100))]).unwrap();
     let destination =
-        Inventory::new([entry("é.txt", InventoryEntryKind::File, 9, Some(102))]).unwrap();
+        Inventory::new([entry("é.txt", InventoryEntryKind::File, 9, Some(999999))]).unwrap();
 
     assert_eq!(
         compare(&source, &destination)[0].status,
@@ -28,7 +28,7 @@ fn compares_files_with_a_two_second_timestamp_tolerance() {
 }
 
 #[test]
-fn uses_size_and_available_modification_times() {
+fn uses_size_regardless_of_available_modification_times() {
     let source = Inventory::new([
         entry("missing-time", InventoryEntryKind::File, 9, None),
         entry("different-size", InventoryEntryKind::File, 9, Some(100)),
@@ -44,7 +44,7 @@ fn uses_size_and_available_modification_times() {
 
     let results = compare(&source, &destination);
     assert_eq!(results[0].status, EntryStatus::Changed);
-    assert_eq!(results[1].status, EntryStatus::Changed);
+    assert_eq!(results[1].status, EntryStatus::Unchanged);
     assert_eq!(results[2].status, EntryStatus::Unchanged);
 }
 

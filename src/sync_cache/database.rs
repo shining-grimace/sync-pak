@@ -71,6 +71,7 @@ impl CacheDatabase {
         Ok(snapshot)
     }
 
+    #[cfg(test)]
     pub fn record_observations(
         &mut self,
         observations: &[RemoteObservation],

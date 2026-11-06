@@ -274,7 +274,7 @@ export component ConnectionFormPage inherits Rectangle {
                     text: "Copies files that exist only at the source. Existing changed files are skipped, and nothing is overwritten or deleted.";
                 }
                 if connection-mode.current-index == 1: DescriptionLabel {
-                    text: "Attempts to make the destination match the source. Any files or metadata that cannot be matched are listed when the operation finishes.";
+                    text: "Review both sides and choose which files to keep, delete, or overwrite. Without preview, a one-direction Mirror automatically makes the destination match the source.";
                 }
                 if connection-mode.current-index == 2: VerticalLayout {
                     spacing: Dimensions.element-gap;
@@ -300,7 +300,7 @@ export component ConnectionFormPage inherits Rectangle {
                     text: "Allowed directions";
                 }
                 DescriptionLabel {
-                    text: root.connection-form-show-preview ? (root.connection-form-mode == 0 ? "Choose which directions can be selected when this connection runs." : "Allow upload, download, or both. Choose one allowed direction for each run.") : (root.connection-form-mode == 0 ? "Sync runs automatically in the allowed directions." : "Choose one direction for automatic sync.");
+                    text: root.connection-form-show-preview ? (root.connection-form-mode != 2 ? "Choose which directions can be selected when this connection runs." : "Allow upload, download, or both. Choose one allowed direction for each run.") : (root.connection-form-mode == 0 ? "Sync runs automatically in the allowed directions." : "Choose one direction for automatic sync.");
                 }
                 HorizontalLayout {
                     spacing: Dimensions.element-gap;

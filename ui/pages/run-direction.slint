@@ -114,7 +114,7 @@ export component RunDirectionPage inherits CenteredPageRoot {
         }
 
         DescriptionLabel {
-            text: "Copy files found on only one side to the other. Changed files are skipped.";
+            text: root.connection-mode == "Mirror" ? "Review both sides and choose which files to keep, delete, or overwrite. No actions are selected by default." : "Copy files found on only one side to the other. Changed files are skipped.";
         }
     }
 

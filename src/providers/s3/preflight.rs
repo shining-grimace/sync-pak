@@ -13,9 +13,8 @@ use crate::{
     operations::request::RunRequest,
     preflight::connection::collect_connection_preflight,
     preflight::{CaseSensitivity, Preflight},
-    providers::capabilities::ProviderError,
+    providers::capabilities::{ObjectLister, ProviderError},
     providers::s3::transport::S3Transport,
-    sync_cache::SyncCache,
 };
 
 /// Collects local and remote inventories for an S3-compatible connection without changing data.
@@ -23,7 +22,7 @@ pub async fn collect_s3_connection_preflight<S: ProtectedCredentialStore>(
     request: &RunRequest,
     providers: &ProviderRepository<'_, S>,
     local_case_sensitivity: CaseSensitivity,
-    configuration_path: &Path,
+    _configuration_path: &Path,
 ) -> Result<Preflight, S3PreflightError> {
     let credentials = providers
         .load_credentials(&request.provider.id)
@@ -44,22 +43,8 @@ pub async fn collect_s3_connection_preflight<S: ProtectedCredentialStore>(
         .map_err(EndpointInventoryError::Remote)
         .map_err(EndpointPreflightError::DestinationInventory)
         .map_err(S3PreflightError::Inventory)?;
-    let cache = SyncCache::for_configuration(configuration_path);
-    let namespace = cache.as_ref().map(|cache| cache.namespace(request));
-    let snapshot = cache
-        .as_ref()
-        .zip(namespace.as_ref())
-        .map(|(cache, namespace)| cache.snapshot(namespace));
     let objects = transport
-        .comparison_objects(
-            &request.connection.bucket,
-            &prefix,
-            &local_inventory,
-            cache
-                .as_ref()
-                .zip(namespace.as_ref())
-                .zip(snapshot.as_ref()),
-        )
+        .list_objects(&request.connection.bucket, &prefix)
         .await
         .map_err(crate::inventory::remote::RemoteInventoryError::Provider)
         .map_err(EndpointInventoryError::Remote)

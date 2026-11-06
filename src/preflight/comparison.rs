@@ -1,7 +1,5 @@
 use crate::inventory::{Inventory, InventoryEntry, InventoryEntryKind, RelativePath};
 
-const MODIFICATION_TIME_TOLERANCE_SECONDS: u64 = 2;
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum EntryStatus {
     New,
@@ -68,23 +66,7 @@ fn file_status(source: &InventoryEntry, destination: &InventoryEntry) -> EntrySt
     if source.byte_size != destination.byte_size {
         return EntryStatus::Changed;
     }
-    if modification_times_match(
-        source.modified_unix_seconds,
-        destination.modified_unix_seconds,
-    ) {
-        EntryStatus::Unchanged
-    } else {
-        EntryStatus::Changed
-    }
-}
-
-pub(crate) fn modification_times_match(source: Option<i64>, destination: Option<i64>) -> bool {
-    match (source, destination) {
-        (Some(source), Some(destination)) => {
-            source.abs_diff(destination) <= MODIFICATION_TIME_TOLERANCE_SECONDS
-        }
-        _ => true,
-    }
+    EntryStatus::Unchanged
 }
 
 #[cfg(test)]

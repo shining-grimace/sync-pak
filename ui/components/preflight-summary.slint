@@ -1,0 +1,34 @@
+import { Dimensions } from "../dimensions.slint";
+import { DescriptionLabel } from "description-label.slint";
+import { ErrorLabel } from "error-label.slint";
+import { ErrorHeadingLabel } from "error-heading-label.slint";
+import { DangerCard } from "cards.slint";
+
+export component PreflightSummary inherits VerticalLayout {
+    in property <string> additions;
+    in property <string> overwrites;
+    in property <string> deletions;
+    in property <string> skipped;
+    in property <string> unchanged;
+    in property <bool> destructive;
+    spacing: Dimensions.element-gap;
+    vertical-stretch: 0;
+    accessible-role: region;
+    accessible-label: "Selected plan: " + root.additions + ", " + root.overwrites + ", " + root.deletions + ", " + root.skipped + ", " + root.unchanged;
+    DescriptionLabel {
+        text: root.additions + " · " + root.overwrites + " · " + root.deletions;
+    }
+    DescriptionLabel {
+        text: root.skipped + " · " + root.unchanged;
+    }
+    if root.destructive: DangerCard {
+        baseline-height: 86px;
+        ErrorHeadingLabel {
+            text: "Destructive mirror changes";
+        }
+        ErrorLabel {
+            accessible-live-region: polite;
+            text: "Review every selected overwrite and deletion on both sides before continuing.";
+        }
+    }
+}

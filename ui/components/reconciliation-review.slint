@@ -1,0 +1,47 @@
+import { MirrorReviewRow } from "../models.slint";
+import { Dimensions } from "../dimensions.slint";
+import { ScrollArea } from "scroll-area.slint";
+import { ReconciliationSection } from "reconciliation-section.slint";
+
+export component ReconciliationReview inherits ScrollArea {
+    in property <[MirrorReviewRow]> isolated;
+    in property <[MirrorReviewRow]> conflicts;
+    in property <[MirrorReviewRow]> synced;
+    in property <bool> interactive;
+    in property <bool> destructive: true;
+    callback choose-file(string, int, int);
+    vertical-stretch: 1;
+    vertical-scrollbar-policy: always-on;
+    VerticalLayout {
+        spacing: Dimensions.section-gap;
+        ReconciliationSection {
+            title: "Isolated Files";
+            section: 0;
+            rows: root.isolated;
+            interactive: root.interactive;
+            destructive: root.destructive;
+            choose-file(path, section, action) => {
+                root.choose-file(path, section, action);
+            }
+        }
+        ReconciliationSection {
+            title: "Conflicting Versions";
+            section: 1;
+            rows: root.conflicts;
+            interactive: root.interactive;
+            destructive: root.destructive;
+            choose-file(path, section, action) => {
+                root.choose-file(path, section, action);
+            }
+        }
+        ReconciliationSection {
+            title: "In Sync";
+            section: 2;
+            rows: root.synced;
+            interactive: false;
+        }
+        Rectangle {
+            vertical-stretch: 1;
+        }
+    }
+}

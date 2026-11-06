@@ -1,0 +1,14 @@
+export component MeasuredVerticalRegion inherits Rectangle {
+    in property <length> spacing;
+
+    min-height: region-layout.min-height;
+    preferred-height: region-layout.preferred-height;
+    max-height: region-layout.max-height;
+    vertical-stretch: 0;
+
+    region-layout := VerticalLayout {
+        spacing: root.spacing;
+        @children
+    }
+}
+

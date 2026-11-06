@@ -47,6 +47,7 @@ impl CacheSnapshot {
         self.observations.get(&(bucket.to_owned(), key.to_owned()))
     }
 
+    #[cfg(test)]
     pub fn baseline(&self, path: &str) -> Option<&Baseline> {
         self.baselines.get(path)
     }

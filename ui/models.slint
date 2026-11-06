@@ -54,3 +54,16 @@ export struct AppNotification {
     height: length,
     offset: length,
 }
+
+export struct MirrorReviewRow {
+    path: string,
+    action-label: string,
+    deleting: bool,
+    local-detail: string,
+    remote-detail: string,
+    local-changed: bool,
+    remote-changed: bool,
+    selected: bool,
+    can-first: bool,
+    can-second: bool,
+}
