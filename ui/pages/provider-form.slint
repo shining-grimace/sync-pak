@@ -1,5 +1,5 @@
 import { SecretVisibilityButton } from "../components/secret-visibility-button.slint";
-import { ProviderSummaryLabel } from "../components/provider-guidance.slint";
+import { ProviderSummaryLabel, ProviderCredentialDescription } from "../components/provider-guidance.slint";
 import { TransportFields } from "../components/transport-fields.slint";
 import { Dimensions } from "../dimensions.slint";
 import { PageRoot, CenteredPageColumn } from "../components/page-layouts.slint";
@@ -110,6 +110,9 @@ export component ProviderFormPage inherits Rectangle {
                 ProviderSummaryLabel {
                     kind: root.provider-form-kind;
                 }
+                ProviderCredentialDescription {
+                    kind: root.provider-form-kind;
+                }
 
                 if root.provider-form-kind == 0: VerticalLayout {
                     spacing: Dimensions.element-gap;
@@ -123,9 +126,6 @@ export component ProviderFormPage inherits Rectangle {
                         text <=> root.provider-form-account-id;
                         enabled: !root.busy;
                     }
-                }
-                if root.provider-form-kind == 1: DescriptionLabel {
-                    text: "Create an application key in Backblaze B2; the same key pair works with its S3-compatible API. Do not use the master application key.";
                 }
                 SectionHeadingLabel {
                     text: root.provider-form-kind == 1 ? "Key ID" : "Access key ID";

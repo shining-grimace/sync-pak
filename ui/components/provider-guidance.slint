@@ -8,6 +8,7 @@ struct ProviderGuidance {
     headline: string,
     description: string,
     short-text: string,
+    credential-description: string,
 }
 
 // Keep the order aligned with the provider type selector: R2, B2, S3.
@@ -18,18 +19,21 @@ global ProviderCopy {
             headline: "Download often, without bandwidth fees.",
             description: "A good fit for files you regularly download or move between devices, with no charges for transferring data out.",
             short-text: "Download often, without bandwidth fees. A good fit for files you regularly retrieve or move between devices.",
+            credential-description: "Create an R2 API token with “Object Read & Write” permission for the buckets you want to sync. Enter a fixed bucket if your token cannot list buckets.",
         },
         {
             name: "Backblaze B2",
             headline: "Affordable storage for backups and archives.",
             description: "A good fit for keeping photo libraries, documents, and dated snapshots of your work in the cloud.",
             short-text: "Affordable storage for backups and archives. A good fit for photo libraries, documents, and dated snapshots.",
+            credential-description: "Create an application key in Backblaze B2 with “Read and Write” access to the bucket you want to sync; the same key pair works with its S3-compatible API. Do not use the master application key. Enable “Allow list all bucket names” for bucket discovery, or enter a fixed bucket below.",
         },
         {
             name: "Amazon S3",
             headline: "Established storage with a vast ecosystem.",
             description: "A good fit if you already use AWS or want your files alongside existing AWS tools and workflows.",
             short-text: "Established storage with a vast ecosystem. A good fit for existing AWS tools and workflows.",
+            credential-description: "Use an access key with s3:ListBucket permission on the bucket, and s3:GetObject, s3:PutObject, s3:DeleteObject, and s3:AbortMultipartUpload permissions on its objects. For bucket discovery, also grant s3:ListAllMyBuckets; otherwise, enter a fixed bucket below. If the bucket uses AWS KMS encryption, also allow kms:Decrypt and kms:GenerateDataKey on the encryption key.",
         },
     ];
 }
@@ -37,6 +41,11 @@ global ProviderCopy {
 export component ProviderSummaryLabel inherits DescriptionLabel {
     in property <int> kind;
     text: root.kind >= 0 && root.kind < ProviderCopy.options.length ? ProviderCopy.options[root.kind].short-text : "";
+}
+
+export component ProviderCredentialDescription inherits DescriptionLabel {
+    in property <int> kind;
+    text: root.kind >= 0 && root.kind < ProviderCopy.options.length ? ProviderCopy.options[root.kind].credential-description : "";
 }
 
 export component ProviderGuidanceCard inherits InfoCard {
