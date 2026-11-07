@@ -47,32 +47,62 @@ object SyncWidgets {
         val views = RemoteViews(context.packageName, layout)
         val selected = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).getString(id.toString(), null)
         val connections = state.optJSONArray("connections")
-        val connection = (0 until (connections?.length() ?: 0)).map { connections!!.getJSONObject(it) }.find { it.getString("id") == selected }
+        val connection = (0 until (connections?.length() ?: 0))
+            .map { connections!!.getJSONObject(it) }
+            .find { it.getString("id") == selected }
         val active = state.optJSONObject("active")
         val busy = active != null
         val runningHere = active != null && active.optString("id") == selected
         val runningElsewhere = busy && !runningHere
         val empty = connections == null || connections.length() == 0
         val verified = connection?.optBoolean("verified") == true
-        val name = connection?.getString("name") ?: if (state.has("error")) "Connections unavailable" else if (empty) "No connections" else "Choose connection"
+        val name = connection?.getString("name")
+            ?: if (state.has("error")) "Connections unavailable" else if (empty) "No connections" else "Choose connection"
         val running = "Running: ${active?.optString("name")}"
         views.setTextViewText(R.id.widget_connection, "$name ▾")
         views.setContentDescription(R.id.widget_connection, "Choose connection. $name")
-        views.setTextViewText(R.id.widget_run, when { runningHere -> "Running…"; empty -> "Open SyncPak"; connection != null && !verified -> "Verify in app"; else -> "Run" })
-        views.setBoolean(R.id.widget_run, "setEnabled", !busy && (empty || connection != null))
+        views.setTextViewText(
+            R.id.widget_run,
+            when {
+                runningHere -> "Running…"
+                empty -> "Open SyncPak"
+                connection != null && !verified -> "Verify in app"
+                else -> "Run"
+            }
+        )
+        views.setBoolean(
+            R.id.widget_run,
+            "setEnabled",
+            !busy && (empty || connection != null)
+        )
         views.setBoolean(R.id.widget_connection, "setEnabled", !busy)
-        views.setInt(R.id.widget_icon, "setImageAlpha", if (runningElsewhere) 115 else 255)
+        views.setInt(
+            R.id.widget_icon,
+            "setImageAlpha",
+            if (runningElsewhere) 115 else 255
+        )
         val status = when {
             runningElsewhere -> "Another connection is running"
             runningHere -> running
             else -> ""
         }
         views.setTextViewText(R.id.widget_status, status)
-        views.setViewVisibility(R.id.widget_status, if (status.isNotEmpty()) View.VISIBLE else View.GONE)
-        views.setViewVisibility(R.id.widget_disclaimer, if (status.isEmpty()) View.VISIBLE else View.GONE)
+        views.setViewVisibility(
+            R.id.widget_status,
+            if (status.isNotEmpty()) View.VISIBLE else View.GONE
+        )
+        views.setViewVisibility(
+            R.id.widget_disclaimer,
+            if (status.isEmpty()) View.VISIBLE else View.GONE
+        )
         views.setBoolean(R.id.widget_app_name, "setEnabled", !runningElsewhere)
         views.setBoolean(R.id.widget_disclaimer, "setEnabled", !runningElsewhere)
-        views.setTextViewText(R.id.widget_disclaimer, if (state.has("error")) "Connections unavailable. Open SyncPak to check settings." else if (empty) "No connections available. Turn off Show Preview in a connection’s settings to use it here." else "Only connections with preview turned off are available.")
+        views.setTextViewText(
+            R.id.widget_disclaimer,
+            if (state.has("error")) "Connections unavailable. Open SyncPak to check settings."
+            else if (empty) "No connections available. Turn off Show Preview in a connection’s settings to use it here."
+            else ""
+        )
         val picker = Intent(context, WidgetConnectionPicker::class.java).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
             .setData(Uri.parse("syncpak://widget/$id/pick"))
         views.setOnClickPendingIntent(R.id.widget_connection, PendingIntent.getActivity(context, id, picker, flags))

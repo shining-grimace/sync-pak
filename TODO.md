@@ -1,6 +1,4 @@
 
-- On Android, test how a widget responds to a connection being deleted
-- I need to test Android's widget with many connections available (that make the list in the picker popup scrollable)
 - Update the app colours, making sure to update the Android widget theme colours (`res/values/widget_theme.xml`)
 - New provider form: should "S3 API Endpoint" be marked optional, or is it usually required, for Cloudflare R2 providers?
 - New provider form: note in a description label the minimum privileges needed (e.g. for Cloudflare R2 "Object Read & Write")
