@@ -10,6 +10,5 @@
 - Consider transitions and animations
 - Add Google package to AdMob once published on Google Play
 - Add app-ads.txt to developer site once requirements are met
-- On the New Provider screen, the order of validation doesn't match the UI order (will be told secret access key is required before account ID is required)
 - Make sure the roadmap's key points are all implemented
 - See where beta versions can be released; Google Play being a likely candidate

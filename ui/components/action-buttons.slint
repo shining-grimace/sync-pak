@@ -87,9 +87,9 @@ export component NavMenuButton inherits ActionButton {
 
     button-width: Dimensions.action-button-preferred-width;
     emphasized: root.selected;
-    fill-color: Colors.primary-accent;
+    fill-color: root.selected ? Colors.primary-accent : Colors.background-trim;
     outline-color: Colors.primary-accent;
-    label-color: Colors.background-trim;
+    label-color: root.selected ? Colors.background-trim : Colors.primary-accent;
 }
 
 export component RadioButton inherits ActionButton {
