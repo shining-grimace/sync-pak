@@ -317,6 +317,8 @@ export component AppWindow inherits Window {
     callback set-connections-newest-first(bool);
     callback set-connection-filter(int);
 
+    icon: @image-url("../assets/images/syncpak-logo.png");
+
     init => {
         Palette.color-scheme = ColorScheme.unknown;
     }

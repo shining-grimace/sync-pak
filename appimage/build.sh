@@ -21,6 +21,7 @@ work=$(mktemp -d "$target_dir/appimage.XXXXXX")
 trap 'rm -rf -- "$work"' EXIT
 appdir="$work/SyncPak.AppDir"
 install -m755 "$target_dir/$target/release/sync-pak" "$work/sync-pak"
+install -m644 "$root/assets/images/syncpak-logo.png" "$work/com.shininggrimace.SyncPak.png"
 # Use the build host's binutils; linuxdeploy's older strip cannot read newer ELF
 # relocation formats. Distribution libraries are already stripped.
 strip --strip-unneeded "$work/sync-pak"
@@ -70,7 +71,7 @@ export LDAI_OUTPUT="$root/dist/SyncPak-$version-x86_64.AppImage"
 "$tool" --appdir "$appdir" \
     --executable "$work/sync-pak" \
     --desktop-file "$root/packaging/linux/com.shininggrimace.SyncPak.desktop" \
-    --icon-file "$root/packaging/linux/com.shininggrimace.SyncPak.svg" \
+    --icon-file "$work/com.shininggrimace.SyncPak.png" \
     "${libraries[@]}" --output appimage
 
 cd "$root/dist"

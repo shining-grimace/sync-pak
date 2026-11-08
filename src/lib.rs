@@ -23,6 +23,14 @@ pub(crate) use ui::*;
 /// Opens the SyncPak application window and runs its event loop.
 pub fn run() -> Result<(), slint::PlatformError> {
     let window = AppWindow::new()?;
+    #[cfg(target_os = "linux")]
+    {
+        // Snap prefixes exported desktop filenames, including parallel-install instances.
+        let app_id = std::env::var("SNAP_INSTANCE_NAME")
+            .map(|instance| format!("{instance}_sync-pak"))
+            .unwrap_or_else(|_| "com.shininggrimace.SyncPak".into());
+        slint::set_xdg_app_id(app_id)?;
+    }
     // The desktop backend resolves the native colour scheme when the window is
     // shown. Initialise appearance-dependent UI only after that has happened.
     window.show()?;

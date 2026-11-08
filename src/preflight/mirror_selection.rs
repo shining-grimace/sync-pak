@@ -1,6 +1,8 @@
 //! Interactive mirror choices, kept separate from unattended one-direction planning.
 use std::collections::BTreeMap;
 
+mod validation;
+
 use crate::{
     configuration::SyncMode,
     inventory::{InventoryEntry, InventoryEntryKind, RelativePath},
@@ -112,17 +114,7 @@ impl MirrorSelection {
     }
 
     pub fn selected(&self) -> Result<Preflight, &'static str> {
-        for entry in self.original.comparison() {
-            if self.choice(&entry.path) == Some(MirrorChoice::Delete) {
-                let prefix = format!("{}/", entry.path.as_str());
-                if self.original.comparison().iter().any(|child| {
-                    child.path.as_str().starts_with(&prefix)
-                        && self.choice(&child.path) != Some(MirrorChoice::Delete)
-                }) {
-                    return Err("To delete a folder, select Delete for every entry inside it too.");
-                }
-            }
-        }
+        self.validate()?;
         Ok(self.preview())
     }
 

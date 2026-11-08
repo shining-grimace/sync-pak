@@ -15,7 +15,7 @@
             android:id="@+id/widget_icon"
             android:layout_width="22dp"
             android:layout_height="22dp"
-            android:src="@drawable/ic_widget_syncpak"
+            android:src="@drawable/ic_launcher_foreground"
             android:contentDescription="Open SyncPak" />
 
         <TextView

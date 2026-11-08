@@ -4,6 +4,8 @@ use crate::{
     preflight::{CaseSensitivity, preflight},
 };
 
+mod completeness;
+
 fn inventory(entries: &[(&str, u64)]) -> Inventory {
     Inventory::new(entries.iter().map(|(path, size)| {
         InventoryEntry::new(
@@ -44,19 +46,13 @@ fn path(path: &str) -> RelativePath {
 #[test]
 fn starts_empty_and_undo_restores_original_inventories() {
     let mut selection = selection(Direction::BothWays);
-    assert!(selection.selected().unwrap().plan().actions().is_empty());
+    assert!(selection.selected().is_err());
     assert!(selection.choose(&path("local"), Some(MirrorChoice::Keep)));
-    assert_eq!(
-        selection.selected().unwrap().plan().summary().additions(),
-        1
-    );
+    assert_eq!(selection.preview().plan().summary().additions(), 1);
     assert!(selection.choose(&path("local"), None));
-    assert!(selection.selected().unwrap().plan().actions().is_empty());
-    assert!(
-        selection
-            .original()
-            .same_inventory_as(&selection.selected().unwrap())
-    );
+    assert!(selection.selected().is_err());
+    assert!(selection.preview().plan().actions().is_empty());
+    assert!(selection.original().same_inventory_as(&selection.preview()));
     assert!(!selection.choose(&path("same"), Some(MirrorChoice::UseLocal)));
 }
 
@@ -147,7 +143,7 @@ fn folder_deletion_requires_explicit_descendant_deletion() {
 }
 
 #[test]
-fn additive_copies_start_selected_and_support_undo_without_enabling_destruction() {
+fn additive_copies_start_selected_and_undo_requires_a_new_choice() {
     let original = preflight(
         SyncMode::AddOnly,
         Direction::BothWays,
@@ -163,10 +159,7 @@ fn additive_copies_start_selected_and_support_undo_without_enabling_destruction(
         2
     );
     assert!(selection.choose(&path("local"), None));
-    assert_eq!(
-        selection.selected().unwrap().plan().summary().additions(),
-        1
-    );
+    assert!(selection.selected().is_err());
     assert!(!selection.choose(&path("remote"), Some(MirrorChoice::Delete)));
     assert!(selection.choose(&path("local"), Some(MirrorChoice::Keep)));
     assert_eq!(

@@ -132,7 +132,7 @@ export component PreflightPage inherits CenteredPageRoot {
                 }
             }
             if root.connection-mode == "Mirror": DescriptionLabel {
-                text: "Unselected files will be left unchanged. Actions are limited by the selected directions; bulk actions affect eligible files only.";
+                text: "Assign an action to every eligible file before starting. Actions are limited by the selected directions; bulk actions affect eligible files only.";
             }
             if root.connection-mode != "Archive": ReconciliationReview {
                 isolated: root.isolated;

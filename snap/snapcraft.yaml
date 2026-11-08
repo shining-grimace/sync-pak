@@ -5,7 +5,7 @@ summary: Synchronise local folders with cloud storage
 description: |
   SyncPak is a cross-platform application for copying local folders directly
   to cloud providers, with add-only, mirror, and archive operations.
-icon: packaging/linux/com.shininggrimace.SyncPak.svg
+icon: assets/images/syncpak-logo.png
 base: core24
 confinement: strict
 grade: devel
@@ -38,7 +38,8 @@ parts:
     override-build: |
       craftctl default
       install -Dm644 packaging/linux/com.shininggrimace.SyncPak.desktop "$CRAFT_PART_INSTALL/usr/share/applications/com.shininggrimace.SyncPak.desktop"
-      install -Dm644 packaging/linux/com.shininggrimace.SyncPak.svg "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/scalable/apps/com.shininggrimace.SyncPak.svg"
+      install -Dm644 assets/images/syncpak-logo.png "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/256x256/apps/com.shininggrimace.SyncPak.png"
+      sed -i 's|^Icon=.*|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/com.shininggrimace.SyncPak.png|' "$CRAFT_PART_INSTALL/usr/share/applications/com.shininggrimace.SyncPak.desktop"
     build-packages:
       - libegl1-mesa-dev
       - libfontconfig1-dev

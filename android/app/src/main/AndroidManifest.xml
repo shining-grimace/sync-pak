@@ -7,7 +7,7 @@
 
     <application
         android:name=".SyncPakApplication"
-        android:icon="@drawable/ic_syncpak"
+        android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:label="SyncPak"
         android:supportsRtl="true"

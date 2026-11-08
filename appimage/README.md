@@ -37,7 +37,8 @@ The continuous-build workflow uploads both as `syncpak-appimage-x86_64` and
 checks extraction and desktop metadata. Download and extract the artifact ZIP
 before following the run instructions; ZIP downloads may lose executable mode.
 
-The shared SVG is a provisional packaging icon, pending final branding.
+The package uses `assets/images/syncpak-logo.png`, installed under the shared
+desktop icon name `com.shininggrimace.SyncPak`.
 The build follows the [official native-binary packaging guide](https://docs.appimage.org/packaging-guide/from-source/native-binaries.html)
 and uses the [linuxdeploy AppImage output plugin](https://github.com/linuxdeploy/linuxdeploy-plugin-appimage).
 

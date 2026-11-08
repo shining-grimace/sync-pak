@@ -3,19 +3,23 @@
     <attr name="widgetPrimary" format="color" />
     <attr name="widgetBackground" format="color" />
     <attr name="widgetDisabledPrimary" format="color" />
-    <color name="widget_light_surface">#FFFAF0</color>
-    <color name="widget_light_secondary">#454039</color>
-    <color name="widget_dark_surface">#1C1A17</color>
-    <color name="widget_dark_secondary">#E4BDA3</color>
-    <color name="widget_light_primary">#171512</color>
-    <color name="widget_light_background">#F3EFE3</color>
-    <color name="widget_light_disabled_primary">#73171512</color>
-    <color name="widget_dark_primary">#BC31FF</color>
-    <color name="widget_dark_background">#000000</color>
-    <color name="widget_dark_disabled_primary">#73BC31FF</color>
+
+    <color name="widget_light_surface">#CCC7B9</color>
+    <color name="widget_light_secondary">#703610</color>
+    <color name="widget_light_primary">#371070</color>
+    <color name="widget_light_background">#FEF8E6</color>
+    <color name="widget_light_disabled_primary">#6C20DF</color>
+
+    <color name="widget_dark_surface">#1D1726</color>
+    <color name="widget_dark_secondary">#EFB68F</color>
+    <color name="widget_dark_primary">#B58FEF</color>
+    <color name="widget_dark_background">#1E1B22</color>
+    <color name="widget_dark_disabled_primary">#7240BF</color>
+
     <color name="widget_primary">@color/widget_light_primary</color>
     <color name="widget_background">@color/widget_light_background</color>
     <color name="widget_disabled_primary">@color/widget_light_disabled_primary</color>
+
     <style name="SyncPakWidget">
         <item name="widgetPrimary">@color/widget_primary</item>
         <item name="widgetBackground">@color/widget_background</item>
