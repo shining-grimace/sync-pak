@@ -3,19 +3,20 @@ import {
     CardPrimaryActionButton,
     CardSecondaryActionButton,
     NavMenuButton,
+    SecondaryActionButton,
 } from "action-buttons.slint";
 
 export component CompactCardPrimaryActionButton inherits CardPrimaryActionButton {
-    button-width: 0px;
+    button-width: root.expand-width ? 0px : Dimensions.card-action-button-width;
     button-height: Dimensions.compact-action-button-height;
-    fixed-width: false;
+    fixed-width: !root.expand-width;
     expand-width: true;
 }
 
 export component CompactCardSecondaryActionButton inherits CardSecondaryActionButton {
-    button-width: 0px;
+    button-width: root.expand-width ? 0px : Dimensions.card-action-button-width;
     button-height: Dimensions.compact-action-button-height;
-    fixed-width: false;
+    fixed-width: !root.expand-width;
     expand-width: true;
 }
 
@@ -24,4 +25,8 @@ export component MobileNavMenuButton inherits NavMenuButton {
     button-height: Dimensions.compact-action-button-height;
     expand-width: true;
     label-text-size: Dimensions.text-size-mobile-navigation;
+}
+
+export component CompactSecondaryActionButton inherits SecondaryActionButton {
+    button-height: Dimensions.compact-action-button-height;
 }

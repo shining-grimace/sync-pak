@@ -12,10 +12,10 @@ import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import {
     FilterButton,
     NewActionButton,
-    SecondaryActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
 import {
+    CompactSecondaryActionButton,
     CompactCardPrimaryActionButton,
     CompactCardSecondaryActionButton,
 } from "../components/compact-action-buttons.slint";
@@ -154,7 +154,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
             }
         }
 
-        SecondaryActionButton {
+        CompactSecondaryActionButton {
             text: root.connections-newest-first ? "Newest to oldest ↓" : "Oldest to newest ↑";
             accessible-label: root.connections-newest-first ? "Sorted newest to oldest. Switch to oldest to newest" : "Sorted oldest to newest. Switch to newest to oldest";
             clicked => {

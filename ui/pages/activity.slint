@@ -6,10 +6,10 @@ import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
 import {
-    CardPrimaryActionButton,
     CardSecondaryActionButton,
     PrimaryActionButton,
 } from "../components/action-buttons.slint";
+import { CompactCardPrimaryActionButton } from "../components/compact-action-buttons.slint";
 import {
     ListItem,
     InlineLoadingIndicator,
@@ -115,7 +115,8 @@ export component ActivityPage inherits CenteredPageRoot {
                     }
                     if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width < Dimensions.narrow-layout-breakpoint : VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        if activity.can-view-result : CardPrimaryActionButton {
+                        if activity.can-view-result : CompactCardPrimaryActionButton {
+                            expand-width: false;
                             accessible-label: "View result for " + activity.title;
                             text: "View Result";
                             clicked => {
@@ -140,7 +141,8 @@ export component ActivityPage inherits CenteredPageRoot {
                     }
                     if (activity.can-cancel || activity.can-remove || activity.can-view-result) && root.width >= Dimensions.narrow-layout-breakpoint : HorizontalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        if activity.can-view-result : CardPrimaryActionButton {
+                        if activity.can-view-result : CompactCardPrimaryActionButton {
+                            expand-width: false;
                             accessible-label: "View result for " + activity.title;
                             text: "View Result";
                             clicked => {

@@ -70,16 +70,6 @@ component ActionButton inherits Rectangle {
             return reject;
         }
     }
-
-    if button-focus.has-focus && root.enabled: Rectangle {
-        x: -3px;
-        y: -3px;
-        width: root.width + 6px;
-        height: root.height + 6px;
-        border-color: root.outline-color;
-        border-width: 2px;
-        border-radius: Dimensions.button-border-radius;
-    }
 }
 
 export component NavMenuButton inherits ActionButton {
@@ -89,6 +79,7 @@ export component NavMenuButton inherits ActionButton {
     emphasized: root.selected;
     fill-color: root.selected ? Colors.primary-accent : Colors.background-trim;
     outline-color: Colors.primary-accent;
+    border-width: 0px;
     label-color: root.selected ? Colors.background-trim : Colors.primary-accent;
 }
 
@@ -97,8 +88,9 @@ export component RadioButton inherits ActionButton {
 
     button-width: Dimensions.radio-button-preferred-width;
     emphasized: root.selected;
-    fill-color: root.selected ? Colors.primary-accent : Colors.background-trim;
+    fill-color: root.selected ? Colors.primary-accent : transparent;
     outline-color: Colors.primary-accent;
+    border-width: 0px;
     label-color: root.selected ? Colors.background-trim : Colors.primary-accent;
     accessible-role: radio-button;
     accessible-checkable: true;
@@ -112,8 +104,9 @@ export component FilterButton inherits ActionButton {
     button-height: Dimensions.compact-action-button-height;
     expand-width: true;
     emphasized: root.selected;
-    fill-color: root.selected ? Colors.primary-accent : Colors.background-trim;
+    fill-color: root.selected ? Colors.primary-accent : transparent;
     outline-color: Colors.primary-accent;
+    border-width: 0px;
     label-color: root.selected ? Colors.background-trim : Colors.primary-accent;
     accessible-role: radio-button;
     accessible-checkable: true;
@@ -133,6 +126,7 @@ export component ToggleButton inherits ActionButton {
     accessible-role: checkbox;
     accessible-checkable: true;
     accessible-checked: root.selected;
+    border-radius: self.height / 2;
 }
 
 export component NewActionButton inherits ActionButton {
@@ -143,6 +137,7 @@ export component NewActionButton inherits ActionButton {
     fill-color: Colors.primary-accent;
     outline-color: Colors.primary-accent;
     label-color: Colors.background-trim;
+    border-radius: self.height / 2;
 }
 
 export component CardPrimaryActionButton inherits ActionButton {
@@ -192,9 +187,10 @@ component PageActionButton inherits HorizontalLayout {
     in property <brush> fill-color;
     in property <brush> outline-color;
     in property <brush> label-color;
+    in property <length> button-height: Dimensions.control-height;
     callback clicked();
 
-    height: Dimensions.control-height;
+    height: root.button-height;
     horizontal-stretch: 1;
     vertical-stretch: 0;
     alignment: center;
@@ -211,6 +207,8 @@ component PageActionButton inherits HorizontalLayout {
         text: root.text;
         enabled: root.enabled;
         button-width: Dimensions.page-action-button-width;
+        button-height: root.button-height;
+        border-radius: self.height / 2;
         fixed-width: true;
         emphasized: root.emphasized;
         fill-color: root.fill-color;
