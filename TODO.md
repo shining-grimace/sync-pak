@@ -1,5 +1,4 @@
 
-- Preflight screen: files get listed as isolated files if they only exist locally, even if Download was the only chosen direction
 - In light mode, card/surface background coloud needs to be much paler to allow text to contrast better
 - Result screen: the outcomes list files but not what happened with each file
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added

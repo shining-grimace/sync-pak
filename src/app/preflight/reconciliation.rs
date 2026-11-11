@@ -30,6 +30,12 @@ pub(crate) fn present(window: &AppWindow, selection: &MirrorSelection, interacti
 fn rows(selection: &MirrorSelection, interactive: bool) -> [Vec<MirrorReviewRow>; 3] {
     let mut groups: [Vec<MirrorReviewRow>; 3] = Default::default();
     for entry in selection.original().comparison() {
+        if section(entry) == 0
+            && !selection.allowed(entry, MirrorChoice::Keep)
+            && !selection.allowed(entry, MirrorChoice::Delete)
+        {
+            continue;
+        }
         let (local, remote) = selection.sides(entry);
         let choice = if interactive {
             selection.choice(&entry.path)

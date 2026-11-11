@@ -79,13 +79,45 @@ fn add_only_preselects_permitted_copies_and_leaves_conflicts_untouched() {
             .unwrap()
             .selected
     );
-    assert!(
-        !isolated
-            .iter()
-            .find(|row| row.path == "remote")
-            .unwrap()
-            .selected
-    );
+    assert!(!isolated.iter().any(|row| row.path == "remote"));
     assert_eq!(conflicts[0].action_label, "Skipped");
     assert!(!conflicts[0].selected);
+}
+
+#[test]
+fn isolated_rows_follow_transfer_directions_and_keep_mirror_deletions_visible() {
+    let local = Inventory::new([entry("local", 1)]).unwrap();
+    let remote = Inventory::new([entry("remote", 1)]).unwrap();
+    for (mode, direction, expected) in [
+        (SyncMode::AddOnly, Direction::Download, vec!["remote"]),
+        (SyncMode::AddOnly, Direction::Upload, vec!["local"]),
+        (
+            SyncMode::AddOnly,
+            Direction::BothWays,
+            vec!["local", "remote"],
+        ),
+        (
+            SyncMode::Mirror,
+            Direction::Download,
+            vec!["local", "remote"],
+        ),
+    ] {
+        let (source, destination) = if direction == Direction::Download {
+            (&remote, &local)
+        } else {
+            (&local, &remote)
+        };
+        let original = preflight(
+            mode,
+            direction,
+            source,
+            CaseSensitivity::Sensitive,
+            destination,
+            CaseSensitivity::Sensitive,
+        )
+        .unwrap();
+        let [isolated, _, _] = rows(&MirrorSelection::new(original), true);
+        let paths: Vec<_> = isolated.iter().map(|row| row.path.as_str()).collect();
+        assert_eq!(paths, expected);
+    }
 }
