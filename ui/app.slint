@@ -69,6 +69,11 @@ export component AppWindow inherits Window {
     in-out property <string> syncpak-policy-url;
     in-out property <int> appearance-preference: 0;
     in property <bool> is-android: false;
+    in-out property <int> support-phase: 0;
+    in-out property <string> support-price;
+    in-out property <string> support-message;
+    callback buy-support();
+    callback refresh-support();
     in-out property <bool> resolved-dark-mode: false;
     in-out property <bool> configuration-unavailable: false;
     in-out property <[ProviderRow]> providers;
@@ -707,6 +712,15 @@ export component AppWindow inherits Window {
                     root.refresh-credential-providers();
                 }
                 is-android: root.is-android;
+                support-phase: root.support-phase;
+                support-price: root.support-price;
+                support-message: root.support-message;
+                buy-support => {
+                    root.buy-support();
+                }
+                refresh-support => {
+                    root.refresh-support();
+                }
                 settings-directory: root.settings-directory;
                 app-version: root.app-version;
                 appearance-preference <=> root.appearance-preference;

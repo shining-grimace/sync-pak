@@ -1,5 +1,6 @@
 pub(crate) mod activity;
 pub(crate) mod advertising;
+pub(crate) mod billing;
 pub(crate) mod document_tree;
 pub(crate) mod folder_picker;
 pub(crate) mod foreground_execution;

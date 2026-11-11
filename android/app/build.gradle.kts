@@ -11,6 +11,8 @@ dependencies {
     implementation(libs.google.ads)
     implementation(libs.google.ump)
     implementation(libs.google.billing)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 }
 
 configurations.configureEach {
@@ -32,6 +34,8 @@ android {
         targetSdk = 37
         versionCode = 2
         versionName = "0.1.0"
+        // Replace with the non-consumable one-time product ID from Play Console.
+        buildConfigField("String", "BUY_ME_A_COFFEEE_PRODUCT_ID", "\"buy_me_a_coffee\"")
 
         ndk {
             abiFilters += listOf("arm64-v8a", "x86_64")

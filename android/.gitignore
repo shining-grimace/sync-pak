@@ -1,8 +1,8 @@
 /.idea/
 /.kotlin/
 build/
-/debug/
-/release/
+/app/debug/
+/app/release/
 /keystore.properties
 *.jks
 *.keystore

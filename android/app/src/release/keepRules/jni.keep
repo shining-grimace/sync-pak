@@ -8,6 +8,9 @@
     public void requestAdvertisingConsent();
     public void showAdvertisingPrivacyChoices();
     public boolean advertisingPrivacyChoicesAvailable();
+    public void buySupport();
+    public void refreshSupport();
+    public void syncSupportState();
 }
 
 -keep,allowoptimization class com.shininggrimace.syncpak.SyncPlatform {

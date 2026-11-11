@@ -21,6 +21,7 @@ class SyncPakActivity : NativeActivity() {
         SyncResultNavigation.accept(intent)
     }
     private val adsController by lazy { AdsController(this) }
+    private val supportBilling by lazy { SupportBilling(this, ::reportSupportState) }
     private val connectionLists by lazy { ConnectionListDocuments(this, ::nativeConnectionListResult) }
 
     fun pickConnectionList(contents: String): Int = connectionLists.pick(contents)
@@ -30,6 +31,7 @@ class SyncPakActivity : NativeActivity() {
     override fun onResume() {
         super.onResume()
         adsController.resume()
+        supportBilling.refresh()
     }
 
     override fun onPause() {
@@ -76,6 +78,7 @@ class SyncPakActivity : NativeActivity() {
 
     override fun onDestroy() {
         adsController.destroy()
+        supportBilling.destroy()
         super.onDestroy()
     }
 
@@ -104,6 +107,16 @@ class SyncPakActivity : NativeActivity() {
     }
 
     fun advertisingPrivacyChoicesAvailable(): Boolean = adsController.privacyChoicesAvailable
+
+    fun buySupport() = runOnUiThread { supportBilling.buy() }
+
+    fun refreshSupport() = runOnUiThread { supportBilling.refresh() }
+
+    fun syncSupportState() = runOnUiThread { supportBilling.snapshot() }
+
+    private fun reportSupportState(state: SupportState) {
+        nativeSupportStateChanged(state.phase, state.price, state.message)
+    }
 
     fun advertisingPrivacyChoicesAvailabilityChanged(available: Boolean) {
         nativeAdvertisingPrivacyChoicesAvailabilityChanged(available)
@@ -189,6 +202,9 @@ class SyncPakActivity : NativeActivity() {
     }
 
     companion object {
+        @JvmStatic
+        private external fun nativeSupportStateChanged(phase: Int, price: String, message: String)
+
         @JvmStatic
         private external fun nativeConnectionListResult(status: Int, contents: String)
 

@@ -1,0 +1,59 @@
+import { Dimensions } from "../dimensions.slint";
+import { SectionHeadingLabel } from "../components/section-heading-label.slint";
+import { DescriptionLabel } from "../components/description-label.slint";
+import { SuccessLabel } from "../components/success-label.slint";
+import { ErrorLabel } from "../components/error-label.slint";
+import { ExpandedSecondaryActionButton } from "../components/action-buttons.slint";
+
+export component SettingsSupportSection inherits VerticalLayout {
+    // SupportState.kt defines these phases: loading, ready, processing, pending,
+    // owned, error, and unconfigured.
+    in property <int> phase;
+    in property <string> price;
+    in property <string> message;
+    callback buy();
+    callback refresh();
+    spacing: Dimensions.element-gap;
+    accessible-role: region;
+    accessible-label: "Support SyncPak";
+
+    SectionHeadingLabel {
+        text: "Support SyncPak";
+    }
+    if root.phase == 4: SuccessLabel {
+        accessible-live-region: polite;
+        text: "Thanks for the coffee! Your support helps keep SyncPak growing.";
+    }
+    if root.phase != 4: VerticalLayout {
+        spacing: Dimensions.element-gap;
+        DescriptionLabel {
+            text: "Enjoying SyncPak? Buy me a coffee to help support its development.";
+        }
+        ExpandedSecondaryActionButton {
+            text: root.phase == 0 ? "Loading price…" : (root.phase == 2 ? "Processing…" : (root.phase == 3 ? "Payment pending" : (root.phase == 1 ? "Buy me a coffee · " + root.price : "Buy me a coffee")));
+            enabled: root.phase == 1;
+            accessible-label: self.text + ". One-time purchase through Google Play";
+            clicked => {
+                root.buy();
+            }
+        }
+        DescriptionLabel {
+            text: "An optional, one-time tip through Google Play. It doesn’t unlock features or remove ads.";
+        }
+        if root.phase == 3: DescriptionLabel {
+            accessible-live-region: polite;
+            text: "Your payment is pending. We’ll confirm it when Google Play completes it.";
+        }
+        if root.message != "": ErrorLabel {
+            accessible-live-region: polite;
+            text: root.message;
+        }
+        if root.phase == 5: ExpandedSecondaryActionButton {
+            text: "Retry";
+            accessible-label: "Retry checking the Google Play support purchase";
+            clicked => {
+                root.refresh();
+            }
+        }
+    }
+}

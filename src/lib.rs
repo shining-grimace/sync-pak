@@ -37,6 +37,8 @@ pub fn run() -> Result<(), slint::PlatformError> {
     app::controller::initialize(&window);
     #[cfg(target_os = "android")]
     platform::android::advertising::configure(&window);
+    #[cfg(target_os = "android")]
+    platform::android::billing::configure(&window);
     slint::run_event_loop()?;
     window.hide()
 }

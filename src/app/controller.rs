@@ -39,6 +39,8 @@ fn configure_navigation(window: &AppWindow) {
     window.on_show_settings(move || {
         if let Some(window) = weak.upgrade() {
             crate::app::settings::refresh(&window);
+            #[cfg(target_os = "android")]
+            window.invoke_refresh_support();
         }
         set_page(&weak, 3);
     });
