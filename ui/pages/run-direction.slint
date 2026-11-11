@@ -4,7 +4,7 @@ import { Dimensions } from "../dimensions.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
 import { SectionHeadingLabel } from "../components/section-heading-label.slint";
 import { InfoCard } from "../components/cards.slint";
-import { ExpandedPrimaryActionButton, ToggleButton } from "../components/action-buttons.slint";
+import { PrimaryActionButton, ToggleButton } from "../components/action-buttons.slint";
 import { FooterActionRow } from "../components/list-and-action-layouts.slint";
 
 export component RunDirectionPage inherits CenteredPageRoot {
@@ -76,45 +76,22 @@ export component RunDirectionPage inherits CenteredPageRoot {
         }
     }
 
-    if root.upload-selected && !root.download-selected: InfoCard {
+    if root.upload-selected || root.download-selected: InfoCard {
         accessible-role: region;
-        accessible-label: "Upload direction. Source: " + root.local-endpoint + ". Destination: " + root.remote-endpoint;
+        accessible-label: (root.upload-selected && root.download-selected ? "Both ways" : (root.upload-selected ? "Upload" : "Download")) + " direction. This device: " + root.local-endpoint + ". Cloud storage: " + root.remote-endpoint;
         baseline-height: 132px;
         vertical-stretch: 0;
         SectionHeadingLabel {
-            text: "Upload";
+            text: root.upload-selected && root.download-selected ? "Both ways" : (root.upload-selected ? "Upload" : "Download");
         }
-
         DescriptionLabel {
-            text: "Use the local folder as the source and cloud storage as the destination.";
+            text: root.upload-selected && root.download-selected ? (root.connection-mode == "Mirror" ? "Review both sides and choose which files to keep, delete, or overwrite. No actions are selected by default." : "Copy files found on only one side to the other. Changed files are skipped.") : (root.upload-selected ? "Use the local folder as the source and cloud storage as the destination." : "Use cloud storage as the source and the local folder as the destination.");
         }
-    }
-
-    if !root.upload-selected && root.download-selected: InfoCard {
-        accessible-role: region;
-        accessible-label: "Download direction. Source: " + root.remote-endpoint + ". Destination: " + root.local-endpoint;
-        baseline-height: 132px;
-        vertical-stretch: 0;
-        SectionHeadingLabel {
-            text: "Download";
-        }
-
         DescriptionLabel {
-            text: "Use cloud storage as the source and the local folder as the destination.";
+            text: "This device: " + root.local-endpoint;
         }
-    }
-
-    if root.upload-selected && root.download-selected: InfoCard {
-        accessible-role: region;
-        accessible-label: "Both ways direction between " + root.local-endpoint + " and " + root.remote-endpoint;
-        baseline-height: 132px;
-        vertical-stretch: 0;
-        SectionHeadingLabel {
-            text: "Both ways";
-        }
-
         DescriptionLabel {
-            text: root.connection-mode == "Mirror" ? "Review both sides and choose which files to keep, delete, or overwrite. No actions are selected by default." : "Copy files found on only one side to the other. Changed files are skipped.";
+            text: "Cloud storage: " + root.remote-endpoint;
         }
     }
 
@@ -123,19 +100,11 @@ export component RunDirectionPage inherits CenteredPageRoot {
         text: "Please select at least one transfer direction";
     }
     DescriptionLabel {
-        text: "Continue performs a read-only inventory and shows the complete plan before any files can change.";
-    }
-
-    DescriptionLabel {
-        text: "This device: " + root.local-endpoint;
-    }
-
-    DescriptionLabel {
-        text: "Cloud storage: " + root.remote-endpoint;
+        text: "Reviewing the plan performs a read-only inventory and shows the complete plan before any files can change.";
     }
 
     FooterActionRow {
-        ExpandedPrimaryActionButton {
+        PrimaryActionButton {
             accessible-label: root.upload-selected || root.download-selected ? "Continue to preflight for " + root.connection-name : "Select at least one transfer direction before reviewing the plan";
             text: "Review Plan";
             enabled: root.upload-selected || root.download-selected;

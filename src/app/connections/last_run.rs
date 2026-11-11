@@ -21,8 +21,8 @@ where
         _ => "th",
     };
     format!(
-        "{} {day}{suffix}, {}, at {}",
-        time.format("%B"),
+        "{} {day}{suffix} {} at {}",
+        time.format("%b"),
         time.format("%Y"),
         time.format("%-I:%M %p"),
     )
@@ -35,8 +35,8 @@ mod tests {
 
     #[test]
     fn formats_the_requested_date_and_twelve_hour_time() {
-        let time = Utc.with_ymd_and_hms(2026, 10, 25, 16, 13, 0).unwrap();
-        assert_eq!(display_time(time), "October 25th, 2026, at 4:13 PM");
+        let time = Utc.with_ymd_and_hms(2026, 11, 11, 8, 6, 0).unwrap();
+        assert_eq!(display_time(time), "Nov 11th 2026 at 8:06 AM");
         assert_eq!(label(None), "Not run yet");
     }
 
@@ -57,10 +57,10 @@ mod tests {
             let time = Utc.with_ymd_and_hms(2026, 10, day, 0, 5, 0).unwrap();
             assert_eq!(
                 display_time(time),
-                format!("October {day}{suffix}, 2026, at 12:05 AM")
+                format!("Oct {day}{suffix} 2026 at 12:05 AM")
             );
         }
         let noon = Utc.with_ymd_and_hms(2026, 10, 25, 12, 0, 0).unwrap();
-        assert_eq!(display_time(noon), "October 25th, 2026, at 12:00 PM");
+        assert_eq!(display_time(noon), "Oct 25th 2026 at 12:00 PM");
     }
 }

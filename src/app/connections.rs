@@ -5,5 +5,7 @@ pub(crate) mod list_controller;
 mod list_preferences;
 mod list_rows;
 pub(crate) mod list_verification_controller;
+mod local_path_label;
+mod local_path_labels;
 pub(crate) mod verification;
 pub(crate) mod verification_worker;

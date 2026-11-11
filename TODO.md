@@ -1,11 +1,11 @@
 
-- Preflight screen: when the "Destructive Changes" warning is shown, there's little room for the list of changes to preview and it's difficult to notice let alone scroll through
+- Preflight screen: files get listed as isolated files if they only exist locally, even if Download was the only chosen direction
+- In light mode, card/surface background coloud needs to be much paler to allow text to contrast better
 - Result screen: the outcomes list files but not what happened with each file
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added
 - The Aus Post app has a nice example of a good design - image shown at the bottom of a list which is a symbol for the list items themselves - which matches what my original intention was for the connections list (a graph view which never got attention)
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
-- Android: test that external storage drives work too
 - Create branding logo
 - Consider transitions and animations
 - Add Google package to AdMob once published on Google Play

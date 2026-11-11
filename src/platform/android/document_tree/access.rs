@@ -14,6 +14,15 @@ use crate::{
     },
 };
 
+pub fn display_label(uri: &str) -> io::Result<String> {
+    call_json(
+        "folderDisplayLabel",
+        "(Ljava/lang/String;)Ljava/lang/String;",
+        uri,
+        None,
+    )
+}
+
 pub fn verify(uri: &str) -> io::Result<()> {
     status(call_one_string(
         "verifyFolder",

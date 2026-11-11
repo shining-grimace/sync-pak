@@ -147,7 +147,8 @@ pub(crate) fn refresh(
                             connection.id.as_str(),
                         ),
                         mode: mode_index(connection.mode),
-                        local_path: connection.local_path.clone().into(),
+                        local_path: super::local_path_labels::label(&connection.local_path).into(),
+                        local_path_source: connection.local_path.clone().into(),
                         provider_name: provider.into(),
                         remote_location: remote_location(
                             &connection.bucket,
@@ -164,6 +165,8 @@ pub(crate) fn refresh(
                 window.get_connections(),
                 rows.collect(),
             ));
+            #[cfg(target_os = "android")]
+            super::local_path_labels::resolve(weak);
         }
         Err(_) => {
             window.set_connections_load_failed(true);

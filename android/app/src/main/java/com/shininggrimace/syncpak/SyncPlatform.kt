@@ -9,8 +9,10 @@ import android.content.pm.PackageManager
 class SyncPlatform(context: Context) {
     private val context = context.applicationContext
     private val documents = DocumentTreeAccess(this.context)
+    private val documentLabels = DocumentTreeLabels(this.context)
     fun applicationContext(): Context = context
     fun hasInternetPermission(): Boolean = context.checkSelfPermission(Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED
+    fun folderDisplayLabel(uri: String): String = documentLabels.label(uri)
     fun verifyFolder(uri: String): Int = documents.verify(uri)
     fun inventoryFolder(uri: String): String? = documents.inventory(uri)
     fun folderEntryMetadata(uri: String, path: String): String? = documents.metadata(uri, path)

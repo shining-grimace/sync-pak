@@ -110,10 +110,6 @@ export component ConnectionsPage inherits CenteredPageRoot {
             accessible-role: region;
             accessible-label: "Filter connections by mode";
             spacing: Dimensions.element-gap;
-            SectionHeadingLabel {
-                text: "Filter by mode";
-            }
-
             HorizontalLayout {
                 spacing: Dimensions.element-gap;
                 FilterButton {
@@ -154,16 +150,25 @@ export component ConnectionsPage inherits CenteredPageRoot {
             }
         }
 
-        CompactSecondaryActionButton {
-            text: root.connections-newest-first ? "Newest to oldest ↓" : "Oldest to newest ↑";
-            accessible-label: root.connections-newest-first ? "Sorted newest to oldest. Switch to oldest to newest" : "Sorted oldest to newest. Switch to newest to oldest";
-            clicked => {
-                root.set-connections-newest-first(!root.connections-newest-first);
+        HorizontalLayout {
+            spacing: Dimensions.element-gap;
+            vertical-stretch: 0;
+            if root.connections-total > 0: DescriptionLabel {
+                text: root.connections.length == root.connections-total ? "Showing all " + root.connections-total + (root.connections-total == 1 ? " connection." : " connections.") : "Showing " + root.connections.length + " of " + root.connections-total + " connections.";
             }
-        }
-
-        if root.connections-total > 0: DescriptionLabel {
-            text: root.connections.length == root.connections-total ? "Showing all " + root.connections-total + (root.connections-total == 1 ? " connection." : " connections.") : "Showing " + root.connections.length + " of " + root.connections-total + " connections.";
+            if root.connections-total == 0: Rectangle {
+                horizontal-stretch: 1;
+            }
+            CompactSecondaryActionButton {
+                button-width: 200px;
+                max-width: 200px;
+                horizontal-stretch: 0;
+                text: root.connections-newest-first ? "Newest to oldest ↓" : "Oldest to newest ↑";
+                accessible-label: root.connections-newest-first ? "Sorted newest to oldest. Switch to oldest to newest" : "Sorted oldest to newest. Switch to newest to oldest";
+                clicked => {
+                    root.set-connections-newest-first(!root.connections-newest-first);
+                }
+            }
         }
         if root.connections.length == 0: ContentGroup {
             spacing: Dimensions.element-gap;
@@ -196,7 +201,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                 width: parent.visible-width;
                 InfoCard {
                     accessible-role: list-item;
-                    accessible-label: connection.name + ". " + connection.detail + ". " + connection.verification + ". On this device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
+                    accessible-label: connection.name + ". " + connection.detail + (connection.verification != "" ? ". " + connection.verification : "") + ". This device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
                     baseline-height: root.width < Dimensions.medium-layout-breakpoint ? 210px : 82px;
                     VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
@@ -207,7 +212,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                         }
 
                         DescriptionLabel {
-                            text: connection.detail + " · " + connection.verification;
+                            text: connection.detail + (connection.verification != "" ? " · " + connection.verification : "");
                             color: Colors.secondary-accent;
                         }
 
@@ -216,7 +221,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                             VerticalLayout {
                                 spacing: Dimensions.card-element-spacing;
                                 DescriptionLabel {
-                                    text: "On this device";
+                                    text: "This device:";
                                 }
 
                                 DescriptionLabel {
@@ -224,15 +229,10 @@ export component ConnectionsPage inherits CenteredPageRoot {
                                 }
                             }
 
-                            DescriptionLabel {
-                                accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders";
-                                text: connection.mode == 2 ? "↓ Archive destination" : "↕ Connected folders";
-                            }
-
                             VerticalLayout {
                                 spacing: Dimensions.card-element-spacing;
                                 DescriptionLabel {
-                                    text: "In " + connection.provider-name;
+                                    text: "In " + connection.provider-name + ":";
                                 }
 
                                 DescriptionLabel {
@@ -246,7 +246,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                                 horizontal-stretch: 1;
                                 spacing: Dimensions.card-element-spacing;
                                 DescriptionLabel {
-                                    text: "On this device";
+                                    text: "This device:";
                                 }
 
                                 DescriptionLabel {
@@ -263,7 +263,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                                 horizontal-stretch: 1;
                                 spacing: Dimensions.card-element-spacing;
                                 DescriptionLabel {
-                                    text: "In " + connection.provider-name;
+                                    text: "In " + connection.provider-name + ":";
                                 }
 
                                 DescriptionLabel {

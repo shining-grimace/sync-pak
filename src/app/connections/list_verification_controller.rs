@@ -180,7 +180,7 @@ pub(crate) fn status(
     } else if sessions.borrow().contains(connection_id) {
         "Verified this session"
     } else if previously_verified {
-        "Previously verified"
+        ""
     } else {
         "Not verified"
     }
@@ -189,3 +189,6 @@ pub(crate) fn status(
 pub(crate) fn is_checking(states: &VerificationStates, connection_id: &str) -> bool {
     states.borrow().contains_key(connection_id)
 }
+
+#[cfg(test)]
+mod tests;

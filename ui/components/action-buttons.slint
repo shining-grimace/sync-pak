@@ -187,6 +187,7 @@ component PageActionButton inherits HorizontalLayout {
     in property <brush> fill-color;
     in property <brush> outline-color;
     in property <brush> label-color;
+    in property <length> button-width: Dimensions.page-action-button-width;
     in property <length> button-height: Dimensions.control-height;
     callback clicked();
 
@@ -206,7 +207,7 @@ component PageActionButton inherits HorizontalLayout {
         accessible-role: none;
         text: root.text;
         enabled: root.enabled;
-        button-width: Dimensions.page-action-button-width;
+        button-width: root.button-width;
         button-height: root.button-height;
         border-radius: self.height / 2;
         fixed-width: true;
