@@ -25,6 +25,10 @@ keyboard checks without a mouse. Run Android accessibility checks with TalkBack 
 
 - **Clean install:** Install the final candidate package, launch it, and confirm no
   developer probes or feasibility controls are exposed.
+- **Windows shutdown:** Launch from a terminal and close with the title-bar close
+  button, both shortly after startup and after Activity has refreshed. Confirm exit
+  code zero and no panic output. Repeat during a transfer using test data; confirm
+  cancellation finishes and the activity history can be loaded on the next launch.
 - **Upgrade and uninstall:** Upgrade an existing install and confirm configuration and
   protected credentials behave as promised. Uninstall, reinstall, and confirm application
   data and credentials are either retained or removed according to the documented package

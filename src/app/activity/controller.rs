@@ -1,5 +1,11 @@
 use super::refresh::refresh;
-use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc, time::Duration};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    rc::Rc,
+    sync::{Arc, Weak},
+    time::Duration,
+};
 
 use slint::{ComponentHandle, SharedString};
 use uuid::Uuid;
@@ -29,7 +35,7 @@ pub(crate) fn configure<E: OperationExecutor + Send + Sync + 'static>(
         .collect();
     schedule_refresh(
         window.as_weak(),
-        Arc::clone(&queue),
+        Arc::downgrade(&queue),
         Rc::new(RefCell::new(announced)),
     );
 
@@ -104,16 +110,21 @@ fn show<E: OperationExecutor + Send + Sync + 'static>(
 
 fn schedule_refresh<E: OperationExecutor + Send + Sync + 'static>(
     weak: slint::Weak<AppWindow>,
-    queue: Arc<BackgroundQueue<E>>,
+    queue: Weak<BackgroundQueue<E>>,
     announced: Rc<RefCell<HashMap<Uuid, i32>>>,
 ) {
+    // Pending timers can outlive the window until thread-local teardown. Keep
+    // worker ownership in the window so it is joined before process shutdown.
     slint::Timer::single_shot(Duration::from_millis(250), move || {
         if weak.upgrade().is_none() {
             return;
         }
-        refresh(&weak, &queue);
+        let Some(active_queue) = queue.upgrade() else {
+            return;
+        };
+        refresh(&weak, &active_queue);
         if let Some(window) = weak.upgrade() {
-            announce_activity(&window, &queue, &announced);
+            announce_activity(&window, &active_queue, &announced);
             #[cfg(target_os = "android")]
             crate::platform::android::result_navigation::show_requested(&window);
         }

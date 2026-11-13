@@ -13,6 +13,7 @@ pub enum CredentialBackend {
 }
 
 impl CredentialBackend {
+    #[cfg(target_os = "linux")]
     pub(crate) fn destination(self) -> &'static str {
         match self {
             Self::System => "org.freedesktop.secrets",

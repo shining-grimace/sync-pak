@@ -5,6 +5,7 @@ edition = "2024"
 build = "build.rs"
 
 [lib]
+name = "sync_pak_core"
 crate-type = ["cdylib", "rlib"]
 
 [features]

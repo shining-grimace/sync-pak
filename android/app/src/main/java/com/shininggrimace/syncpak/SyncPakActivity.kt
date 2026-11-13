@@ -163,7 +163,7 @@ class SyncPakActivity : NativeActivity() {
         private const val PICK_FOLDER_REQUEST = 4101
 
         init {
-            System.loadLibrary("sync_pak")
+            System.loadLibrary("sync_pak_core")
         }
 
         @JvmStatic

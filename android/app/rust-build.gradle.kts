@@ -91,7 +91,7 @@ fun registerRustTasks(
 ): Pair<TaskProvider<Exec>, TaskProvider<Sync>> {
     val release = buildType == "release"
     val taskSuffix = if (abi == "arm64-v8a") "Arm64" else "X86_64"
-    val rustLibrary = File(repositoryRoot, "target/$rustTarget/$buildType/libsync_pak.so")
+    val rustLibrary = File(repositoryRoot, "target/$rustTarget/$buildType/libsync_pak_core.so")
     val generatedLibraries = layout.buildDirectory.dir("generated/rust-libs/$buildType/$abi")
 
     val buildRust = tasks.register<Exec>("buildRust$buildSuffix$taskSuffix") {

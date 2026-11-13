@@ -23,7 +23,7 @@
             android:resizeableActivity="true">
             <meta-data
                 android:name="android.app.lib_name"
-                android:value="sync_pak" />
+                android:value="sync_pak_core" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

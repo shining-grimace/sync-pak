@@ -1,5 +1,5 @@
-use sync_pak::capabilities::{DesktopNotification, DesktopNotifier};
-use sync_pak::notifications::PlatformDesktopNotifier;
+use sync_pak_core::capabilities::{DesktopNotification, DesktopNotifier};
+use sync_pak_core::notifications::PlatformDesktopNotifier;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let notifier = platform_notifier();

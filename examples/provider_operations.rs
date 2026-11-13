@@ -1,6 +1,6 @@
 #[tokio::main]
 async fn main() -> std::process::ExitCode {
-    match sync_pak::provider_probe::run_from_environment().await {
+    match sync_pak_core::provider_probe::run_from_environment().await {
         Ok(()) => {
             println!("Provider probe completed successfully.");
             std::process::ExitCode::SUCCESS
