@@ -1,5 +1,5 @@
 
-- In light mode, card/surface background coloud needs to be much paler to allow text to contrast better
+- Android widget: double the padding of the outer card, increase the size of the top-left corner icon
 - Result screen: the outcomes list files but not what happened with each file
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added
 - The Aus Post app has a nice example of a good design - image shown at the bottom of a list which is a symbol for the list items themselves - which matches what my original intention was for the connections list (a graph view which never got attention)

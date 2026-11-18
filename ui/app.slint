@@ -356,7 +356,9 @@ export component AppWindow inherits Window {
     }
     apply-appearance-preference => {
         Colors.dark-mode = root.resolved-dark-mode;
-        Palette.color-scheme = root.appearance-preference == 1 ? ColorScheme.light : root.appearance-preference == 2 ? ColorScheme.dark : ColorScheme.unknown;
+        Palette.color-scheme = root.appearance-preference == 2
+            || (root.appearance-preference == 0 && root.resolved-dark-mode)
+            ? ColorScheme.dark : ColorScheme.light;
         root.set-advertising-footer-color(Colors.secondary-accent);
     }
     title: "SyncPak";
@@ -909,6 +911,8 @@ export component AppWindow inherits Window {
             if root.width < Dimensions.medium-layout-breakpoint: InfoCard {
                 accessible-role: navigation;
                 accessible-label: "Primary navigation";
+                background: transparent;
+                border-width: 0px;
                 baseline-height: Dimensions.compact-action-button-height + Dimensions.card-padding * 2;
                 HorizontalLayout {
                     spacing: Dimensions.card-element-spacing;
@@ -977,16 +981,21 @@ export component AppWindow inherits Window {
         if root.width >= Dimensions.desktop-layout-breakpoint: InfoCard {
             accessible-role: navigation;
             accessible-label: "Primary navigation";
+            background: transparent;
+            border-width: 0px;
             x: 16px;
             y: 16px;
             width: 144px;
             height: root.height - 32px;
-                Text {
-                    text: "SYNCPAK";
-                    color: Colors.primary-accent;
-                    font-size: 17px;
-                    font-weight: 800;
-                    letter-spacing: 2px;
+                VerticalLayout {
+                    padding-bottom: Dimensions.card-element-spacing;
+                    Text {
+                        text: "SYNCPAK";
+                        color: Colors.primary-accent;
+                        font-size: 17px;
+                        font-weight: 800;
+                        letter-spacing: 2px;
+                    }
                 }
 
                 NavMenuButton {
