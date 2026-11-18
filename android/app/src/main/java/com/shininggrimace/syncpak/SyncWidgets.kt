@@ -64,12 +64,12 @@ object SyncWidgets {
         views.setTextViewText(
             R.id.widget_run,
             when {
-                runningHere -> "Running…"
                 empty -> "Open SyncPak"
                 connection != null && !verified -> "Verify in app"
                 else -> "Run"
             }
         )
+        views.setViewVisibility(R.id.widget_run, if (busy) View.GONE else View.VISIBLE)
         views.setBoolean(
             R.id.widget_run,
             "setEnabled",

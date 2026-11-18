@@ -64,7 +64,7 @@ can be selected, but their button opens SyncPak for verification instead of sync
 A Run PendingIntent targets the non-exported foreground service directly. No
 Activity is opened. The service submits a connection ID through the same coordinator
 as the app, revalidating verification, preview policy and allowed directions. All
-widgets disable Run while any connection is preparing or running. The compact
+widgets hide Run while any connection is preparing or running. The compact
 widget replaces its picker text with the running connection's name during a run.
 An empty widget provides an Open SyncPak action.
 

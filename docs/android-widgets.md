@@ -7,12 +7,12 @@ Build with `./android/gradlew --project-dir android :app:assembleDebug`. The APK
    and both-ways Add Only connections. Use a disposable folder/bucket for transfers.
    Configure a separate preview-enabled connection and one unverified connection.
 2. Confirm **SyncPak** is the only entry in the launcher's widget picker and defaults
-   to 2×1 cells. Add two instances and select different connections. Confirm the
+   to 2×2 cells. Add two instances and select different connections. Confirm the
    preview-enabled connection is omitted, the picker explains the omission, and the unverified entry offers **Verify in app**.
 3. Check the widget's icon, app name, connection selector, Run button and explanation
    fit at its default size. Resize it. Check long names, large text, empty lists, and screen-reader labels. An empty widget should offer **Open SyncPak**.
 4. Close the app without force-stopping it. Tap Run on a widget. Confirm no app screen
-   opens, the foreground notification appears, and all widgets disable Run. Widgets
+   opens, the foreground notification appears, and all widgets hide Run. Widgets
    selecting the active connection show Running in place of the explanation.
    Widgets selecting other connections keep their
    normal labels, dim their foreground elements, and show "Another connection is
