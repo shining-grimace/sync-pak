@@ -119,5 +119,9 @@ fn isolated_rows_follow_transfer_directions_and_keep_mirror_deletions_visible() 
         let [isolated, _, _] = rows(&MirrorSelection::new(original), true);
         let paths: Vec<_> = isolated.iter().map(|row| row.path.as_str()).collect();
         assert_eq!(paths, expected);
+        for row in isolated {
+            assert_eq!(row.local_present, row.path == "local");
+            assert_eq!(row.remote_present, row.path == "remote");
+        }
     }
 }

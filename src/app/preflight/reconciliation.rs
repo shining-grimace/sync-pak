@@ -95,6 +95,8 @@ fn rows(selection: &MirrorSelection, interactive: bool) -> [Vec<MirrorReviewRow>
             deleting: choice == Some(MirrorChoice::Delete),
             local_detail: left.into(),
             remote_detail: right.into(),
+            local_present: local.is_some(),
+            remote_present: remote.is_some(),
             local_changed: choice.is_some(),
             remote_changed: choice.is_some(),
             selected: choice.is_some(),

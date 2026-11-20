@@ -89,7 +89,7 @@ export component ReconciliationSection inherits VerticalLayout {
                     min-width: 0px;
                     preferred-width: 0px;
                     horizontal-stretch: 1;
-                    Text {
+                    if item.local-present: Text {
                         text: item.path;
                         wrap: word-wrap;
                         color: item.local-changed ? (item.deleting ? Colors.danger : Colors.success) : Colors.primary-accent;
@@ -140,7 +140,7 @@ export component ReconciliationSection inherits VerticalLayout {
                     min-width: 0px;
                     preferred-width: 0px;
                     horizontal-stretch: 1;
-                    Text {
+                    if item.remote-present: Text {
                         text: item.path;
                         wrap: word-wrap;
                         color: item.remote-changed ? (item.deleting ? Colors.danger : Colors.success) : Colors.primary-accent;
