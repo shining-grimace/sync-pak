@@ -1,0 +1,43 @@
+import { Colors } from "../colors.slint";
+
+export component WindowBackground inherits Rectangle {
+    in property <bool> retracted;
+
+    private property <image> artwork: Colors.dark-mode
+        ? @image-url("../../assets/images/app-background-side-dark.svg")
+        : @image-url("../../assets/images/app-background-side-light.svg");
+    private property <length> layer-width: root.height / 2;
+    // On narrow windows, clip the outer edges and keep the inner edges at the center.
+    private property <length> visible-width: min(root.layer-width, root.width / 2);
+
+    // Animate a fraction of the travel distance so resizing keeps both destinations aligned.
+    private property <float> left-retraction: root.retracted ? 1.0 : 0.0;
+    private property <float> right-retraction: root.retracted ? 1.0 : 0.0;
+
+    // Springs carry the current velocity forward when navigation changes the target.
+    animate left-retraction { duration: 360ms; easing: spring(0); }
+    animate right-retraction { duration: 420ms; easing: spring(0); }
+
+    clip: true;
+
+    Image {
+        source: root.artwork;
+        image-fit: fill;
+        width: root.layer-width;
+        height: root.height;
+        x: -self.width + root.visible-width * (1.0 - root.left-retraction);
+        y: 0px;
+        accessible-role: none;
+    }
+
+    Image {
+        source: root.artwork;
+        image-fit: fill;
+        width: root.layer-width;
+        height: root.height;
+        x: root.width - root.visible-width * (1.0 - root.right-retraction);
+        y: 0px;
+        transform-scale-x: -1;
+        accessible-role: none;
+    }
+}

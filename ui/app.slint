@@ -38,6 +38,7 @@ import {
 import { DescriptionLabel } from "components/description-label.slint";
 import { ErrorLabel } from "components/error-label.slint";
 import { ErrorHeadingLabel } from "components/error-heading-label.slint";
+import { WindowBackground } from "components/window-background.slint";
 import { DangerCard, InfoCard, SuccessCard } from "components/cards.slint";
 import {
     CardPrimaryActionButton,
@@ -367,6 +368,20 @@ export component AppWindow inherits Window {
     min-width: 360px;
     min-height: Dimensions.window-min-height;
     background: Colors.background;
+
+    WindowBackground {
+        x: 0px;
+        y: 0px;
+        width: root.width;
+        height: root.height;
+        retracted: root.page == Page.provider-form
+            || root.page == Page.provider-discard-confirmation
+            || root.page == Page.run-direction
+            || root.page == Page.preflight
+            || root.page == Page.activity
+            || root.page == Page.activity-cancel
+            || root.page == Page.activity-result;
+    }
 
     Rectangle {
         x: 0px;

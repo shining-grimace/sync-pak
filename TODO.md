@@ -1,7 +1,10 @@
 
-- Result screen: the outcomes list files but not what happened with each file
+- Android: in light mode the OS status bar is white and unreadable
+- Android: the popup shown when opening via the widget has a poorly-themed button
+- Connections: the "Oldest to newest" / "Newest to oldest" button shouldn't have an arrow icon because it's potentially confusing
+- Sync: folder present remotely but not locally doesn't delete when that action is requested
+- Result screen: the outcomes list files but not what happened with each file (just says "Completed: filename")
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added
-- The Aus Post app has a nice example of a good design - image shown at the bottom of a list which is a symbol for the list items themselves - which matches what my original intention was for the connections list (a graph view which never got attention)
 - I ought to test handling of connection paths with spaces and special characters
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
 - Create branding logo
