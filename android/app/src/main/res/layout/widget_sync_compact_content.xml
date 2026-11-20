@@ -1,0 +1,43 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="6dp">
+
+    <ImageView
+        android:id="@+id/widget_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/syncpak_logo"
+        android:contentDescription="Open SyncPak" />
+
+    <TextView
+        android:id="@+id/widget_connection"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginHorizontal="4dp"
+        android:gravity="center_vertical"
+        android:text="Choose connection ▾"
+        android:textColor="@color/widget_button_foreground"
+        android:textSize="13sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:accessibilityLiveRegion="polite" />
+
+    <Button
+        android:id="@+id/widget_run"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:background="@drawable/widget_button"
+        android:paddingHorizontal="8dp"
+        android:text="Run"
+        android:textColor="@color/widget_button_foreground"
+        android:textSize="12sp"
+        android:textAllCaps="false" />
+
+</LinearLayout>

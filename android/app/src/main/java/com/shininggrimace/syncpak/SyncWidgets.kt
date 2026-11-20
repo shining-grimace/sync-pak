@@ -14,6 +14,7 @@ import java.util.concurrent.Executors
 /** Complete RemoteViews updates keep multiple widget instances in agreement. */
 object SyncWidgets {
     const val PREFERENCES = "sync_widgets"
+    private const val EXPANDED_MIN_HEIGHT_DP = 112
     private val executor = Executors.newSingleThreadExecutor()
     private val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     fun refresh(context: Context) {
@@ -34,15 +35,18 @@ object SyncWidgets {
         val manager = AppWidgetManager.getInstance(context)
         for (provider in providers()) {
             manager.getAppWidgetIds(ComponentName(context, provider)).forEach { id ->
-                manager.updateAppWidget(id, render(context, state, id))
+                val height = manager.getAppWidgetOptions(id)
+                    .getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+                val compact = height in 1 until EXPANDED_MIN_HEIGHT_DP
+                manager.updateAppWidget(id, render(context, state, id, compact))
             }
         }
     }
-    private fun render(context: Context, state: JSONObject, id: Int): RemoteViews {
+    private fun render(context: Context, state: JSONObject, id: Int, compact: Boolean): RemoteViews {
         val layout = when (WidgetAppearance.preference(context)) {
-            "light" -> R.layout.widget_sync_light
-            "dark" -> R.layout.widget_sync_dark
-            else -> R.layout.widget_sync
+            "light" -> if (compact) R.layout.widget_sync_compact_light else R.layout.widget_sync_light
+            "dark" -> if (compact) R.layout.widget_sync_compact_dark else R.layout.widget_sync_dark
+            else -> if (compact) R.layout.widget_sync_compact else R.layout.widget_sync
         }
         val views = RemoteViews(context.packageName, layout)
         val selected = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).getString(id.toString(), null)
@@ -59,16 +63,27 @@ object SyncWidgets {
         val name = connection?.getString("name")
             ?: if (state.has("error")) "Connections unavailable" else if (empty) "No connections" else "Choose connection"
         val running = "Running: ${active?.optString("name")}"
-        views.setTextViewText(R.id.widget_connection, "$name ▾")
-        views.setContentDescription(R.id.widget_connection, "Choose connection. $name")
+        val status = when {
+            runningElsewhere -> "Another connection is running"
+            runningHere -> running
+            else -> ""
+        }
+        val showCompactStatus = compact && busy
+        views.setTextViewText(R.id.widget_connection, if (showCompactStatus) status else "$name ▾")
+        views.setContentDescription(
+            R.id.widget_connection,
+            if (showCompactStatus) status else "Choose connection. $name"
+        )
+        val action = when {
+            empty -> "Open SyncPak"
+            connection != null && !verified -> "Verify in app"
+            else -> "Run"
+        }
         views.setTextViewText(
             R.id.widget_run,
-            when {
-                empty -> "Open SyncPak"
-                connection != null && !verified -> "Verify in app"
-                else -> "Run"
-            }
+            if (compact) action.substringBefore(' ') else action
         )
+        views.setContentDescription(R.id.widget_run, action)
         views.setViewVisibility(R.id.widget_run, if (busy) View.GONE else View.VISIBLE)
         views.setBoolean(
             R.id.widget_run,
@@ -81,28 +96,19 @@ object SyncWidgets {
             "setImageAlpha",
             if (runningElsewhere) 115 else 255
         )
-        val status = when {
-            runningElsewhere -> "Another connection is running"
-            runningHere -> running
-            else -> ""
+        if (!compact) {
+            views.setTextViewText(R.id.widget_status, status)
+            views.setViewVisibility(R.id.widget_status, if (busy) View.VISIBLE else View.GONE)
+            views.setViewVisibility(R.id.widget_disclaimer, if (busy) View.GONE else View.VISIBLE)
+            views.setBoolean(R.id.widget_app_name, "setEnabled", !runningElsewhere)
+            views.setBoolean(R.id.widget_disclaimer, "setEnabled", !runningElsewhere)
+            views.setTextViewText(
+                R.id.widget_disclaimer,
+                if (state.has("error")) "Connections unavailable. Open SyncPak to check settings."
+                else if (empty) "No connections available. Turn off Show Preview in a connection’s settings to use it here."
+                else ""
+            )
         }
-        views.setTextViewText(R.id.widget_status, status)
-        views.setViewVisibility(
-            R.id.widget_status,
-            if (status.isNotEmpty()) View.VISIBLE else View.GONE
-        )
-        views.setViewVisibility(
-            R.id.widget_disclaimer,
-            if (status.isEmpty()) View.VISIBLE else View.GONE
-        )
-        views.setBoolean(R.id.widget_app_name, "setEnabled", !runningElsewhere)
-        views.setBoolean(R.id.widget_disclaimer, "setEnabled", !runningElsewhere)
-        views.setTextViewText(
-            R.id.widget_disclaimer,
-            if (state.has("error")) "Connections unavailable. Open SyncPak to check settings."
-            else if (empty) "No connections available. Turn off Show Preview in a connection’s settings to use it here."
-            else ""
-        )
         val picker = Intent(context, WidgetConnectionPicker::class.java).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
             .setData(Uri.parse("syncpak://widget/$id/pick"))
         views.setOnClickPendingIntent(R.id.widget_connection, PendingIntent.getActivity(context, id, picker, flags))
