@@ -15,43 +15,45 @@ pub struct PlanSummary {
 }
 
 impl PlanSummary {
+    #[cfg(test)]
     pub fn additions(&self) -> usize {
         self.additions
     }
 
+    #[cfg(test)]
     pub fn overwrites(&self) -> usize {
         self.overwrites
     }
 
+    #[cfg(test)]
     pub fn deletions(&self) -> usize {
         self.deletions
     }
 
+    #[cfg(test)]
     pub fn skipped(&self) -> usize {
         self.skipped
-    }
-
-    pub fn unchanged(&self) -> usize {
-        self.unchanged
     }
 
     pub fn planned_file_changes(&self) -> usize {
         self.additions + self.overwrites + self.deletions + self.skipped
     }
 
-    #[cfg(test)]
     pub fn archives(&self) -> usize {
         self.archives
     }
 
+    #[cfg(test)]
     pub fn copy_byte_size(&self) -> u64 {
         self.copy_byte_size
     }
 
+    #[cfg(test)]
     pub fn overwrite_byte_size(&self) -> u64 {
         self.overwrite_byte_size
     }
 
+    #[cfg(test)]
     pub fn delete_byte_size(&self) -> u64 {
         self.delete_byte_size
     }

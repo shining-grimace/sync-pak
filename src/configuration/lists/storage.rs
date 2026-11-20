@@ -1,5 +1,5 @@
 use super::paths::{local_path, local_relative};
-use crate::configuration::{AppConfig, AppearancePreference, ConnectionConfig, ProviderConfig};
+use crate::configuration::{AppConfig, AppearancePreference, ConnectionConfig, ProviderConfig, SyncMode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -53,6 +53,9 @@ pub(crate) fn decode(bytes: &[u8]) -> Result<AppConfig, String> {
     local_path(&file.local_root, "")?;
     let mut connections = file.connections;
     for connection in &mut connections {
+        if connection.mode == SyncMode::Archive && connection.allow_upload {
+            connection.allow_download = false;
+        }
         if !absolute_local(&connection.local_path) {
             connection.local_path = local_path(&file.local_root, &connection.local_path)?;
         }

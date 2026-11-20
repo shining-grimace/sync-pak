@@ -90,14 +90,18 @@ fn automatic_work_is_independent_of_windows_and_protects_configuration_until_fin
 }
 
 #[test]
-fn unattended_mirror_and_archive_require_one_direction_but_preview_can_allow_both() {
+fn archive_requires_one_direction_and_mirror_requires_preview_for_both() {
     use crate::configuration::{SyncMode, validate_run_policy};
     for mode in [SyncMode::Mirror, SyncMode::Archive] {
         assert!(validate_run_policy(mode, true, true, false).is_err());
-        assert!(validate_run_policy(mode, true, true, true).is_ok());
+        assert_eq!(validate_run_policy(mode, true, true, true).is_ok(), mode == SyncMode::Mirror);
         assert!(validate_run_policy(mode, true, false, false).is_ok());
         assert!(validate_run_policy(mode, false, true, false).is_ok());
     }
+    assert_eq!(
+        validate_run_policy(SyncMode::Archive, true, true, true),
+        Err("Choose either Upload or Download for an archive connection, not both.".into()),
+    );
     assert!(validate_run_policy(SyncMode::AddOnly, true, true, false).is_ok());
     assert!(validate_run_policy(SyncMode::AddOnly, false, false, false).is_err());
 }

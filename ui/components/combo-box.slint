@@ -5,6 +5,8 @@ import { ComboBoxBase } from "combo-box-base.slint";
 
 export component ComboBox {
     in property <[string]> model <=> base.model;
+    in property <bool> require-selection <=> base.require-selection;
+    in property <string> placeholder-text;
     in property <bool> enabled <=> base.enabled;
     out property <bool> has-focus: base.has-focus;
     in-out property <int> current-index <=> base.current-index;
@@ -24,7 +26,9 @@ export component ComboBox {
     accessible-expanded: base.popup-has-focus;
     accessible-value: root.current-value;
     accessible-action-expand => {
-        popup.show();
+        if root.enabled && root.model.length > 0 {
+            popup.show();
+        }
     }
 
     base := ComboBoxBase {
@@ -61,7 +65,7 @@ export component ComboBox {
                 horizontal-stretch: 1;
                 horizontal-alignment: left;
                 vertical-alignment: center;
-                text: root.current-value;
+                text: root.current-index < 0 ? root.placeholder-text : root.current-value;
                 color: Palette.foreground;
                 overflow: elide;
                 accessible-role: none;

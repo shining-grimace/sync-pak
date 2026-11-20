@@ -31,7 +31,8 @@ import {
     ProviderRow,
     ConnectionRow,
     ActivityRow,
-    PreflightRow,
+    ArchiveReviewRow,
+    BucketDiscovery,
     MirrorReviewRow,
     AppNotification,
 } from "models.slint";
@@ -185,7 +186,7 @@ export component AppWindow inherits Window {
     in-out property <bool> connection-providers-load-failed: false;
     in-out property <string> connection-form-bucket;
     in-out property <[string]> connection-verified-buckets;
-    in-out property <bool> connection-bucket-list-checked: false;
+    in-out property <BucketDiscovery> connection-bucket-discovery;
     in-out property <string> connection-form-remote;
     in-out property <string> connection-form-local;
     in-out property <int> connection-form-mode;
@@ -212,7 +213,6 @@ export component AppWindow inherits Window {
     in-out property <string> run-remote-endpoint;
     in-out property <string> run-archive-upload-details;
     in-out property <string> run-archive-download-details;
-    in-out property <bool> run-allows-both-ways;
     in-out property <bool> run-allows-upload;
     in-out property <bool> run-allows-download;
     in-out property <int> run-direction: 0;
@@ -227,19 +227,13 @@ export component AppWindow inherits Window {
     in-out property <bool> preflight-failed: false;
     in-out property <string> preflight-failure-message;
     in-out property <int> preflight-generation: 0;
-    in-out property <string> preflight-additions;
-    in-out property <string> preflight-overwrites;
-    in-out property <string> preflight-deletions;
-    in-out property <string> preflight-skipped;
-    in-out property <string> preflight-unchanged;
-    in-out property <int> preflight-planned-file-changes: 0;
+    in-out property <[ArchiveReviewRow]> preflight-archive-rows;
+    in-out property <bool> preflight-archive-all-included: true;
+    callback set-archive-included(string, bool);
     in-out property <bool> preflight-has-planned-actions: false;
     in-out property <string> preflight-start-action;
     in-out property <bool> preflight-requires-mirror-confirmation: false;
     in-out property <bool> preflight-mirror-confirmed: false;
-    in-out property <int> preflight-item-filter: 0;
-    in-out property <[PreflightRow]> preflight-items;
-    in-out property <[PreflightRow]> preflight-visible-items;
     in-out property <string> pending-cancel-activity-id;
     in-out property <string> pending-cancel-activity-name;
     in-out property <int> pending-navigation-page: -1;
@@ -312,7 +306,6 @@ export component AppWindow inherits Window {
     callback set-run-download-selected(bool);
     callback begin-preflight();
     callback start-preflight-operation();
-    callback set-preflight-item-filter(int);
     callback cancel-run-direction();
     callback return-to-run-direction();
     callback set-connections-newest-first(bool);
@@ -693,7 +686,7 @@ export component AppWindow inherits Window {
                 provider-names: root.provider-names;
                 provider-buckets: root.provider-buckets;
                 connection-verified-buckets: root.connection-verified-buckets;
-                connection-bucket-list-checked: root.connection-bucket-list-checked;
+                connection-bucket-discovery: root.connection-bucket-discovery;
                 connection-providers-loading: root.connection-providers-loading;
                 connection-providers-load-failed: root.connection-providers-load-failed;
                 folder-picker-open: root.folder-picker-open;
@@ -863,7 +856,6 @@ export component AppWindow inherits Window {
                 remote-endpoint: root.run-remote-endpoint;
                 archive-upload-details: root.run-archive-upload-details;
                 archive-download-details: root.run-archive-download-details;
-                allows-both-ways: root.run-allows-both-ways;
                 allows-upload: root.run-allows-upload;
                 allows-download: root.run-allows-download;
                 upload-selected: root.run-upload-selected;
@@ -897,24 +889,17 @@ export component AppWindow inherits Window {
                 loading: root.preflight-loading;
                 failed: root.preflight-failed;
                 failure-message: root.preflight-failure-message;
-                additions: root.preflight-additions;
-                overwrites: root.preflight-overwrites;
-                deletions: root.preflight-deletions;
-                skipped: root.preflight-skipped;
-                unchanged: root.preflight-unchanged;
-                planned-file-changes: root.preflight-planned-file-changes;
+                archive-rows: root.preflight-archive-rows;
+                archive-all-included: root.preflight-archive-all-included;
+                set-archive-included(path, included) => {
+                    root.set-archive-included(path, included);
+                }
                 has-planned-actions: root.preflight-has-planned-actions;
                 start-action: root.preflight-start-action;
                 requires-mirror-confirmation: root.preflight-requires-mirror-confirmation;
                 mirror-confirmed <=> root.preflight-mirror-confirmed;
-                item-filter: root.preflight-item-filter;
-                items: root.preflight-items;
-                visible-items: root.preflight-visible-items;
                 start-operation => {
                     root.start-preflight-operation();
-                }
-                set-item-filter(filter) => {
-                    root.set-preflight-item-filter(filter);
                 }
                 return-to-direction => {
                     root.return-to-run-direction();

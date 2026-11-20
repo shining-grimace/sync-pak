@@ -1,9 +1,15 @@
-import { MirrorReviewRow } from "../models.slint";
+import { ArchiveReviewRow, MirrorReviewRow } from "../models.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ScrollArea } from "scroll-area.slint";
 import { ReconciliationSection } from "reconciliation-section.slint";
 
+import { ArchiveIncludedSection } from "archive-included-section.slint";
+
 export component ReconciliationReview inherits ScrollArea {
+    in property <bool> archive;
+    in property <[ArchiveReviewRow]> archive-rows;
+    in property <bool> archive-all-included;
+    callback set-archive-included(string, bool);
     in property <[MirrorReviewRow]> isolated;
     in property <[MirrorReviewRow]> conflicts;
     in property <[MirrorReviewRow]> synced;
@@ -14,7 +20,14 @@ export component ReconciliationReview inherits ScrollArea {
     vertical-scrollbar-policy: always-on;
     VerticalLayout {
         spacing: Dimensions.section-gap;
-        ReconciliationSection {
+        if root.archive: ArchiveIncludedSection {
+            rows: root.archive-rows;
+            all-included: root.archive-all-included;
+            set-included(path, included) => {
+                root.set-archive-included(path, included);
+            }
+        }
+        if !root.archive: ReconciliationSection {
             title: "Isolated Files";
             section: 0;
             rows: root.isolated;
@@ -24,7 +37,7 @@ export component ReconciliationReview inherits ScrollArea {
                 root.choose-file(path, section, action);
             }
         }
-        ReconciliationSection {
+        if !root.archive: ReconciliationSection {
             title: "Conflicting Versions";
             section: 1;
             rows: root.conflicts;
@@ -34,7 +47,7 @@ export component ReconciliationReview inherits ScrollArea {
                 root.choose-file(path, section, action);
             }
         }
-        ReconciliationSection {
+        if !root.archive: ReconciliationSection {
             title: "In Sync";
             section: 2;
             rows: root.synced;

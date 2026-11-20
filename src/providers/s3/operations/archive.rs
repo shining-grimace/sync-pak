@@ -1,5 +1,6 @@
 mod storage;
 mod timestamp;
+use std::future::Future;
 pub(super) use storage::ArchiveStorage;
 use storage::{create_download_archive, create_upload_archive};
 
@@ -27,118 +28,90 @@ pub(crate) async fn execute(
     observer: &dyn TransferProgressObserver,
     jitter_seed: u64,
 ) -> ExecutionResult {
-    let action =
-        preflight
-            .plan()
-            .actions()
-            .first()
-            .cloned()
-            .unwrap_or(PlannedAction::CreateArchive {
-                from: crate::preflight::planning::Endpoint::Source,
-                to: crate::preflight::planning::Endpoint::Destination,
-            });
-    let mut progress = ExecutionProgress::new([action.clone()]);
-    if cancellation.is_cancelled() {
-        return finish(
-            &mut progress,
-            observer,
-            ExecutionState::Cancelled,
-            0,
-            1,
-            None,
+    let Some(action) = preflight.plan().actions().first().cloned() else {
+        return ExecutionResult::failed_before_start_with_message(
+            "No archive action was reviewed.",
         );
-    }
-    observer.on_progress(&TransferProgress {
-        state: ExecutionState::Copying,
-        completed_actions: 0,
-        total_actions: 1,
-        current_action: Some(action),
-    });
+    };
     let root = LocalTransferRoot::from_config(&request.connection.local_path);
     let timestamp = timestamp::utc_timestamp();
+    let inventory = preflight.archive_source();
     let source = ArchiveSource {
         source_root: &root,
-        inventory: preflight.source(),
+        inventory: &inventory,
         staging_directory: storage.staging_directory,
         timestamp: &timestamp,
         connection_name: &request.connection.name,
     };
-    let success = match request.direction {
-        Direction::Upload => {
-            // The archive helpers each contain a deep generic async transfer stack.
-            // Keep that stack behind a heap boundary so this dispatcher future stays small.
-            Box::pin(create_upload_archive(
-                request,
-                source,
-                transfer,
-                cancellation,
-                storage.history,
-                jitter_seed,
-            ))
-            .await
+    let store = async {
+        match request.direction {
+            Direction::Upload => {
+                // The archive helpers each contain a deep generic async transfer stack.
+                // Keep that stack behind a heap boundary so this dispatcher future stays small.
+                Box::pin(create_upload_archive(
+                    request,
+                    source,
+                    transfer,
+                    cancellation,
+                    storage.history,
+                    jitter_seed,
+                ))
+                .await
+            }
+            Direction::Download => {
+                Box::pin(create_download_archive(
+                    source,
+                    transfer,
+                    cancellation,
+                    jitter_seed,
+                ))
+                .await
+            }
+            Direction::BothWays => unreachable!("archive preflight has exactly one direction"),
         }
-        Direction::Download => {
-            Box::pin(create_download_archive(
-                source,
-                transfer,
-                cancellation,
-                jitter_seed,
-            ))
-            .await
-        }
-        Direction::BothWays => false,
     };
-    if success {
-        progress.complete_current();
-        finish(
-            &mut progress,
-            observer,
-            ExecutionState::Completed,
-            1,
-            1,
-            None,
-        )
-    } else if cancellation.is_cancelled() {
-        finish(
-            &mut progress,
-            observer,
-            ExecutionState::Cancelled,
-            0,
-            1,
-            None,
-        )
-    } else {
-        let mut result = finish(&mut progress, observer, ExecutionState::Failed, 0, 1, None);
-        result.failure_message = Some(
-            "Archive creation or storage failed. A recoverable staging file was kept when possible."
-                .into(),
-        );
-        result
-    }
+    execute_action(action, cancellation, observer, store).await
 }
 
-fn finish(
-    progress: &mut ExecutionProgress,
+async fn execute_action(
+    action: PlannedAction,
+    cancellation: &CancellationToken,
     observer: &dyn TransferProgressObserver,
-    state: ExecutionState,
-    completed: usize,
-    total: usize,
-    action: Option<PlannedAction>,
+    store: impl Future<Output = bool>,
 ) -> ExecutionResult {
+    let mut progress = ExecutionProgress::new([action.clone()]);
+    let result = if cancellation.is_cancelled() {
+        progress.cancel()
+    } else {
+        progress.start_next();
+        observer.on_progress(&TransferProgress {
+            state: ExecutionState::Copying,
+            completed_actions: 0,
+            total_actions: 1,
+            current_action: Some(action),
+        });
+        if store.await {
+            progress.complete_current();
+            progress.finish()
+        } else if cancellation.is_cancelled() {
+            progress.cancel()
+        } else {
+            let mut result = progress.fail();
+            result.failure_message = Some(
+                "Archive creation or storage failed. A recoverable staging file was kept when possible."
+                    .into(),
+            );
+            result
+        }
+    };
     observer.on_progress(&TransferProgress {
-        state,
-        completed_actions: completed,
-        total_actions: total,
-        current_action: action,
+        state: result.state,
+        completed_actions: result.completed.len(),
+        total_actions: 1,
+        current_action: None,
     });
-    match state {
-        ExecutionState::Completed => {
-            std::mem::replace(progress, ExecutionProgress::new([])).finish()
-        }
-        ExecutionState::Cancelled => {
-            std::mem::replace(progress, ExecutionProgress::new([])).cancel()
-        }
-        ExecutionState::Failed => std::mem::replace(progress, ExecutionProgress::new([])).fail(),
-        _ => unreachable!(),
-    }
+    result
 }
+
+#[cfg(test)]
+mod tests;

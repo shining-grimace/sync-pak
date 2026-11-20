@@ -1,0 +1,78 @@
+import { ArchiveReviewRow } from "../models.slint";
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import { ReviewSectionHeader } from "review-section-header.slint";
+import { ExpandedSecondaryActionButton } from "action-buttons.slint";
+import { DescriptionLabel } from "description-label.slint";
+
+export component ArchiveIncludedSection inherits VerticalLayout {
+    in property <[ArchiveReviewRow]> rows;
+    in property <bool> all-included;
+    private property <bool> expanded: true;
+    callback set-included(string, bool);
+    spacing: Dimensions.element-gap;
+    vertical-stretch: 0;
+
+    ReviewSectionHeader {
+        title: "Included files";
+        file-count: root.rows.length;
+        expanded <=> root.expanded;
+    }
+
+    if root.expanded: VerticalLayout {
+        spacing: Dimensions.element-gap;
+        if root.rows.length > 0: DescriptionLabel {
+            text: "Apply to all files";
+        }
+        if root.rows.length > 0: ExpandedSecondaryActionButton {
+            text: root.all-included ? "Clear All" : "Select All";
+            accessible-label: root.all-included ? "Exclude all archive files" : "Include all archive files";
+            clicked => {
+                root.set-included("", !root.all-included);
+            }
+        }
+        if root.rows.length == 0: DescriptionLabel {
+            text: "There are no files in the source folder.";
+        }
+        if root.rows.length > 0: HorizontalLayout {
+            spacing: Dimensions.element-gap;
+            padding-left: Dimensions.element-gap;
+            padding-right: Dimensions.element-gap;
+            DescriptionLabel {
+                text: "File";
+            }
+            DescriptionLabel {
+                width: Dimensions.card-action-button-width;
+                horizontal-alignment: center;
+                text: "Action";
+            }
+        }
+        for row in root.rows: Rectangle {
+            background: Colors.background-trim;
+            min-height: file-row.preferred-height;
+            vertical-stretch: 0;
+            file-row := HorizontalLayout {
+                spacing: Dimensions.element-gap;
+                padding: Dimensions.element-gap;
+                DescriptionLabel {
+                    text: row.path;
+                }
+                ExpandedSecondaryActionButton {
+                    button-width: Dimensions.card-action-button-width;
+                    fixed-width: true;
+                    expand-width: false;
+                    text: row.included ? "Included" : "Include";
+                    accessible-label: "Include " + row.path;
+                    accessible-role: checkbox;
+                    accessible-checkable: true;
+                    accessible-checked: row.included;
+                    label-color: row.included ? Colors.success : Colors.primary-accent;
+                    outline-color: row.included ? Colors.success : Colors.primary-accent;
+                    clicked => {
+                        root.set-included(row.path, !row.included);
+                    }
+                }
+            }
+        }
+    }
+}

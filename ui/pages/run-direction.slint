@@ -14,7 +14,6 @@ export component RunDirectionPage inherits CenteredPageRoot {
     in property <string> remote-endpoint;
     in property <string> archive-upload-details;
     in property <string> archive-download-details;
-    in property <bool> allows-both-ways;
     in property <bool> allows-upload;
     in property <bool> allows-download;
     in property <bool> upload-selected;
@@ -49,9 +48,6 @@ export component RunDirectionPage inherits CenteredPageRoot {
         DescriptionLabel {
             text: root.archive-download-details;
         }
-    }
-    if !root.allows-both-ways: DescriptionLabel {
-        text: "This connection type uses one source and one destination per run. Choose Upload or Download; selecting one clears the other.";
     }
     HorizontalLayout {
         spacing: Dimensions.element-gap;

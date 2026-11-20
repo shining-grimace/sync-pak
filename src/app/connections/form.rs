@@ -1,3 +1,4 @@
+mod bucket_discovery;
 pub(crate) mod controller;
 pub(crate) mod data;
 mod draft;

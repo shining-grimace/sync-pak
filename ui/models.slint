@@ -1,3 +1,10 @@
+export enum BucketDiscovery {
+    unchecked,
+    loading,
+    listed,
+    failed,
+}
+
 export struct ProviderRow {
     id: string,
     name: string,
@@ -40,10 +47,9 @@ export struct ActivityRow {
     can-view-result: bool,
 }
 
-export struct PreflightRow {
+export struct ArchiveReviewRow {
     path: string,
-    status: string,
-    detail: string,
+    included: bool,
 }
 
 export struct AppNotification {

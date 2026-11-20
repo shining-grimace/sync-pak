@@ -1,3 +1,5 @@
+#[cfg(feature = "provider-s3")]
+use std::{borrow::Cow, collections::BTreeSet};
 use std::error::Error;
 use std::fmt;
 
@@ -9,7 +11,6 @@ mod last_run;
 pub mod mirror_selection;
 pub mod plan_summary;
 pub mod planning;
-pub mod review;
 pub mod reviewed_operation;
 
 use crate::configuration::SyncMode;
@@ -31,6 +32,8 @@ pub struct Preflight {
     comparison: Vec<ComparedEntry>,
     plan: TransferPlan,
     source: Inventory,
+    #[cfg(feature = "provider-s3")]
+    archive_exclusions: BTreeSet<RelativePath>,
     destination: Inventory,
     source_fingerprint: InventoryFingerprint,
     destination_fingerprint: InventoryFingerprint,
@@ -64,9 +67,29 @@ impl Preflight {
         &self.plan
     }
 
+    #[cfg(feature = "provider-s3")]
     /// Returns the immutable source inventory that was reviewed with this plan.
     pub fn source(&self) -> &Inventory {
         &self.source
+    }
+
+    #[cfg(feature = "provider-s3")]
+    pub(crate) fn with_archive_exclusions(&self, exclusions: BTreeSet<RelativePath>) -> Self {
+        let mut selected = self.clone();
+        selected.archive_exclusions = exclusions;
+        selected
+    }
+
+    /// Selects ZIP inputs while retaining the full source for stale-review checks.
+    #[cfg(feature = "provider-s3")]
+    pub(crate) fn archive_source(&self) -> Cow<'_, Inventory> {
+        if self.archive_exclusions.is_empty() {
+            Cow::Borrowed(&self.source)
+        } else {
+            let mut inventory = self.source.clone();
+            inventory.retain(|entry| !self.archive_exclusions.contains(&entry.path));
+            Cow::Owned(inventory)
+        }
     }
 
     #[cfg(test)]
@@ -106,6 +129,8 @@ pub fn preflight(
         comparison,
         plan,
         source: source.clone(),
+        #[cfg(feature = "provider-s3")]
+        archive_exclusions: BTreeSet::new(),
         destination: destination.clone(),
         source_fingerprint: fingerprint(source),
         destination_fingerprint: fingerprint(destination),

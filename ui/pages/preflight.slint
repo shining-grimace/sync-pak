@@ -2,9 +2,8 @@ import { MeasuredVerticalRegion } from "../components/measured-vertical-region.s
 import { CheckBox } from "std-widgets.slint";
 import { Dimensions } from "../dimensions.slint";
 import { Colors } from "../colors.slint";
-import { PreflightChanges } from "../components/preflight-changes.slint";
 import { ReconciliationReview } from "../components/reconciliation-review.slint";
-import { MirrorReviewRow, PreflightRow } from "../models.slint";
+import { ArchiveReviewRow, MirrorReviewRow } from "../models.slint";
 import { CenteredPageRoot } from "../components/page-layouts.slint";
 import { PageHeader } from "../components/page-header.slint";
 import { DescriptionLabel } from "../components/description-label.slint";
@@ -30,21 +29,14 @@ export component PreflightPage inherits CenteredPageRoot {
     in property <bool> loading;
     in property <bool> failed;
     in property <string> failure-message;
-    in property <string> additions;
-    in property <string> overwrites;
-    in property <string> deletions;
-    in property <string> skipped;
-    in property <string> unchanged;
-    in property <int> planned-file-changes;
+    in property <[ArchiveReviewRow]> archive-rows;
+    in property <bool> archive-all-included;
+    callback set-archive-included(string, bool);
     in property <bool> has-planned-actions;
     in property <string> start-action;
     in property <bool> requires-mirror-confirmation;
     in-out property <bool> mirror-confirmed;
-    in property <int> item-filter;
-    in property <[PreflightRow]> items;
-    in property <[PreflightRow]> visible-items;
     callback start-operation();
-    callback set-item-filter(int);
     callback return-to-direction();
     callback begin-preflight();
     fill-height: true;
@@ -52,7 +44,7 @@ export component PreflightPage inherits CenteredPageRoot {
     PageHeader {
         title: root.failed ? "This Operation Cannot Start" : (root.loading ? "Checking Before Anything Changes" : (root.connection-mode == "Mirror" ? "Review Mirror Changes" : "Ready to Start"));
         back-label: "Back to direction selection for " + root.connection-name;
-        focus-back: root.loading || root.failed || root.items.length == 0;
+        focus-back: root.loading || root.failed || (root.archive-rows.length == 0 && root.isolated.length == 0 && root.conflicts.length == 0 && root.synced.length == 0);
         back => {
             root.return-to-direction();
         }
@@ -110,16 +102,13 @@ export component PreflightPage inherits CenteredPageRoot {
             if !root.has-planned-actions && root.selection-error == "": SuccessLabel {
                 text: "No actions are selected for this run.";
             }
-            if root.connection-mode == "Archive": PreflightChanges {
-                items: root.items;
-                visible-items: root.visible-items;
-                item-filter: root.item-filter;
-                planned-file-changes: root.planned-file-changes;
-                set-item-filter(filter) => {
-                    root.set-item-filter(filter);
+            ReconciliationReview {
+                archive: root.connection-mode == "Archive";
+                archive-rows: root.archive-rows;
+                archive-all-included: root.archive-all-included;
+                set-archive-included(path, included) => {
+                    root.set-archive-included(path, included);
                 }
-            }
-            if root.connection-mode != "Archive": ReconciliationReview {
                 isolated: root.isolated;
                 conflicts: root.conflicts;
                 synced: root.synced;

@@ -181,10 +181,11 @@ pub fn validate_run_policy(
     if !upload && !download {
         return Err("Choose at least one allowed sync direction.".into());
     }
-    if !show_preview && mode != SyncMode::AddOnly && upload && download {
-        return Err(
-            "Choose one allowed direction for Mirror or Archive when preview is disabled.".into(),
-        );
+    if mode == SyncMode::Archive && upload && download {
+        return Err("Choose either Upload or Download for an archive connection, not both.".into());
+    }
+    if mode == SyncMode::Mirror && !show_preview && upload && download {
+        return Err("Choose one allowed direction for Mirror when preview is disabled.".into());
     }
     Ok(())
 }

@@ -2,6 +2,7 @@ import { MirrorReviewRow } from "../models.slint";
 import { Colors } from "../colors.slint";
 import { Dimensions } from "../dimensions.slint";
 import { ExpandedSecondaryActionButton } from "action-buttons.slint";
+import { ReviewSectionHeader } from "review-section-header.slint";
 import { DescriptionLabel } from "description-label.slint";
 
 export component ReconciliationSection inherits VerticalLayout {
@@ -15,14 +16,12 @@ export component ReconciliationSection inherits VerticalLayout {
     spacing: Dimensions.element-gap;
     vertical-stretch: 0;
 
-    ExpandedSecondaryActionButton {
-        text: (root.expanded ? "▾ " : "▸ ") + root.title + " (" + root.rows.length + ")";
+    ReviewSectionHeader {
+        title: root.title;
+        file-count: root.rows.length;
+        expanded <=> root.expanded;
         label-color: root.section == 2 ? Colors.success : Colors.danger;
         outline-color: root.section == 2 ? Colors.success : Colors.danger;
-        accessible-label: root.title + ", " + root.rows.length + " files, " + (root.expanded ? "expanded" : "collapsed");
-        clicked => {
-            root.expanded = !root.expanded;
-        }
     }
     if root.expanded: VerticalLayout {
         spacing: Dimensions.element-gap;

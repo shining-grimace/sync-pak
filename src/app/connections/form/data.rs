@@ -5,7 +5,7 @@ use std::rc::Rc;
 use slint::{ModelRc, SharedString, VecModel};
 
 use crate::{
-    AppWindow,
+    AppWindow, BucketDiscovery,
     configuration::{ConfigStore, ConnectionConfig, ProviderConfig, SyncMode},
 };
 
@@ -23,7 +23,7 @@ pub(crate) fn reset(window: &AppWindow) {
     window.set_connection_form_allow_download(true);
     window.set_connection_form_show_preview(true);
     window.set_connection_form_retention("1".into());
-    set_verified_buckets(window, None);
+    reset_bucket_discovery(window);
     window.set_connection_providers_loading(false);
     mark_clean(window);
 }
@@ -83,7 +83,7 @@ pub(crate) fn populate(
             .to_string()
             .into(),
     );
-    set_verified_buckets(window, None);
+    reset_bucket_discovery(window);
     window.set_connection_providers_loading(false);
     mark_clean(window);
     window.set_status_message(SharedString::default());
@@ -158,10 +158,19 @@ pub(crate) fn set_provider_bucket(window: &AppWindow, providers: &[ProviderConfi
     }
 }
 
-pub(crate) fn set_verified_buckets(window: &AppWindow, buckets: Option<Vec<String>>) {
-    let listed = buckets.is_some();
-    let buckets = buckets.unwrap_or_default();
-    window.set_connection_bucket_list_checked(listed);
+pub(super) fn reset_bucket_discovery(window: &AppWindow) {
+    window.set_connection_provider_generation(
+        window.get_connection_provider_generation().wrapping_add(1),
+    );
+    set_bucket_discovery(window, BucketDiscovery::Unchecked, Vec::new());
+}
+
+pub(super) fn set_bucket_discovery(
+    window: &AppWindow,
+    discovery: BucketDiscovery,
+    buckets: Vec<String>,
+) {
+    window.set_connection_bucket_discovery(discovery);
     window.set_connection_verified_buckets(ModelRc::new(Rc::new(VecModel::from_iter(
         buckets.into_iter().map(SharedString::from),
     ))));

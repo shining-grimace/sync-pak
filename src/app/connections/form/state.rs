@@ -5,10 +5,11 @@ use slint::{ModelRc, SharedString, VecModel};
 use crate::{
     AppWindow,
     app::connections::form::data::{
-        mark_clean, populate, reset, set_provider_bucket, set_provider_models, set_verified_buckets,
+        mark_clean, populate, reset, reset_bucket_discovery, set_provider_bucket,
+        set_provider_models,
     },
     app::diagnostics::{self as diagnostics_controller, SharedDiagnosticLog},
-    app::providers::bucket_cache::{self as provider_bucket_cache, ProviderBucketCache},
+    app::providers::bucket_cache::ProviderBucketCache,
     configuration::ConfigStore,
 };
 
@@ -42,7 +43,7 @@ pub(crate) fn select_provider(
         Ok(config) => {
             super::transport::reset(&window);
             window.set_connection_form_bucket(Default::default());
-            apply_provider_selection(&window, &config.providers, buckets, index);
+            apply_provider_selection(&window, configuration, &config.providers, buckets, index);
         }
         Err(_) => provider_load_error(&window, diagnostics),
     }
@@ -93,7 +94,12 @@ pub(crate) fn show_edit(
     match result {
         Ok((providers, connection, provider_index)) => {
             populate(&window, &providers, connection, provider_index);
-            set_cached_buckets(&window, &providers, buckets, provider_index as i32);
+            super::bucket_discovery::load(
+                &window,
+                configuration,
+                providers.get(provider_index),
+                buckets,
+            );
         }
         Err(_) => diagnostics_controller::present(
             &window,
@@ -118,6 +124,7 @@ fn load_providers(
             set_provider_models(&window, &config.providers);
             apply_provider_selection(
                 &window,
+                configuration,
                 &config.providers,
                 buckets,
                 window.get_connection_form_provider(),
@@ -129,27 +136,18 @@ fn load_providers(
     window.set_connection_providers_loading(false);
 }
 
-pub(crate) fn set_cached_buckets(
-    window: &AppWindow,
-    providers: &[crate::configuration::ProviderConfig],
-    buckets: &ProviderBucketCache,
-    index: i32,
-) {
-    let cached = usize::try_from(index)
-        .ok()
-        .and_then(|index| providers.get(index))
-        .and_then(|provider| provider_bucket_cache::buckets(buckets, provider.id.as_str()));
-    set_verified_buckets(window, cached);
-}
-
 fn apply_provider_selection(
     window: &AppWindow,
+    configuration: &ConfigStore,
     providers: &[crate::configuration::ProviderConfig],
     buckets: &ProviderBucketCache,
     index: i32,
 ) {
     set_provider_bucket(window, providers, index);
-    set_cached_buckets(window, providers, buckets, index);
+    let provider = usize::try_from(index)
+        .ok()
+        .and_then(|index| providers.get(index));
+    super::bucket_discovery::load(window, configuration, provider, buckets);
 }
 
 fn provider_load_error(window: &AppWindow, diagnostics: &SharedDiagnosticLog) {
@@ -158,7 +156,7 @@ fn provider_load_error(window: &AppWindow, diagnostics: &SharedDiagnosticLog) {
     window.set_connection_form_provider(-1);
     window.set_provider_names(ModelRc::new(Rc::new(VecModel::default())));
     window.set_provider_buckets(ModelRc::new(Rc::new(VecModel::default())));
-    set_verified_buckets(window, None);
+    reset_bucket_discovery(window);
     diagnostics_controller::present(
         window,
         diagnostics,

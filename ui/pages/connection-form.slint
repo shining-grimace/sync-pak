@@ -1,3 +1,4 @@
+import { BucketDiscovery } from "../models.slint";
 import { DangerCard } from "../components/cards.slint";
 import { TransportFields } from "../components/transport-fields.slint";
 import { Dimensions } from "../dimensions.slint";
@@ -29,7 +30,10 @@ export component ConnectionFormPage inherits Rectangle {
     in property <[string]> provider-names;
     in property <[string]> provider-buckets;
     in property <[string]> connection-verified-buckets;
-    in property <bool> connection-bucket-list-checked;
+    in property <BucketDiscovery> connection-bucket-discovery;
+    private property <bool> custom-bucket: root.connection-form-provider >= 0
+        && root.connection-form-provider < root.provider-buckets.length
+        && root.provider-buckets[root.connection-form-provider] == "";
     in property <bool> connection-providers-loading;
     in property <bool> connection-providers-load-failed;
     in property <bool> folder-picker-open;
@@ -162,7 +166,7 @@ export component ConnectionFormPage inherits Rectangle {
                     if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] != "" && root.connection-form-bucket != root.provider-buckets[connection-provider.current-index]: DescriptionLabel {
                         text: "This existing connection keeps its saved bucket. Saving this form will not automatically adopt the provider’s current fixed bucket.";
                     }
-                    if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length > 0: VerticalLayout {
+                    if root.custom-bucket: VerticalLayout {
                         spacing: Dimensions.element-gap;
                         DescriptionLabel {
                             text: "Discovered buckets";
@@ -171,20 +175,36 @@ export component ConnectionFormPage inherits Rectangle {
                         ComboBox {
                             accessible-label: "Discovered buckets";
                             model: root.connection-verified-buckets;
-                            enabled: !root.connection-verifying && !root.folder-picker-open;
-                            selected => {
-                                root.connection-form-bucket = root.connection-verified-buckets[self.current-index];
+                            require-selection: false;
+                            current-index: -1;
+                            placeholder-text: root.connection-bucket-discovery == BucketDiscovery.loading
+                                ? "Discovering buckets…"
+                                : "Choose a discovered bucket";
+                            enabled: !root.connection-verifying && !root.folder-picker-open
+                                && root.connection-verified-buckets.length > 0;
+                            selected(bucket) => {
+                                root.connection-form-bucket = bucket;
                             }
                         }
-                    }
-                    if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && root.connection-bucket-list-checked && root.connection-verified-buckets.length == 0: DescriptionLabel {
-                        text: "No bucket names were discovered. Enter the bucket name manually and verify this connection to check its access.";
-                    }
-                    if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "" && !root.connection-bucket-list-checked: DescriptionLabel {
-                        text: "Enter the bucket name manually, or verify this provider to select buckets visible to its current credentials.";
-                    }
-                    if connection-provider.current-index >= 0 && connection-provider.current-index < root.provider-buckets.length && root.provider-buckets[connection-provider.current-index] == "": DescriptionLabel {
-                        text: "You can also enter a bucket manually. Listed buckets may have different access permissions.";
+
+                        if root.connection-bucket-discovery == BucketDiscovery.loading: DescriptionLabel {
+                            accessible-live-region: polite;
+                            text: "Looking for buckets visible to the saved credentials.";
+                        }
+                        if root.connection-bucket-discovery == BucketDiscovery.listed
+                            && root.connection-verified-buckets.length == 0: DescriptionLabel {
+                            text: "No bucket names were discovered. Enter the bucket name manually.";
+                        }
+                        if root.connection-bucket-discovery == BucketDiscovery.failed: DescriptionLabel {
+                            accessible-live-region: polite;
+                            text: "Could not discover buckets with the saved credentials. You can still enter the bucket name manually.";
+                        }
+                        if root.connection-bucket-discovery == BucketDiscovery.unchecked: DescriptionLabel {
+                            text: "Enter the bucket name manually, or verify this provider to discover available buckets.";
+                        }
+                        if root.connection-verified-buckets.length > 0: DescriptionLabel {
+                            text: "You can also enter a bucket manually. Listed buckets may have different access permissions.";
+                        }
                     }
                     SectionHeadingLabel {
                         text: "Connection settings";
@@ -300,7 +320,7 @@ export component ConnectionFormPage inherits Rectangle {
                     text: "Allowed directions";
                 }
                 DescriptionLabel {
-                    text: root.connection-form-show-preview ? (root.connection-form-mode != 2 ? "Choose which directions can be selected when this connection runs." : "Allow upload, download, or both. Choose one allowed direction for each run.") : (root.connection-form-mode == 0 ? "Sync runs automatically in the allowed directions." : "Choose one direction for automatic sync.");
+                    text: root.connection-form-mode == 2 ? "Choose either Upload or Download for this archive connection." : (root.connection-form-show-preview ? "Choose which directions can be selected when this connection runs." : (root.connection-form-mode == 0 ? "Sync runs automatically in the allowed directions." : "Choose one direction for automatic sync."));
                 }
                 HorizontalLayout {
                     spacing: Dimensions.element-gap;

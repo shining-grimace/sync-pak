@@ -1,0 +1,16 @@
+import { Colors } from "../colors.slint";
+import { ExpandedSecondaryActionButton } from "action-buttons.slint";
+
+export component ReviewSectionHeader inherits ExpandedSecondaryActionButton {
+    in property <string> title;
+    in property <int> file-count;
+    in-out property <bool> expanded;
+
+    text: (root.expanded ? "▾ " : "▸ ") + root.title + " (" + root.file-count + ")";
+    accessible-label: root.title + ", " + root.file-count + " files, " + (root.expanded ? "expanded" : "collapsed");
+    label-color: Colors.primary-accent;
+    outline-color: Colors.primary-accent;
+    clicked => {
+        root.expanded = !root.expanded;
+    }
+}

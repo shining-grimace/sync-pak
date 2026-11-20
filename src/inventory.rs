@@ -84,6 +84,11 @@ impl Inventory {
         self.entries.values()
     }
 
+    #[cfg(feature = "provider-s3")]
+    pub(crate) fn retain(&mut self, mut keep: impl FnMut(&InventoryEntry) -> bool) {
+        self.entries.retain(|_, entry| keep(entry));
+    }
+
     pub fn get(&self, path: &RelativePath) -> Option<&InventoryEntry> {
         self.entries.get(path)
     }

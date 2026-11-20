@@ -1,19 +1,21 @@
 use super::ExecutionState;
+use crate::preflight::planning::PlannedAction;
 
 impl super::ExecutionResult {
     pub fn summary(&self) -> String {
         let result = self;
         match result.state {
             ExecutionState::Completed => {
+                if matches!(
+                    result.completed.as_slice(),
+                    [PlannedAction::CreateArchive { .. }]
+                ) {
+                    return "Archive created.".into();
+                }
                 let skipped = result
                     .completed
                     .iter()
-                    .filter(|action| {
-                        matches!(
-                            action,
-                            crate::preflight::planning::PlannedAction::SkipChanged { .. }
-                        )
-                    })
+                    .filter(|action| matches!(action, PlannedAction::SkipChanged { .. }))
                     .count();
                 let completed = result.completed.len() - skipped;
                 let items = if completed == 1 { "item" } else { "items" };

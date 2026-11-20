@@ -45,8 +45,13 @@ impl ListDocument {
         if bytes.len() > MAX_DOCUMENT_BYTES {
             return Err("Connection list exceeds 4 MiB.".into());
         }
-        let document: Self = serde_json::from_slice(bytes)
+        let mut document: Self = serde_json::from_slice(bytes)
             .map_err(|e| format!("Invalid connection list JSON: {e}"))?;
+        for connection in &mut document.connections {
+            if connection.mode == SyncMode::Archive && connection.allow_upload {
+                connection.allow_download = false;
+            }
+        }
         document.validate()?;
         Ok(document)
     }

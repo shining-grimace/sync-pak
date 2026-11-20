@@ -86,3 +86,48 @@ fn cancelled_staging_removes_its_partial_archive() {
     assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
     std::fs::remove_dir_all(&root).unwrap();
 }
+
+#[cfg(feature = "provider-s3")]
+#[test]
+fn reviewed_exclusions_are_applied_to_the_zip_without_changing_stale_checks() {
+    use crate::{
+        configuration::SyncMode,
+        preflight::{CaseSensitivity, planning::Direction, preflight},
+    };
+
+    let root = std::env::temp_dir().join(format!("sync-pak-archive-{}", uuid::Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    std::fs::write(root.join("keep.txt"), "include").unwrap();
+    std::fs::write(root.join("omit.txt"), "exclude").unwrap();
+    let inventory = Inventory::new([
+        entry("keep.txt", InventoryEntryKind::File),
+        entry("omit.txt", InventoryEntryKind::File),
+    ])
+    .unwrap();
+    let empty = Inventory::default();
+    let reviewed = preflight(
+        SyncMode::Archive,
+        Direction::Upload,
+        &inventory,
+        CaseSensitivity::Sensitive,
+        &empty,
+        CaseSensitivity::Sensitive,
+    )
+    .unwrap();
+    let selected = reviewed.with_archive_exclusions([RelativePath::new("omit.txt").unwrap()].into());
+    assert!(selected.same_inventory_as(&reviewed));
+    assert_eq!(reviewed.archive_source().entries().count(), 2);
+
+    let destination = root.join("archive.zip");
+    create_archive(
+        &LocalTransferRoot::new(&root),
+        &selected.archive_source(),
+        &destination,
+    )
+    .unwrap();
+    let mut archive = zip::ZipArchive::new(std::fs::File::open(destination).unwrap()).unwrap();
+    assert!(archive.by_name("keep.txt").is_ok());
+    assert!(archive.by_name("omit.txt").is_err());
+    drop(archive);
+    std::fs::remove_dir_all(root).unwrap();
+}

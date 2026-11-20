@@ -118,3 +118,26 @@ fn preview_policy_is_required_and_round_trips_in_settings_and_portable_lists() {
     let document = super::document(&config);
     assert!(!document.connections[0].show_preview);
 }
+
+#[test]
+fn existing_archives_with_both_directions_load_as_upload_only() {
+    use crate::configuration::SyncMode;
+
+    let mut config = super::config();
+    let connection = &mut config.connections[0];
+    connection.mode = SyncMode::Archive;
+    connection.allow_download = true;
+    connection.keep_last_archives = Some(3);
+    assert!(config.validate().is_err());
+
+    // The old version wrote both allowed directions to settings and exported lists.
+    let loaded = decode(&encode(&config).unwrap()).unwrap();
+    assert!(loaded.connections[0].allow_upload);
+    assert!(!loaded.connections[0].allow_download);
+
+    let mut old_list = super::document(&loaded);
+    old_list.connections[0].allow_download = true;
+    let parsed = super::ListDocument::parse(&serde_json::to_vec(&old_list).unwrap()).unwrap();
+    assert!(parsed.connections[0].allow_upload);
+    assert!(!parsed.connections[0].allow_download);
+}
