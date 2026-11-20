@@ -1,6 +1,4 @@
 
-- The "View Summary" button on cards in the Connections view can have truncated text on Android; it should (on mobile and on desktop alike) be moved to the top-right of the card, as wide as needed to fit its text (with sensible padding), using the same sizing as the "New" button atop the Connections form but with no background and an outline and text colour of the theme primary accent, and the label changed to "Last Run"
-- The labels in connection cards on the Connections list should not separate "This device:" and the local path on separate lines, and similarly for "In <provider name>:" and its path
 - Saving an archive connection with both upload and download directions should be disallowed
 - When creating a connection for a B2 provider, there's a bucket name setting and a drop-down selection for a list of discovered buckets available; the drop-down shouldn't be pre-selected to any bucket initially
 - Running an archive connection shows a confusing sentence "this connection type uses one source and one destination per run" which should be removed

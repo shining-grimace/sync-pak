@@ -14,6 +14,7 @@ component ActionButton inherits Rectangle {
     in property <bool> fixed-width: false;
     in property <bool> expand-width: false;
     in property <bool> focus-on-init: false;
+    out property <length> label-width: button-label.preferred-width;
     callback clicked();
 
     min-width: root.fixed-width ? root.button-width : 0px;
@@ -35,7 +36,7 @@ component ActionButton inherits Rectangle {
     border-radius: Dimensions.button-border-radius;
     opacity: !root.enabled ? 0.45 : (button-touch.pressed ? 0.7 : (button-touch.has-hover ? 0.85 : 1));
 
-    Text {
+    button-label := Text {
         width: parent.width;
         text: root.text;
         color: root.label-color;

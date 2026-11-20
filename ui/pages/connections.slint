@@ -204,11 +204,28 @@ export component ConnectionsPage inherits CenteredPageRoot {
                     accessible-label: connection.name + ". " + connection.detail + (connection.verification != "" ? ". " + connection.verification : "") + ". This device: " + connection.local-path + ". In " + connection.provider-name + ": " + connection.remote-location;
                     baseline-height: root.width < Dimensions.medium-layout-breakpoint ? 210px : 82px;
                     VerticalLayout {
-                    spacing: Dimensions.card-element-spacing;
-                    VerticalLayout {
                         spacing: Dimensions.card-element-spacing;
-                        SectionHeadingLabel {
-                            text: connection.name;
+                        HorizontalLayout {
+                            spacing: Dimensions.card-element-spacing;
+                            SectionHeadingLabel {
+                                text: connection.name;
+                            }
+
+                            if connection.result-id != "": VerticalLayout {
+                                alignment: start;
+                                horizontal-stretch: 0;
+                                NewActionButton {
+                                    button-width: max(Dimensions.new-action-button-width, self.label-width + 2 * Dimensions.card-padding);
+                                    fill-color: transparent;
+                                    label-color: Colors.primary-accent;
+                                    text: "Last Run";
+                                    accessible-label: "View last run for " + connection.name;
+                                    enabled: !root.connection-list-verifying;
+                                    clicked => {
+                                        root.show-activity-result(connection.result-id);
+                                    }
+                                }
+                            }
                         }
 
                         DescriptionLabel {
@@ -218,121 +235,79 @@ export component ConnectionsPage inherits CenteredPageRoot {
 
                         if root.width < Dimensions.medium-layout-breakpoint: VerticalLayout {
                             spacing: Dimensions.card-element-spacing;
-                            VerticalLayout {
-                                spacing: Dimensions.card-element-spacing;
-                                DescriptionLabel {
-                                    text: "This device:";
-                                }
-
-                                DescriptionLabel {
-                                    text: connection.local-path;
-                                }
+                            DescriptionLabel {
+                                text: "This device: " + connection.local-path;
                             }
 
-                            VerticalLayout {
-                                spacing: Dimensions.card-element-spacing;
-                                DescriptionLabel {
-                                    text: "In " + connection.provider-name + ":";
-                                }
-
-                                DescriptionLabel {
-                                    text: connection.remote-location;
-                                }
+                            DescriptionLabel {
+                                text: "In " + connection.provider-name + ": " + connection.remote-location;
                             }
                         }
                         if root.width >= Dimensions.medium-layout-breakpoint: HorizontalLayout {
                             spacing: Dimensions.card-element-spacing;
-                            VerticalLayout {
-                                horizontal-stretch: 1;
-                                spacing: Dimensions.card-element-spacing;
-                                DescriptionLabel {
-                                    text: "This device:";
-                                }
-
-                                DescriptionLabel {
-                                    text: connection.local-path;
-                                }
+                            DescriptionLabel {
+                                preferred-width: 0px;
+                                text: "This device: " + connection.local-path;
                             }
 
                             SectionHeadingLabel {
                                 accessible-label: connection.mode == 2 ? "Archive destination" : "Connected folders";
+                                horizontal-stretch: 0;
                                 text: connection.mode == 2 ? "▣" : "⇄";
                             }
 
-                            VerticalLayout {
-                                horizontal-stretch: 1;
-                                spacing: Dimensions.card-element-spacing;
-                                DescriptionLabel {
-                                    text: "In " + connection.provider-name + ":";
-                                }
-
-                                DescriptionLabel {
-                                    text: connection.remote-location;
-                                }
+                            DescriptionLabel {
+                                preferred-width: 0px;
+                                text: "In " + connection.provider-name + ": " + connection.remote-location;
                             }
                         }
                         if connection.mode == 2: DescriptionLabel {
                             text: "Keeps the last " + connection.archive-retention + " archives";
                         }
-                    }
 
-                    HorizontalLayout {
-                        spacing: Dimensions.card-element-spacing;
                         DescriptionLabel {
-                            width: (parent.width - Dimensions.card-element-spacing) * 0.75;
                             text: connection.last-run;
                         }
 
                         HorizontalLayout {
-                            width: (parent.width - Dimensions.card-element-spacing) * 0.25;
-                            if connection.result-id != "": CompactCardSecondaryActionButton {
-                                text: "View Summary";
-                                accessible-label: "View latest sync summary for " + connection.name;
-                                enabled: !root.connection-list-verifying;
+                            padding-top: Dimensions.card-element-spacing;
+                            spacing: Dimensions.card-element-spacing;
+                            CompactCardPrimaryActionButton {
+                                accessible-label: "Run connection " + connection.name;
+                                text: connection.running ? "Running..." : "Run";
+                                enabled: !root.operation-busy && !connection.running;
                                 clicked => {
-                                    root.show-activity-result(connection.result-id);
+                                    root.request-run-connection(connection.id);
+                                }
+                            }
+
+                            CompactCardSecondaryActionButton {
+                                accessible-label: "Verify connection " + connection.name;
+                                text: connection.verifying ? "Verifying…" : "Verify";
+                                enabled: !connection.verifying && !connection.running;
+                                clicked => {
+                                    root.verify-saved-connection(connection.id);
+                                }
+                            }
+
+                            CompactCardSecondaryActionButton {
+                                accessible-label: "Edit connection " + connection.name;
+                                text: "Edit";
+                                enabled: !connection.running;
+                                clicked => {
+                                    root.request-connection-edit(connection.id);
+                                }
+                            }
+
+                            CompactCardSecondaryActionButton {
+                                accessible-label: "Delete connection " + connection.name;
+                                text: "Delete";
+                                enabled: !connection.running;
+                                clicked => {
+                                    root.request-connection-delete(connection.id);
                                 }
                             }
                         }
-                    }
-                    HorizontalLayout {
-                        spacing: Dimensions.card-element-spacing;
-                        CompactCardPrimaryActionButton {
-                            accessible-label: "Run connection " + connection.name;
-                            text: connection.running ? "Running..." : "Run";
-                            enabled: !root.operation-busy && !connection.running;
-                            clicked => {
-                                root.request-run-connection(connection.id);
-                            }
-                        }
-
-                        CompactCardSecondaryActionButton {
-                            accessible-label: "Verify connection " + connection.name;
-                            text: connection.verifying ? "Verifying…" : "Verify";
-                            enabled: !connection.verifying && !connection.running;
-                            clicked => {
-                                root.verify-saved-connection(connection.id);
-                            }
-                        }
-
-                        CompactCardSecondaryActionButton {
-                            accessible-label: "Edit connection " + connection.name;
-                            text: "Edit";
-                            enabled: !connection.running;
-                            clicked => {
-                                root.request-connection-edit(connection.id);
-                            }
-                        }
-
-                        CompactCardSecondaryActionButton {
-                            accessible-label: "Delete connection " + connection.name;
-                            text: "Delete";
-                            enabled: !connection.running;
-                            clicked => {
-                                root.request-connection-delete(connection.id);
-                            }
-                        }
-                    }
                     }
                 }
             }
