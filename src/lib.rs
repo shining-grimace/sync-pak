@@ -44,8 +44,8 @@ pub fn run() -> Result<(), slint::PlatformError> {
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub fn android_main(app: slint::android::AndroidApp) {
-    if let Err(error) = platform::android::advertising::initialize(app.clone()) {
-        eprintln!("Android advertising initialization failed: {error}");
+    if let Err(error) = platform::android::activity::initialize(app.clone()) {
+        eprintln!("Android activity initialization failed: {error}");
         return;
     }
     if let Err(error) = platform::android::folder_picker::initialize(app.clone()) {

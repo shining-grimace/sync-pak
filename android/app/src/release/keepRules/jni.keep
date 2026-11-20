@@ -3,6 +3,7 @@
     native <methods>;
     public int pickConnectionList(java.lang.String);
     public void pickFolder();
+    public void setStatusBarDarkMode(boolean);
     public void setAdvertisingPlacement(int);
     public void requestAdvertisingConsent();
     public void showAdvertisingPrivacyChoices();

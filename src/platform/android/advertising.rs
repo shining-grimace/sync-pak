@@ -1,22 +1,13 @@
 use std::sync::Mutex;
 
-use jni::{
-    EnvUnowned, JavaVM, jni_sig, jni_str,
-    objects::{Global, JClass, JObject},
-};
-use slint::{ComponentHandle, android::AndroidApp};
+use jni::{EnvUnowned, jni_sig, jni_str, objects::JClass};
+use slint::ComponentHandle;
 
-use crate::{AppWindow, capabilities::CapabilityError};
+use crate::AppWindow;
 
-static ANDROID_APP: Mutex<Option<AndroidApp>> = Mutex::new(None);
+use super::activity::with_activity;
+
 static WINDOW: Mutex<Option<slint::Weak<AppWindow>>> = Mutex::new(None);
-
-pub fn initialize(app: AndroidApp) -> Result<(), CapabilityError> {
-    *ANDROID_APP
-        .lock()
-        .map_err(|_| CapabilityError::Unexpected)? = Some(app);
-    Ok(())
-}
 
 pub fn configure(window: &AppWindow) {
     if let Ok(mut stored) = WINDOW.lock() {
@@ -100,24 +91,6 @@ fn update_privacy_choices_available() {
     })
     .unwrap_or(false);
     update_window(Some(available), None);
-}
-
-fn with_activity<T>(
-    action: impl FnOnce(&mut jni::Env<'_>, &JObject<'_>) -> jni::errors::Result<T>,
-) -> Result<T, CapabilityError> {
-    let app = ANDROID_APP
-        .lock()
-        .map_err(|_| CapabilityError::Unexpected)?
-        .clone()
-        .ok_or(CapabilityError::Unavailable)?;
-    let vm = JavaVM::singleton().map_err(|_| CapabilityError::Unavailable)?;
-    vm.attach_current_thread(|env| {
-        let raw_activity = app.activity_as_ptr() as jni::sys::jobject;
-        // SAFETY: AndroidApp guarantees this unowned global reference while `app` is alive.
-        let activity = unsafe { env.as_cast_raw::<Global<JObject>>(&raw_activity)? };
-        action(env, &activity)
-    })
-    .map_err(|_| CapabilityError::Unavailable)
 }
 
 fn update_window(privacy_choices_available: Option<bool>, banner_inset: Option<i32>) {

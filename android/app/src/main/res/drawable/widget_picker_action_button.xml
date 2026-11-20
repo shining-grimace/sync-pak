@@ -1,0 +1,10 @@
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?android:attr/colorControlHighlight">
+    <!-- Match the primary action button in ui/components/action-buttons.slint. -->
+    <item>
+        <shape>
+            <solid android:color="?android:attr/colorAccent" />
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+</ripple>

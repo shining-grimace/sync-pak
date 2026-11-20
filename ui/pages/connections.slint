@@ -163,7 +163,7 @@ export component ConnectionsPage inherits CenteredPageRoot {
                 button-width: 200px;
                 max-width: 200px;
                 horizontal-stretch: 0;
-                text: root.connections-newest-first ? "Newest to oldest ↓" : "Oldest to newest ↑";
+                text: root.connections-newest-first ? "Newest to oldest" : "Oldest to newest";
                 accessible-label: root.connections-newest-first ? "Sorted newest to oldest. Switch to oldest to newest" : "Sorted oldest to newest. Switch to newest to oldest";
                 clicked => {
                     root.set-connections-newest-first(!root.connections-newest-first);

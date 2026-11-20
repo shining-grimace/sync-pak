@@ -1,3 +1,7 @@
+mod results;
+
+use self::results::result_details;
+
 use crate::{
     configuration::SyncMode,
     operations::queue::{QueueEntry, QueueState},
@@ -25,7 +29,10 @@ impl ActivityPresentation {
             String::new,
             crate::operations::execution::ExecutionResult::summary,
         );
-        let result_details = entry.result.as_ref().map_or_else(Vec::new, result_details);
+        let result_details = entry
+            .result
+            .as_ref()
+            .map_or_else(Vec::new, |result| result_details(result, &entry.snapshot));
         Self {
             operation_id: entry.operation_id.to_string(),
             title: entry.snapshot.connection_name.clone(),
@@ -85,55 +92,6 @@ fn status(state: QueueState) -> &'static str {
         QueueState::Completed => "Completed",
         QueueState::Failed => "Failed",
         QueueState::Cancelled => "Cancelled",
-    }
-}
-
-fn result_details(result: &crate::operations::execution::ExecutionResult) -> Vec<String> {
-    let mut details = Vec::new();
-    let skipped = result
-        .completed
-        .iter()
-        .filter(|action| is_skip(action))
-        .count();
-    details.extend(action_details(
-        "Completed",
-        result.completed.iter().filter(|action| !is_skip(action)),
-    ));
-    details.extend(action_details("Incomplete", &result.incomplete));
-    details.extend(action_details("Not started", &result.not_started));
-    if skipped > 0 {
-        let files = if skipped == 1 { "file" } else { "files" };
-        details.push(format!("{skipped} {files} skipped"));
-    }
-    details
-}
-
-fn is_skip(action: &crate::preflight::planning::PlannedAction) -> bool {
-    matches!(
-        action,
-        crate::preflight::planning::PlannedAction::SkipChanged { .. }
-    )
-}
-
-fn action_details<'a>(
-    status: &str,
-    actions: impl IntoIterator<Item = &'a crate::preflight::planning::PlannedAction>,
-) -> Vec<String> {
-    actions
-        .into_iter()
-        .map(|action| format!("{status}: {}", action_name(action)))
-        .collect()
-}
-
-fn action_name(action: &crate::preflight::planning::PlannedAction) -> String {
-    use crate::preflight::planning::PlannedAction;
-
-    match action {
-        PlannedAction::Copy { path, .. }
-        | PlannedAction::Overwrite { path, .. }
-        | PlannedAction::Delete { path, .. }
-        | PlannedAction::SkipChanged { path } => path.as_str().into(),
-        PlannedAction::CreateArchive { .. } => "archive".into(),
     }
 }
 

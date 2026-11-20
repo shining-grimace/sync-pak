@@ -4,8 +4,13 @@ import android.Manifest
 import android.app.NativeActivity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.os.Build
+import android.view.WindowInsetsController
 
 class SyncPakActivity : NativeActivity() {
+    private var darkStatusBarBackground = false
+
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         SyncResultNavigation.accept(intent)
@@ -34,12 +39,39 @@ class SyncPakActivity : NativeActivity() {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        updateStatusBarAppearance()
         adsController.windowAvailable()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) adsController.windowAvailable()
+        if (hasFocus) {
+            updateStatusBarAppearance()
+            adsController.windowAvailable()
+        }
+    }
+
+    fun setStatusBarDarkMode(darkMode: Boolean) {
+        runOnUiThread {
+            darkStatusBarBackground = darkMode
+            updateStatusBarAppearance()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun updateStatusBarAppearance() {
+        if (Build.VERSION.SDK_INT < 35) {
+            window.statusBarColor = if (darkStatusBarBackground) {
+                Color.rgb(12, 12, 13)
+            } else {
+                getColor(R.color.widget_light_background)
+            }
+        }
+        val lightStatusBar = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        window.insetsController?.setSystemBarsAppearance(
+            if (darkStatusBarBackground) 0 else lightStatusBar,
+            lightStatusBar,
+        )
     }
 
     override fun onDestroy() {

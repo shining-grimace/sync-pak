@@ -75,7 +75,7 @@ pub(crate) fn summarize(actions: &[PlannedAction], comparison: &[ComparedEntry])
                 summary.overwrites += 1;
                 summary.overwrite_byte_size += byte_size(path, *from, comparison);
             }
-            PlannedAction::Delete { path, from } => {
+            PlannedAction::Delete { path, from, .. } => {
                 summary.deletions += 1;
                 summary.delete_byte_size += byte_size(path, *from, comparison);
             }

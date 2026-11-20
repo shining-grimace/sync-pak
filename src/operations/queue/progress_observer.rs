@@ -90,6 +90,7 @@ mod tests {
             current_action: Some(PlannedAction::Delete {
                 path: RelativePath::new("old/photo.jpg").unwrap(),
                 from: Endpoint::Destination,
+                directory: false,
             }),
         });
 

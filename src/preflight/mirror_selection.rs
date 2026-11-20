@@ -124,7 +124,7 @@ impl MirrorSelection {
             let Some(choice) = self.choice(&entry.path) else {
                 continue;
             };
-            let (local, _) = self.sides(entry);
+            let (local, remote) = self.sides(entry);
             let local_endpoint = if self.original.plan().direction() == Direction::Download {
                 Endpoint::Destination
             } else {
@@ -149,7 +149,12 @@ impl MirrorSelection {
                     from,
                     to: opposite(from),
                 },
-                MirrorChoice::Delete => PlannedAction::Delete { path, from },
+                MirrorChoice::Delete => {
+                    let Some(existing) = local.or(remote) else {
+                        continue;
+                    };
+                    PlannedAction::delete(existing, from)
+                }
                 _ => PlannedAction::Overwrite {
                     path,
                     from,

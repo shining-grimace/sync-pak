@@ -31,6 +31,7 @@ pub trait MirrorTransfer {
         &self,
         direction: Direction,
         path: &RelativePath,
+        directory: bool,
         cancellation: &CancellationToken,
     ) -> impl Future<Output = Result<(), Self::Error>>;
 }
@@ -144,14 +145,18 @@ async fn apply_action<T: MirrorTransfer>(
                 .await
                 .map_err(MirrorActionError::Transfer)
         }
-        PlannedAction::Delete { path, from } => {
+        PlannedAction::Delete {
+            path,
+            from,
+            directory,
+        } => {
             let action_direction = if *from == Endpoint::Destination {
                 forward
             } else {
                 reverse
             };
             transfer
-                .delete(action_direction, path, cancellation)
+                .delete(action_direction, path, *directory, cancellation)
                 .await
                 .map_err(MirrorActionError::Transfer)
         }

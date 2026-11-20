@@ -31,7 +31,13 @@ fn apply(window: &AppWindow, preference: AppearancePreference) {
     if let Some(dark_mode) = resolved_dark_mode(window, preference) {
         window.set_resolved_dark_mode(dark_mode);
     }
+    apply_resolved(window);
+}
+
+fn apply_resolved(window: &AppWindow) {
     window.invoke_apply_appearance_preference();
+    #[cfg(target_os = "android")]
+    crate::platform::android::activity::set_status_bar_dark_mode(window.get_resolved_dark_mode());
 }
 
 fn refresh_system_appearance(
@@ -48,7 +54,7 @@ fn refresh_system_appearance(
         };
         if let Some(dark_mode) = resolved_dark_mode(&window, AppearancePreference::System) {
             window.set_resolved_dark_mode(dark_mode);
-            window.invoke_apply_appearance_preference();
+            apply_resolved(&window);
         } else if attempts_remaining > 1 {
             refresh_system_appearance(weak, AppearancePreference::System, attempts_remaining - 1);
         }

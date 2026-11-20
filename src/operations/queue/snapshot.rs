@@ -11,6 +11,8 @@ pub struct ActivitySnapshot {
     pub direction: Direction,
     pub local_endpoint: String,
     pub remote_endpoint: String,
+    #[serde(default)]
+    pub provider_name: Option<String>,
 }
 
 impl ActivitySnapshot {
@@ -30,6 +32,7 @@ impl ActivitySnapshot {
                 &connection.bucket,
                 &connection.remote_path,
             ),
+            provider_name: Some(provider_name),
         }
     }
 }

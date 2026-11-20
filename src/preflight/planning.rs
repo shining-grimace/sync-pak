@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt;
 
 use crate::configuration::SyncMode;
-use crate::inventory::RelativePath;
+use crate::inventory::{InventoryEntry, InventoryEntryKind, RelativePath};
 use crate::preflight::comparison::{ComparedEntry, EntryStatus};
 use crate::preflight::plan_summary::summarize;
 
@@ -55,6 +55,8 @@ pub enum PlannedAction {
     Delete {
         path: RelativePath,
         from: Endpoint,
+        #[serde(default)]
+        directory: bool,
     },
     SkipChanged {
         path: RelativePath,
@@ -66,6 +68,14 @@ pub enum PlannedAction {
 }
 
 impl PlannedAction {
+    pub(super) fn delete(entry: &InventoryEntry, from: Endpoint) -> Self {
+        Self::Delete {
+            path: entry.path.clone(),
+            from,
+            directory: entry.kind == InventoryEntryKind::Directory,
+        }
+    }
+
     pub fn is_destructive(&self) -> bool {
         matches!(self, Self::Overwrite { .. } | Self::Delete { .. })
     }
@@ -151,13 +161,12 @@ fn plan_mirror(comparison: &[ComparedEntry]) -> Vec<PlannedAction> {
     comparison
         .iter()
         .filter_map(
-            |entry| match (entry.source.is_some(), entry.destination.is_some()) {
-                (true, false) => Some(copy(&entry.path, Endpoint::Source, Endpoint::Destination)),
-                (false, true) => Some(PlannedAction::Delete {
-                    path: entry.path.clone(),
-                    from: Endpoint::Destination,
-                }),
-                (true, true) if entry.status == EntryStatus::Changed => {
+            |entry| match (&entry.source, &entry.destination) {
+                (Some(_), None) => Some(copy(&entry.path, Endpoint::Source, Endpoint::Destination)),
+                (None, Some(destination)) => {
+                    Some(PlannedAction::delete(destination, Endpoint::Destination))
+                }
+                (Some(_), Some(_)) if entry.status == EntryStatus::Changed => {
                     Some(PlannedAction::Overwrite {
                         path: entry.path.clone(),
                         from: Endpoint::Source,

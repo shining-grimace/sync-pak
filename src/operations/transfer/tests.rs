@@ -34,6 +34,7 @@ fn action(path: &str, delete: bool) -> PlannedAction {
         PlannedAction::Delete {
             path: RelativePath::new(path).unwrap(),
             from: Endpoint::Destination,
+            directory: false,
         }
     } else {
         PlannedAction::Copy {

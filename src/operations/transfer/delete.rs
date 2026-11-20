@@ -4,7 +4,7 @@ use crate::{
     inventory::RelativePath,
     operations::cancellation::CancellationToken,
     operations::retry::{RetryContext, RetrySleeper},
-    operations::transfer::paths::{LocalTransferRoot, RemoteTransferPrefix},
+    operations::transfer::paths::LocalTransferRoot,
     providers::capabilities::{ObjectDeleter, ProviderError},
 };
 
@@ -25,7 +25,7 @@ pub fn delete_local(
 pub async fn delete_remote<T: ObjectDeleter>(
     provider: &T,
     bucket: &str,
-    prefix: &RemoteTransferPrefix,
+    prefix: &super::paths::RemoteTransferPrefix,
     relative: &RelativePath,
     cancellation: &CancellationToken,
 ) -> Result<(), TransferDeleteError> {
@@ -42,8 +42,7 @@ pub async fn delete_remote<T: ObjectDeleter>(
 pub async fn delete_remote_with_retry_and_cancellation<T: ObjectDeleter, S: RetrySleeper>(
     provider: &T,
     bucket: &str,
-    prefix: &RemoteTransferPrefix,
-    relative: &RelativePath,
+    key: &str,
     retry: &RetryContext<'_, S>,
 ) -> Result<(), TransferDeleteError> {
     let RetryContext {
@@ -59,7 +58,7 @@ pub async fn delete_remote_with_retry_and_cancellation<T: ObjectDeleter, S: Retr
             .check()
             .map_err(|_| TransferDeleteError::Cancelled)?;
         completed_attempts += 1;
-        match provider.delete(bucket, &prefix.resolve(relative)).await {
+        match provider.delete(bucket, key).await {
             Ok(()) => return Ok(()),
             Err(error) => {
                 match policy.delay_after_failure(completed_attempts, &error, None, jitter_seed) {

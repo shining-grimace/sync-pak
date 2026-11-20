@@ -65,6 +65,7 @@ fn mirror_plans_overwrites_and_deletes_for_confirmation() {
     assert!(plan.actions().contains(&PlannedAction::Delete {
         path: RelativePath::new("destination-only").unwrap(),
         from: Endpoint::Destination,
+        directory: false,
     }));
     assert!(plan.actions().iter().any(PlannedAction::is_destructive));
     assert!(plan.requires_confirmation());

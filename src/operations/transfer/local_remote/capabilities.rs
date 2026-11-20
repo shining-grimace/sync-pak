@@ -29,8 +29,7 @@ impl<P: ObjectDeleter, S: RetrySleeper> ArchiveRemover for LocalRemoteTransfer<'
         delete_remote_with_retry_and_cancellation(
             self.provider,
             self.bucket,
-            &self.remote_prefix,
-            &path,
+            &self.remote_prefix.resolve(&path),
             &RetryContext {
                 policy: self.retry_policy,
                 sleeper: self.sleeper,
@@ -144,23 +143,29 @@ impl<
         &self,
         direction: Direction,
         path: &crate::inventory::RelativePath,
+        directory: bool,
         cancellation: &CancellationToken,
     ) -> Result<(), Self::Error> {
         let result = match direction {
-            Direction::Upload => delete_remote_with_retry_and_cancellation(
-                self.provider,
-                self.bucket,
-                &self.remote_prefix,
-                path,
-                &RetryContext {
-                    policy: self.retry_policy,
-                    sleeper: self.sleeper,
-                    jitter_seed: 0,
-                    cancellation,
-                },
-            )
-            .await
-            .map_err(LocalRemoteTransferError::Delete),
+            Direction::Upload => {
+                let mut key = self.remote_prefix.resolve(path);
+                if directory {
+                    key.push('/');
+                }
+                delete_remote_with_retry_and_cancellation(
+                    self.provider,
+                    self.bucket,
+                    &key,
+                    &RetryContext {
+                        policy: self.retry_policy,
+                        sleeper: self.sleeper,
+                        jitter_seed: 0,
+                        cancellation,
+                    },
+                )
+                .await
+                .map_err(LocalRemoteTransferError::Delete)
+            }
             Direction::Download => delete_local(&self.local_root, path, cancellation)
                 .map_err(LocalRemoteTransferError::Delete),
             Direction::BothWays => Err(LocalRemoteTransferError::UnsupportedDirection),

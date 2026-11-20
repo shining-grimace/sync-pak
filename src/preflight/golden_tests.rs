@@ -95,6 +95,7 @@ fn mirror_golden_plan_overwrites_differences_then_deletes_destination_only_paths
             PlannedAction::Delete {
                 path: RelativePath::new("destination-only").unwrap(),
                 from: Endpoint::Destination,
+                directory: false,
             },
             PlannedAction::Copy {
                 path: RelativePath::new("empty").unwrap(),

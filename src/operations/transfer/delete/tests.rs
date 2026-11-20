@@ -113,8 +113,7 @@ fn retries_an_unavailable_remote_delete() {
     block_on(delete_remote_with_retry_and_cancellation(
         &provider,
         "bucket",
-        &RemoteTransferPrefix::new("sync").unwrap(),
-        &RelativePath::new("file").unwrap(),
+        "sync/file",
         &RetryContext {
             policy: &RetryPolicy::default(),
             sleeper: &sleeper,

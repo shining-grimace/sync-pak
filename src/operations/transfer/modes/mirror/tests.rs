@@ -42,6 +42,7 @@ impl MirrorTransfer for Transfer {
         &self,
         _: Direction,
         path: &RelativePath,
+        _: bool,
         _: &CancellationToken,
     ) -> Result<(), Self::Error> {
         self.0

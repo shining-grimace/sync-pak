@@ -108,7 +108,7 @@ fn presents_each_terminal_action_with_its_outcome() {
 
     let presentation = ActivityPresentation::from_entry(queue.entries().next().unwrap());
 
-    assert_eq!(presentation.result_details, ["Completed: photos/new.jpg"]);
+    assert_eq!(presentation.result_details, ["Copied on R2: photos/new.jpg"]);
     assert!(presentation.can_view_result);
 }
 
@@ -153,8 +153,8 @@ fn skipped_files_are_counted_once_at_the_end_of_results() {
     let result = progress.finish();
     assert_eq!(result.summary(), "1 item completed · 2 files skipped");
     assert_eq!(
-        super::result_details(&result),
-        ["Completed: new.jpg", "2 files skipped"]
+        super::result_details(&result, &snapshot()),
+        ["Copied on R2: new.jpg", "2 files skipped"]
     );
 }
 
@@ -167,7 +167,7 @@ fn an_all_skipped_run_shows_a_summary_without_file_rows() {
     assert!(progress.complete_current());
     let result = progress.finish();
     assert_eq!(result.summary(), "0 items completed · 1 file skipped");
-    assert_eq!(super::result_details(&result), ["1 file skipped"]);
+    assert_eq!(super::result_details(&result, &snapshot()), ["1 file skipped"]);
 }
 
 #[test]
@@ -181,11 +181,46 @@ fn uncompleted_skip_actions_are_not_counted_as_skipped_files() {
     assert!(progress.complete_current());
     progress.start_next();
     assert_eq!(
-        super::result_details(&progress.fail()),
+        super::result_details(&progress.fail(), &snapshot()),
         [
-            "Incomplete: failed",
-            "Not started: pending",
+            "Incomplete · Skip changed file: failed",
+            "Not started · Skip changed file: pending",
             "1 file skipped",
+        ]
+    );
+}
+
+#[test]
+fn names_the_affected_side_for_bidirectional_results() {
+    let mut snapshot = snapshot();
+    snapshot.direction = Direction::BothWays;
+    let mut progress = ExecutionProgress::new([
+        PlannedAction::Delete {
+            path: RelativePath::new("old.jpg").unwrap(),
+            from: Endpoint::Source,
+            directory: false,
+        },
+        PlannedAction::Overwrite {
+            path: RelativePath::new("edited.jpg").unwrap(),
+            from: Endpoint::Source,
+            to: Endpoint::Destination,
+        },
+        PlannedAction::Copy {
+            path: RelativePath::new("remote.jpg").unwrap(),
+            from: Endpoint::Destination,
+            to: Endpoint::Source,
+        },
+    ]);
+    while progress.start_next().is_some() {
+        assert!(progress.complete_current());
+    }
+
+    assert_eq!(
+        super::result_details(&progress.finish(), &snapshot),
+        [
+            "Deleted locally: old.jpg",
+            "Overwritten on R2: edited.jpg",
+            "Copied locally: remote.jpg",
         ]
     );
 }

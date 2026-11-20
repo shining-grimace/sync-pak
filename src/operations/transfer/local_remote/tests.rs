@@ -540,3 +540,5 @@ fn cancelled_archive_retention_does_not_start_a_remote_delete() {
     assert!(provider.deletes.lock().unwrap().is_empty());
     std::fs::remove_dir_all(&root).unwrap();
 }
+
+mod remote_delete;
