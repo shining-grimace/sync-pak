@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.rustls.platform.verifier)
     implementation(libs.google.ads)
     implementation(libs.google.ump)
+    implementation(libs.google.billing)
 }
 
 configurations.configureEach {
@@ -29,7 +30,7 @@ android {
         applicationId = "com.shininggrimace.syncpak"
         minSdk = 30
         targetSdk = 37
-        versionCode = 1
+        versionCode = 2
         versionName = "0.1.0"
 
         ndk {
