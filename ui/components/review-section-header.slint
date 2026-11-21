@@ -5,8 +5,16 @@ export component ReviewSectionHeader inherits ExpandedSecondaryActionButton {
     in property <string> title;
     in property <int> file-count;
     in-out property <bool> expanded;
+    private property <angle> disclosure-angle: root.expanded ? 90deg : 0deg;
 
-    text: (root.expanded ? "▾ " : "▸ ") + root.title + " (" + root.file-count + ")";
+    animate disclosure-angle {
+        duration: 160ms;
+        easing: ease-in-out;
+    }
+
+    text: root.title + " (" + root.file-count + ")";
+    leading-icon: @image-url("../../assets/images/disclosure-triangle.svg");
+    leading-icon-rotation: root.disclosure-angle;
     accessible-label: root.title + ", " + root.file-count + " files, " + (root.expanded ? "expanded" : "collapsed");
     label-color: Colors.primary-accent;
     outline-color: Colors.primary-accent;

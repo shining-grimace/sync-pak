@@ -8,6 +8,10 @@ component ActionButton inherits Rectangle {
     in property <brush> fill-color;
     in property <brush> outline-color;
     in property <brush> label-color;
+    in property <image> leading-icon;
+    in property <angle> leading-icon-rotation;
+    private property <length> icon-size: 12px;
+    private property <bool> has-leading-icon: root.leading-icon.width > 0;
     in property <length> label-text-size: Dimensions.text-size-description;
     in property <length> button-width;
     in property <length> button-height: Dimensions.control-height;
@@ -37,7 +41,12 @@ component ActionButton inherits Rectangle {
     opacity: !root.enabled ? 0.45 : (button-touch.pressed ? 0.7 : (button-touch.has-hover ? 0.85 : 1));
 
     button-label := Text {
-        width: parent.width;
+        width: root.has-leading-icon
+            ? min(root.label-width, max(0px, parent.width - root.icon-size - 3 * Dimensions.element-gap))
+            : parent.width;
+        x: root.has-leading-icon
+            ? (parent.width + root.icon-size + Dimensions.element-gap - self.width) / 2
+            : 0px;
         text: root.text;
         color: root.label-color;
         font-size: root.label-text-size;
@@ -45,6 +54,17 @@ component ActionButton inherits Rectangle {
         horizontal-alignment: center;
         vertical-alignment: center;
         overflow: elide;
+    }
+
+    if root.has-leading-icon: Image {
+        source: root.leading-icon;
+        width: root.icon-size;
+        height: root.icon-size;
+        x: button-label.x - Dimensions.element-gap - self.width;
+        y: (parent.height - self.height) / 2;
+        colorize: root.label-color;
+        transform-rotation: root.leading-icon-rotation;
+        accessible-role: none;
     }
 
     button-touch := TouchArea {

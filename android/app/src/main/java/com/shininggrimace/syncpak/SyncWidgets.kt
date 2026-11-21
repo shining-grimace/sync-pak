@@ -69,9 +69,16 @@ object SyncWidgets {
             else -> ""
         }
         val showCompactStatus = compact && busy
-        views.setTextViewText(R.id.widget_connection, if (showCompactStatus) status else "$name ▾")
-        views.setContentDescription(
+        views.setTextViewText(R.id.widget_connection, if (showCompactStatus) status else name)
+        views.setTextViewCompoundDrawablesRelative(
             R.id.widget_connection,
+            0,
+            0,
+            if (showCompactStatus) 0 else R.drawable.ic_disclosure_triangle,
+            0
+        )
+        views.setContentDescription(
+            R.id.widget_connection_picker,
             if (showCompactStatus) status else "Choose connection. $name"
         )
         val action = when {
@@ -91,6 +98,7 @@ object SyncWidgets {
             !busy && (empty || connection != null)
         )
         views.setBoolean(R.id.widget_connection, "setEnabled", !busy)
+        views.setBoolean(R.id.widget_connection_picker, "setEnabled", !busy)
         views.setInt(
             R.id.widget_icon,
             "setImageAlpha",
@@ -111,7 +119,7 @@ object SyncWidgets {
         }
         val picker = Intent(context, WidgetConnectionPicker::class.java).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
             .setData(Uri.parse("syncpak://widget/$id/pick"))
-        views.setOnClickPendingIntent(R.id.widget_connection, PendingIntent.getActivity(context, id, picker, flags))
+        views.setOnClickPendingIntent(R.id.widget_connection_picker, PendingIntent.getActivity(context, id, picker, flags))
         val open = PendingIntent.getActivity(context, id, Intent(context, SyncPakActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP).setData(Uri.parse("syncpak://widget/$id/open")), flags)
         views.setOnClickPendingIntent(R.id.widget_icon, open)
         if (empty || !verified) {

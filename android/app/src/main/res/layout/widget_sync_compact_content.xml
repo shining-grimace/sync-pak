@@ -13,19 +13,32 @@
         android:src="@drawable/syncpak_logo"
         android:contentDescription="Open SyncPak" />
 
-    <TextView
-        android:id="@+id/widget_connection"
+    <FrameLayout
+        android:id="@+id/widget_connection_picker"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_marginHorizontal="4dp"
-        android:gravity="center_vertical"
-        android:text="Choose connection ▾"
-        android:textColor="@color/widget_button_foreground"
-        android:textSize="13sp"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:accessibilityLiveRegion="polite" />
+        android:accessibilityLiveRegion="polite"
+        android:contentDescription="Choose connection">
+
+        <TextView
+            android:id="@+id/widget_connection"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:gravity="center_vertical"
+            android:text="Choose connection"
+            android:drawableEnd="@drawable/ic_disclosure_triangle"
+            android:drawablePadding="8dp"
+            android:drawableTint="@color/widget_button_foreground"
+            android:textColor="@color/widget_button_foreground"
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:importantForAccessibility="no" />
+
+    </FrameLayout>
 
     <Button
         android:id="@+id/widget_run"
