@@ -44,7 +44,6 @@ pub(crate) fn invalidate_verification(window: &AppWindow) {
             .wrapping_add(1),
     );
     window.set_connection_verifying(false);
-    window.set_connection_save_after_verification(false);
 }
 
 pub(crate) fn is_current_verification(expected: i32, current: i32) -> bool {

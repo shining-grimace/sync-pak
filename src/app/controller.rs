@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use slint::ComponentHandle;
 
-use crate::{AppWindow, app::diagnostics as diagnostics_controller};
+use crate::{AppWindow, ConfirmationKind, app::diagnostics as diagnostics_controller};
 
 pub(crate) fn initialize(window: &AppWindow) {
     window.set_is_android(cfg!(target_os = "android"));
@@ -103,7 +103,7 @@ fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
 fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
     let Some(window) = weak.upgrade() else { return };
     if window.get_provider_storage_busy()
-        || navigation_is_blocked(window.get_page())
+        || window.get_confirmation() != ConfirmationKind::None
         || (window.get_page() == 3
             && (window.global::<crate::SettingsState>().get_mode() != 0
                 || window.global::<crate::SettingsState>().get_busy()))
@@ -123,10 +123,6 @@ fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
     }
 }
 
-fn navigation_is_blocked(page: i32) -> bool {
-    matches!(page, 6 | 7 | 12 | 14 | 15)
-}
-
 fn configuration_unavailable_allows(page: i32) -> bool {
     matches!(page, 0 | 3 | 18)
 }
@@ -135,7 +131,7 @@ fn complete_pending_navigation(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
     let page = match window.get_pending_navigation_page() {
         page if page >= 0 => page,
-        _ if window.get_page() == 2 || window.get_page() == 15 => 1,
+        _ if window.get_page() == 2 => 1,
         _ => 4,
     };
     window.set_pending_navigation_page(-1);
@@ -155,17 +151,7 @@ fn navigate(window: &AppWindow, page: i32) {
 
 #[cfg(test)]
 mod tests {
-    use super::{configuration_unavailable_allows, navigation_is_blocked};
-
-    #[test]
-    fn navigation_cannot_bypass_confirmation_pages() {
-        for page in [6, 7, 12, 14, 15] {
-            assert!(navigation_is_blocked(page));
-        }
-        for page in [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 16, 17] {
-            assert!(!navigation_is_blocked(page));
-        }
-    }
+    use super::configuration_unavailable_allows;
 
     #[test]
     fn unavailable_configuration_only_allows_welcome_and_privacy() {

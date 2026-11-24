@@ -1,17 +1,25 @@
-use std::{rc::Rc, sync::mpsc, time::Duration};
+use std::{cell::RefCell, rc::Rc};
 
 use slint::{ComponentHandle, SharedString};
 
 use crate::{
-    AppWindow,
-    app::connections::form::data::{begin_verification, draft, is_current_verification},
+    AppWindow, ConfirmationKind,
+    app::connections::form::data::is_current_verification,
     app::connections::verification_worker::{
         self as connection_verification_worker, VerificationFailure,
     },
     app::diagnostics::{self as diagnostics_controller, SharedDiagnosticLog},
-    app::form_validation,
-    configuration::ConfigStore,
+    configuration::{ConfigStore, ConnectionDraft},
 };
+
+use super::{draft::validated_form_draft, save, verification_task};
+
+struct PendingCreation {
+    generation: i32,
+    connection: ConnectionDraft,
+}
+
+type PendingFolder = RefCell<Option<PendingCreation>>;
 
 pub(crate) fn configure(
     window: &AppWindow,
@@ -26,19 +34,47 @@ pub(crate) fn configure(
             &weak,
             Rc::clone(&verify_configuration),
             Rc::clone(&verify_diagnostics),
-            false,
+            None,
         )
     });
 
+    let pending = Rc::new(PendingFolder::default());
     let weak = window.as_weak();
+    let save_pending = Rc::clone(&pending);
+    let save_diagnostics = Rc::clone(&diagnostics);
     let save_configuration = Rc::clone(configuration);
     window.on_save_and_verify_connection(move || {
         request(
             &weak,
             Rc::clone(&save_configuration),
-            Rc::clone(&diagnostics),
-            true,
+            Rc::clone(&save_diagnostics),
+            Some(Rc::clone(&save_pending)),
         )
+    });
+
+    let weak = window.as_weak();
+    let cancel_pending = Rc::clone(&pending);
+    window.on_cancel_create_remote_folder(move || {
+        if let Some(window) = weak.upgrade()
+            && window.get_confirmation() == ConfirmationKind::CreateRemoteFolder
+            && !window.get_connection_verifying()
+        {
+            cancel_pending.borrow_mut().take();
+            window.set_confirmation(ConfirmationKind::None);
+        }
+    });
+
+    let weak = window.as_weak();
+    let configuration = Rc::clone(configuration);
+    window.on_confirm_create_remote_folder(move || {
+        if let Some(window) = weak.upgrade() {
+            create_remote_folder(
+                &window,
+                Rc::clone(&configuration),
+                Rc::clone(&diagnostics),
+                &pending,
+            );
+        }
     });
 }
 
@@ -46,129 +82,124 @@ fn request(
     weak: &slint::Weak<AppWindow>,
     configuration: Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
-    save_after_verification: bool,
+    save: Option<Rc<PendingFolder>>,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    window.set_connection_save_after_verification(save_after_verification);
+    if window.get_page() != 5
+        || window.get_connection_verifying()
+        || window.get_confirmation() != ConfirmationKind::None
+    {
+        return;
+    }
+    if let Some(pending) = &save {
+        pending.borrow_mut().take();
+    }
     window.set_status_message(SharedString::default());
     window.set_notice_message(SharedString::default());
-    let name = window.get_connection_form_name();
-    let provider = window.get_connection_form_provider();
-    let bucket = window.get_connection_form_bucket();
-    let remote = window.get_connection_form_remote();
-    let local = window.get_connection_form_local();
-    let mode = window.get_connection_form_mode();
-    let retention = window.get_connection_form_retention();
-    if let Err(error) = form_validation::directions(
-        window.get_connection_form_allow_upload(),
-        window.get_connection_form_allow_download(),
-    ) {
-        window.set_connection_save_after_verification(false);
-        window.set_status_message(error.into());
+    let Some(connection) = validated_form_draft(&window, &configuration) else {
         return;
-    }
-    if let Err(error) =
-        form_validation::connection(&name, provider, &bucket, &local, mode, &retention)
-    {
-        window.set_connection_save_after_verification(false);
-        window.set_connection_validation_focus(form_validation::connection_focus(&error));
-        window.set_status_message(error.into());
-        return;
-    }
-    let transport = match super::transport::read(&window, &configuration) {
-        Ok(settings) => settings,
-        Err(error) => {
-            window.set_connection_save_after_verification(false);
-            window.set_status_message(error.into());
-            return;
-        }
     };
-    let connection = match draft(
-        &configuration,
-        transport,
-        name,
-        provider,
-        bucket,
-        remote,
-        local,
-        mode,
-        retention,
-        window.get_connection_form_allow_upload(),
-        window.get_connection_form_allow_download(),
-        window.get_connection_form_show_preview(),
-    ) {
-        Ok(connection) => connection,
-        Err(error) => {
-            window.set_connection_save_after_verification(false);
-            window.set_status_message(error.into());
-            return;
-        }
-    };
-    let generation = begin_verification(&window);
-    let (sender, receiver) = mpsc::sync_channel(1);
     let configuration_path = configuration.path().to_path_buf();
-    std::thread::spawn(move || {
-        let _ = sender.send(connection_verification_worker::verify(
-            configuration_path,
-            connection,
-        ));
-    });
-    poll(weak.clone(), receiver, diagnostics, generation);
-}
-
-fn poll(
-    weak: slint::Weak<AppWindow>,
-    receiver: mpsc::Receiver<Result<(), VerificationFailure>>,
-    diagnostics: SharedDiagnosticLog,
-    generation: i32,
-) {
-    slint::Timer::single_shot(Duration::from_millis(50), move || {
-        let Some(window) = weak.upgrade() else { return };
-        if window.get_page() != 5
-            || !window.get_connection_verifying()
-            || !is_current_verification(generation, window.get_connection_verification_generation())
-        {
-            return;
-        }
-        match receiver.try_recv() {
-            Ok(Ok(())) => verified(&window),
-            Ok(Err(failure)) => failed(&window, &diagnostics, failure),
-            Err(mpsc::TryRecvError::Disconnected) => {
-                failed(&window, &diagnostics, VerificationFailure::Unexpected)
+    let verification_draft = connection.clone();
+    verification_task::start(
+        &window,
+        move || connection_verification_worker::verify(configuration_path, verification_draft),
+        move |window, generation, result| match (result, save) {
+            (Ok(()), Some(_)) => save_verified(window, configuration, &diagnostics, connection),
+            (Ok(()), None) => window.set_notice_message(
+                "Connection path checked. The local folder and cloud bucket/folder are accessible."
+                    .into(),
+            ),
+            (Err(VerificationFailure::MissingRemotePrefix), Some(pending))
+                if window.get_connection_form_id().is_empty() =>
+            {
+                pending.replace(Some(PendingCreation {
+                    generation,
+                    connection,
+                }));
+                window.set_confirmation(ConfirmationKind::CreateRemoteFolder);
             }
-            Err(mpsc::TryRecvError::Empty) => poll(weak, receiver, diagnostics, generation),
-        }
-    });
-}
-
-fn verified(window: &AppWindow) {
-    window.set_connection_verifying(false);
-    window.set_notice_message(
-        "Connection path checked. The local folder and cloud bucket/folder are accessible.".into(),
+            (Err(failure), _) => failed(window, &diagnostics, failure, false),
+        },
     );
-    if window.get_connection_save_after_verification() {
-        window.invoke_save_connection(
-            window.get_connection_form_name(),
-            window.get_connection_form_provider(),
-            window.get_connection_form_bucket(),
-            window.get_connection_form_remote(),
-            window.get_connection_form_local(),
-            window.get_connection_form_mode(),
-            window.get_connection_form_retention(),
-            window.get_connection_form_allow_upload(),
-            window.get_connection_form_allow_download(),
-        );
-    }
 }
 
-fn failed(window: &AppWindow, diagnostics: &SharedDiagnosticLog, failure: VerificationFailure) {
-    window.set_connection_verifying(false);
-    window.set_connection_save_after_verification(false);
+fn create_remote_folder(
+    window: &AppWindow,
+    configuration: Rc<ConfigStore>,
+    diagnostics: SharedDiagnosticLog,
+    pending: &PendingFolder,
+) {
+    if window.get_page() != 5
+        || !window.get_connection_form_id().is_empty()
+        || window.get_confirmation() != ConfirmationKind::CreateRemoteFolder
+        || window.get_connection_verifying()
+    {
+        return;
+    }
+    let Some(PendingCreation {
+        generation,
+        connection,
+    }) = pending.borrow_mut().take()
+    else {
+        return;
+    };
+    if !is_current_verification(generation, window.get_connection_verification_generation()) {
+        window.set_confirmation(ConfirmationKind::None);
+        return;
+    }
+    let configuration_path = configuration.path().to_path_buf();
+    let creation_draft = connection.clone();
+    verification_task::start(
+        window,
+        move || {
+            connection_verification_worker::create_remote_folder(configuration_path, creation_draft)
+        },
+        move |window, _, result| {
+            window.set_confirmation(ConfirmationKind::None);
+            match result {
+                Ok(()) => save_verified(window, configuration, &diagnostics, connection),
+                Err(failure) => failed(window, &diagnostics, failure, true),
+            }
+        },
+    );
+}
+
+fn save_verified(
+    window: &AppWindow,
+    configuration: Rc<ConfigStore>,
+    diagnostics: &SharedDiagnosticLog,
+    mut connection: ConnectionDraft,
+) {
+    connection.verified = true;
+    save::persist(window, configuration, diagnostics, Ok(connection));
+}
+
+fn failed(
+    window: &AppWindow,
+    diagnostics: &SharedDiagnosticLog,
+    failure: VerificationFailure,
+    creating_folder: bool,
+) {
+    let (summary, message) = if creating_folder {
+        let message = match failure {
+            VerificationFailure::PermissionDenied => {
+                "The provider denied permission to create the remote folder."
+            }
+            VerificationFailure::Unexpected => {
+                "SyncPak could not create the remote folder. Check the provider settings and try again."
+            }
+            _ => failure.message(),
+        };
+        ("Remote folder could not be created", message)
+    } else {
+        ("Connection could not be verified", failure.message())
+    };
     diagnostics_controller::present_with_safe_details(
         window,
         diagnostics,
-        "Connection could not be verified",
+        summary,
         failure.diagnostic().into_owned(),
-        failure.message(),
+        message,
     );
 }

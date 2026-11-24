@@ -3,7 +3,7 @@ use std::{rc::Rc, sync::Arc};
 use slint::{ComponentHandle, SharedString};
 
 use crate::{
-    AppWindow,
+    AppWindow, ConfirmationKind,
     app::diagnostics::{self as diagnostics_controller, SharedDiagnosticLog},
     configuration::{ConfigStore, ConnectionRepository},
     operations::operation_cancellation::ConnectionOperationCanceller,
@@ -43,14 +43,10 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
-    let cancel_config = Rc::clone(configuration);
-    let cancel_diagnostics = Rc::clone(&diagnostics);
     window.on_cancel_connection_delete(move || {
-        crate::app::connections::list_controller::show(
-            &weak,
-            Rc::clone(&cancel_config),
-            Rc::clone(&cancel_diagnostics),
-        );
+        if let Some(window) = weak.upgrade() {
+            window.set_confirmation(ConfirmationKind::None);
+        }
     });
 }
 
@@ -61,12 +57,15 @@ fn request_delete(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_confirmation() != ConfirmationKind::None {
+        return;
+    }
     match connection(configuration, id.as_str()) {
         Ok(connection) => {
             window.set_pending_connection_id(connection.id.as_str().into());
             window.set_pending_connection_name(connection.name.into());
             window.set_status_message(SharedString::default());
-            window.set_page(7);
+            window.set_confirmation(ConfirmationKind::DeleteConnection);
         }
         Err(_) => diagnostics_controller::present(
             &window,
@@ -85,6 +84,10 @@ fn delete_connection(
     canceller: Option<&(dyn ConnectionOperationCanceller + Send + Sync)>,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_confirmation() != ConfirmationKind::DeleteConnection {
+        return;
+    }
+    window.set_confirmation(ConfirmationKind::None);
     let result = connection(configuration, window.get_pending_connection_id().as_str()).and_then(
         |connection| match canceller {
             Some(canceller) => crate::operations::operation_cancellation::delete_connection(

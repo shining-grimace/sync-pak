@@ -4,7 +4,8 @@ use aws_sdk_s3::primitives::ByteStream;
 
 use crate::{
     providers::capabilities::{
-        ObjectWriteMetadata, ObjectWriter, ProviderResult, SOURCE_MODIFIED_TIME_METADATA_KEY,
+        ObjectPrefixCreator, ObjectWriteMetadata, ObjectWriter, ProviderResult,
+        SOURCE_MODIFIED_TIME_METADATA_KEY,
     },
     providers::s3::error::provider_error,
     providers::s3::transport::S3Transport,
@@ -33,5 +34,31 @@ impl ObjectWriter for S3Transport {
             .await
             .map(|_| ())
             .map_err(provider_error)
+    }
+}
+
+impl ObjectPrefixCreator for S3Transport {
+    async fn create_prefix(&self, bucket: &str, prefix: &str) -> ProviderResult<()> {
+        match self
+            .client
+            .put_object()
+            .bucket(bucket)
+            .key(prefix)
+            .body(ByteStream::from_static(b""))
+            .if_none_match("*")
+            .send()
+            .boxed()
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(error)
+                if error
+                    .raw_response()
+                    .is_some_and(|response| response.status().as_u16() == 412) =>
+            {
+                Ok(())
+            }
+            Err(error) => Err(provider_error(error)),
+        }
     }
 }

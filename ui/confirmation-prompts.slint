@@ -1,0 +1,102 @@
+import { ConfirmationDialog } from "components/confirmation-dialog.slint";
+import { DescriptionLabel } from "components/description-label.slint";
+import { ErrorHeadingLabel } from "components/error-heading-label.slint";
+import { ErrorLabel } from "components/error-label.slint";
+import { DangerCard } from "components/cards.slint";
+
+export enum ConfirmationKind {
+    none,
+    discard-provider,
+    discard-connection,
+    delete-provider,
+    delete-connection,
+    cancel-activity,
+    create-remote-folder,
+}
+
+export component ConfirmationPrompts inherits ConfirmationDialog {
+    in property <ConfirmationKind> kind;
+    in property <bool> provider-storage-busy;
+    in property <bool> connection-verifying;
+    in property <bool> provider-storage-can-cancel;
+    in property <string> provider-storage-message;
+    in property <string> provider-name;
+    in property <string> connection-name;
+    in property <string> activity-name;
+    in property <int> dependent-count;
+    in property <[string]> dependent-connections;
+
+    private property <bool> deleting-provider: root.kind == ConfirmationKind.delete-provider;
+    private property <bool> deleting-connection: root.kind == ConfirmationKind.delete-connection;
+    private property <bool> cancelling-activity: root.kind == ConfirmationKind.cancel-activity;
+    private property <bool> creating-folder: root.kind == ConfirmationKind.create-remote-folder;
+    private property <bool> discarding-provider: root.kind == ConfirmationKind.discard-provider;
+    open: root.kind != ConfirmationKind.none;
+    busy: (root.deleting-provider && root.provider-storage-busy)
+        || (root.creating-folder && root.connection-verifying);
+    can-cancel-busy: root.deleting-provider && root.busy && root.provider-storage-message != "" && root.provider-storage-can-cancel;
+    title: root.deleting-provider ? "Delete " + root.provider-name + "?"
+        : root.deleting-connection ? "Delete " + root.connection-name + "?"
+        : root.cancelling-activity ? "Cancel " + root.activity-name + "?"
+        : root.creating-folder ? "Create Remote Folder?"
+        : "Discard Unsaved Changes?";
+    cancel-text: root.can-cancel-busy ? "Cancel Access"
+        : root.deleting-provider || root.deleting-connection ? "Cancel"
+        : root.cancelling-activity ? "Keep Running"
+        : root.creating-folder ? "Keep Editing"
+        : "Keep Editing";
+    confirm-text: root.deleting-provider ? (root.busy ? "Deleting…" : "Delete Provider")
+        : root.deleting-connection ? "Delete Connection"
+        : root.cancelling-activity ? "Cancel Operation"
+        : root.creating-folder ? (root.busy ? "Creating…" : "Create Folder")
+        : "Discard Changes";
+    confirm-label: root.deleting-provider ? "Delete provider " + root.provider-name
+        : root.deleting-connection ? "Delete connection " + root.connection-name
+        : root.cancelling-activity ? "Cancel operation " + root.activity-name
+        : root.confirm-text;
+
+    if root.deleting-provider && root.busy && root.provider-storage-message != "": DescriptionLabel {
+        accessible-live-region: polite;
+        text: root.provider-storage-message;
+    }
+
+    if root.deleting-provider || root.deleting-connection: DangerCard {
+        accessible-role: region;
+        accessible-label: "Deletion consequences";
+
+        ErrorHeadingLabel {
+            text: "What will be deleted";
+        }
+
+        ErrorLabel {
+            text: root.deleting-provider
+                ? "The protected credentials and " + root.dependent-count + (root.dependent-count == 1 ? " dependent connection will be removed from SyncPak." : " dependent connections will be removed from SyncPak.")
+                : "This removes the connection from SyncPak.";
+        }
+
+        ErrorLabel {
+            text: "Local folders and cloud files are not deleted.";
+        }
+    }
+
+    if root.deleting-provider && root.dependent-count > 0: ErrorHeadingLabel {
+        text: "Connections that will be deleted";
+    }
+
+    for connection-name in (root.deleting-provider ? root.dependent-connections : []): DescriptionLabel {
+        text: "• " + connection-name;
+    }
+
+    if root.creating-folder: DescriptionLabel {
+        accessible-live-region: polite;
+        text: root.busy ? "Creating the remote folder…" : "The remote folder does not exist. Would you like to create it?";
+    }
+
+    if root.cancelling-activity: DescriptionLabel {
+        text: "Completed changes will not be undone. Work that has not started will be skipped.";
+    }
+
+    if root.kind == ConfirmationKind.discard-provider || root.kind == ConfirmationKind.discard-connection: DescriptionLabel {
+        text: root.discarding-provider ? "Your changes to this provider have not been saved." : "Your changes to this connection have not been saved.";
+    }
+}

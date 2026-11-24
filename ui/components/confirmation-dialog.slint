@@ -1,0 +1,137 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import { SectionHeadingLabel } from "section-heading-label.slint";
+import { ExpandedPrimaryActionButton, ExpandedSecondaryActionButton } from "action-buttons.slint";
+import { ScrollArea } from "scroll-area.slint";
+
+export component ConfirmationDialog inherits Rectangle {
+    in property <bool> open;
+    in property <bool> busy;
+    in property <bool> can-cancel-busy;
+    in property <string> title;
+    in property <string> cancel-text: "Cancel";
+    in property <string> confirm-text;
+    in property <string> confirm-label: root.confirm-text;
+    in property <length> top-inset;
+    in property <length> bottom-inset;
+    in property <length> left-inset;
+    in property <length> right-inset;
+    callback cancel();
+    callback cancel-busy();
+    callback confirm();
+
+    changed open => {
+        if root.open {
+            popup.show();
+        } else {
+            popup.close();
+        }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: 0px;
+        width: root.width;
+        height: root.height;
+        close-policy: no-auto-close;
+
+        Rectangle {
+            width: root.width;
+            height: root.height;
+            background: #0009;
+
+            FocusScope {
+                private property <bool> working: root.busy;
+                focus-on-click: false;
+                focus-on-tab-navigation: self.working;
+                changed working => {
+                    if self.working {
+                        body-scroll.content-y = 0px;
+                        self.focus();
+                    } else {
+                        cancel-button.focus();
+                    }
+                }
+                capture-key-pressed(event) => {
+                    if event.text == Key.Escape || event.text == Key.Back {
+                        if !root.busy {
+                            root.cancel();
+                        }
+                        return accept;
+                    }
+                    return reject;
+                }
+
+                panel := Rectangle {
+                    private property <length> available-width: root.width - root.left-inset - root.right-inset;
+                    private property <length> available-height: root.height - root.top-inset - root.bottom-inset;
+                    x: root.left-inset + (self.available-width - self.width) / 2;
+                    y: root.top-inset + (self.available-height - self.height) / 2;
+                    width: min(480px, max(0px, self.available-width - 32px));
+                    height: layout.preferred-height;
+                    background: Colors.background;
+                    border-radius: Dimensions.card-border-radius;
+                    border-width: 1px;
+                    border-color: Colors.primary-accent;
+                    accessible-role: groupbox;
+                    accessible-label: root.title;
+
+                    layout := VerticalLayout {
+                        padding: 16px;
+                        spacing: 16px;
+
+                        body-scroll := ScrollArea {
+                            height: min(content.preferred-height, max(0px, panel.available-height - 32px - 2 * layout.padding - layout.spacing - actions.preferred-height));
+                            scrollbar-outset: Dimensions.scrollbar-width + Dimensions.scrollbar-gap;
+                            content-width: self.visible-width;
+                            content-height: content.preferred-height;
+                            horizontal-scrollbar-policy: always-off;
+
+                            content := VerticalLayout {
+                                width: parent.visible-width;
+                                spacing: Dimensions.element-gap;
+
+                                SectionHeadingLabel {
+                                    text: root.title;
+                                }
+
+                                @children
+                            }
+                        }
+
+                        actions := HorizontalLayout {
+                            spacing: Dimensions.element-gap;
+
+                            cancel-button := ExpandedSecondaryActionButton {
+                                text: root.cancel-text;
+                                enabled: !root.busy || root.can-cancel-busy;
+                                focus-on-init: true;
+                                border-width: self.has-focus ? 3px : 1px;
+                                clicked => {
+                                    if root.busy && root.can-cancel-busy {
+                                        root.cancel-busy();
+                                    } else if !root.busy {
+                                        root.cancel();
+                                    }
+                                }
+                            }
+
+                            ExpandedPrimaryActionButton {
+                                text: root.confirm-text;
+                                accessible-label: root.confirm-label;
+                                enabled: !root.busy;
+                                border-width: self.has-focus ? 3px : 1px;
+                                outline-color: self.has-focus ? Colors.background : Colors.primary-accent;
+                                clicked => {
+                                    if !root.busy {
+                                        root.confirm();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -5,7 +5,7 @@ use super::{
     verification::verify,
 };
 use crate::{
-    AppWindow,
+    AppWindow, ConfirmationKind,
     app::{diagnostics::SharedDiagnosticLog, providers::bucket_cache::ProviderBucketCache},
     configuration::ConfigStore,
 };
@@ -99,13 +99,14 @@ pub(crate) fn configure(
     window.on_cancel_discard_provider(move || {
         if let Some(window) = weak.upgrade() {
             window.set_pending_navigation_page(-1);
-            window.set_page(2);
+            window.set_confirmation(ConfirmationKind::None);
         }
     });
 
     let weak = window.as_weak();
     window.on_confirm_discard_provider(move || {
         if let Some(window) = weak.upgrade() {
+            window.set_confirmation(ConfirmationKind::None);
             clear_transient_state(&window);
             window.invoke_complete_pending_navigation();
         }
@@ -147,7 +148,7 @@ fn show_add(weak: &slint::Weak<AppWindow>) {
 
 fn request_discard(weak: &slint::Weak<AppWindow>) {
     let Some(window) = weak.upgrade() else { return };
-    if window.get_provider_storage_busy() {
+    if window.get_provider_storage_busy() || window.get_confirmation() != ConfirmationKind::None {
         return;
     }
     crate::app::providers::form::secret_reveal::hide(&window);
@@ -156,7 +157,7 @@ fn request_discard(weak: &slint::Weak<AppWindow>) {
         window.set_pending_navigation_page(1);
     }
     if is_dirty(&window) {
-        window.set_page(15);
+        window.set_confirmation(ConfirmationKind::DiscardProvider);
     } else {
         clear_transient_state(&window);
         window.invoke_complete_pending_navigation();

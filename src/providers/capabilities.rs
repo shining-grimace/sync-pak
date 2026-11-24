@@ -82,6 +82,15 @@ pub trait ObjectPrefixChecker {
     ) -> impl Future<Output = ProviderResult<bool>> + Send;
 }
 
+/// Creates an empty folder marker without replacing an existing object.
+pub trait ObjectPrefixCreator {
+    fn create_prefix(
+        &self,
+        bucket: &str,
+        prefix: &str,
+    ) -> impl Future<Output = ProviderResult<()>> + Send;
+}
+
 pub trait ObjectReader: Sync {
     fn read(&self, bucket: &str, key: &str)
     -> impl Future<Output = ProviderResult<Vec<u8>>> + Send;

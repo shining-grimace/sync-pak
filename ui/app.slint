@@ -9,17 +9,8 @@ import { SettingsState } from "settings-state.slint";
 export { SettingsState, SettingsConnectionRow } from "settings-state.slint";
 import { PrivacyPage } from "pages/privacy.slint";
 import { DiagnosticsPage } from "pages/diagnostics.slint";
-import {
-    ProviderDiscardConfirmationPage,
-} from "pages/provider-confirmations.slint";
-import {
-    ConnectionDiscardConfirmationPage,
-} from "pages/connection-confirmations.slint";
-import {
-    ProviderDeletePage,
-    ConnectionDeletePage,
-    ActivityCancelPage,
-} from "pages/destructive-confirmations.slint";
+import { ConfirmationKind, ConfirmationPrompts } from "confirmation-prompts.slint";
+export { ConfirmationKind } from "confirmation-prompts.slint";
 import { ActivityResultPage } from "pages/activity-result.slint";
 import { ProviderFormPage } from "pages/provider-form.slint";
 import { ConnectionsPage } from "pages/connections.slint";
@@ -58,15 +49,10 @@ export global Page {
     out property <int> privacy: 18;
     out property <int> connections: 4;
     out property <int> connection-form: 5;
-    out property <int> provider-delete: 6;
-    out property <int> connection-delete: 7;
     out property <int> diagnostics: 8;
     out property <int> activity: 9;
     out property <int> run-direction: 10;
     out property <int> preflight: 11;
-    out property <int> activity-cancel: 12;
-    out property <int> connection-discard-confirmation: 14;
-    out property <int> provider-discard-confirmation: 15;
     out property <int> activity-result: 16;
 }
 
@@ -134,7 +120,14 @@ export component AppWindow inherits Window {
     callback queue-notification(string, int, int);
     callback dismiss-notification(int);
     callback activate-notification(int);
-    private property <bool> confirmation-open: (page == Page.settings && (SettingsState.mode != 0 || SettingsState.busy)) || page == Page.provider-delete || page == Page.connection-delete || page == Page.activity-cancel || page == Page.connection-discard-confirmation || page == Page.provider-discard-confirmation;
+    in-out property <ConfirmationKind> confirmation: ConfirmationKind.none;
+    private property <bool> settings-navigation-blocked: root.page == Page.settings
+        && (SettingsState.mode != 0 || SettingsState.busy);
+    private property <bool> navigation-blocked: root.confirmation != ConfirmationKind.none || root.settings-navigation-blocked;
+    private property <int> advertising-placement: root.confirmation != ConfirmationKind.none ? 0
+        : root.page == Page.providers && root.providers-total == 0 && !root.providers-load-failed ? 1
+        : root.page == Page.connections && root.connections-total == 0 && !root.connections-load-failed ? 2
+        : 0;
     changed status-message => {
         if root.status-message != "" {
             root.queue-notification(root.status-message, 0, 0);
@@ -204,7 +197,6 @@ export component AppWindow inherits Window {
     in-out property <bool> connection-verifying: false;
     in-out property <bool> connection-list-verifying: false;
     in-out property <int> connection-verification-generation: 0;
-    in-out property <bool> connection-save-after-verification: false;
     in-out property <bool> folder-picker-open: false;
     in-out property <string> run-connection-id;
     in-out property <string> run-connection-name;
@@ -284,6 +276,8 @@ export component AppWindow inherits Window {
     callback save-connection(string, int, string, string, string, int, string, bool, bool);
     callback verify-connection();
     callback save-and-verify-connection();
+    callback cancel-create-remote-folder();
+    callback confirm-create-remote-folder();
     callback request-discard-connection();
     callback confirm-discard-connection();
     callback cancel-discard-connection();
@@ -317,36 +311,16 @@ export component AppWindow inherits Window {
         Palette.color-scheme = ColorScheme.unknown;
     }
     changed page => {
+        if root.confirmation != ConfirmationKind.none {
+            root.confirmation = ConfirmationKind.none;
+            root.pending-navigation-page = -1;
+        }
         if root.page == Page.welcome {
             root.request-advertising-consent();
-            root.set-advertising-placement(0);
-        } else if root.page == Page.providers && root.providers-total == 0 && !root.providers-load-failed {
-            root.set-advertising-placement(1);
-        } else if root.page == Page.connections && root.connections-total == 0 && !root.connections-load-failed {
-            root.set-advertising-placement(2);
-        } else {
-            root.set-advertising-placement(0);
         }
     }
-    changed connections-total => {
-        if root.page == Page.connections {
-            root.set-advertising-placement(root.connections-total == 0 && !root.connections-load-failed ? 2 : 0);
-        }
-    }
-    changed providers-total => {
-        if root.page == Page.providers {
-            root.set-advertising-placement(root.providers-total == 0 && !root.providers-load-failed ? 1 : 0);
-        }
-    }
-    changed providers-load-failed => {
-        if root.page == Page.providers {
-            root.set-advertising-placement(root.providers-total == 0 && !root.providers-load-failed ? 1 : 0);
-        }
-    }
-    changed connections-load-failed => {
-        if root.page == Page.connections {
-            root.set-advertising-placement(root.connections-total == 0 && !root.connections-load-failed ? 2 : 0);
-        }
+    changed advertising-placement => {
+        root.set-advertising-placement(root.advertising-placement);
     }
     apply-appearance-preference => {
         Colors.dark-mode = root.resolved-dark-mode;
@@ -368,11 +342,9 @@ export component AppWindow inherits Window {
         width: root.width;
         height: root.height;
         retracted: root.page == Page.provider-form
-            || root.page == Page.provider-discard-confirmation
             || root.page == Page.run-direction
             || root.page == Page.preflight
             || root.page == Page.activity
-            || root.page == Page.activity-cancel
             || root.page == Page.activity-result;
     }
 
@@ -397,14 +369,6 @@ export component AppWindow inherits Window {
                         root.privacy-back();
                         return accept;
                     }
-                    if root.page == Page.provider-delete {
-                        root.cancel-provider-delete();
-                        return accept;
-                    }
-                    if root.page == Page.connection-delete {
-                        root.cancel-connection-delete();
-                        return accept;
-                    }
                     if root.page == Page.diagnostics {
                         root.dismiss-diagnostics();
                         return accept;
@@ -417,20 +381,8 @@ export component AppWindow inherits Window {
                         root.return-to-run-direction();
                         return accept;
                     }
-                    if root.page == Page.activity-cancel {
-                        root.dismiss-cancel-activity();
-                        return accept;
-                    }
                     if root.page == Page.activity-result {
                         root.dismiss-activity-result();
-                        return accept;
-                    }
-                    if root.page == Page.connection-discard-confirmation {
-                        root.cancel-discard-connection();
-                        return accept;
-                    }
-                    if root.page == Page.provider-discard-confirmation {
-                        root.cancel-discard-provider();
                         return accept;
                     }
                     if root.page == Page.provider-form {
@@ -473,20 +425,20 @@ export component AppWindow inherits Window {
                 HorizontalLayout {
                     spacing: Dimensions.element-gap;
                     NavMenuButton {
-                        accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
+                        accessible-label: (root.page == 4 || root.page == 5 || root.page == 10 || root.page == 11) ? "Connections, selected" : "Connections";
                         text: "Connections";
-                        selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
-                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        selected: root.page == 4 || root.page == 5 || root.page == 10 || root.page == 11;
+                        enabled: !root.navigation-blocked && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(4);
                         }
                     }
 
                     NavMenuButton {
-                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15) ? "Providers, selected" : "Providers";
+                        accessible-label: (root.page == 1 || root.page == 2) ? "Providers, selected" : "Providers";
                         text: "Providers";
-                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15;
-                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        selected: root.page == 1 || root.page == 2;
+                        enabled: !root.navigation-blocked && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(1);
                         }
@@ -496,10 +448,10 @@ export component AppWindow inherits Window {
                 HorizontalLayout {
                     spacing: Dimensions.element-gap;
                     NavMenuButton {
-                        accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
+                        accessible-label: (root.page == 8 || root.page == 9 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                         text: "Activity";
-                        selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
-                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        selected: root.page == 8 || root.page == 9 || root.page == 16 || root.page == 17;
+                        enabled: !root.navigation-blocked && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(9);
                         }
@@ -509,7 +461,7 @@ export component AppWindow inherits Window {
                         accessible-label: (root.page == 3 || root.page == 18) ? "Settings, selected" : "Settings";
                         text: "Settings";
                         selected: root.page == 3 || root.page == 18;
-                        enabled: !root.confirmation-open;
+                        enabled: !root.navigation-blocked;
                         clicked => {
                             root.request-navigation(3);
                         }
@@ -521,7 +473,7 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.provider-storage-waiting: VerticalLayout {
+            if root.provider-storage-waiting && root.confirmation != ConfirmationKind.delete-provider: VerticalLayout {
                 spacing: Dimensions.element-gap;
                 DescriptionLabel {
                     accessible-live-region: polite;
@@ -611,15 +563,6 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.page == Page.provider-discard-confirmation: ProviderDiscardConfirmationPage {
-                provider-name: root.provider-form-name;
-                cancel => {
-                    root.cancel-discard-provider();
-                }
-                confirm => {
-                    root.confirm-discard-provider();
-                }
-            }
 
             if root.page == Page.connections: ConnectionsPage {
                 connection-list-verifying: root.connection-list-verifying;
@@ -714,15 +657,6 @@ export component AppWindow inherits Window {
                 }
             }
 
-            if root.page == Page.connection-discard-confirmation: ConnectionDiscardConfirmationPage {
-                connection-name: root.connection-form-name;
-                cancel => {
-                    root.cancel-discard-connection();
-                }
-                confirm => {
-                    root.confirm-discard-connection();
-                }
-            }
 
             if root.page == Page.settings && SettingsState.mode == 0: SettingsPage {
                 credential-provider-names: root.credential-provider-names;
@@ -819,36 +753,6 @@ export component AppWindow inherits Window {
             }
 
 
-            if root.page == Page.provider-delete: ProviderDeletePage {
-                busy: root.provider-storage-busy;
-                provider-name: root.pending-provider-name;
-                connection-count: root.pending-connection-count;
-                connections: root.pending-provider-connections;
-                cancel => {
-                    root.cancel-provider-delete();
-                }
-                confirm => {
-                    root.confirm-provider-delete();
-                }
-            }
-            if root.page == Page.connection-delete: ConnectionDeletePage {
-                connection-name: root.pending-connection-name;
-                cancel => {
-                    root.cancel-connection-delete();
-                }
-                confirm => {
-                    root.confirm-connection-delete();
-                }
-            }
-            if root.page == Page.activity-cancel: ActivityCancelPage {
-                activity-name: root.pending-cancel-activity-name;
-                dismiss => {
-                    root.dismiss-cancel-activity();
-                }
-                confirm => {
-                    root.confirm-cancel-activity();
-                }
-            }
             if root.page == Page.run-direction: RunDirectionPage {
                 connection-name: root.run-connection-name;
                 connection-mode: root.run-connection-mode;
@@ -917,30 +821,30 @@ export component AppWindow inherits Window {
                 HorizontalLayout {
                     spacing: Dimensions.card-element-spacing;
                     MobileNavMenuButton {
-                        accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
+                        accessible-label: (root.page == 4 || root.page == 5 || root.page == 10 || root.page == 11) ? "Connections, selected" : "Connections";
                         text: "Connections";
-                        selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
-                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        selected: root.page == 4 || root.page == 5 || root.page == 10 || root.page == 11;
+                        enabled: !root.navigation-blocked && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(4);
                         }
                     }
 
                     MobileNavMenuButton {
-                        accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15) ? "Providers, selected" : "Providers";
+                        accessible-label: (root.page == 1 || root.page == 2) ? "Providers, selected" : "Providers";
                         text: "Providers";
-                        selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15;
-                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        selected: root.page == 1 || root.page == 2;
+                        enabled: !root.navigation-blocked && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(1);
                         }
                     }
 
                     MobileNavMenuButton {
-                        accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
+                        accessible-label: (root.page == 8 || root.page == 9 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                         text: "Activity";
-                        selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
-                        enabled: !root.confirmation-open && !root.configuration-unavailable;
+                        selected: root.page == 8 || root.page == 9 || root.page == 16 || root.page == 17;
+                        enabled: !root.navigation-blocked && !root.configuration-unavailable;
                         clicked => {
                             root.request-navigation(9);
                         }
@@ -950,7 +854,7 @@ export component AppWindow inherits Window {
                         accessible-label: (root.page == 3 || root.page == 18) ? "Settings, selected" : "Settings";
                         text: "Settings";
                         selected: root.page == 3 || root.page == 18;
-                        enabled: !root.confirmation-open;
+                        enabled: !root.navigation-blocked;
                         clicked => {
                             root.request-navigation(3);
                         }
@@ -968,7 +872,7 @@ export component AppWindow inherits Window {
             activate(id) => { root.activate-notification(id); }
         }
 
-        if root.active-activity-id != "" && !root.confirmation-open && root.page != Page.activity: ActiveOperationNotice {
+        if root.active-activity-id != "" && root.page != Page.activity && !root.settings-navigation-blocked: ActiveOperationNotice {
             x: max(16px, (root.width - 440px) / 2);
             y: root.height - self.preferred-height - 16px;
             width: min(440px, root.width - 32px);
@@ -999,30 +903,30 @@ export component AppWindow inherits Window {
                 }
 
                 NavMenuButton {
-                    accessible-label: (root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14) ? "Connections, selected" : "Connections";
+                    accessible-label: (root.page == 4 || root.page == 5 || root.page == 10 || root.page == 11) ? "Connections, selected" : "Connections";
                     text: "Connections";
-                    selected: root.page == 4 || root.page == 5 || root.page == 7 || root.page == 10 || root.page == 11 || root.page == 14;
-                    enabled: !root.confirmation-open && !root.configuration-unavailable;
+                    selected: root.page == 4 || root.page == 5 || root.page == 10 || root.page == 11;
+                    enabled: !root.navigation-blocked && !root.configuration-unavailable;
                     clicked => {
                         root.request-navigation(4);
                     }
                 }
 
                 NavMenuButton {
-                    accessible-label: (root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15) ? "Providers, selected" : "Providers";
+                    accessible-label: (root.page == 1 || root.page == 2) ? "Providers, selected" : "Providers";
                     text: "Providers";
-                    selected: root.page == 1 || root.page == 2 || root.page == 6 || root.page == 15;
-                    enabled: !root.confirmation-open && !root.configuration-unavailable;
+                    selected: root.page == 1 || root.page == 2;
+                    enabled: !root.navigation-blocked && !root.configuration-unavailable;
                     clicked => {
                         root.request-navigation(1);
                     }
                 }
 
                 NavMenuButton {
-                    accessible-label: (root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
+                    accessible-label: (root.page == 8 || root.page == 9 || root.page == 16 || root.page == 17) ? "Activity, selected" : "Activity";
                     text: "Activity";
-                    selected: root.page == 8 || root.page == 9 || root.page == 12 || root.page == 16 || root.page == 17;
-                    enabled: !root.confirmation-open && !root.configuration-unavailable;
+                    selected: root.page == 8 || root.page == 9 || root.page == 16 || root.page == 17;
+                    enabled: !root.navigation-blocked && !root.configuration-unavailable;
                     clicked => {
                         root.request-navigation(9);
                     }
@@ -1032,7 +936,7 @@ export component AppWindow inherits Window {
                     accessible-label: (root.page == 3 || root.page == 18) ? "Settings, selected" : "Settings";
                     text: "Settings";
                     selected: root.page == 3 || root.page == 18;
-                    enabled: !root.confirmation-open;
+                    enabled: !root.navigation-blocked;
                     clicked => {
                         root.request-navigation(3);
                     }
@@ -1040,6 +944,60 @@ export component AppWindow inherits Window {
 
             Rectangle {
                 vertical-stretch: 1;
+            }
+        }
+    }
+
+    ConfirmationPrompts {
+        x: 0px;
+        y: 0px;
+        width: root.width;
+        height: root.height;
+        top-inset: root.safe-area-insets.top;
+        bottom-inset: root.safe-area-insets.bottom + root.advertising-bottom-inset;
+        left-inset: root.safe-area-insets.left;
+        right-inset: root.safe-area-insets.right;
+        kind: root.confirmation;
+        connection-verifying: root.connection-verifying;
+        provider-storage-busy: root.provider-storage-busy;
+        provider-storage-can-cancel: root.provider-storage-can-cancel;
+        provider-storage-message: root.provider-storage-waiting ? root.provider-storage-message : "";
+        provider-name: root.pending-provider-name;
+        connection-name: root.pending-connection-name;
+        activity-name: root.pending-cancel-activity-name;
+        dependent-count: root.pending-connection-count;
+        dependent-connections: root.pending-provider-connections;
+        cancel-busy => {
+            root.cancel-provider-storage();
+        }
+        cancel => {
+            if root.confirmation == ConfirmationKind.discard-provider {
+                root.cancel-discard-provider();
+            } else if root.confirmation == ConfirmationKind.discard-connection {
+                root.cancel-discard-connection();
+            } else if root.confirmation == ConfirmationKind.delete-provider {
+                root.cancel-provider-delete();
+            } else if root.confirmation == ConfirmationKind.delete-connection {
+                root.cancel-connection-delete();
+            } else if root.confirmation == ConfirmationKind.cancel-activity {
+                root.dismiss-cancel-activity();
+            } else if root.confirmation == ConfirmationKind.create-remote-folder {
+                root.cancel-create-remote-folder();
+            }
+        }
+        confirm => {
+            if root.confirmation == ConfirmationKind.discard-provider {
+                root.confirm-discard-provider();
+            } else if root.confirmation == ConfirmationKind.discard-connection {
+                root.confirm-discard-connection();
+            } else if root.confirmation == ConfirmationKind.delete-provider {
+                root.confirm-provider-delete();
+            } else if root.confirmation == ConfirmationKind.delete-connection {
+                root.confirm-connection-delete();
+            } else if root.confirmation == ConfirmationKind.cancel-activity {
+                root.confirm-cancel-activity();
+            } else if root.confirmation == ConfirmationKind.create-remote-folder {
+                root.confirm-create-remote-folder();
             }
         }
     }

@@ -1,5 +1,9 @@
-use crate::configuration::{
-    ConfigStore, ConnectionDraft, ProviderConfig, ProviderId, SyncMode, TransportSettings,
+use crate::{
+    AppWindow,
+    app::form_validation,
+    configuration::{
+        ConfigStore, ConnectionDraft, ProviderConfig, ProviderId, SyncMode, TransportSettings,
+    },
 };
 use slint::SharedString;
 
@@ -67,4 +71,58 @@ fn archive_retention(mode: SyncMode, input: &str) -> Result<Option<u32>, String>
         .filter(|count| *count >= 1)
         .map(Some)
         .ok_or_else(|| "Enter a whole number of at least 1 for archive retention.".to_owned())
+}
+
+pub(super) fn validated_form_draft(
+    window: &AppWindow,
+    configuration: &ConfigStore,
+) -> Option<ConnectionDraft> {
+    let name = window.get_connection_form_name();
+    let provider = window.get_connection_form_provider();
+    let bucket = window.get_connection_form_bucket();
+    let remote = window.get_connection_form_remote();
+    let local = window.get_connection_form_local();
+    let mode = window.get_connection_form_mode();
+    let retention = window.get_connection_form_retention();
+    if let Err(error) = form_validation::directions(
+        window.get_connection_form_allow_upload(),
+        window.get_connection_form_allow_download(),
+    ) {
+        window.set_status_message(error.into());
+        return None;
+    }
+    if let Err(error) =
+        form_validation::connection(&name, provider, &bucket, &local, mode, &retention)
+    {
+        window.set_connection_validation_focus(form_validation::connection_focus(&error));
+        window.set_status_message(error.into());
+        return None;
+    }
+    let transport = match super::transport::read(window, configuration) {
+        Ok(settings) => settings,
+        Err(error) => {
+            window.set_status_message(error.into());
+            return None;
+        }
+    };
+    match draft(
+        configuration,
+        transport,
+        name,
+        provider,
+        bucket,
+        remote,
+        local,
+        mode,
+        retention,
+        window.get_connection_form_allow_upload(),
+        window.get_connection_form_allow_download(),
+        window.get_connection_form_show_preview(),
+    ) {
+        Ok(connection) => Some(connection),
+        Err(error) => {
+            window.set_status_message(error.into());
+            None
+        }
+    }
 }

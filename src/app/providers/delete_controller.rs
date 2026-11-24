@@ -3,7 +3,7 @@ use std::{rc::Rc, sync::Arc};
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::{
-    AppWindow,
+    AppWindow, ConfirmationKind,
     app::diagnostics::{self as diagnostics_controller, SharedDiagnosticLog},
     app::providers::bucket_cache::{self as provider_bucket_cache, ProviderBucketCache},
     app::providers::save_error::ProviderPersistenceError,
@@ -49,22 +49,12 @@ pub(crate) fn configure(
     });
 
     let weak = window.as_weak();
-    let cancel_config = Rc::clone(configuration);
-    let cancel_diagnostics = Rc::clone(&diagnostics);
-    let cancel_buckets = Rc::clone(&buckets);
     window.on_cancel_provider_delete(move || {
-        if weak
-            .upgrade()
-            .is_some_and(|window| window.get_provider_storage_busy())
+        if let Some(window) = weak.upgrade()
+            && !window.get_provider_storage_busy()
         {
-            return;
+            window.set_confirmation(ConfirmationKind::None);
         }
-        crate::app::providers::list_controller::show(
-            &weak,
-            Rc::clone(&cancel_config),
-            Rc::clone(&cancel_diagnostics),
-            Rc::clone(&cancel_buckets),
-        );
     });
 }
 
@@ -75,7 +65,7 @@ fn request_delete(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    if window.get_provider_storage_busy() {
+    if window.get_provider_storage_busy() || window.get_confirmation() != ConfirmationKind::None {
         return;
     }
     match provider_and_dependents(configuration, id.as_str()) {
@@ -87,7 +77,7 @@ fn request_delete(
                 connections.into_iter().map(SharedString::from),
             ))));
             window.set_status_message(SharedString::default());
-            window.set_page(6);
+            window.set_confirmation(ConfirmationKind::DeleteProvider);
         }
         Err(_) => diagnostics_controller::present(
             &window,
@@ -107,7 +97,9 @@ fn delete_provider(
     canceller: Option<Arc<dyn ConnectionOperationCanceller + Send + Sync>>,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    if window.get_provider_storage_busy() {
+    if window.get_provider_storage_busy()
+        || window.get_confirmation() != ConfirmationKind::DeleteProvider
+    {
         return;
     }
     let pending_id = window.get_pending_provider_id();
@@ -141,6 +133,7 @@ fn delete_provider(
         },
         move |window, result| match result {
             Ok(_) => {
+                window.set_confirmation(ConfirmationKind::None);
                 provider_bucket_cache::remove(&buckets, pending_id.as_str());
                 crate::app::providers::list_controller::show(
                     &weak,
@@ -161,6 +154,7 @@ fn delete_provider(
                     window.set_notice_message(message.into());
                     return;
                 }
+                window.set_confirmation(ConfirmationKind::None);
                 diagnostics_controller::present(
                     window,
                     &diagnostics,

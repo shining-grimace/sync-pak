@@ -79,7 +79,9 @@ export component ConnectionFormPage inherits Rectangle {
             CenteredPageColumn {
                 width: parent.visible-width;
                 DescriptionLabel {
-                    text: "Save only stores this connection. It does not transfer files.";
+                    text: root.connection-form-id == ""
+                        ? "Saving does not transfer files. Save & Verify can create a missing remote folder with your approval."
+                        : "Save only stores this connection. It does not transfer files.";
                 }
 
                 VerticalLayout {
@@ -369,7 +371,7 @@ export component ConnectionFormPage inherits Rectangle {
 
                 if root.connection-verifying: DescriptionLabel {
                     accessible-live-region: polite;
-                    text: "Checking the local folder and cloud path without changing files…";
+                    text: "Checking the local folder and cloud path…";
                 }
             }
         }
