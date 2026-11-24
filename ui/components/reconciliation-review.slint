@@ -15,6 +15,7 @@ export component ReconciliationReview inherits ScrollArea {
     in property <[MirrorReviewRow]> synced;
     in property <bool> interactive;
     in property <bool> destructive: true;
+    callback compare-file(string);
     callback choose-file(string, int, int);
     vertical-stretch: 1;
     vertical-scrollbar-policy: always-on;
@@ -33,6 +34,9 @@ export component ReconciliationReview inherits ScrollArea {
             rows: root.isolated;
             interactive: root.interactive;
             destructive: root.destructive;
+            compare-file(path) => {
+                root.compare-file(path);
+            }
             choose-file(path, section, action) => {
                 root.choose-file(path, section, action);
             }
@@ -43,6 +47,9 @@ export component ReconciliationReview inherits ScrollArea {
             rows: root.conflicts;
             interactive: root.interactive;
             destructive: root.destructive;
+            compare-file(path) => {
+                root.compare-file(path);
+            }
             choose-file(path, section, action) => {
                 root.choose-file(path, section, action);
             }

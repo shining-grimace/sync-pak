@@ -141,7 +141,7 @@ fn describe(entry: Option<&InventoryEntry>) -> String {
     match entry.kind {
         crate::inventory::InventoryEntryKind::Directory => format!("{time}\nFolder"),
         crate::inventory::InventoryEntryKind::Symlink { .. } => format!("{time}\nSymbolic link"),
-        _ => format!("{time}\n{} bytes", entry.byte_size),
+        _ => time,
     }
 }
 

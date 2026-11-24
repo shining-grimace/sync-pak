@@ -45,7 +45,7 @@ fn selection_projects_both_sides_without_reclassifying_and_undo_restores_missing
     assert_eq!(conflicts.len(), 1);
     assert!(isolated[0].remote_detail.contains("Will copy from local"));
     assert!(isolated[0].local_changed && isolated[0].remote_changed);
-    assert!(conflicts[0].local_detail.contains("4 bytes"));
+    assert!(!conflicts[0].local_detail.contains("bytes"));
     assert!(
         conflicts[0]
             .local_detail

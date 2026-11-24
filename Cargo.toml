@@ -15,6 +15,7 @@ provider-probes = ["provider-s3", "dep:tokio"]
 provider-s3 = [
     "dep:aws-config",
     "dep:aws-sdk-s3",
+    "dep:image",
     "dep:aws-smithy-runtime-api",
     "dep:aws-smithy-types",
     "dep:hyper",
@@ -32,6 +33,7 @@ chrono = { version = "=0.4.45", default-features = false, features = ["clock"] }
 aws-config = { version = "=1.9.0", default-features = false, features = ["rt-tokio", "rustls"], optional = true }
 aws-sdk-s3 = { version = "=1.138.1", default-features = false, features = ["rt-tokio", "rustls"], optional = true }
 keyring-core = "=1.0.0"
+image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg", "gif", "webp", "bmp", "ico"], optional = true }
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.149"
 slint = { version = "^1.18.0", default-features = false, features = ["accessibility", "compat-1-2", "std"] }

@@ -50,6 +50,26 @@ pub(crate) fn configure(window: &AppWindow) {
     });
 }
 
+pub(super) fn comparison_target(
+    path: &str,
+) -> Option<(
+    RunRequest,
+    Option<crate::inventory::InventoryEntry>,
+    Option<crate::inventory::InventoryEntry>,
+)> {
+    SELECTION.with(|state| {
+        let state = state.borrow();
+        let (request, selection) = state.as_ref()?;
+        let entry = selection
+            .original()
+            .comparison()
+            .iter()
+            .find(|entry| entry.path.as_str() == path && reconciliation::section(entry) != 2)?;
+        let (local, remote) = selection.sides(entry);
+        Some((request.clone(), local.cloned(), remote.cloned()))
+    })
+}
+
 pub(crate) fn begin(window: &AppWindow, request: RunRequest, preflight: &Preflight) {
     let selection = MirrorSelection::new(preflight.clone());
     publish(window, &request, &selection);

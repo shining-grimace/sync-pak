@@ -1,3 +1,5 @@
+import { FileComparison } from "components/file-comparison.slint";
+import { FileVersion } from "models.slint";
 import { Palette } from "std-widgets.slint";
 import { Dimensions } from "dimensions.slint";
 import { Colors } from "colors.slint";
@@ -123,7 +125,7 @@ export component AppWindow inherits Window {
     in-out property <ConfirmationKind> confirmation: ConfirmationKind.none;
     private property <bool> settings-navigation-blocked: root.page == Page.settings
         && (SettingsState.mode != 0 || SettingsState.busy);
-    private property <bool> navigation-blocked: root.confirmation != ConfirmationKind.none || root.settings-navigation-blocked;
+    private property <bool> navigation-blocked: root.comparison-open || root.confirmation != ConfirmationKind.none || root.settings-navigation-blocked;
     private property <int> advertising-placement: root.confirmation != ConfirmationKind.none ? 0
         : root.page == Page.providers && root.providers-total == 0 && !root.providers-load-failed ? 1
         : root.page == Page.connections && root.connections-total == 0 && !root.connections-load-failed ? 2
@@ -214,6 +216,12 @@ export component AppWindow inherits Window {
     in-out property <[MirrorReviewRow]> preflight-conflicts;
     in-out property <[MirrorReviewRow]> preflight-synced;
     in-out property <string> preflight-selection-error;
+    in-out property <bool> comparison-open;
+    in-out property <int> comparison-generation;
+    in-out property <FileVersion> comparison-local;
+    in-out property <FileVersion> comparison-remote;
+    callback compare-file(string);
+    callback close-comparison();
     callback choose-mirror-file(string, int, int);
     in-out property <bool> preflight-loading: false;
     in-out property <bool> preflight-failed: false;
@@ -311,6 +319,9 @@ export component AppWindow inherits Window {
         Palette.color-scheme = ColorScheme.unknown;
     }
     changed page => {
+        if root.page != Page.preflight && root.comparison-open {
+            root.close-comparison();
+        }
         if root.confirmation != ConfirmationKind.none {
             root.confirmation = ConfirmationKind.none;
             root.pending-navigation-page = -1;
@@ -787,6 +798,9 @@ export component AppWindow inherits Window {
                 conflicts: root.preflight-conflicts;
                 synced: root.preflight-synced;
                 selection-error: root.preflight-selection-error;
+                compare-file(path) => {
+                    root.compare-file(path);
+                }
                 choose-file(path, section, action) => {
                     root.choose-mirror-file(path, section, action);
                 }
@@ -945,6 +959,23 @@ export component AppWindow inherits Window {
             Rectangle {
                 vertical-stretch: 1;
             }
+        }
+    }
+
+    FileComparison {
+        x: 0px;
+        y: 0px;
+        width: root.width;
+        height: root.height;
+        left-inset: root.safe-area-insets.left;
+        right-inset: root.safe-area-insets.right;
+        top-inset: root.safe-area-insets.top;
+        bottom-inset: root.safe-area-insets.bottom;
+        open: root.comparison-open;
+        local: root.comparison-local;
+        remote: root.comparison-remote;
+        close => {
+            root.close-comparison();
         }
     }
 

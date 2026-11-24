@@ -24,6 +24,7 @@ pub(crate) fn configure(_window: &AppWindow) {
     #[cfg(feature = "provider-s3")]
     {
         super::mirror_controller::configure(_window);
+        super::comparison::configure(_window);
         super::archive_controller::configure(_window);
     }
 }

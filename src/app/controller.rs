@@ -103,6 +103,7 @@ fn set_page(weak: &slint::Weak<AppWindow>, page: i32) {
 fn request_navigation(weak: &slint::Weak<AppWindow>, page: i32) {
     let Some(window) = weak.upgrade() else { return };
     if window.get_provider_storage_busy()
+        || window.get_comparison_open()
         || window.get_confirmation() != ConfirmationKind::None
         || (window.get_page() == 3
             && (window.global::<crate::SettingsState>().get_mode() != 0

@@ -3176,6 +3176,9 @@ checksum = "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
 dependencies = [
  "bytemuck",
  "byteorder-lite",
+ "color_quant",
+ "gif",
+ "image-webp",
  "moxcms",
  "num-traits",
  "png",
@@ -5731,6 +5734,7 @@ dependencies = [
  "hyper 1.10.1",
  "hyper-rustls 0.27.9",
  "hyper-util",
+ "image",
  "jni 0.22.4",
  "keyring-core",
  "ndk-context",

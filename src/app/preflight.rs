@@ -1,5 +1,7 @@
 #[cfg(feature = "provider-s3")]
 mod archive_controller;
+#[cfg(feature = "provider-s3")]
+mod comparison;
 pub mod controller;
 #[cfg(feature = "provider-s3")]
 mod presentation;

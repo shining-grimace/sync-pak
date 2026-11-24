@@ -1,0 +1,176 @@
+import { Colors } from "../colors.slint";
+import { Dimensions } from "../dimensions.slint";
+import { FileVersion } from "../models.slint";
+import { ScrollArea } from "scroll-area.slint";
+import { DescriptionLabel } from "description-label.slint";
+import { SectionHeadingLabel } from "section-heading-label.slint";
+import { ExpandedPrimaryActionButton } from "action-buttons.slint";
+
+component VersionPanel inherits Rectangle {
+    in property <FileVersion> version;
+    in property <string> heading;
+
+    border-radius: Dimensions.card-border-radius;
+    background: Colors.background-trim;
+
+    VerticalLayout {
+        padding: Dimensions.card-padding;
+        spacing: Dimensions.element-gap;
+        SectionHeadingLabel {
+            text: root.heading;
+        }
+
+        ScrollArea {
+            content-width: self.visible-width;
+            content-height: metadata.preferred-height;
+            horizontal-scrollbar-policy: always-off;
+            height: min(metadata.preferred-height, 100px);
+            metadata := VerticalLayout {
+                width: parent.visible-width;
+                if root.version.path != "": DescriptionLabel {
+                    text: root.version.path;
+                    wrap: char-wrap;
+                }
+                if root.version.size != "": DescriptionLabel {
+                    text: root.version.size;
+                }
+            }
+        }
+
+        if root.version.has-text: ScrollArea {
+            content-width: self.visible-width;
+            content-height: preview.preferred-height;
+            horizontal-scrollbar-policy: always-off;
+            preview := Text {
+                width: parent.visible-width;
+                text: root.version.preview-text;
+                wrap: char-wrap;
+                font-size: Dimensions.text-size-description;
+                font-family: "monospace";
+                color: Colors.primary-accent;
+            }
+        }
+
+        if root.version.preview-image.width > 0: Rectangle {
+            vertical-stretch: 1;
+            Image {
+                width: parent.width;
+                height: parent.height;
+                source: root.version.preview-image;
+                image-fit: contain;
+            }
+        }
+
+        if !root.version.has-text && root.version.preview-image.width == 0: VerticalLayout {
+            vertical-stretch: 1;
+            alignment: center;
+            spacing: Dimensions.element-gap;
+            if root.version.path != "": HorizontalLayout {
+                alignment: center;
+                Path {
+                    width: 34px;
+                    height: 44px;
+                    viewbox-width: 34;
+                    viewbox-height: 44;
+                    fill: transparent;
+                    stroke: Colors.secondary-accent;
+                    stroke-width: 2px;
+                    commands: "M 4 2 H 21 L 30 11 V 42 H 4 Z M 21 2 V 11 H 30";
+                }
+            }
+            DescriptionLabel {
+                horizontal-alignment: center;
+                text: root.version.message;
+                accessible-live-region: polite;
+            }
+        }
+    }
+}
+
+export component FileComparison inherits Rectangle {
+    in property <bool> open;
+    in property <FileVersion> local;
+    in property <FileVersion> remote;
+    in property <length> left-inset;
+    in property <length> right-inset;
+    in property <length> top-inset;
+    in property <length> bottom-inset;
+    callback close();
+
+    changed open => {
+        if root.open {
+            popup.show();
+        } else {
+            popup.close();
+        }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: 0px;
+        width: root.width;
+        height: root.height;
+        close-policy: no-auto-close;
+        Rectangle {
+            background: #0009;
+            FocusScope {
+                focus-on-click: false;
+                focus-on-tab-navigation: false;
+                capture-key-pressed(event) => {
+                    if event.text == Key.Escape || event.text == Key.Back {
+                        root.close();
+                        return accept;
+                    }
+                    return reject;
+                }
+
+                Rectangle {
+                    x: root.left-inset + 16px;
+                    y: root.top-inset + 16px;
+                    width: max(0px, root.width - root.left-inset - root.right-inset - 32px);
+                    height: max(0px, root.height - root.top-inset - root.bottom-inset - 32px);
+                    background: Colors.background;
+                    border-radius: Dimensions.card-border-radius;
+                    border-width: 1px;
+                    border-color: Colors.primary-accent;
+                    accessible-role: groupbox;
+                    accessible-label: "Compare File Versions";
+                    VerticalLayout {
+                        padding: 16px;
+                        spacing: 16px;
+                        SectionHeadingLabel {
+                            text: "Compare File Versions";
+                        }
+                        panels := HorizontalLayout {
+                            vertical-stretch: 1;
+                            spacing: Dimensions.element-gap;
+                            VersionPanel {
+                                width: (panels.width - panels.spacing) / 2;
+                                heading: "Local Device";
+                                version: root.local;
+                            }
+                            VersionPanel {
+                                width: (panels.width - panels.spacing) / 2;
+                                heading: "Remote";
+                                version: root.remote;
+                            }
+                        }
+                        HorizontalLayout {
+                            alignment: end;
+                            ExpandedPrimaryActionButton {
+                                width: 140px;
+                                text: "Close";
+                                focus-on-init: true;
+                                outline-color: self.has-focus ? Colors.background : Colors.primary-accent;
+                                border-width: self.has-focus ? 3px : 1px;
+                                clicked => {
+                                    root.close();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

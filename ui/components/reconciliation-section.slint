@@ -12,6 +12,7 @@ export component ReconciliationSection inherits VerticalLayout {
     in property <bool> interactive;
     in property <bool> destructive: true;
     in-out property <bool> expanded: false;
+    callback compare-file(string);
     callback choose-file(string, int, int);
     spacing: Dimensions.element-gap;
     vertical-stretch: 0;
@@ -103,6 +104,13 @@ export component ReconciliationSection inherits VerticalLayout {
                 }
                 VerticalLayout {
                     width: 112px;
+                    if root.interactive && root.section != 2: ExpandedSecondaryActionButton {
+                        text: "Compare";
+                        accessible-label: "Compare file versions: " + item.path;
+                        clicked => {
+                            root.compare-file(item.path);
+                        }
+                    }
                     spacing: Dimensions.element-gap;
                     if !root.interactive || item.selected || (!root.destructive && root.section == 1): Text {
                         text: item.action-label;

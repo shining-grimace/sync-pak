@@ -20,6 +20,7 @@ export component PreflightPage inherits CenteredPageRoot {
     in property <[MirrorReviewRow]> conflicts;
     in property <[MirrorReviewRow]> synced;
     in property <string> selection-error;
+    callback compare-file(string);
     callback choose-file(string, int, int);
     in property <string> connection-name;
     in property <string> connection-mode;
@@ -114,6 +115,9 @@ export component PreflightPage inherits CenteredPageRoot {
                 synced: root.synced;
                 interactive: true;
                 destructive: root.connection-mode == "Mirror";
+                compare-file(path) => {
+                    root.compare-file(path);
+                }
                 choose-file(path, section, action) => {
                     root.choose-file(path, section, action);
                 }

@@ -218,3 +218,31 @@ fn source_modified_time(
         })
         .and_then(|value| value.parse().ok())
 }
+
+impl S3Transport {
+    pub(crate) async fn read_preview(
+        &self,
+        bucket: &str,
+        key: &str,
+        limit: u64,
+    ) -> Option<Vec<u8>> {
+        let mut response = self
+            .client
+            .get_object()
+            .bucket(bucket)
+            .key(key)
+            .send()
+            .boxed()
+            .await
+            .ok()?;
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response.body.next().await {
+            let chunk = chunk.ok()?;
+            if bytes.len().saturating_add(chunk.len()) as u64 > limit {
+                return None;
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        Some(bytes)
+    }
+}
