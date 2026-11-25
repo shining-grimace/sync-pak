@@ -101,6 +101,11 @@ pub(crate) fn refresh(
                     id: provider.id.as_str().into(),
                     name: provider.name.into(),
                     kind: kind_name(provider.kind).into(),
+                    credential_store_index: crate::platform::credential_discovery::BACKENDS
+                        .iter()
+                        .position(|backend| *backend == provider.credential_reference.backend)
+                        .map_or(-1, |index| index as i32),
+                    credential_store: provider.credential_reference.backend.name().into(),
                     verification: provider_list_verification_controller::status(
                         states,
                         buckets,

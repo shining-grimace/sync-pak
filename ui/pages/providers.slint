@@ -20,6 +20,7 @@ import { ContentGroup, ListItem, ListView } from "../components/list-and-action-
 
 export component ProvidersPage inherits CenteredPageRoot {
     in property <[ProviderRow]> providers;
+    in property <[string]> credential-store-statuses;
     in property <string> busy-provider-id;
     in property <bool> load-failed;
     callback show-providers();
@@ -89,9 +90,12 @@ export component ProvidersPage inherits CenteredPageRoot {
             vertical-scrollbar-policy: always-on;
             for provider in root.providers: ListItem {
                 width: parent.visible-width;
-                InfoCard {
+                card := InfoCard {
+                    private property <string> store-status: provider.credential-store-index >= 0 && provider.credential-store-index < root.credential-store-statuses.length
+                        ? " — " + root.credential-store-statuses[provider.credential-store-index]
+                        : "";
                     accessible-role: list-item;
-                    accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary;
+                    accessible-label: provider.name + ". " + provider.kind + ". " + provider.verification + ". " + provider.connection-summary + ". Credential store: " + provider.credential-store + self.store-status;
                     baseline-height: root.width < Dimensions.narrow-layout-breakpoint ? 128px : 66px;
                     VerticalLayout {
                     spacing: Dimensions.card-element-spacing;
@@ -107,6 +111,9 @@ export component ProvidersPage inherits CenteredPageRoot {
 
                         DescriptionLabel {
                             text: provider.connection-summary;
+                        }
+                        DescriptionLabel {
+                            text: "Credential store: " + provider.credential-store + card.store-status;
                         }
                     }
 

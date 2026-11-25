@@ -56,7 +56,7 @@ pub(crate) fn configure(window: &AppWindow) {
     });
 }
 
-pub(crate) fn present_diagnostic(window: &AppWindow, message: &'static str) {
+pub(crate) fn present_diagnostic(window: &AppWindow, message: &str) {
     window.invoke_queue_notification(message.into(), 0, DIAGNOSTICS_ACTION);
 }
 

@@ -1,5 +1,5 @@
-use super::{CapabilityError, CredentialBackend, CredentialProvider};
-pub(crate) fn discover() -> Result<Vec<CredentialProvider>, CapabilityError> {
+use super::{CapabilityError, CredentialBackend, CredentialProvider, Discovery};
+pub(crate) fn discover_with_status() -> Result<Discovery, CapabilityError> {
     use crate::platform::{
         credential_deadline::{SERVICE_TIMEOUT, within},
         credential_errors::map_bus_error,
@@ -25,7 +25,7 @@ pub(crate) fn discover() -> Result<Vec<CredentialProvider>, CapabilityError> {
                 .await
                 .map_err(map_bus_error)?;
             let mut owners = std::collections::HashSet::new();
-            let mut providers = Vec::new();
+            let mut report = Discovery::default();
             for backend in [
                 CredentialBackend::Kde,
                 CredentialBackend::KdeLegacy6,
@@ -93,13 +93,17 @@ pub(crate) fn discover() -> Result<Vec<CredentialProvider>, CapabilityError> {
                     ))
                 })
                 .await;
-                if let Ok((owner, provider)) = probe
-                    && owners.insert(owner)
-                {
-                    providers.push(provider);
+                match probe {
+                    Ok((owner, provider)) => {
+                        report.probes.push((backend, Ok(provider.clone())));
+                        if owners.insert(owner) {
+                            report.choices.push(provider);
+                        }
+                    }
+                    Err(error) => report.probes.push((backend, Err(error))),
                 }
             }
-            Ok(providers)
+            Ok(report)
         }
         .await;
         let _ = within(std::time::Duration::from_secs(1), async {
@@ -112,7 +116,7 @@ pub(crate) fn discover() -> Result<Vec<CredentialProvider>, CapabilityError> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::discover;
 
     /// Metadata only: never unlocks a collection or reads/writes credential items.
     #[test]

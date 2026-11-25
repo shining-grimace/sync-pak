@@ -12,10 +12,14 @@ export enum ConfirmationKind {
     delete-connection,
     cancel-activity,
     create-remote-folder,
+    replace-provider-credentials,
+    retry-provider-access,
+    setup-provider-credential-store,
 }
 
 export component ConfirmationPrompts inherits ConfirmationDialog {
     in property <ConfirmationKind> kind;
+    in property <string> recovery-store-status;
     in property <bool> provider-storage-busy;
     in property <bool> connection-verifying;
     in property <bool> provider-storage-can-cancel;
@@ -31,6 +35,9 @@ export component ConfirmationPrompts inherits ConfirmationDialog {
     private property <bool> cancelling-activity: root.kind == ConfirmationKind.cancel-activity;
     private property <bool> creating-folder: root.kind == ConfirmationKind.create-remote-folder;
     private property <bool> discarding-provider: root.kind == ConfirmationKind.discard-provider;
+    private property <bool> replacing-credentials: root.kind == ConfirmationKind.replace-provider-credentials;
+    private property <bool> retrying-access: root.kind == ConfirmationKind.retry-provider-access;
+    private property <bool> setting-up-store: root.kind == ConfirmationKind.setup-provider-credential-store;
     open: root.kind != ConfirmationKind.none;
     busy: (root.deleting-provider && root.provider-storage-busy)
         || (root.creating-folder && root.connection-verifying);
@@ -39,9 +46,12 @@ export component ConfirmationPrompts inherits ConfirmationDialog {
         : root.deleting-connection ? "Delete " + root.connection-name + "?"
         : root.cancelling-activity ? "Cancel " + root.activity-name + "?"
         : root.creating-folder ? "Create Remote Folder?"
+        : root.replacing-credentials ? "Replace Provider Credentials?"
+        : root.retrying-access ? "Credential Access"
+        : root.setting-up-store ? "Set Up Credential Storage"
         : "Discard Unsaved Changes?";
     cancel-text: root.can-cancel-busy ? "Cancel Access"
-        : root.deleting-provider || root.deleting-connection ? "Cancel"
+        : root.deleting-provider || root.deleting-connection || root.replacing-credentials || root.retrying-access || root.setting-up-store ? "Cancel"
         : root.cancelling-activity ? "Keep Running"
         : root.creating-folder ? "Keep Editing"
         : "Keep Editing";
@@ -49,6 +59,9 @@ export component ConfirmationPrompts inherits ConfirmationDialog {
         : root.deleting-connection ? "Delete Connection"
         : root.cancelling-activity ? "Cancel Operation"
         : root.creating-folder ? (root.busy ? "Creating…" : "Create Folder")
+        : root.replacing-credentials ? "Replace Credentials"
+        : root.retrying-access ? "Retry Access"
+        : root.setting-up-store ? "Open Settings"
         : "Discard Changes";
     confirm-label: root.deleting-provider ? "Delete provider " + root.provider-name
         : root.deleting-connection ? "Delete connection " + root.connection-name
@@ -85,6 +98,20 @@ export component ConfirmationPrompts inherits ConfirmationDialog {
 
     for connection-name in (root.deleting-provider ? root.dependent-connections : []): DescriptionLabel {
         text: "• " + connection-name;
+    }
+
+    if root.replacing-credentials || root.retrying-access: DescriptionLabel {
+        text: "Credential store: " + root.recovery-store-status;
+    }
+
+    if root.replacing-credentials || root.retrying-access: DescriptionLabel {
+        text: root.replacing-credentials
+            ? "This provider’s credentials cannot be accessed. Would you like to replace them?"
+            : "Retry credential access to open this provider.";
+    }
+
+    if root.setting-up-store: DescriptionLabel {
+        text: "SyncPak needs a configured credential store before it can save replacement credentials. Set up a store in your desktop’s password manager, then choose it under Default store for new providers in Settings and try again.";
     }
 
     if root.creating-folder: DescriptionLabel {

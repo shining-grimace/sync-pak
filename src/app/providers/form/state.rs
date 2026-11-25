@@ -6,6 +6,8 @@ use slint::{ModelRc, SharedString, VecModel};
 
 /// Removes credentials and verification data that only belong to the current form session.
 pub(crate) fn clear_transient_state(window: &AppWindow) {
+    window.set_provider_form_replacing(false);
+    window.set_provider_replacement_store(SharedString::default());
     window.set_provider_form_access_key(SharedString::default());
     window.set_provider_form_secret_key(SharedString::default());
     window.set_provider_form_session_token(SharedString::default());

@@ -23,6 +23,9 @@ pub(super) fn save(
     kind: i32,
 ) {
     let Some(window) = weak.upgrade() else { return };
+    if window.get_provider_form_replacing() && !window.get_provider_save_after_verification() {
+        return;
+    }
     if window.get_credential_discovery_busy() {
         window.set_provider_save_after_verification(false);
         window.set_status_message(
@@ -122,6 +125,14 @@ fn save_ready(
         options,
         verified,
     };
+    let replacement = match super::recovery::destination(&window) {
+        Ok(backend) => backend,
+        Err(error) => {
+            window.set_provider_save_after_verification(false);
+            window.set_status_message(error.into());
+            return;
+        }
+    };
     let diagnostics = Rc::clone(diagnostics);
     let buckets = Rc::clone(buckets);
     let worker_configuration = ConfigStore::at(configuration.path().to_owned());
@@ -132,7 +143,18 @@ fn save_ready(
             let store = PlatformCredentialStore::with_interaction(interaction)
                 .map_err(ProviderPersistenceError::ProtectedStore)?;
             let repository = ProviderRepository::new(&worker_configuration, &store);
-            if worker_edit_id.is_none() {
+            if let Some(backend) = replacement {
+                repository
+                    .replace_credentials(
+                        worker_edit_id
+                            .as_ref()
+                            .ok_or(ProviderPersistenceError::Other)?,
+                        backend,
+                        draft,
+                        &credentials,
+                    )
+                    .map_err(ProviderPersistenceError::from)
+            } else if worker_edit_id.is_none() {
                 repository
                     .create(draft, &credentials)
                     .map_err(ProviderPersistenceError::from)

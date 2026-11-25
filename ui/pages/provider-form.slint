@@ -28,6 +28,8 @@ export component ProviderFormPage inherits Rectangle {
     in-out property <bool> provider-secret-visible;
     in-out property <bool> provider-advanced-expanded;
     in property <bool> provider-verifying;
+    in property <string> replacement-store;
+    in property <bool> replacing-credentials;
     in property <bool> provider-storage-busy;
     private property <bool> busy: root.provider-verifying || root.provider-storage-busy;
     in property <[string]> provider-verified-buckets;
@@ -71,8 +73,11 @@ export component ProviderFormPage inherits Rectangle {
                     text: "Credentials are saved in this device's protected storage only when you save this provider.";
                 }
 
-                if root.provider-form-id != "": DescriptionLabel {
+                if root.provider-form-id != "" && !root.replacing-credentials: DescriptionLabel {
                     text: "The access key ID is loaded from protected storage. Leave secret fields blank to keep their saved values; SyncPak never displays saved secrets.";
+                }
+                if root.replacing-credentials: DescriptionLabel {
+                    text: "Enter replacement credentials. After verification, SyncPak will save them in " + root.replacement-store + ".";
                 }
                 FocusScope {
                     width: 0px;
@@ -146,7 +151,7 @@ export component ProviderFormPage inherits Rectangle {
                     spacing: Dimensions.element-gap;
                     LineEdit {
                         accessible-label: root.provider-form-kind == 1 ? "Application key" : "Secret access key";
-                        placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
+                        placeholder-text: root.provider-form-id != "" && !root.replacing-credentials ? "Leave blank to keep saved value" : (root.provider-form-kind == 1 ? "Application key" : "Secret access key");
                         text <=> root.provider-form-secret-key;
                         input-type: root.provider-secret-visible ? text : password;
                         horizontal-stretch: 1;
@@ -264,7 +269,7 @@ export component ProviderFormPage inherits Rectangle {
 
                     LineEdit {
                         accessible-label: "Session token";
-                        placeholder-text: root.provider-form-id != "" ? "Leave blank to keep saved value" : "Optional temporary session token";
+                        placeholder-text: root.provider-form-id != "" && !root.replacing-credentials ? "Leave blank to keep saved value" : "Optional temporary session token";
                         text <=> root.provider-form-session-token;
                         input-type: root.provider-secret-visible ? text : password;
                         enabled: !root.busy;
@@ -294,7 +299,7 @@ export component ProviderFormPage inherits Rectangle {
             padding-top: Dimensions.section-gap;
             HorizontalLayout {
                 spacing: Dimensions.element-gap;
-                ExpandedSecondaryActionButton {
+                if !root.replacing-credentials: ExpandedSecondaryActionButton {
                     accessible-label: "Save " + root.provider-form-name + " without verifying";
                     text: "Save Unverified";
                     enabled: !root.busy;
@@ -303,7 +308,7 @@ export component ProviderFormPage inherits Rectangle {
                     }
                 }
 
-                ExpandedSecondaryActionButton {
+                if !root.replacing-credentials: ExpandedSecondaryActionButton {
                     accessible-label: "Verify settings for " + root.provider-form-name;
                     text: "Verify";
                     enabled: !root.busy;
@@ -313,8 +318,8 @@ export component ProviderFormPage inherits Rectangle {
                 }
 
                 ExpandedPrimaryActionButton {
-                    accessible-label: "Save and verify " + root.provider-form-name;
-                    text: root.provider-storage-busy ? "Waiting…" : root.provider-verifying ? "Verifying…" : "Save & Verify";
+                    accessible-label: (root.replacing-credentials ? "Verify and replace credentials for " : "Save and verify ") + root.provider-form-name;
+                    text: root.provider-storage-busy ? "Waiting…" : root.provider-verifying ? "Verifying…" : root.replacing-credentials ? "Verify & Replace" : "Save & Verify";
                     enabled: !root.busy;
                     clicked => {
                         root.save-and-verify-provider();

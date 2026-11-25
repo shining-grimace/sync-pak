@@ -1,3 +1,7 @@
+mod failure;
+
+use failure::PreflightFailure;
+
 use std::{
     path::PathBuf,
     sync::mpsc::{self, Receiver},
@@ -8,11 +12,10 @@ use crate::{
     AppWindow,
     app::diagnostics::{self as diagnostics_controller, SharedDiagnosticLog},
     configuration::{ConfigStore, ProviderRepository},
-    inventory::endpoint::{EndpointInventoryError, EndpointPreflightError},
     operations::request::RunRequest,
     platform::PlatformCredentialStore,
     preflight::{CaseSensitivity, Preflight},
-    providers::s3::preflight::{S3PreflightError, collect_s3_connection_preflight},
+    providers::s3::preflight::collect_s3_connection_preflight,
 };
 
 /// Runs S3 inventory collection away from the UI event loop and returns its read-only result.
@@ -44,7 +47,8 @@ fn collect(
     configuration_path: PathBuf,
 ) -> Result<Preflight, PreflightFailure> {
     let configuration = ConfigStore::at(configuration_path.clone());
-    let credentials = PlatformCredentialStore::new().map_err(|_| PreflightFailure::Credentials)?;
+    let credentials = PlatformCredentialStore::new()
+        .map_err(|error| PreflightFailure::Credentials(Some(error)))?;
     let providers = ProviderRepository::new(&configuration, &credentials);
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -82,13 +86,14 @@ fn await_result(
                 );
             }
             Ok(Err(failure)) => {
-                crate::app::preflight::controller::show_failed(&window, failure.message());
+                let message = failure.message(review_request.provider.credential_reference.backend);
+                crate::app::preflight::controller::show_failed(&window, &message);
                 diagnostics_controller::present(
                     &window,
                     &diagnostics,
                     "This operation cannot start",
                     failure.diagnostic(),
-                    failure.message(),
+                    &message,
                 );
             }
             Err(mpsc::TryRecvError::Disconnected) => {
@@ -124,64 +129,6 @@ fn is_active(window: &AppWindow, connection_id: &str, generation: i32) -> bool {
             generation,
             window.get_preflight_generation(),
         )
-}
-
-#[derive(Clone, Copy)]
-enum PreflightFailure {
-    Credentials,
-    Provider,
-    LocalInventory,
-    RemoteInventory,
-    Planning,
-}
-
-impl From<S3PreflightError> for PreflightFailure {
-    fn from(error: S3PreflightError) -> Self {
-        match error {
-            S3PreflightError::Credentials(_) => Self::Credentials,
-            S3PreflightError::Provider(_) => Self::Provider,
-            S3PreflightError::Inventory(
-                EndpointPreflightError::SourceInventory(EndpointInventoryError::Local(_))
-                | EndpointPreflightError::DestinationInventory(EndpointInventoryError::Local(_)),
-            ) => Self::LocalInventory,
-            S3PreflightError::Inventory(
-                EndpointPreflightError::SourceInventory(EndpointInventoryError::Remote(_))
-                | EndpointPreflightError::DestinationInventory(EndpointInventoryError::Remote(_)),
-            ) => Self::RemoteInventory,
-            S3PreflightError::Inventory(EndpointPreflightError::Preflight(_)) => Self::Planning,
-        }
-    }
-}
-
-impl PreflightFailure {
-    fn diagnostic(self) -> &'static str {
-        match self {
-            Self::Credentials => "saved credential access failed",
-            Self::Provider => "provider inventory failed",
-            Self::LocalInventory => "local folder inventory failed",
-            Self::RemoteInventory => "cloud path inventory failed",
-            Self::Planning => "connection preflight planning failed",
-        }
-    }
-    fn message(self) -> &'static str {
-        match self {
-            Self::Credentials => {
-                "SyncPak could not access the saved credentials. Unlock protected storage, then try again."
-            }
-            Self::Provider => {
-                "SyncPak could not reach this provider. Check its credentials, bucket, and network connection."
-            }
-            Self::LocalInventory => {
-                "SyncPak could not read the configured local folder. Check that it exists and that SyncPak has permission to access it."
-            }
-            Self::RemoteInventory => {
-                "SyncPak could not read the configured cloud bucket or remote folder. Check that the cloud path exists and that the provider credentials can access it."
-            }
-            Self::Planning => {
-                "SyncPak read both paths but could not prepare this operation. Review the connection settings, then try again."
-            }
-        }
-    }
 }
 
 #[cfg(target_os = "windows")]

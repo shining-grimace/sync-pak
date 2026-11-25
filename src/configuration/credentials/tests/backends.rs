@@ -85,3 +85,60 @@ fn changing_the_preference_only_affects_new_cloud_providers() {
     assert!(repository.load_credentials(&new_provider.id).unwrap() == secret());
     assert_eq!(config.load().unwrap().schema_version, 1);
 }
+
+#[test]
+fn recovery_moves_the_reference_and_preserves_linked_connections() {
+    let config = ConfigStore::at(test_path());
+    let stores = Stores::default();
+    let repository = ProviderRepository::new(&config, &stores);
+    let mut settings = config.load().unwrap();
+    settings.credential_backend = Some(CredentialBackend::Gnome);
+    config.save(&settings).unwrap();
+    let provider = repository.create(provider_draft(), &secret()).unwrap();
+    let connection = ConnectionRepository::new(&config)
+        .create(ConnectionDraft {
+            transport: None,
+            name: "Photos".into(),
+            provider_id: provider.id.clone(),
+            bucket: "backup".into(),
+            remote_path: String::new(),
+            local_path: "/photos".into(),
+            mode: SyncMode::AddOnly,
+            allow_upload: true,
+            allow_download: true,
+            show_preview: true,
+            keep_last_archives: None,
+            verified: true,
+        })
+        .unwrap();
+
+    let mut verified_draft = provider_draft();
+    verified_draft.verified = true;
+    let replaced = repository
+        .replace_credentials(
+            &provider.id,
+            CredentialBackend::Kde,
+            verified_draft,
+            &replacement_secret(),
+        )
+        .unwrap();
+
+    let saved = config.load().unwrap();
+    assert_eq!(saved.credential_backend, Some(CredentialBackend::Gnome));
+    assert_eq!(replaced.id, provider.id);
+    assert!(replaced.verified);
+    assert_eq!(saved.providers, vec![replaced.clone()]);
+    assert_eq!(
+        replaced.credential_reference.backend,
+        CredentialBackend::Kde
+    );
+    assert_eq!(saved.connections[0].id, connection.id);
+    assert_eq!(saved.connections[0].provider_id, provider.id);
+    assert!(!saved.connections[0].verified);
+    assert!(repository.load_credentials(&provider.id).unwrap() == replacement_secret());
+    assert!(
+        stores
+            .load_from(CredentialBackend::Gnome, provider.id.as_str())
+            .is_ok()
+    );
+}

@@ -1,7 +1,7 @@
 use crate::{
     AppWindow,
     configuration::ConfigStore,
-    platform::credential_discovery::{self, CredentialProvider},
+    platform::credential_discovery::{self, BACKENDS, CredentialProvider, Discovery},
 };
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use std::{cell::RefCell, rc::Rc, sync::mpsc, time::Duration};
@@ -38,6 +38,7 @@ pub(crate) fn configure(window: &AppWindow, configuration: Rc<ConfigStore>) {
             refresh(&window, Rc::clone(&store), Rc::clone(&choices));
         }
     });
+    display(window, &configuration, &[]);
     refresh(window, configuration, providers);
 }
 
@@ -50,14 +51,16 @@ fn refresh(
         return;
     }
     window.set_credential_discovery_busy(true);
+    publish_status(window, |_| "checking…");
     window.set_credential_provider_summary("Checking this device's credential providers…".into());
     let (sender, receiver) = mpsc::sync_channel(1);
     let worker = std::thread::Builder::new()
         .name("credential-discovery".into())
         .spawn(move || {
-            let _ = sender.send(credential_discovery::discover());
+            let _ = sender.send(credential_discovery::discover_with_status());
         });
     if worker.is_err() {
+        publish_status(window, |_| "status could not be checked");
         window.set_credential_discovery_busy(false);
         window.set_credential_provider_summary(
             "Credential providers could not be checked. Retry in Settings.".into(),
@@ -71,7 +74,7 @@ fn poll(
     weak: slint::Weak<AppWindow>,
     configuration: Rc<ConfigStore>,
     choices: Rc<RefCell<Vec<CredentialProvider>>>,
-    receiver: mpsc::Receiver<Result<Vec<CredentialProvider>, crate::capabilities::CapabilityError>>,
+    receiver: mpsc::Receiver<Result<Discovery, crate::capabilities::CapabilityError>>,
 ) {
     slint::Timer::single_shot(Duration::from_millis(50), move || {
         let Some(window) = weak.upgrade() else { return };
@@ -85,8 +88,11 @@ fn poll(
         };
         window.set_credential_discovery_busy(false);
         match result {
-            Ok(providers) => {
-                *choices.borrow_mut() = providers;
+            Ok(report) => {
+                publish_status(&window, |backend| {
+                    credential_discovery::status(&report, backend)
+                });
+                *choices.borrow_mut() = report.choices;
                 let selected = credential_discovery::preferred(
                     &choices.borrow(),
                     &std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default(),
@@ -106,6 +112,7 @@ fn poll(
                 display(&window, &configuration, &choices.borrow());
             }
             Err(_) => {
+                publish_status(&window, |_| "status could not be checked");
                 choices.borrow_mut().clear();
                 display(&window, &configuration, &[]);
             }
@@ -115,11 +122,18 @@ fn poll(
 
 fn display(window: &AppWindow, configuration: &ConfigStore, choices: &[CredentialProvider]) {
     let selected = configuration.load().ok().and_then(|c| c.credential_backend);
-    window.set_credential_provider_names(ModelRc::new(Rc::new(VecModel::from_iter(
-        choices.iter().map(|p| SharedString::from(p.description())),
-    ))));
+    let mut labels: Vec<SharedString> = choices.iter().map(|p| p.description().into()).collect();
     let index = selected.and_then(|backend| choices.iter().position(|p| p.backend == backend));
-    window.set_credential_provider_index(index.map_or(-1, |i| i as i32));
+    let display_index = index.unwrap_or_else(|| {
+        let label = match selected {
+            Some(backend) => format!("{} — unavailable", backend.name()),
+            None => "No default store selected".into(),
+        };
+        labels.push(label.into());
+        labels.len() - 1
+    });
+    window.set_credential_provider_names(ModelRc::new(Rc::new(VecModel::from(labels))));
+    window.set_credential_provider_index(display_index as i32);
     let summary = match (selected, index) {
         (Some(_), Some(index)) => format!("Credentials provider: {}.", choices[index].description()),
         (Some(backend), None) => format!("Credentials provider: {} — unavailable. Retry or choose another provider in Settings. Existing credentials stay with their original provider.", backend.name()),
@@ -127,4 +141,16 @@ fn display(window: &AppWindow, configuration: &ConfigStore, choices: &[Credentia
         (None, _) => "No usable credential provider was found. Enable your desktop's password service and set up a default keyring, then retry in Settings.".into(),
     };
     window.set_credential_provider_summary(summary.into());
+}
+
+fn publish_status(
+    window: &AppWindow,
+    status: impl Fn(crate::capabilities::CredentialBackend) -> &'static str,
+) {
+    window.set_credential_store_statuses(ModelRc::new(Rc::new(VecModel::from(
+        BACKENDS
+            .into_iter()
+            .map(|backend| SharedString::from(status(backend)))
+            .collect::<Vec<_>>(),
+    ))));
 }

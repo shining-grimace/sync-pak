@@ -115,7 +115,7 @@ export component SettingsPage inherits CenteredPageRoot {
         VerticalLayout {
             spacing: Dimensions.element-gap;
             SectionHeadingLabel {
-                text: "Credential storage";
+                text: "Default store for new providers";
             }
             DescriptionLabel {
                 text: root.credential-provider-summary;
@@ -124,7 +124,7 @@ export component SettingsPage inherits CenteredPageRoot {
                 text: "Choose where new cloud providers' credentials are stored on this device. Existing providers keep using their original credential store. This preference is not included in exported connection lists.";
             }
             ComboBox {
-                accessible-label: "Credential provider for new cloud providers";
+                accessible-label: "Default store for new providers";
                 model: root.credential-provider-names;
                 current-index <=> root.credential-provider-index;
                 enabled: !root.configuration-unavailable && !root.credential-discovery-busy && !root.credential-storage-busy && root.credential-provider-names.length > 0;

@@ -3,9 +3,11 @@ use super::{
     state::{clear_transient_state, mark_clean, provider_kind_index},
 };
 use crate::{
-    AppWindow,
+    AppWindow, ConfirmationKind,
     app::diagnostics::{self as diagnostics_controller, SharedDiagnosticLog},
-    configuration::ConfigStore,
+    app::providers::save_error::ProviderPersistenceError,
+    capabilities::CapabilityError,
+    configuration::{ConfigStore, ProviderConfig},
 };
 use slint::SharedString;
 use std::rc::Rc;
@@ -17,7 +19,7 @@ pub(super) fn edit(
     id: SharedString,
 ) {
     let Some(window) = weak.upgrade() else { return };
-    if window.get_provider_storage_busy() {
+    if window.get_provider_storage_busy() || window.get_confirmation() != ConfirmationKind::None {
         return;
     }
     clear_transient_state(&window);
@@ -40,34 +42,62 @@ pub(super) fn edit(
                 move |interaction| {
                     provider_form_credentials::load(&worker_configuration, &worker_id, interaction)
                 },
-                move |window, result| {
-                    let credentials = match result {
-                        Ok(credentials) => credentials,
-                        Err(error) => {
-                            super::credential_task::present_error(window, &diagnostics, &error);
-                            return;
+                move |window, result| match result {
+                    Ok(credentials) => populate(window, provider, credentials.access_key_id),
+                    Err(error) => {
+                        let kind = match error {
+                            ProviderPersistenceError::ProtectedStore(
+                                CapabilityError::Locked
+                                | CapabilityError::UnlockTimedOut
+                                | CapabilityError::Cancelled,
+                            ) => ConfirmationKind::RetryProviderAccess,
+                            ProviderPersistenceError::ProtectedStore(
+                                CapabilityError::ServiceMissing
+                                | CapabilityError::NotFound
+                                | CapabilityError::NotConfigured
+                                | CapabilityError::Unavailable
+                                | CapabilityError::AccessDenied
+                                | CapabilityError::Unsupported
+                                | CapabilityError::InvalidReference,
+                            ) => ConfirmationKind::ReplaceProviderCredentials,
+                            _ => {
+                                super::credential_task::present_error(window, &diagnostics, &error);
+                                return;
+                            }
+                        };
+                        if window.get_confirmation() == ConfirmationKind::None {
+                            let status = match error {
+                                ProviderPersistenceError::ProtectedStore(
+                                    CapabilityError::Locked | CapabilityError::UnlockTimedOut,
+                                ) => "locked",
+                                ProviderPersistenceError::ProtectedStore(
+                                    CapabilityError::Cancelled,
+                                ) => "access cancelled",
+                                ProviderPersistenceError::ProtectedStore(
+                                    CapabilityError::ServiceMissing | CapabilityError::Unavailable,
+                                ) => "unavailable",
+                                ProviderPersistenceError::ProtectedStore(
+                                    CapabilityError::NotFound,
+                                ) => "saved entry missing",
+                                ProviderPersistenceError::ProtectedStore(
+                                    CapabilityError::NotConfigured,
+                                ) => "needs setup",
+                                ProviderPersistenceError::ProtectedStore(
+                                    CapabilityError::AccessDenied,
+                                ) => "access denied",
+                                _ => "saved entry could not be read",
+                            };
+                            window.set_provider_recovery_store_status(
+                                format!(
+                                    "{} — {status}",
+                                    provider.credential_reference.backend.name()
+                                )
+                                .into(),
+                            );
+                            window.set_pending_provider_recovery_id(provider.id.as_str().into());
+                            window.set_confirmation(kind);
                         }
-                    };
-                    super::transport::populate(window, &provider.options);
-                    window.set_provider_form_id(provider.id.as_str().into());
-                    window.set_provider_form_name(provider.name.into());
-                    window.set_provider_form_kind(provider_kind_index(provider.kind));
-                    window.set_provider_form_account_id(
-                        provider.options.account_id.unwrap_or_default().into(),
-                    );
-                    window.set_provider_form_region(
-                        provider.options.region.unwrap_or_default().into(),
-                    );
-                    window.set_provider_form_bucket(
-                        provider.options.default_bucket.unwrap_or_default().into(),
-                    );
-                    window.set_provider_form_endpoint(
-                        provider.options.endpoint.unwrap_or_default().into(),
-                    );
-                    window.set_provider_form_access_key(credentials.access_key_id.into());
-                    mark_clean(window);
-                    window.set_status_message(SharedString::default());
-                    window.set_page(2);
+                    }
                 },
             );
         }
@@ -79,4 +109,19 @@ pub(super) fn edit(
             "SyncPak could not open this provider. It may have been removed.",
         ),
     }
+}
+
+pub(super) fn populate(window: &AppWindow, provider: ProviderConfig, access_key: String) {
+    super::transport::populate(window, &provider.options);
+    window.set_provider_form_id(provider.id.as_str().into());
+    window.set_provider_form_name(provider.name.into());
+    window.set_provider_form_kind(provider_kind_index(provider.kind));
+    window.set_provider_form_account_id(provider.options.account_id.unwrap_or_default().into());
+    window.set_provider_form_region(provider.options.region.unwrap_or_default().into());
+    window.set_provider_form_bucket(provider.options.default_bucket.unwrap_or_default().into());
+    window.set_provider_form_endpoint(provider.options.endpoint.unwrap_or_default().into());
+    window.set_provider_form_access_key(access_key.into());
+    mark_clean(window);
+    window.set_status_message(SharedString::default());
+    window.set_page(2);
 }

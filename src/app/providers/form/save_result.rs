@@ -26,6 +26,10 @@ pub(super) fn complete(
     let weak = window.as_weak();
     match result {
         Ok(saved_provider) => {
+            let replaced = window.get_provider_form_replacing();
+            if replaced {
+                window.invoke_invalidate_connection_verifications();
+            }
             let save_after_verification = window.get_provider_save_after_verification();
             let buckets_after_verification =
                 save_after_verification.then(|| verified_buckets(window));
@@ -48,7 +52,11 @@ pub(super) fn complete(
                         Rc::clone(&diagnostics),
                         Rc::clone(&buckets),
                     );
-                    window.set_notice_message("Provider saved securely.".into());
+                    window.set_notice_message(if replaced {
+                        "Credentials replaced. Verify linked connections before syncing.".into()
+                    } else {
+                        "Provider saved securely.".into()
+                    });
                 }
                 Err(_) => diagnostics_controller::present(
                     window,

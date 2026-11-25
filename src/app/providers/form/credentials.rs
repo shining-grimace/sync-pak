@@ -1,7 +1,9 @@
 use crate::{
     app::providers::save_error::ProviderPersistenceError,
-    capabilities::CredentialInteraction,
-    configuration::{ConfigStore, ProviderCredentials, ProviderId, ProviderRepository},
+    capabilities::{CapabilityError, CredentialInteraction},
+    configuration::{
+        ConfigStore, CredentialError, ProviderCredentials, ProviderId, ProviderRepository,
+    },
     platform::PlatformCredentialStore,
 };
 
@@ -14,7 +16,12 @@ pub(crate) fn load(
         .map_err(ProviderPersistenceError::ProtectedStore)?;
     ProviderRepository::new(configuration, &store)
         .load_credentials(provider_id)
-        .map_err(ProviderPersistenceError::from)
+        .map_err(|error| match error {
+            CredentialError::Serialization => {
+                ProviderPersistenceError::ProtectedStore(CapabilityError::InvalidReference)
+            }
+            error => ProviderPersistenceError::from(error),
+        })
 }
 
 pub(crate) fn resolve(

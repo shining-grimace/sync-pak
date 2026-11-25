@@ -18,6 +18,7 @@ pub(crate) fn configure(
     diagnostics: SharedDiagnosticLog,
     buckets: ProviderBucketCache,
 ) {
+    super::recovery::configure(window, configuration, Rc::clone(&diagnostics));
     window.on_infer_b2_region(|value| {
         crate::providers::endpoint::b2_region(&value)
             .unwrap_or_default()
@@ -63,7 +64,11 @@ pub(crate) fn configure(
     let save_and_verify_diagnostics = Rc::clone(&diagnostics);
     window.on_save_and_verify_provider(move || {
         if let Some(window) = weak.upgrade() {
-            if window.get_provider_storage_busy() || window.get_provider_verifying() {
+            if window.get_provider_storage_busy()
+                || window.get_provider_verifying()
+                || (window.get_provider_form_replacing()
+                    && window.get_provider_replacement_store().is_empty())
+            {
                 return;
             }
             window.set_provider_save_after_verification(true);
@@ -78,7 +83,10 @@ pub(crate) fn configure(
     let weak = window.as_weak();
     window.on_request_save_provider(move || {
         if let Some(window) = weak.upgrade() {
-            if window.get_provider_storage_busy() || window.get_provider_verifying() {
+            if window.get_provider_storage_busy()
+                || window.get_provider_verifying()
+                || window.get_provider_form_replacing()
+            {
                 return;
             }
             window.set_status_message(SharedString::default());

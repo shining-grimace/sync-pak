@@ -1,7 +1,9 @@
 use super::{CredentialError, ProviderCredentials, ProviderRepository};
 use crate::{
-    capabilities::{CapabilityError, ProtectedCredentialStore},
-    configuration::{ConfigurationError, ProviderConfig},
+    capabilities::{CapabilityError, CredentialBackend, ProtectedCredentialStore},
+    configuration::{
+        ConfigurationError, CredentialReference, ProviderConfig, ProviderDraft, ProviderId,
+    },
 };
 impl<S: ProtectedCredentialStore> ProviderRepository<'_, S> {
     pub(super) fn save(
@@ -9,9 +11,51 @@ impl<S: ProtectedCredentialStore> ProviderRepository<'_, S> {
         provider: ProviderConfig,
         secret: &ProviderCredentials,
     ) -> Result<(), CredentialError> {
+        self.save_inner(provider, secret, false)
+    }
+
+    pub(crate) fn replace_credentials(
+        &self,
+        id: &ProviderId,
+        backend: CredentialBackend,
+        draft: ProviderDraft,
+        secret: &ProviderCredentials,
+    ) -> Result<ProviderConfig, CredentialError> {
+        let provider = ProviderConfig {
+            id: id.clone(),
+            credential_reference: CredentialReference {
+                backend,
+                provider_id: id.clone(),
+            },
+            name: draft.name,
+            kind: draft.kind,
+            options: draft.options,
+            verified: draft.verified,
+        };
+        self.save_inner(provider.clone(), secret, true)?;
+        Ok(provider)
+    }
+
+    fn save_inner(
+        &self,
+        provider: ProviderConfig,
+        secret: &ProviderCredentials,
+        replacing: bool,
+    ) -> Result<(), CredentialError> {
         let _edit =
             super::super::run_guard::edit_provider(self.configuration.path(), provider.id.as_str())
                 .map_err(CredentialError::Configuration)?;
+        if replacing
+            && !self
+                .configuration
+                .load()
+                .map_err(CredentialError::Configuration)?
+                .providers
+                .iter()
+                .any(|item| item.id == provider.id)
+        {
+            return Err(CredentialError::NotFound);
+        }
         let provider_id = provider.id.clone();
         let backend = provider.credential_reference.backend;
         let serialized = serde_json::to_vec(secret).map_err(|_| CredentialError::Serialization)?;
@@ -38,7 +82,7 @@ impl<S: ProtectedCredentialStore> ProviderRepository<'_, S> {
                 &mut config,
                 &previous,
                 &provider,
-                previous_secret.as_deref() != Some(serialized.as_slice()),
+                replacing || previous_secret.as_deref() != Some(serialized.as_slice()),
             );
         }
         match config

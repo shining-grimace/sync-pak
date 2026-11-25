@@ -103,6 +103,8 @@ export component AppWindow inherits Window {
     in-out property <string> status-message;
     in-out property <string> notice-message;
     in-out property <[string]> credential-provider-names;
+    in-out property <[string]> credential-store-statuses;
+    in-out property <string> provider-recovery-store-status;
     in-out property <int> credential-provider-index: -1;
     in-out property <string> credential-provider-summary: "Checking this device's credential providers…";
     in-out property <bool> credential-discovery-busy: false;
@@ -147,6 +149,11 @@ export component AppWindow inherits Window {
     in-out property <int> pending-connection-count;
     in-out property <[string]> pending-provider-connections;
     in-out property <string> provider-form-id;
+    in-out property <string> provider-replacement-store;
+    in-out property <bool> provider-form-replacing;
+    in-out property <string> pending-provider-recovery-id;
+    callback cancel-provider-recovery();
+    callback confirm-provider-recovery();
     in-out property <string> provider-form-name;
     in-out property <int> provider-form-kind;
     in-out property <string> provider-form-account-id;
@@ -319,6 +326,9 @@ export component AppWindow inherits Window {
         Palette.color-scheme = ColorScheme.unknown;
     }
     changed page => {
+        if root.page == Page.providers {
+            root.refresh-credential-providers();
+        }
         if root.page != Page.preflight && root.comparison-open {
             root.close-comparison();
         }
@@ -514,6 +524,7 @@ export component AppWindow inherits Window {
 
             if root.page == Page.providers: ProvidersPage {
                 providers: root.providers;
+                credential-store-statuses: root.credential-store-statuses;
                 busy-provider-id: root.busy-provider-id;
                 load-failed: root.providers-load-failed;
                 show-providers => {
@@ -536,6 +547,8 @@ export component AppWindow inherits Window {
             if root.page == Page.provider-form: ProviderFormPage {
                 validation-focus: root.provider-validation-focus;
                 provider-form-id <=> root.provider-form-id;
+                replacement-store: root.provider-replacement-store;
+                replacing-credentials: root.provider-form-replacing;
                 provider-form-name <=> root.provider-form-name;
                 provider-form-kind <=> root.provider-form-kind;
                 provider-form-account-id <=> root.provider-form-account-id;
@@ -989,6 +1002,7 @@ export component AppWindow inherits Window {
         left-inset: root.safe-area-insets.left;
         right-inset: root.safe-area-insets.right;
         kind: root.confirmation;
+        recovery-store-status: root.provider-recovery-store-status;
         connection-verifying: root.connection-verifying;
         provider-storage-busy: root.provider-storage-busy;
         provider-storage-can-cancel: root.provider-storage-can-cancel;
@@ -1014,6 +1028,8 @@ export component AppWindow inherits Window {
                 root.dismiss-cancel-activity();
             } else if root.confirmation == ConfirmationKind.create-remote-folder {
                 root.cancel-create-remote-folder();
+            } else if root.confirmation == ConfirmationKind.replace-provider-credentials || root.confirmation == ConfirmationKind.retry-provider-access || root.confirmation == ConfirmationKind.setup-provider-credential-store {
+                root.cancel-provider-recovery();
             }
         }
         confirm => {
@@ -1029,6 +1045,8 @@ export component AppWindow inherits Window {
                 root.confirm-cancel-activity();
             } else if root.confirmation == ConfirmationKind.create-remote-folder {
                 root.confirm-create-remote-folder();
+            } else if root.confirmation == ConfirmationKind.replace-provider-credentials || root.confirmation == ConfirmationKind.retry-provider-access || root.confirmation == ConfirmationKind.setup-provider-credential-store {
+                root.confirm-provider-recovery();
             }
         }
     }

@@ -17,7 +17,7 @@ pub(super) fn resolve(
     complete: impl FnOnce(&AppWindow, ProviderCredentials) + 'static,
 ) {
     let edit_id = window.get_provider_form_id();
-    let id = if edit_id.is_empty() {
+    let id = if edit_id.is_empty() || window.get_provider_form_replacing() {
         None
     } else {
         match super::state::provider_id(configuration, edit_id.as_str()) {
