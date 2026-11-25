@@ -1,6 +1,9 @@
 
 - An in-progress connection run's progress percentage is based on file count rather than byte count; we should factor in byte count as well as some additional weight per each network operation itself
 - Android: There's a quirk in text inputs where placing the cursor at the start, when there's text already after the cursor, duplicates text when typing rather than inserting only that one new character
+- Android: figure out can the widget-compatible connection eligibility be loosened up to allow connections which would use a preflight, but on the agreement that they can only complete the operation in the background if a preflight finds no destructive changes
+- Branding: update the app icon with a silver lining on the cloud (using SVG gradient)
+- Branding: Make the screenshot background and the Play Store banner more "gritty"
 - Connections list: archive connections saying "Upload only" or "Download only" should be shortened to just "Upload" or "Download" (leaving other connection types unaffected)
 - Add a terms of use to the website, and link it in the app, accepting no liability for potential loss of data
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added

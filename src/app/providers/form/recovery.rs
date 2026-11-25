@@ -15,6 +15,7 @@ pub(super) fn configure(
     configuration: &Rc<ConfigStore>,
     diagnostics: SharedDiagnosticLog,
 ) {
+    super::recovery_details::configure(window, configuration);
     let weak = window.as_weak();
     window.on_cancel_provider_recovery(move || {
         if let Some(window) = weak.upgrade() {
@@ -29,10 +30,14 @@ pub(super) fn configure(
         let Some(window) = weak.upgrade() else { return };
         let kind = window.get_confirmation();
         let id = window.get_pending_provider_recovery_id();
+        let destination_ready = window.get_credential_recovery_destination_ready();
         window.invoke_cancel_provider_recovery();
         match kind {
             ConfirmationKind::RetryProviderAccess => window.invoke_request_provider_edit(id),
             ConfirmationKind::ReplaceProviderCredentials => {
+                open(&window, &configuration, Rc::clone(&diagnostics), id);
+            }
+            ConfirmationKind::SetupProviderCredentialStore if destination_ready => {
                 open(&window, &configuration, Rc::clone(&diagnostics), id);
             }
             ConfirmationKind::SetupProviderCredentialStore => window.invoke_request_navigation(3),
@@ -60,6 +65,7 @@ fn open(
         return;
     };
     let preferred = config.credential_backend;
+    let recovery_id = id.clone();
     super::storage_task::start(
         window,
         move |_| {
@@ -74,13 +80,16 @@ fn open(
                 window.set_provider_replacement_store(backend.name().into());
                 super::edit::populate(window, provider, String::new());
             }
-            Ok(None) => window.set_confirmation(ConfirmationKind::SetupProviderCredentialStore),
+            Ok(None) => {
+                window.set_pending_provider_recovery_id(recovery_id);
+                window.set_confirmation(ConfirmationKind::SetupProviderCredentialStore);
+            }
             Err(error) => super::credential_task::present_error(window, &diagnostics, &error),
         },
     );
 }
 
-fn replacement_store(
+pub(super) fn replacement_store(
     preferred: Option<CredentialBackend>,
     providers: &[CredentialProvider],
 ) -> Option<CredentialBackend> {

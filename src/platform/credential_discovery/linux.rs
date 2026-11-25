@@ -1,5 +1,15 @@
 use super::{CapabilityError, CredentialBackend, CredentialProvider, Discovery};
+mod service_details;
+
 pub(crate) fn discover_with_status() -> Result<Discovery, CapabilityError> {
+    discover(true)
+}
+
+pub(crate) fn inspect() -> Result<Discovery, CapabilityError> {
+    discover(false)
+}
+
+fn discover(activate: bool) -> Result<Discovery, CapabilityError> {
     use crate::platform::{
         credential_deadline::{SERVICE_TIMEOUT, within},
         credential_errors::map_bus_error,
@@ -20,12 +30,19 @@ pub(crate) fn discover_with_status() -> Result<Discovery, CapabilityError> {
             .await
             .map_err(map_bus_error)?;
             let names: Vec<String> = bus.call("ListNames", &()).await.map_err(map_bus_error)?;
-            let activatable: Vec<String> = bus
-                .call("ListActivatableNames", &())
-                .await
-                .map_err(map_bus_error)?;
+            let activatable: Vec<String> = if activate {
+                bus.call("ListActivatableNames", &())
+                    .await
+                    .map_err(map_bus_error)?
+            } else {
+                Vec::new()
+            };
             let mut owners = std::collections::HashSet::new();
-            let mut report = Discovery::default();
+            let mut report = if activate {
+                Discovery::default()
+            } else {
+                service_details::inspect(&connection, &bus, &names).await
+            };
             for backend in [
                 CredentialBackend::Kde,
                 CredentialBackend::KdeLegacy6,
@@ -40,9 +57,16 @@ pub(crate) fn discover_with_status() -> Result<Discovery, CapabilityError> {
                     continue;
                 }
                 let probe = within(SERVICE_TIMEOUT, async {
+                    let target: String = if activate {
+                        destination.into()
+                    } else {
+                        bus.call("GetNameOwner", &(destination,))
+                            .await
+                            .map_err(map_bus_error)?
+                    };
                     let service = zbus::Proxy::new(
                         &connection,
-                        destination,
+                        target.clone(),
                         "/org/freedesktop/secrets",
                         "org.freedesktop.Secret.Service",
                     )
@@ -56,7 +80,7 @@ pub(crate) fn discover_with_status() -> Result<Discovery, CapabilityError> {
                     let locked = if configured {
                         zbus::Proxy::new(
                             &connection,
-                            destination,
+                            target,
                             path,
                             "org.freedesktop.Secret.Collection",
                         )

@@ -7,6 +7,8 @@ import { ScrollArea } from "scroll-area.slint";
 export component ConfirmationDialog inherits Rectangle {
     in property <bool> open;
     in property <bool> busy;
+    in property <bool> confirm-enabled: true;
+    in property <bool> alternate-view;
     in property <bool> can-cancel-busy;
     in property <string> title;
     in property <string> cancel-text: "Cancel";
@@ -42,6 +44,11 @@ export component ConfirmationDialog inherits Rectangle {
 
             FocusScope {
                 private property <bool> working: root.busy;
+                private property <bool> showing-alternate: root.alternate-view;
+                changed showing-alternate => {
+                    body-scroll.content-y = 0px;
+                    cancel-button.focus();
+                }
                 focus-on-click: false;
                 focus-on-tab-navigation: self.working;
                 changed working => {
@@ -119,11 +126,11 @@ export component ConfirmationDialog inherits Rectangle {
                             ExpandedPrimaryActionButton {
                                 text: root.confirm-text;
                                 accessible-label: root.confirm-label;
-                                enabled: !root.busy;
+                                enabled: !root.busy && root.confirm-enabled;
                                 border-width: self.has-focus ? 3px : 1px;
                                 outline-color: self.has-focus ? Colors.background : Colors.primary-accent;
                                 clicked => {
-                                    if !root.busy {
+                                    if !root.busy && root.confirm-enabled {
                                         root.confirm();
                                     }
                                 }

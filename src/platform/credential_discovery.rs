@@ -33,6 +33,12 @@ pub(crate) const BACKENDS: [CredentialBackend; 5] = [
 
 #[derive(Default)]
 pub(crate) struct Discovery {
+    #[cfg(target_os = "linux")]
+    pub system_service: Option<String>,
+    #[cfg(target_os = "linux")]
+    pub oo7_inactive: bool,
+    #[cfg(target_os = "linux")]
+    pub inactive_service_addresses: Vec<&'static str>,
     pub choices: Vec<CredentialProvider>,
     pub probes: Vec<(
         CredentialBackend,
@@ -88,7 +94,7 @@ pub(crate) fn preferred(
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "linux")]
-pub(crate) use linux::discover_with_status;
+pub(crate) use linux::{discover_with_status, inspect};
 
 #[cfg(not(target_os = "linux"))]
 pub(crate) fn discover_with_status() -> Result<Discovery, CapabilityError> {
@@ -101,6 +107,11 @@ pub(crate) fn discover_with_status() -> Result<Discovery, CapabilityError> {
         choices: vec![provider.clone()],
         probes: vec![(CredentialBackend::System, Ok(provider))],
     })
+}
+
+#[cfg(not(target_os = "linux"))]
+pub(crate) fn inspect() -> Result<Discovery, CapabilityError> {
+    discover_with_status()
 }
 
 #[cfg(test)]
@@ -119,6 +130,7 @@ mod tests {
                 (CredentialBackend::System, Ok(wallet)),
                 (CredentialBackend::Gnome, Err(CapabilityError::TimedOut)),
             ],
+            ..Discovery::default()
         };
         assert_eq!(status(&report, CredentialBackend::System), "needs setup");
         assert_eq!(status(&report, CredentialBackend::Gnome), "check timed out");

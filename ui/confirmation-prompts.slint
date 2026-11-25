@@ -1,3 +1,5 @@
+import { Dimensions } from "dimensions.slint";
+import { ExpandedSecondaryActionButton } from "components/action-buttons.slint";
 import { ConfirmationDialog } from "components/confirmation-dialog.slint";
 import { DescriptionLabel } from "components/description-label.slint";
 import { ErrorHeadingLabel } from "components/error-heading-label.slint";
@@ -20,6 +22,11 @@ export enum ConfirmationKind {
 export component ConfirmationPrompts inherits ConfirmationDialog {
     in property <ConfirmationKind> kind;
     in property <string> recovery-store-status;
+    in-out property <bool> details-open;
+    in property <bool> details-busy;
+    in property <bool> replacement-ready;
+    in property <[string]> detail-rows;
+    callback refresh-details();
     in property <bool> provider-storage-busy;
     in property <bool> connection-verifying;
     in property <bool> provider-storage-can-cancel;
@@ -42,7 +49,10 @@ export component ConfirmationPrompts inherits ConfirmationDialog {
     busy: (root.deleting-provider && root.provider-storage-busy)
         || (root.creating-folder && root.connection-verifying);
     can-cancel-busy: root.deleting-provider && root.busy && root.provider-storage-message != "" && root.provider-storage-can-cancel;
-    title: root.deleting-provider ? "Delete " + root.provider-name + "?"
+    alternate-view: root.details-open;
+    confirm-enabled: !root.details-open || !root.details-busy;
+    title: root.details-open ? "Credential Storage Details"
+        : root.deleting-provider ? "Delete " + root.provider-name + "?"
         : root.deleting-connection ? "Delete " + root.connection-name + "?"
         : root.cancelling-activity ? "Cancel " + root.activity-name + "?"
         : root.creating-folder ? "Create Remote Folder?"
@@ -50,80 +60,112 @@ export component ConfirmationPrompts inherits ConfirmationDialog {
         : root.retrying-access ? "Credential Access"
         : root.setting-up-store ? "Set Up Credential Storage"
         : "Discard Unsaved Changes?";
-    cancel-text: root.can-cancel-busy ? "Cancel Access"
+    cancel-text: root.details-open ? "Back" : root.can-cancel-busy ? "Cancel Access"
         : root.deleting-provider || root.deleting-connection || root.replacing-credentials || root.retrying-access || root.setting-up-store ? "Cancel"
         : root.cancelling-activity ? "Keep Running"
         : root.creating-folder ? "Keep Editing"
         : "Keep Editing";
-    confirm-text: root.deleting-provider ? (root.busy ? "Deleting…" : "Delete Provider")
+    confirm-text: root.details-open ? (root.details-busy ? "Checking…" : "Refresh")
+        : root.deleting-provider ? (root.busy ? "Deleting…" : "Delete Provider")
         : root.deleting-connection ? "Delete Connection"
         : root.cancelling-activity ? "Cancel Operation"
         : root.creating-folder ? (root.busy ? "Creating…" : "Create Folder")
         : root.replacing-credentials ? "Replace Credentials"
         : root.retrying-access ? "Retry Access"
-        : root.setting-up-store ? "Open Settings"
+        : root.setting-up-store ? (root.replacement-ready ? "Replace Credentials" : "Open Settings")
         : "Discard Changes";
-    confirm-label: root.deleting-provider ? "Delete provider " + root.provider-name
+    confirm-label: root.details-open ? "Refresh and check again"
+        : root.deleting-provider ? "Delete provider " + root.provider-name
         : root.deleting-connection ? "Delete connection " + root.connection-name
         : root.cancelling-activity ? "Cancel operation " + root.activity-name
         : root.confirm-text;
 
-    if root.deleting-provider && root.busy && root.provider-storage-message != "": DescriptionLabel {
-        accessible-live-region: polite;
-        text: root.provider-storage-message;
-    }
-
-    if root.deleting-provider || root.deleting-connection: DangerCard {
-        accessible-role: region;
-        accessible-label: "Deletion consequences";
-
-        ErrorHeadingLabel {
-            text: "What will be deleted";
+    if root.details-open: VerticalLayout {
+        spacing: Dimensions.element-gap;
+        DescriptionLabel {
+            text: "Saved credential lookup: " + root.recovery-store-status;
         }
-
-        ErrorLabel {
-            text: root.deleting-provider
-                ? "The protected credentials and " + root.dependent-count + (root.dependent-count == 1 ? " dependent connection will be removed from SyncPak." : " dependent connections will be removed from SyncPak.")
-                : "This removes the connection from SyncPak.";
+        if root.retrying-access: DescriptionLabel {
+            text: "Unlock the saved store if needed, then retry credential access.";
         }
-
-        ErrorLabel {
-            text: "Local folders and cloud files are not deleted.";
+        if root.details-busy: DescriptionLabel {
+            text: "Checking credential storage…";
+            accessible-live-region: polite;
+        }
+        for detail in root.detail-rows: DescriptionLabel {
+            text: detail;
         }
     }
 
-    if root.deleting-provider && root.dependent-count > 0: ErrorHeadingLabel {
-        text: "Connections that will be deleted";
-    }
+    if !root.details-open: VerticalLayout {
+        spacing: Dimensions.element-gap;
+        if root.deleting-provider && root.busy && root.provider-storage-message != "": DescriptionLabel {
+            accessible-live-region: polite;
+            text: root.provider-storage-message;
+        }
 
-    for connection-name in (root.deleting-provider ? root.dependent-connections : []): DescriptionLabel {
-        text: "• " + connection-name;
-    }
+        if root.deleting-provider || root.deleting-connection: DangerCard {
+            accessible-role: region;
+            accessible-label: "Deletion consequences";
 
-    if root.replacing-credentials || root.retrying-access: DescriptionLabel {
-        text: "Credential store: " + root.recovery-store-status;
-    }
+            ErrorHeadingLabel {
+                text: "What will be deleted";
+            }
 
-    if root.replacing-credentials || root.retrying-access: DescriptionLabel {
-        text: root.replacing-credentials
-            ? "This provider’s credentials cannot be accessed. Would you like to replace them?"
-            : "Retry credential access to open this provider.";
-    }
+            ErrorLabel {
+                text: root.deleting-provider
+                    ? "The protected credentials and " + root.dependent-count + (root.dependent-count == 1 ? " dependent connection will be removed from SyncPak." : " dependent connections will be removed from SyncPak.")
+                    : "This removes the connection from SyncPak.";
+            }
 
-    if root.setting-up-store: DescriptionLabel {
-        text: "SyncPak needs a configured credential store before it can save replacement credentials. Set up a store in your desktop’s password manager, then choose it under Default store for new providers in Settings and try again.";
-    }
+            ErrorLabel {
+                text: "Local folders and cloud files are not deleted.";
+            }
+        }
 
-    if root.creating-folder: DescriptionLabel {
-        accessible-live-region: polite;
-        text: root.busy ? "Creating the remote folder…" : "The remote folder does not exist. Would you like to create it?";
-    }
+        if root.deleting-provider && root.dependent-count > 0: ErrorHeadingLabel {
+            text: "Connections that will be deleted";
+        }
 
-    if root.cancelling-activity: DescriptionLabel {
-        text: "Completed changes will not be undone. Work that has not started will be skipped.";
-    }
+        for connection-name in (root.deleting-provider ? root.dependent-connections : []): DescriptionLabel {
+            text: "• " + connection-name;
+        }
 
-    if root.kind == ConfirmationKind.discard-provider || root.kind == ConfirmationKind.discard-connection: DescriptionLabel {
-        text: root.discarding-provider ? "Your changes to this provider have not been saved." : "Your changes to this connection have not been saved.";
+        if root.replacing-credentials || root.retrying-access: DescriptionLabel {
+            text: "Credential store: " + root.recovery-store-status;
+        }
+
+        if root.replacing-credentials || root.retrying-access: DescriptionLabel {
+            text: root.replacing-credentials
+                ? "This provider’s credentials cannot be accessed. Would you like to replace them?"
+                : "Retry credential access to open this provider.";
+        }
+
+        if root.setting-up-store: DescriptionLabel {
+            text: root.replacement-ready
+                ? "A configured credential store is now available. You can continue to replace this provider’s credentials."
+                : "SyncPak needs a configured credential store before it can save replacement credentials. Open Credential Storage Details for setup guidance.";
+        }
+
+        if root.creating-folder: DescriptionLabel {
+            accessible-live-region: polite;
+            text: root.busy ? "Creating the remote folder…" : "The remote folder does not exist. Would you like to create it?";
+        }
+
+        if root.cancelling-activity: DescriptionLabel {
+            text: "Completed changes will not be undone. Work that has not started will be skipped.";
+        }
+
+        if root.kind == ConfirmationKind.discard-provider || root.kind == ConfirmationKind.discard-connection: DescriptionLabel {
+            text: root.discarding-provider ? "Your changes to this provider have not been saved." : "Your changes to this connection have not been saved.";
+        }
+
+        if root.replacing-credentials || root.retrying-access || root.setting-up-store: ExpandedSecondaryActionButton {
+            text: "Credential Storage Details";
+            clicked => {
+                root.details-open = true;
+                root.refresh-details();
+            }
+        }
     }
 }

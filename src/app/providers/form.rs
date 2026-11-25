@@ -12,3 +12,4 @@ mod save_result;
 mod verification;
 
 mod recovery;
+mod recovery_details;

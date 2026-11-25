@@ -105,6 +105,16 @@ export component AppWindow inherits Window {
     in-out property <[string]> credential-provider-names;
     in-out property <[string]> credential-store-statuses;
     in-out property <string> provider-recovery-store-status;
+    in-out property <bool> credential-recovery-details-open;
+    in-out property <bool> credential-recovery-details-busy;
+    in-out property <bool> credential-recovery-destination-ready;
+    in-out property <[string]> credential-recovery-detail-rows;
+    callback refresh-credential-recovery-details();
+    changed confirmation => {
+        root.credential-recovery-details-open = false;
+        root.credential-recovery-details-busy = false;
+        root.credential-recovery-destination-ready = false;
+    }
     in-out property <int> credential-provider-index: -1;
     in-out property <string> credential-provider-summary: "Checking this device's credential providers…";
     in-out property <bool> credential-discovery-busy: false;
@@ -1003,6 +1013,13 @@ export component AppWindow inherits Window {
         right-inset: root.safe-area-insets.right;
         kind: root.confirmation;
         recovery-store-status: root.provider-recovery-store-status;
+        details-open <=> root.credential-recovery-details-open;
+        details-busy: root.credential-recovery-details-busy;
+        replacement-ready: root.credential-recovery-destination-ready;
+        detail-rows: root.credential-recovery-detail-rows;
+        refresh-details => {
+            root.refresh-credential-recovery-details();
+        }
         connection-verifying: root.connection-verifying;
         provider-storage-busy: root.provider-storage-busy;
         provider-storage-can-cancel: root.provider-storage-can-cancel;
@@ -1016,7 +1033,10 @@ export component AppWindow inherits Window {
             root.cancel-provider-storage();
         }
         cancel => {
-            if root.confirmation == ConfirmationKind.discard-provider {
+            if root.credential-recovery-details-open {
+                root.credential-recovery-details-open = false;
+                root.credential-recovery-details-busy = false;
+            } else if root.confirmation == ConfirmationKind.discard-provider {
                 root.cancel-discard-provider();
             } else if root.confirmation == ConfirmationKind.discard-connection {
                 root.cancel-discard-connection();
@@ -1033,7 +1053,9 @@ export component AppWindow inherits Window {
             }
         }
         confirm => {
-            if root.confirmation == ConfirmationKind.discard-provider {
+            if root.credential-recovery-details-open {
+                root.refresh-credential-recovery-details();
+            } else if root.confirmation == ConfirmationKind.discard-provider {
                 root.confirm-discard-provider();
             } else if root.confirmation == ConfirmationKind.discard-connection {
                 root.confirm-discard-connection();
