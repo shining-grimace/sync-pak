@@ -25,7 +25,9 @@ val android = extensions.getByType<ApplicationExtension>()
 android.ndkVersion = ndkVersion
 val androidComponents = extensions.getByType<ApplicationAndroidComponentsExtension>()
 val repositoryRoot = rootProject.projectDir.parentFile
-val androidSdkDirectory = androidComponents.sdkComponents.sdkDirectory
+val sdkComponents = androidComponents.sdkComponents
+val androidSdkDirectory = sdkComponents.sdkDirectory
+val androidBootClasspath = sdkComponents.bootClasspath
 val rustTargets = mapOf(
     "arm64-v8a" to "aarch64-linux-android",
     "x86_64" to "x86_64-linux-android",
@@ -34,6 +36,9 @@ val rustTargets = mapOf(
 fun Exec.configureRustEnvironment(rustTarget: String) {
     val targetEnvironment = rustTarget.replace('-', '_')
     val sdkRoot = androidSdkDirectory.get().asFile.absolutePath
+    val androidJar = androidBootClasspath.get().map { it.asFile }
+        .firstOrNull { it.name == "android.jar" && it.isFile }
+        ?: throw GradleException("android.jar is missing from the compile SDK boot classpath.")
     val ndkDirectory = File(sdkRoot, "ndk/$ndkVersion")
     if (!ndkDirectory.isDirectory) {
         throw GradleException(
@@ -65,7 +70,7 @@ fun Exec.configureRustEnvironment(rustTarget: String) {
     environment("ANDROID_SDK_ROOT", sdkRoot)
     environment("ANDROID_NDK_HOME", ndkRoot)
     environment("ANDROID_NDK_ROOT", ndkRoot)
-    environment("ANDROID_PLATFORM", "android-37.0")
+    environment("ANDROID_JAR", androidJar.absolutePath)
     // Align the Rust shared library for devices using 16 KB pages.
     val rustFlags = System.getenv("CARGO_ENCODED_RUSTFLAGS")
         ?.split('\u001f')?.filter { it.isNotEmpty() }

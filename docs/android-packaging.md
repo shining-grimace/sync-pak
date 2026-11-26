@@ -1,12 +1,12 @@
 # Android feasibility package
 
-SyncPak's Android feasibility build targets Android 11+ (`minSdkVersion` 30), targets API 36,
-compiles against Android 16 SDK 36.1, and includes the ARM64 and x86_64 ABIs. The package identity is
+SyncPak's Android feasibility build supports Android 11+ (`minSdkVersion` 30), targets API 37,
+compiles against SDK 37.2, and includes the ARM64 and x86_64 ABIs. The package identity is
 `com.shininggrimace.syncpak`.
 
 ## Local debug build
 
-Install Rust's AArch64 and x86_64 Android targets, Android SDK platform 36.1, Android build tools 36.0.0,
+Install Rust's AArch64 and x86_64 Android targets, Android SDK platform 37.2, Android build tools 36.0.0,
 a side-by-side Android NDK, and JDK 17 or newer. The build uses `ANDROID_NDK_HOME` or
 `ANDROID_NDK_ROOT` when set; otherwise it selects the highest installed NDK below the SDK.
 Set `ANDROID_HOME` if the SDK is not in `$HOME/Android/Sdk`, then run:
@@ -18,7 +18,7 @@ JAVA_HOME=/path/to/android-studio/jbr ./android/gradlew --project-dir android :a
 
 When the project is opened from the `android` directory in Android Studio, no shell
 environment setup is required. The Cargo task receives the SDK selected by Gradle, the JVM
-running Gradle as `JAVA_HOME`, and Android platform 36.1 explicitly. This is important
+running Gradle as `JAVA_HOME`, and the compile SDK's `android.jar` as `ANDROID_JAR`. This is important
 because Android Studio does not necessarily export its bundled JDK to child processes even
 though Gradle itself is already using that JDK.
 
