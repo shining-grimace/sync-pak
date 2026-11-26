@@ -90,3 +90,6 @@ required-features = ["provider-probes"]
 secret-service = { path = "vendor/secret-service" }
 # Service startup and NativeActivity both register the same process Application.
 ndk-context = { path = "vendor/ndk-context" }
+
+# Keep intermediate composition updates out of the Android keyboard.
+i-slint-backend-android-activity = { path = "vendor/i-slint-backend-android-activity" }
