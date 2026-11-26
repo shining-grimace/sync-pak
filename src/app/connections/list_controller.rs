@@ -129,6 +129,8 @@ pub(crate) fn refresh(
                             mode_name(connection.mode),
                             match (connection.allow_upload, connection.allow_download) {
                                 (true, true) => "Upload & Download",
+                                (true, false) if connection.mode == SyncMode::Archive => "Upload",
+                                (false, true) if connection.mode == SyncMode::Archive => "Download",
                                 (true, false) => "Upload only",
                                 (false, true) => "Download only",
                                 (false, false) => "No allowed directions",

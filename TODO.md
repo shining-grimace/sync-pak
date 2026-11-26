@@ -3,7 +3,6 @@
 - Android: figure out can the widget-compatible connection eligibility be loosened up to allow connections which would use a preflight, but on the agreement that they can only complete the operation in the background if a preflight finds no destructive changes
 - Branding: update the app icon with a silver lining on the cloud (using SVG gradient)
 - Branding: Make the screenshot background and the Play Store banner more "gritty"
-- Connections list: archive connections saying "Upload only" or "Download only" should be shortened to just "Upload" or "Download" (leaving other connection types unaffected)
 - Add a terms of use to the website, and link it in the app, accepting no liability for potential loss of data
 - Ponder if Railway storage would be a good fit, and it there are any other popular S3-compatible providers that should be added
 - On Android, add to Settings a one-time purchase of "buy the developer a coffee"
