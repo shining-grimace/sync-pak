@@ -5,22 +5,6 @@ use crate::{
 };
 use slint::{Model, SharedString};
 
-fn progress_percent(progress: &crate::operations::operation_progress::OperationProgress) -> i32 {
-    progress
-        .transferred_bytes
-        .saturating_mul(100)
-        .checked_div(progress.total_bytes)
-        .map(|p| p.min(100) as i32)
-        .or_else(|| {
-            progress
-                .completed_items
-                .saturating_mul(100)
-                .checked_div(progress.total_items)
-                .map(|p| p.min(100) as i32)
-        })
-        .unwrap_or(0)
-}
-
 pub(super) fn refresh<E: OperationExecutor + Send + Sync + 'static>(
     weak: &slint::Weak<AppWindow>,
     queue: &BackgroundQueue<E>,
@@ -117,7 +101,7 @@ pub(super) fn refresh<E: OperationExecutor + Send + Sync + 'static>(
                 .and_then(|progress| progress.current_path.clone())
                 .unwrap_or_default()
                 .into(),
-            percent: progress.map_or(0, progress_percent),
+            percent: progress.map_or(0, |progress| progress.percent()),
             running: entry.state == crate::operations::queue::QueueState::Running,
             cancelling: entry.cancellation_requested,
             result: activity.result_summary.into(),

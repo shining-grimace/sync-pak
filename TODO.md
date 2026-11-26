@@ -1,5 +1,4 @@
 
-- An in-progress connection run's progress percentage is based on file count rather than byte count; we should factor in byte count as well as some additional weight per each network operation itself
 - Android: There's a quirk in text inputs where placing the cursor at the start, when there's text already after the cursor, duplicates text when typing rather than inserting only that one new character
 - Android: figure out can the widget-compatible connection eligibility be loosened up to allow connections which would use a preflight, but on the agreement that they can only complete the operation in the background if a preflight finds no destructive changes
 - Branding: update the app icon with a silver lining on the cloud (using SVG gradient)

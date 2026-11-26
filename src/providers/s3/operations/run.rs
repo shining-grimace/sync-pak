@@ -1,3 +1,5 @@
+mod progress;
+
 use std::time::Duration;
 
 use crate::{
@@ -106,6 +108,7 @@ pub(super) async fn execute_request(
         &retry,
         &sleeper,
     );
+    let cache_enabled = cache.is_some();
     let transfer = match cache.zip(namespace) {
         Some((cache, namespace)) => transfer.with_cache(cache, namespace),
         None => transfer,
@@ -114,13 +117,15 @@ pub(super) async fn execute_request(
         .parent()
         .ok_or(CapabilityError::Unavailable)?;
     let history = crate::operations::archive::history::ArchiveHistory::new(history_directory);
+    let preflight = confirmed.preflight().preflight();
+    let weighted_progress = progress::WeightedProgress::new(preflight, cache_enabled, observer);
     match confirmed.request().connection.mode {
         SyncMode::AddOnly => match execute_add_only_actions(
             confirmed.request().direction,
-            confirmed.preflight().preflight().plan().actions(),
+            preflight.plan().actions(),
             &transfer,
             cancellation,
-            observer,
+            &weighted_progress,
             jitter_seed,
         )
         .await
@@ -129,11 +134,11 @@ pub(super) async fn execute_request(
             Err(error) => Ok(failed_action(error.error, *error.result)),
         },
         SyncMode::Mirror => match execute_confirmed_mirror(
-            confirmed.preflight().preflight().plan(),
+            preflight.plan(),
             confirmed.preflight().destructive_confirmation(),
             &transfer,
             cancellation,
-            observer,
+            &weighted_progress,
             jitter_seed,
         )
         .await
@@ -146,7 +151,7 @@ pub(super) async fn execute_request(
         },
         SyncMode::Archive => Ok(crate::providers::s3::operations::archive::execute(
             confirmed.request(),
-            confirmed.preflight().preflight(),
+            preflight,
             &transfer,
             cancellation,
             super::archive::ArchiveStorage {

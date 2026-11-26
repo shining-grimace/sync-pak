@@ -40,6 +40,7 @@ impl OperationExecutor for Executor {
             completed_actions: 0,
             total_actions: 0,
             current_action: None,
+            work: None,
         });
         Ok(ExecutionProgress::new([]).finish())
     }

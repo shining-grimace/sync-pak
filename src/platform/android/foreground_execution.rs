@@ -45,11 +45,12 @@ pub fn update(connection_name: &str, progress: &OperationProgress) -> Result<(),
         env.call_method(
             activity,
             jni_str!("updateSyncExecution"),
-            jni_sig!("(Ljava/lang/String;II)V"),
+            jni_sig!("(Ljava/lang/String;III)V"),
             &[
                 (&connection_name).into(),
                 current_item.into(),
                 total_items.into(),
+                progress.percent().into(),
             ],
         )?;
         Ok(())

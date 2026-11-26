@@ -64,12 +64,14 @@ impl OperationExecutor for ProgressExecutor {
                 completed_actions: 1,
                 total_actions: 3,
                 current_action: Some(action.clone()),
+                work: None,
             });
             observer.on_progress(&TransferProgress {
                 state: crate::operations::execution::ExecutionState::Completed,
                 completed_actions: 2,
                 total_actions: 3,
                 current_action: Some(action),
+                work: None,
             });
         }
         Ok(ExecutionProgress::new([]).finish())

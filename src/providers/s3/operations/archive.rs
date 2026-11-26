@@ -89,6 +89,7 @@ async fn execute_action(
             completed_actions: 0,
             total_actions: 1,
             current_action: Some(action),
+            work: None,
         });
         if store.await {
             progress.complete_current();
@@ -109,6 +110,7 @@ async fn execute_action(
         completed_actions: result.completed.len(),
         total_actions: 1,
         current_action: None,
+        work: None,
     });
     result
 }

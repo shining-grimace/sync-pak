@@ -30,6 +30,7 @@ pub struct OperationProgress {
     pub total_items: usize,
     pub transferred_bytes: u64,
     pub total_bytes: u64,
+    pub weighted_percent: Option<i32>,
     pub current_path: Option<String>,
     pub retry: Option<RetryStatus>,
 }
@@ -58,6 +59,7 @@ impl Default for OperationProgress {
             total_items: 0,
             transferred_bytes: 0,
             total_bytes: 0,
+            weighted_percent: None,
             current_path: None,
             retry: None,
         }
@@ -65,6 +67,25 @@ impl Default for OperationProgress {
 }
 
 impl OperationProgress {
+    pub fn percent(&self) -> i32 {
+        let percent = self.weighted_percent.unwrap_or_else(|| {
+            let (completed, total) = if self.total_bytes > 0 {
+                (
+                    u128::from(self.transferred_bytes),
+                    u128::from(self.total_bytes),
+                )
+            } else {
+                (self.completed_items as u128, self.total_items as u128)
+            };
+            (completed.min(total) * 100).checked_div(total).unwrap_or(0) as i32
+        });
+        if self.completed_items < self.total_items {
+            percent.min(99)
+        } else {
+            percent
+        }
+    }
+
     pub fn current_item_number(&self) -> Option<usize> {
         (self.current_path.is_some()
             && self.phase != OperationPhase::CleaningUp
@@ -107,6 +128,7 @@ mod tests {
                 total_items: 5,
                 transferred_bytes: 20,
                 total_bytes: 100,
+                weighted_percent: None,
                 current_path: Some("photo.jpg".into()),
                 retry: None,
             }

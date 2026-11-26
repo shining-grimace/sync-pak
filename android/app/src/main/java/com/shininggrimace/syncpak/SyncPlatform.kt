@@ -24,7 +24,8 @@ class SyncPlatform(context: Context) {
         context.startForegroundService(SyncExecutionService.startIntent(context, name))
         SyncWidgets.refresh(context)
     }
-    fun updateSyncExecution(name: String, current: Int, total: Int) = SyncExecutionNotification.update(context, name, current, total)
+    fun updateSyncExecution(name: String, current: Int, total: Int, percent: Int) =
+        SyncExecutionNotification.update(context, name, current, total, percent)
     fun finishSyncOperation(name: String, summary: String, operationId: String) {
         stopSyncExecution()
         SyncExecutionNotification.complete(context, name, summary, operationId)

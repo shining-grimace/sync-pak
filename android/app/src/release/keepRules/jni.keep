@@ -21,7 +21,7 @@
     public int createFolderPath(java.lang.String, java.lang.String);
     public int deleteFolderEntry(java.lang.String, java.lang.String);
     public void startSyncExecution(java.lang.String);
-    public void updateSyncExecution(java.lang.String, int, int);
+    public void updateSyncExecution(java.lang.String, int, int, int);
     public void finishSyncExecution(java.lang.String, java.lang.String);
     public void finishSyncOperation(java.lang.String, java.lang.String, java.lang.String);
     public void stopSyncExecution();

@@ -134,6 +134,7 @@ fn progress_event(
         completed_actions,
         total_actions,
         current_action,
+        work: None,
     }
 }
 

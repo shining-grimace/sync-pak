@@ -131,8 +131,8 @@ class SyncPakActivity : NativeActivity() {
         startForegroundService(SyncExecutionService.startIntent(this, connectionName))
     }
 
-    fun updateSyncExecution(connectionName: String, currentFile: Int, totalFiles: Int) {
-        SyncExecutionNotification.update(this, connectionName, currentFile, totalFiles)
+    fun updateSyncExecution(connectionName: String, currentFile: Int, totalFiles: Int, percent: Int) {
+        SyncExecutionNotification.update(this, connectionName, currentFile, totalFiles, percent)
     }
 
     fun finishSyncExecution(connectionName: String, summary: String) {

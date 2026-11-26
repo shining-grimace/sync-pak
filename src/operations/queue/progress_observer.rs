@@ -33,8 +33,9 @@ pub fn from_transfer(progress: &TransferProgress) -> OperationProgress {
         phase: phase(progress),
         completed_items: progress.completed_actions,
         total_items: progress.total_actions,
-        transferred_bytes: 0,
-        total_bytes: 0,
+        transferred_bytes: progress.work.map_or(0, |work| work.completed.bytes),
+        total_bytes: progress.work.map_or(0, |work| work.total.bytes),
+        weighted_percent: progress.work.and_then(|work| work.percent()),
         current_path: progress.current_action.as_ref().map(action_path),
         retry: None,
     }
@@ -92,6 +93,7 @@ mod tests {
                 from: Endpoint::Destination,
                 directory: false,
             }),
+            work: None,
         });
 
         assert_eq!(progress.phase, OperationPhase::Deleting);

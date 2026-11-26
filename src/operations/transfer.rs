@@ -112,6 +112,7 @@ fn snapshot(
         completed_actions,
         total_actions,
         current_action,
+        work: None,
     }
 }
 

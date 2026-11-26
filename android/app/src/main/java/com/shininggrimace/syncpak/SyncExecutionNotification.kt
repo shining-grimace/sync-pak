@@ -28,6 +28,7 @@ object SyncExecutionNotification {
         connectionName: String,
         currentFile: Int? = null,
         totalFiles: Int? = null,
+        percent: Int? = null,
     ): Notification {
         val openPendingIntent = PendingIntent.getActivity(
             context,
@@ -56,19 +57,19 @@ object SyncExecutionNotification {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .addAction(cancelAction)
-        if (currentFile != null && totalFiles != null) {
-            builder.setProgress(totalFiles, currentFile - 1, false)
+        if (percent != null) {
+            builder.setProgress(100, percent, false)
         }
         return builder.build()
     }
 
-    fun update(context: Context, connectionName: String, currentFile: Int, totalFiles: Int) {
+    fun update(context: Context, connectionName: String, currentFile: Int, totalFiles: Int, percent: Int) {
         if (currentFile !in 1..totalFiles) {
             return
         }
         context.getSystemService(NotificationManager::class.java).notify(
             ID,
-            build(context, connectionName, currentFile, totalFiles),
+            build(context, connectionName, currentFile, totalFiles, percent),
         )
     }
 

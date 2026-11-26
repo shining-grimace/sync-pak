@@ -56,7 +56,7 @@ pub async fn execute_confirmed_mirror<T: MirrorTransfer, O: TransferProgressObse
     }
     let actions = ordered_actions(plan.actions());
     let total_actions = actions.len();
-    let mut progress = ExecutionProgress::new(actions);
+    let mut progress = ExecutionProgress::new(actions.into_iter().cloned());
     let mut completed_actions = 0;
     loop {
         if cancellation.is_cancelled() {
@@ -164,11 +164,10 @@ async fn apply_action<T: MirrorTransfer>(
     }
 }
 
-fn ordered_actions(actions: &[PlannedAction]) -> Vec<PlannedAction> {
+pub(crate) fn ordered_actions(actions: &[PlannedAction]) -> Vec<&PlannedAction> {
     let mut result = actions
         .iter()
         .filter(|action| !matches!(action, PlannedAction::Delete { .. }))
-        .cloned()
         .collect::<Vec<_>>();
     let mut deletes = actions
         .iter()
@@ -180,7 +179,7 @@ fn ordered_actions(actions: &[PlannedAction]) -> Vec<PlannedAction> {
         })
         .collect::<Vec<_>>();
     deletes.sort_by(|left, right| right.0.cmp(&left.0).then_with(|| left.1.cmp(right.1)));
-    result.extend(deletes.into_iter().map(|(_, _, action)| action.clone()));
+    result.extend(deletes.into_iter().map(|(_, _, action)| action));
     result
 }
 
@@ -195,6 +194,7 @@ fn event(
         completed_actions: completed,
         total_actions: total,
         current_action: action,
+        work: None,
     }
 }
 
