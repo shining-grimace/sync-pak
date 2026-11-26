@@ -5,10 +5,11 @@ Build with `./android/gradlew --project-dir android :app:assembleDebug`. The APK
 
 1. Install the APK on a test device and configure verified upload-only, download-only,
    and both-ways Add Only connections. Use a disposable folder/bucket for transfers.
-   Configure a separate preview-enabled connection and one unverified connection.
+   Configure a preview-enabled two-way Mirror and one unverified connection.
 2. Confirm **SyncPak** is the only entry in the launcher's widget picker and defaults
    to 2×2 cells. Add two instances and select different connections. Confirm the
-   preview-enabled connection is omitted, the picker explains the omission, and the unverified entry offers **Verify in app**.
+   preview-enabled connection asks for create-only consent, and the unverified
+   entry offers **Verify in app**.
 3. Check the widget's icon, app name, connection selector, Run button and explanation
    fit at its default size. Resize it. Check long names, large text, empty lists, and screen-reader labels. An empty widget should offer **Open SyncPak**.
 4. Close the app without force-stopping it. Tap Run on a widget. Confirm no app screen
@@ -48,6 +49,16 @@ Build with `./android/gradlew --project-dir android :app:assembleDebug`. The APK
     one heading, **Choose connection**, appears. Change appearance in the app while
     the picker is in the background, then return and check it adopts the new theme.
     Repeat immediately after restarting the process to exercise the cached preference.
+
+14. Add a new file on either side of the two-way Mirror. Run it from its widget and
+    check both files are copied. Change a file present on both sides and add a
+    separate new file. Confirm the widget stops before either transfer and Activity
+    shows **Review required**. Tap the notification and confirm it opens a fresh
+    preview in the original direction. With notifications disabled, open the
+    Activity result and use **Review Changes**.
+15. During a create-only run, create a destination file after preflight and before
+    its transfer. Confirm the existing file stays intact and the result lists any
+    additions already completed. Repeat for an S3 multipart upload.
 
 Automated validation covers Rust admission/eligibility and application-context
 registration, Android target compilation, Kotlin and RemoteViews resource compilation,

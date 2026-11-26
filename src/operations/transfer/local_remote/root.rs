@@ -13,7 +13,7 @@ use crate::{
     operations::transfer::local_remote::root_metadata::{
         LocalEntryMetadata, native_metadata, verify_directory,
     },
-    platform::atomic_write::atomic_write,
+    platform::atomic_write::{atomic_create, atomic_write},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -90,26 +90,33 @@ impl LocalTransferRoot {
         relative: &RelativePath,
         contents: &[u8],
         modified_unix_seconds: Option<i64>,
+        create_only: bool,
     ) -> io::Result<()> {
         match self {
             Self::FileSystem(root) => {
                 let path = resolve(root, relative);
+                let modified = modified_unix_seconds
+                    .and_then(|value| u64::try_from(value).ok())
+                    .and_then(|seconds| UNIX_EPOCH.checked_add(Duration::from_secs(seconds)));
+                if create_only {
+                    return atomic_create(&path, contents, modified);
+                }
                 atomic_write(&path, contents)?;
-                if let Some(seconds) =
-                    modified_unix_seconds.and_then(|value| u64::try_from(value).ok())
+                if let Some(modified) = modified
                     && let Ok(file) = fs::File::options().write(true).open(path)
                 {
-                    let _ = file.set_times(
-                        fs::FileTimes::new()
-                            .set_modified(UNIX_EPOCH + Duration::from_secs(seconds)),
-                    );
+                    let _ = file.set_times(fs::FileTimes::new().set_modified(modified));
                 }
                 Ok(())
             }
             #[cfg(target_os = "android")]
             Self::AndroidTree(uri) => {
-                let mut file =
-                    crate::platform::android::document_tree::access::open_write(uri, relative)?;
+                use crate::platform::android::document_tree::access;
+                let mut file = if create_only {
+                    access::open_create(uri, relative)?
+                } else {
+                    access::open_write(uri, relative)?
+                };
                 file.write_all(contents)?;
                 crate::platform::android::document_tree::file::finish_write(&mut file)
             }

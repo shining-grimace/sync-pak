@@ -14,6 +14,7 @@ use super::{ReviewedOperation, StartError};
 fn request() -> RunRequest {
     let provider_id = ProviderId::new();
     RunRequest {
+        widget_create_only: false,
         connection: ConnectionConfig {
             last_run: None,
             transport: None,

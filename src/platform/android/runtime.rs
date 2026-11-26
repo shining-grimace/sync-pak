@@ -32,9 +32,9 @@ pub fn queue() -> Result<Arc<Queue>, ConfigurationError> {
     *shared = Some(Arc::clone(&queue));
     Ok(queue)
 }
-pub fn start(id: &str) -> Result<(), ConfigurationError> {
+pub fn start(id: &str, create_only: bool) -> Result<(), ConfigurationError> {
     let config = ConfigStore::for_current_platform()?;
     RunCoordinator::new(queue()?, config.path().into())
-        .start_automatic(id)
+        .start_widget(id, create_only)
         .map(|_| ())
 }

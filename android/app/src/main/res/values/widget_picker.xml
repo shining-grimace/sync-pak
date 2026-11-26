@@ -8,6 +8,10 @@
         <item name="android:textStyle">bold</item>
         <item name="android:minHeight">56dp</item>
     </style>
+    <style name="SyncPakWidgetPickerOutlineButton" parent="SyncPakWidgetPickerActionButton">
+        <item name="android:background">@drawable/widget_picker_outline_button</item>
+        <item name="android:textColor">?android:attr/colorAccent</item>
+    </style>
     <style name="SyncPakWidgetPicker" parent="SyncPakWidgetPicker.Light" />
     <style name="SyncPakWidgetPicker.Light" parent="android:style/Theme.Material.Light.Dialog.Alert">
         <item name="android:windowBackground">@color/widget_light_surface</item>

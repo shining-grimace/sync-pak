@@ -6,8 +6,8 @@ Mirror plans. **Don't show preview** makes Run submit work from Connections with
 changing pages. It uses the saved allowed directions: upload, download, or both
 for Add Only. Interactive Mirror also supports both directions, with per-file
 approval. Mirror and Archive require a single allowed direction when preview
-is disabled. Bidirectional Mirror always requires preview and cannot run from
-an Android widget. The form warns about destructive Mirror operations.
+is disabled. The form warns about destructive Mirror operations. Android widgets
+can use a separate create-only policy for preview-enabled syncs.
 
 The required `show_preview` boolean is stored in settings and portable connection
 lists. There is no configuration migration or missing-field fallback.
@@ -58,12 +58,17 @@ file. Storage failures are reported, with session results still accessible.
 The launcher offers **SyncPak** (icon, name, connection picker, explanation and
 Run) and **SyncPak Compact** (icon, connection picker and Run). Tap the connection
 name to configure or change a widget. Each widget remembers its own selection.
-Both pickers omit preview-enabled connections and explain why. Unverified entries
-can be selected, but their button opens SyncPak for verification instead of syncing.
+Preview-enabled Add Only and Mirror connections require an opt-in during widget setup.
+The widget preflights every run. In two-way Mirror it assigns Keep to new files on
+either side. Overwrites, deletions and unresolved changes stop the entire run before
+any transfers. Preview-enabled Archive connections remain unavailable in the picker
+because archive retention can delete existing archives. Unverified entries can be
+selected, and their button opens SyncPak for verification.
 
 A Run PendingIntent targets the non-exported foreground service directly. No
 Activity is opened. The service submits a connection ID through the same coordinator
-as the app, revalidating verification, preview policy and allowed directions. All
+as the app, revalidating the selected widget connection, consent, verification and
+allowed directions. The opt-in is stored per widget. All
 widgets hide Run while any connection is preparing or running. The compact
 widget replaces its picker text with the running connection's name during a run.
 An empty widget provides an Open SyncPak action.
@@ -78,7 +83,11 @@ storage or encryption.
 
 The foreground notification covers preparation and transfers and provides Cancel.
 It is removed when the operation ends, and a completion notification opens that
-operation's saved results. Notifications require the system's notification permission;
+operation's saved results. **Review required** results can open a fresh preview from
+Activity or directly from the Android notification. The create-only policy also
+stops when a destination file appears during execution and reports additions that
+already completed. Background uploads under this policy require documented
+conditional-write support on the configured endpoint. Notifications require the system's notification permission;
 the widget picker requests it on Android 13 and later. File observation and worker
 completion callbacks refresh all widget instances when settings or run state change.
 Preview-enabled connections remain protected even if a widget's old Run intent is

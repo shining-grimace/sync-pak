@@ -5,7 +5,7 @@ object SyncNative {
     init { System.loadLibrary("sync_pak_core") }
     @JvmStatic external fun initialize(host: SyncPlatform, files: String)
     @JvmStatic external fun snapshot(): String?
-    @JvmStatic external fun start(connectionId: String): String?
+    @JvmStatic external fun start(connectionId: String, createOnly: Boolean): String?
     fun state(): org.json.JSONObject = runCatching {
         snapshot()?.let { org.json.JSONObject(it) }
             ?: org.json.JSONObject().put("error", "Connections unavailable. Open SyncPak to check settings.")

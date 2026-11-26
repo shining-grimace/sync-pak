@@ -84,6 +84,7 @@ pub(super) fn refresh<E: OperationExecutor + Send + Sync + 'static>(
                 crate::operations::queue::QueueState::Completed
                     | crate::operations::queue::QueueState::Failed
                     | crate::operations::queue::QueueState::Cancelled
+                    | crate::operations::queue::QueueState::ReviewRequired
             )
         })
         .count();

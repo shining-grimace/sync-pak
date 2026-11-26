@@ -91,6 +91,7 @@ fn status(state: QueueState) -> &'static str {
         QueueState::Running => "In progress",
         QueueState::Completed => "Completed",
         QueueState::Failed => "Failed",
+        QueueState::ReviewRequired => "Review required",
         QueueState::Cancelled => "Cancelled",
     }
 }

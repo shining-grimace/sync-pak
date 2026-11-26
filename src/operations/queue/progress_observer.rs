@@ -54,9 +54,10 @@ fn phase(progress: &TransferProgress) -> OperationPhase {
         }
         ExecutionState::Copying => OperationPhase::Copying,
         ExecutionState::Finalizing => OperationPhase::Finalizing,
-        ExecutionState::Completed | ExecutionState::Failed | ExecutionState::Cancelled => {
-            OperationPhase::CleaningUp
-        }
+        ExecutionState::Completed
+        | ExecutionState::Failed
+        | ExecutionState::Cancelled
+        | ExecutionState::ReviewRequired => OperationPhase::CleaningUp,
     }
 }
 

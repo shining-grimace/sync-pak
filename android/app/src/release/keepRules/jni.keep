@@ -18,6 +18,7 @@
     public java.lang.String folderEntryMetadata(java.lang.String, java.lang.String);
     public int openFolderFileForRead(java.lang.String, java.lang.String);
     public int openFolderFileForWrite(java.lang.String, java.lang.String);
+    public int openNewFolderFile(java.lang.String, java.lang.String);
     public int createFolderPath(java.lang.String, java.lang.String);
     public int deleteFolderEntry(java.lang.String, java.lang.String);
     public void startSyncExecution(java.lang.String);

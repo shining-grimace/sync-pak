@@ -18,6 +18,7 @@ class SyncPlatform(context: Context) {
     fun folderEntryMetadata(uri: String, path: String): String? = documents.metadata(uri, path)
     fun openFolderFileForRead(uri: String, path: String): Int = documents.openForRead(uri, path)
     fun openFolderFileForWrite(uri: String, path: String): Int = documents.openForWrite(uri, path)
+    fun openNewFolderFile(uri: String, path: String): Int = documents.openForWrite(uri, path, createOnly = true)
     fun createFolderPath(uri: String, path: String): Int = documents.createDirectories(uri, path)
     fun deleteFolderEntry(uri: String, path: String): Int = documents.delete(uri, path)
     fun startSyncExecution(name: String) {

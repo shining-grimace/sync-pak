@@ -67,13 +67,17 @@ pub extern "system" fn Java_com_shininggrimace_syncpak_SyncNative_start<'l>(
     mut env: EnvUnowned<'l>,
     _: JClass<'l>,
     id: JString<'l>,
+    create_only: jni::sys::jboolean,
 ) -> jstring {
     env.with_env(|env| {
         let id = String::from(id.mutf8_chars(env)?);
         #[cfg(feature = "provider-s3")]
-        let result = super::runtime::start(&id).map_err(|e| e.to_string());
+        let result = super::runtime::start(&id, create_only).map_err(|e| e.to_string());
         #[cfg(not(feature = "provider-s3"))]
-        let result: Result<(), String> = Err(format!("Provider support is unavailable for {id}."));
+        let result: Result<(), String> = {
+            let _ = create_only;
+            Err(format!("Provider support is unavailable for {id}."))
+        };
         Ok::<_, jni::errors::Error>(env.new_string(result.err().unwrap_or_default())?.into_raw())
     })
     .resolve::<jni::errors::LogErrorAndDefault>()

@@ -31,7 +31,14 @@ pub(crate) fn configure(
     let run_configuration = Rc::clone(configuration);
     let diagnostics_for_run = Rc::clone(&diagnostics);
     window.on_request_run_connection(move |id| {
-        show(&weak, &run_configuration, &diagnostics_for_run, id);
+        show(&weak, &run_configuration, &diagnostics_for_run, id, false);
+    });
+
+    let weak = window.as_weak();
+    let review_configuration = Rc::clone(configuration);
+    let review_diagnostics = Rc::clone(&diagnostics);
+    window.on_request_connection_preview(move |id| {
+        show(&weak, &review_configuration, &review_diagnostics, id, true);
     });
 
     let weak = window.as_weak();
@@ -181,6 +188,7 @@ fn show(
     configuration: &ConfigStore,
     diagnostics: &SharedDiagnosticLog,
     id: SharedString,
+    force_preview: bool,
 ) {
     let Some(window) = weak.upgrade() else { return };
     if crate::configuration::run_guard::active(configuration.path()).is_some() {
@@ -209,7 +217,7 @@ fn show(
                 window.set_status_message("Verify this connection before syncing.".into());
                 return;
             }
-            if !connection.show_preview {
+            if !connection.show_preview && !force_preview {
                 window.invoke_start_automatic_connection(id);
                 return;
             }

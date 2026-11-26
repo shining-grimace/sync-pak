@@ -1,6 +1,7 @@
 package com.shininggrimace.syncpak
 
 import android.app.Service
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -27,8 +28,20 @@ class SyncExecutionService : Service() {
             val active = SyncNative.state().optJSONObject("active")
             if (intent?.action == ACTION_RUN && active == null) {
                 val id = intent.getStringExtra(EXTRA_CONNECTION_ID).orEmpty()
-                val error = runCatching { SyncNative.start(id) }.getOrNull()
-                    ?: "Sync could not start. Open SyncPak and try again."
+                val widgetId = intent.getIntExtra(
+                    AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    intent.data?.pathSegments?.firstOrNull()?.toIntOrNull() ?: AppWidgetManager.INVALID_APPWIDGET_ID,
+                )
+                val preferences = getSharedPreferences(SyncWidgets.PREFERENCES, Context.MODE_PRIVATE).all
+                val error = if (!SyncWidgets.validWidget(this, widgetId) ||
+                    preferences[widgetId.toString()] != id
+                ) {
+                    "This widget’s connection changed. Choose a connection on the widget and try again."
+                } else {
+                    val createOnly = preferences[SyncWidgets.createOnlyKey(widgetId)] == true
+                    runCatching { SyncNative.start(id, createOnly) }.getOrNull()
+                        ?: "Sync could not start. Open SyncPak and try again."
+                }
                 if (cancelRequested) nativeSyncExecutionCancelled()
                 if (error.isNotEmpty() && SyncNative.state().optJSONObject("active") == null) {
                     stopSelf(startId)

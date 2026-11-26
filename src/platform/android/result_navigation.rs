@@ -18,14 +18,33 @@ pub fn show_requested(window: &crate::AppWindow) {
         return;
     }
     #[cfg(feature = "provider-s3")]
-    if super::runtime::queue().is_ok_and(|queue| {
-        queue
-            .activity()
+    if let Ok(queue) = super::runtime::queue() {
+        use crate::operations::queue::QueueState;
+        let activity = queue.activity();
+        let entry = activity
             .iter()
-            .find(|e| e.operation_id.to_string() == id)
-            .is_none_or(|e| e.result.is_some())
-    }) {
+            .find(|entry| entry.operation_id.to_string() == id);
+        if entry.is_some_and(|entry| entry.result.is_none()) {
+            return;
+        }
+        let needs_review = entry.is_some_and(|entry| entry.state == QueueState::ReviewRequired);
+        if needs_review {
+            if activity
+                .iter()
+                .any(|entry| matches!(entry.state, QueueState::Queued | QueueState::Running))
+            {
+                return;
+            }
+            if let Ok(config) = crate::configuration::ConfigStore::for_current_platform()
+                && crate::configuration::run_guard::active(config.path()).is_some()
+            {
+                return;
+            }
+        }
         window.invoke_show_activity_result(id.clone().into());
+        if needs_review {
+            window.invoke_retry_activity_result();
+        }
         let _ = super::context::with_host(|env, host| {
             let id = env.new_string(id)?;
             env.call_method(

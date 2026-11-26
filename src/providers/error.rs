@@ -51,6 +51,7 @@ pub enum ProviderTransportError {
     reason = "provider failures include capabilities unavailable on some targets"
 )]
 pub enum ProviderError {
+    DestinationExists,
     Authentication,
     Certificate(ProviderCertificateError),
     ClockSkew,
@@ -87,6 +88,7 @@ impl ProviderError {
 impl std::fmt::Display for ProviderError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(match self {
+            Self::DestinationExists => "A file already exists at the destination.",
             Self::Authentication => "The provider rejected the saved credentials.",
             Self::Certificate(_) => "The provider certificate was rejected.",
             Self::ClockSkew => {

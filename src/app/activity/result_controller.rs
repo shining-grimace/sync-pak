@@ -64,6 +64,7 @@ fn show<E: OperationExecutor + Send + Sync + 'static>(
     window.set_activity_result_connection_id(entry.plan.connection_id.into());
     window.set_activity_result_retry_direction(direction_index(entry.plan.direction));
     window.set_activity_result_can_retry(retryable(entry.state));
+    window.set_activity_result_needs_review(entry.state == QueueState::ReviewRequired);
     window.set_activity_result_details(ModelRc::new(std::rc::Rc::new(VecModel::from_iter(
         activity.result_details.into_iter().map(SharedString::from),
     ))));
@@ -81,7 +82,11 @@ fn retry(weak: &slint::Weak<AppWindow>) {
         return;
     }
     let direction = window.get_activity_result_retry_direction();
-    window.invoke_request_run_connection(connection_id.clone());
+    if window.get_activity_result_needs_review() {
+        window.invoke_request_connection_preview(connection_id.clone());
+    } else {
+        window.invoke_request_run_connection(connection_id.clone());
+    }
     if window.get_page() != 10 || window.get_run_connection_id() != connection_id {
         return;
     }
@@ -92,7 +97,10 @@ fn retry(weak: &slint::Weak<AppWindow>) {
 }
 
 fn retryable(state: QueueState) -> bool {
-    matches!(state, QueueState::Failed | QueueState::Cancelled)
+    matches!(
+        state,
+        QueueState::Failed | QueueState::Cancelled | QueueState::ReviewRequired
+    )
 }
 
 fn direction_index(direction: Direction) -> i32 {
@@ -124,6 +132,7 @@ mod tests {
     fn only_incomplete_activity_results_can_retry() {
         assert!(retryable(QueueState::Failed));
         assert!(retryable(QueueState::Cancelled));
+        assert!(retryable(QueueState::ReviewRequired));
         assert!(!retryable(QueueState::Completed));
         assert!(!retryable(QueueState::Queued));
         assert!(!retryable(QueueState::Running));

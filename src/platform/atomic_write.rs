@@ -9,6 +9,29 @@ use uuid::Uuid;
 
 /// Writes a complete replacement beside `path` before renaming it into place.
 pub fn atomic_write(path: &Path, contents: &[u8]) -> io::Result<()> {
+    write_then_publish(path, contents, None, |temporary| {
+        fs::rename(temporary, path)
+    })
+}
+
+pub(crate) fn atomic_create(
+    path: &Path,
+    contents: &[u8],
+    modified: Option<std::time::SystemTime>,
+) -> io::Result<()> {
+    write_then_publish(path, contents, modified, |temporary| {
+        fs::hard_link(temporary, path)?;
+        let _ = fs::remove_file(temporary);
+        Ok(())
+    })
+}
+
+fn write_then_publish(
+    path: &Path,
+    contents: &[u8],
+    modified: Option<std::time::SystemTime>,
+    publish: impl FnOnce(&Path) -> io::Result<()>,
+) -> io::Result<()> {
     let directory = path.parent().ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -29,13 +52,16 @@ pub fn atomic_write(path: &Path, contents: &[u8]) -> io::Result<()> {
             .write(true)
             .open(&temporary)?;
         file.write_all(contents)?;
+        if let Some(modified) = modified {
+            let _ = file.set_times(fs::FileTimes::new().set_modified(modified));
+        }
         file.sync_all()
     })();
     if let Err(error) = write_result {
         let _ = fs::remove_file(&temporary);
         return Err(error);
     }
-    fs::rename(&temporary, path).inspect_err(|_| {
+    publish(&temporary).inspect_err(|_| {
         let _ = fs::remove_file(&temporary);
     })
 }

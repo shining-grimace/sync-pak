@@ -28,6 +28,26 @@ pub(crate) fn provider_error<E: ProvideErrorMetadata>(error: SdkError<E>) -> Pro
     }
 }
 
+/// Conditional writes may report conflicts through S3-compatible status codes.
+pub(crate) fn write_error<E: ProvideErrorMetadata>(
+    error: SdkError<E>,
+    create_only: bool,
+) -> ProviderError {
+    if create_only
+        && (error
+            .raw_response()
+            .is_some_and(|response| matches!(response.status().as_u16(), 409 | 412))
+            || matches!(
+                error.as_service_error().and_then(|error| error.code()),
+                Some("PreconditionFailed" | "ConditionalRequestConflict")
+            ))
+    {
+        ProviderError::DestinationExists
+    } else {
+        provider_error(error)
+    }
+}
+
 fn connector_error(error: &ConnectorError) -> ProviderError {
     if error.is_timeout() {
         return transport_error(ProviderTransportError::ConnectionTimedOut);

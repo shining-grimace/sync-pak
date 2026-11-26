@@ -19,6 +19,7 @@ pub fn status_error(value: i32) -> io::Error {
         -4 => io::ErrorKind::IsADirectory,
         -5 => io::ErrorKind::PermissionDenied,
         -6 => io::ErrorKind::InvalidInput,
+        -7 => io::ErrorKind::AlreadyExists,
         _ => io::ErrorKind::Other,
     };
     io::Error::new(kind, "Android document provider operation failed")

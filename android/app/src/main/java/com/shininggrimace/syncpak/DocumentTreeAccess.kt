@@ -56,16 +56,17 @@ internal class DocumentTreeAccess(context: Context) {
         resolver.openFileDescriptor(document.uri, "r")?.detachFd() ?: UNAVAILABLE
     }
 
-    fun openForWrite(value: String, path: String): Int = safely {
+    fun openForWrite(value: String, path: String, createOnly: Boolean = false): Int = safely {
         val tree = Uri.parse(value)
         val (parentPath, name) = splitParent(path) ?: return@safely INVALID_PATH
         val parent = ensureDirectories(tree, parentPath) ?: return@safely UNAVAILABLE
         val existing = child(tree, parent, name)
+        if (createOnly && existing != null) return@safely ALREADY_EXISTS
         if (existing?.mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
             return@safely NOT_FILE
         }
         val document = existing ?: create(tree, parent, "application/octet-stream", name)
-            ?: return@safely UNAVAILABLE
+            ?: return@safely if (createOnly && child(tree, parent, name) != null) ALREADY_EXISTS else UNAVAILABLE
         resolver.openFileDescriptor(document.uri, "wt")?.detachFd() ?: UNAVAILABLE
     }
 
@@ -221,6 +222,7 @@ internal class DocumentTreeAccess(context: Context) {
         const val NOT_FILE = -4
         const val MISSING_PERMISSION = -5
         const val INVALID_PATH = -6
+        const val ALREADY_EXISTS = -7
         const val UNAVAILABLE = -1
 
         val PROJECTION = arrayOf(

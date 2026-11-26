@@ -33,6 +33,7 @@ pub struct LocalRemoteTransfer<'a, P, S> {
     pub(crate) retry_policy: &'a RetryPolicy,
     pub(crate) sleeper: &'a S,
     pub(crate) cache: Option<TransferCache>,
+    pub(crate) create_only: bool,
 }
 
 impl<'a, P, S> LocalRemoteTransfer<'a, P, S> {
@@ -52,6 +53,7 @@ impl<'a, P, S> LocalRemoteTransfer<'a, P, S> {
             retry_policy,
             sleeper,
             cache: None,
+            create_only: false,
         }
     }
 
@@ -75,6 +77,32 @@ pub enum LocalRemoteTransferError {
     Download(DownloadError),
     Delete(crate::operations::transfer::delete::TransferDeleteError),
     ArchiveLocation(InventoryError),
+}
+
+#[cfg(feature = "provider-s3")]
+impl LocalRemoteTransferError {
+    pub(crate) fn destination_exists(&self) -> bool {
+        use crate::{
+            operations::transfer::multipart::MultipartUploadError,
+            providers::capabilities::ProviderError,
+        };
+        match self {
+            Self::Local(error) => matches!(
+                error.kind(),
+                std::io::ErrorKind::AlreadyExists
+                    | std::io::ErrorKind::NotADirectory
+                    | std::io::ErrorKind::IsADirectory
+            ),
+            Self::Upload(UploadError::Provider(ProviderError::DestinationExists))
+            | Self::Multipart(MultipartFileUploadError::Provider(
+                MultipartUploadError::Provider {
+                    error: ProviderError::DestinationExists,
+                    ..
+                },
+            )) => true,
+            _ => false,
+        }
+    }
 }
 
 impl fmt::Display for LocalRemoteTransferError {

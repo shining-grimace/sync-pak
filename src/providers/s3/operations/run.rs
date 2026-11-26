@@ -1,4 +1,5 @@
 mod progress;
+mod widget_policy;
 
 use std::time::Duration;
 
@@ -15,7 +16,7 @@ use crate::{
     operations::transfer::progress::TransferProgressObserver,
     platform::PlatformCredentialStore,
     providers::s3::operations::failure::{
-        credential_store_message, failed_action, inventory_message, provider_message,
+        credential_store_message, inventory_message, provider_message,
     },
     providers::s3::preflight::{S3PreflightError, collect_s3_connection_preflight},
     providers::s3::transport::S3Transport,
@@ -65,6 +66,13 @@ pub(super) async fn execute_request(
     let automatic;
     let confirmed = match reviewed {
         Some(confirmed) => confirmed,
+        None if request.widget_create_only => {
+            automatic = match widget_policy::authorize(request, current) {
+                Ok(confirmed) => confirmed,
+                Err(result) => return Ok(result),
+            };
+            &automatic
+        }
         None => {
             automatic = crate::preflight::reviewed_operation::ConfirmedOperation::from_automatic(
                 request.clone(),
@@ -82,7 +90,7 @@ pub(super) async fn execute_request(
             ));
         }
     };
-    let transport = match S3Transport::connect_bucket(
+    let mut transport = match S3Transport::connect_bucket(
         &confirmed.request().provider,
         provider_credentials,
         &confirmed.request().connection.bucket,
@@ -93,13 +101,14 @@ pub(super) async fn execute_request(
         Ok(transport) => transport,
         Err(error) => return Ok(failed(provider_message(error))),
     };
+    transport.create_only = request.widget_create_only;
     let retry = RetryPolicy::default();
     let sleeper = TokioSleeper;
     let cache = crate::sync_cache::SyncCache::for_configuration(configuration_path);
     let namespace = cache
         .as_ref()
         .map(|cache| cache.namespace(confirmed.request()));
-    let transfer = LocalRemoteTransfer::new(
+    let mut transfer = LocalRemoteTransfer::new(
         &transport,
         &confirmed.request().connection.bucket,
         LocalTransferRoot::from_config(&confirmed.request().connection.local_path),
@@ -108,6 +117,7 @@ pub(super) async fn execute_request(
         &retry,
         &sleeper,
     );
+    transfer.create_only = request.widget_create_only;
     let cache_enabled = cache.is_some();
     let transfer = match cache.zip(namespace) {
         Some((cache, namespace)) => transfer.with_cache(cache, namespace),
@@ -131,7 +141,17 @@ pub(super) async fn execute_request(
         .await
         {
             Ok(result) => Ok(result),
-            Err(error) => Ok(failed_action(error.error, *error.result)),
+            Err(error) => {
+                let collision = matches!(&error.error,
+                    crate::operations::transfer::modes::add_only::AddOnlyActionError::Transfer(error)
+                        if error.destination_exists());
+                Ok(widget_policy::action_result(
+                    request,
+                    error.error,
+                    *error.result,
+                    collision,
+                ))
+            }
         },
         SyncMode::Mirror => match execute_confirmed_mirror(
             preflight.plan(),
@@ -145,7 +165,12 @@ pub(super) async fn execute_request(
         {
             Ok(result) => Ok(result),
             Err(MirrorExecutionError::Action { error, result }) => {
-                Ok(failed_action(error, *result))
+                let collision = matches!(&error,
+                    crate::operations::transfer::modes::mirror::MirrorActionError::Transfer(error)
+                        if error.destination_exists());
+                Ok(widget_policy::action_result(
+                    request, error, *result, collision,
+                ))
             }
             Err(_) => Err(CapabilityError::InvalidReference),
         },

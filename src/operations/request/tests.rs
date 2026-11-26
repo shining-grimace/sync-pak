@@ -145,3 +145,26 @@ fn mirror_both_ways_requires_preview_and_both_permissions() {
         Direction::Upload
     );
 }
+
+#[test]
+fn preview_enabled_two_way_mirror_requires_widget_opt_in() {
+    let mut config = config(SyncMode::Mirror);
+    let id = config.connections[0].id.as_str().to_owned();
+    assert_eq!(
+        RunRequest::automatic(&config, &id),
+        Err(RunRequestError::PreviewRequired)
+    );
+    assert_eq!(
+        RunRequest::widget(&config, &id, false),
+        Err(RunRequestError::PreviewRequired)
+    );
+    let request = RunRequest::widget(&config, &id, true).unwrap();
+    assert_eq!(request.direction, Direction::BothWays);
+    assert!(request.widget_create_only);
+
+    config.connections[0].verified = false;
+    assert_eq!(
+        RunRequest::widget(&config, &id, true),
+        Err(RunRequestError::NotVerified)
+    );
+}

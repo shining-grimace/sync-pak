@@ -34,6 +34,9 @@ impl super::ExecutionResult {
                 .failure_message
                 .clone()
                 .unwrap_or_else(|| incomplete_summary(result, "Failed")),
+            ExecutionState::ReviewRequired => result.failure_message.clone().unwrap_or_else(|| {
+                "Review required. No files changed. Open SyncPak to review.".into()
+            }),
             ExecutionState::Cancelled => incomplete_summary(result, "Cancelled"),
             ExecutionState::Preparing | ExecutionState::Copying | ExecutionState::Finalizing => {
                 String::new()

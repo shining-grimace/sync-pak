@@ -34,3 +34,16 @@ fn cleans_up_the_temporary_file_when_replacement_fails() {
     assert_eq!(fs::read_dir(&directory).unwrap().count(), 1);
     fs::remove_dir_all(&directory).unwrap();
 }
+
+#[test]
+fn create_only_keeps_the_existing_file_and_removes_the_temporary_file() {
+    let directory = temporary_directory();
+    let destination = directory.join("destination.txt");
+
+    super::atomic_create(&destination, b"existing", None).unwrap();
+    let error = super::atomic_create(&destination, b"replacement", None).unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::AlreadyExists);
+    assert_eq!(fs::read(&destination).unwrap(), b"existing");
+    assert_eq!(fs::read_dir(&directory).unwrap().count(), 1);
+    fs::remove_dir_all(&directory).unwrap();
+}

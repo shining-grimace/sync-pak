@@ -17,6 +17,7 @@ export component ActivityResultPage inherits CenteredPageRoot {
     in property <int> not-started;
     in property <[string]> details;
     in property <bool> can-retry;
+    in property <bool> needs-review;
     callback retry();
     callback dismiss();
     fill-height: true;
@@ -97,8 +98,8 @@ export component ActivityResultPage inherits CenteredPageRoot {
     }
     if root.can-retry: FooterActionRow {
         ExpandedPrimaryActionButton {
-            accessible-label: "Retry " + root.title + " with a new preflight review";
-            text: "Retry Run";
+            accessible-label: root.needs-review ? "Review " + root.title : "Retry " + root.title + " with a new preflight review";
+            text: root.needs-review ? "Review Changes" : "Retry Run";
             clicked => {
                 root.retry();
             }

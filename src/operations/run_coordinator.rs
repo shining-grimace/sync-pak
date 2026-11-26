@@ -24,10 +24,28 @@ impl<E: OperationExecutor + Send + Sync + 'static> RunCoordinator<E> {
     }
     /// Resolves saved policy without creating a window or collecting inventory on the caller.
     pub fn start_automatic(&self, connection_id: &str) -> Result<Uuid, ConfigurationError> {
+        self.submit_automatic(|config| RunRequest::automatic(config, connection_id))
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn start_widget(
+        &self,
+        connection_id: &str,
+        create_only: bool,
+    ) -> Result<Uuid, ConfigurationError> {
+        self.submit_automatic(|config| RunRequest::widget(config, connection_id, create_only))
+    }
+
+    fn submit_automatic(
+        &self,
+        resolve: impl FnOnce(
+            &crate::configuration::AppConfig,
+        ) -> Result<RunRequest, crate::operations::request::RunRequestError>,
+    ) -> Result<Uuid, ConfigurationError> {
         run_guard::admit(&self.configuration_path, |state| {
             let config = ConfigStore::at(self.configuration_path.clone()).load()?;
-            let request = RunRequest::automatic(&config, connection_id)
-                .map_err(|e| ConfigurationError::Portable(e.to_string()))?;
+            let request =
+                resolve(&config).map_err(|e| ConfigurationError::Portable(e.to_string()))?;
             state.reserve(&request)?;
             let snapshot = ActivitySnapshot::from_connection(
                 &request.connection,

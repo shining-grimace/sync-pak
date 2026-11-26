@@ -91,6 +91,7 @@ export component AppWindow inherits Window {
     in-out property <string> activity-result-connection-id;
     in-out property <int> activity-result-retry-direction: 0;
     in-out property <bool> activity-result-can-retry: false;
+    in-out property <bool> activity-result-needs-review: false;
     in-out property <int> activity-result-return-page: 9;
     in-out property <string> active-activity-id;
     in-out property <string> active-activity-title;
@@ -316,6 +317,7 @@ export component AppWindow inherits Window {
     callback dismiss-activity-result();
     callback retry-activity-result();
     callback request-run-connection(string);
+    callback request-connection-preview(string);
     callback start-automatic-connection(string);
     in-out property <string> busy-connection-id;
     in-out property <string> busy-provider-id;
@@ -778,6 +780,7 @@ export component AppWindow inherits Window {
                 not-started: root.activity-result-not-started-count;
                 details: root.activity-result-details;
                 can-retry: root.activity-result-can-retry;
+                needs-review: root.activity-result-needs-review;
                 retry => {
                     root.retry-activity-result();
                 }

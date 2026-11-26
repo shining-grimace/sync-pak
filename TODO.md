@@ -1,5 +1,4 @@
 
-- Android: figure out can the widget-compatible connection eligibility be loosened up to allow connections which would use a preflight, but on the agreement that they can only complete the operation in the background if a preflight finds no destructive changes
 - Branding: update the app icon with a silver lining on the cloud (using SVG gradient)
 - Branding: Make the screenshot background and the Play Store banner more "gritty"
 - Add a terms of use to the website, and link it in the app, accepting no liability for potential loss of data

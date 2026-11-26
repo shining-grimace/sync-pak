@@ -14,6 +14,7 @@ import java.util.concurrent.Executors
 /** Complete RemoteViews updates keep multiple widget instances in agreement. */
 object SyncWidgets {
     const val PREFERENCES = "sync_widgets"
+    fun createOnlyKey(id: Int) = "create_only:$id"
     private const val EXPANDED_MIN_HEIGHT_DP = 112
     private val executor = Executors.newSingleThreadExecutor()
     private val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -49,7 +50,9 @@ object SyncWidgets {
             else -> if (compact) R.layout.widget_sync_compact else R.layout.widget_sync
         }
         val views = RemoteViews(context.packageName, layout)
-        val selected = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).getString(id.toString(), null)
+        val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+        val selected = preferences.getString(id.toString(), null)
+        val createOnly = preferences.getBoolean(createOnlyKey(id), false)
         val connections = state.optJSONArray("connections")
         val connection = (0 until (connections?.length() ?: 0))
             .map { connections!!.getJSONObject(it) }
@@ -60,6 +63,7 @@ object SyncWidgets {
         val runningElsewhere = busy && !runningHere
         val empty = connections == null || connections.length() == 0
         val verified = connection?.optBoolean("verified") == true
+        val needsSetup = connection?.optBoolean("requires_opt_in") == true && !createOnly
         val name = connection?.getString("name")
             ?: if (state.has("error")) "Connections unavailable" else if (empty) "No connections" else "Choose connection"
         val running = "Running: ${active?.optString("name")}"
@@ -83,6 +87,7 @@ object SyncWidgets {
         )
         val action = when {
             empty -> "Open SyncPak"
+            needsSetup -> "Set up widget"
             connection != null && !verified -> "Verify in app"
             else -> "Run"
         }
@@ -113,7 +118,7 @@ object SyncWidgets {
             views.setTextViewText(
                 R.id.widget_disclaimer,
                 if (state.has("error")) "Connections unavailable. Open SyncPak to check settings."
-                else if (empty) "No connections available. Turn off Show Preview in a connection’s settings to use it here."
+                else if (empty) "No connections available for widgets."
                 else ""
             )
         }
@@ -122,11 +127,14 @@ object SyncWidgets {
         views.setOnClickPendingIntent(R.id.widget_connection_picker, PendingIntent.getActivity(context, id, picker, flags))
         val open = PendingIntent.getActivity(context, id, Intent(context, SyncPakActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP).setData(Uri.parse("syncpak://widget/$id/open")), flags)
         views.setOnClickPendingIntent(R.id.widget_icon, open)
-        if (empty || !verified) {
+        if (needsSetup) {
+            views.setOnClickPendingIntent(R.id.widget_run, PendingIntent.getActivity(context, id, picker, flags))
+        } else if (empty || !verified) {
             views.setOnClickPendingIntent(R.id.widget_run, open)
         } else {
             val run = Intent(context, SyncExecutionService::class.java).setAction(SyncExecutionService.ACTION_RUN)
                 .putExtra(SyncExecutionService.EXTRA_CONNECTION_ID, selected).putExtra("connection_name", name)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
                 .setData(Uri.parse("syncpak://widget/$id/run/$selected"))
             views.setOnClickPendingIntent(R.id.widget_run, PendingIntent.getForegroundService(context, id, run, flags))
         }

@@ -30,6 +30,7 @@ pub enum QueueState {
     Completed,
     Failed,
     Cancelled,
+    ReviewRequired,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -171,7 +172,10 @@ impl OperationQueue {
         self.entries.retain(|entry| {
             !matches!(
                 entry.state,
-                QueueState::Completed | QueueState::Failed | QueueState::Cancelled
+                QueueState::Completed
+                    | QueueState::Failed
+                    | QueueState::Cancelled
+                    | QueueState::ReviewRequired
             )
         });
         self.persist();
@@ -197,6 +201,7 @@ impl OperationQueue {
 fn terminal_queue_state(state: ExecutionState) -> Option<QueueState> {
     match state {
         ExecutionState::Cancelled => Some(QueueState::Cancelled),
+        ExecutionState::ReviewRequired => Some(QueueState::ReviewRequired),
         ExecutionState::Failed => Some(QueueState::Failed),
         ExecutionState::Completed => Some(QueueState::Completed),
         ExecutionState::Preparing | ExecutionState::Copying | ExecutionState::Finalizing => None,

@@ -10,7 +10,7 @@ use crate::{
         MultipartUpload, MultipartUploadRequest, MultipartUploader, ProviderError, ProviderResult,
         UploadedPart,
     },
-    providers::s3::error::provider_error,
+    providers::s3::error::{provider_error, write_error},
     providers::s3::transport::S3Transport,
 };
 
@@ -79,7 +79,8 @@ impl MultipartUploader for S3Transport {
         upload: &MultipartUpload,
         parts: &[UploadedPart],
     ) -> ProviderResult<()> {
-        self.client
+        let mut request = self
+            .client
             .complete_multipart_upload()
             .bucket(bucket)
             .key(key)
@@ -88,12 +89,16 @@ impl MultipartUploader for S3Transport {
                 CompletedMultipartUpload::builder()
                     .set_parts(Some(completed_parts(parts)?))
                     .build(),
-            )
+            );
+        if self.create_only {
+            request = request.if_none_match("*");
+        }
+        request
             .send()
             .boxed()
             .await
             .map(|_| ())
-            .map_err(provider_error)
+            .map_err(|error| write_error(error, self.create_only))
     }
 
     async fn abort_multipart_upload(

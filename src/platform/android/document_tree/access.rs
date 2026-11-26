@@ -76,6 +76,15 @@ pub fn open_write(uri: &str, path: &RelativePath) -> io::Result<File> {
     )?)
 }
 
+pub fn open_create(uri: &str, path: &RelativePath) -> io::Result<File> {
+    open_file(call_two_strings(
+        "openNewFolderFile",
+        "(Ljava/lang/String;Ljava/lang/String;)I",
+        uri,
+        path.as_str(),
+    )?)
+}
+
 pub fn create_directories(uri: &str, path: &RelativePath) -> io::Result<()> {
     status(call_two_strings(
         "createFolderPath",

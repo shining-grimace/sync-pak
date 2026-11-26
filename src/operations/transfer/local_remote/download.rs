@@ -39,7 +39,12 @@ impl<P: ObjectPrefixChecker + ObjectReader, S: RetrySleeper> LocalRemoteTransfer
                     .as_ref()
                     .and_then(super::cache::effective_time);
                 self.local_root
-                    .write_with_modified_time(relative, &object.contents, effective_time)
+                    .write_with_modified_time(
+                        relative,
+                        &object.contents,
+                        effective_time,
+                        self.create_only,
+                    )
                     .map_err(LocalRemoteTransferError::Local)?;
                 self.record_download(relative, object.metadata.as_ref());
                 Ok(())

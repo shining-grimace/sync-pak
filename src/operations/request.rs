@@ -11,6 +11,7 @@ pub struct RunRequest {
     pub connection: ConnectionConfig,
     pub provider: ProviderConfig,
     pub direction: Direction,
+    pub widget_create_only: bool,
 }
 
 impl RunRequest {
@@ -23,16 +24,43 @@ impl RunRequest {
         if connection.show_preview {
             return Err(RunRequestError::PreviewRequired);
         }
-        let direction = match (connection.allow_upload, connection.allow_download) {
-            (true, false) => Direction::Upload,
-            (false, true) => Direction::Download,
-            (true, true) => Direction::BothWays,
-            _ => return Err(RunRequestError::DirectionNotAllowed),
-        };
+        let direction = Self::saved_direction(connection)?;
         if direction == Direction::BothWays && connection.mode == SyncMode::Mirror {
             return Err(RunRequestError::PreviewRequired);
         }
         Self::from_config(config, connection_id, direction)
+    }
+
+    #[cfg(any(target_os = "android", test))]
+    pub fn widget(
+        config: &AppConfig,
+        connection_id: &str,
+        create_only: bool,
+    ) -> Result<Self, RunRequestError> {
+        if !create_only {
+            return Self::automatic(config, connection_id);
+        }
+        let connection = config
+            .connections
+            .iter()
+            .find(|c| c.id.as_str() == connection_id)
+            .ok_or(RunRequestError::ConnectionNotFound)?;
+        if connection.mode == SyncMode::Archive {
+            return Err(RunRequestError::PreviewRequired);
+        }
+        let mut request =
+            Self::from_config(config, connection_id, Self::saved_direction(connection)?)?;
+        request.widget_create_only = true;
+        Ok(request)
+    }
+
+    fn saved_direction(connection: &ConnectionConfig) -> Result<Direction, RunRequestError> {
+        Ok(match (connection.allow_upload, connection.allow_download) {
+            (true, false) => Direction::Upload,
+            (false, true) => Direction::Download,
+            (true, true) => Direction::BothWays,
+            _ => return Err(RunRequestError::DirectionNotAllowed),
+        })
     }
 
     pub fn from_config(
@@ -69,6 +97,7 @@ impl RunRequest {
             connection,
             provider,
             direction,
+            widget_create_only: false,
         })
     }
 }

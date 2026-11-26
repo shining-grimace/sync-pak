@@ -183,6 +183,7 @@ fn marker(state: crate::operations::queue::QueueState) -> Option<i32> {
         QueueState::Running => Some(0),
         QueueState::Completed => Some(101),
         QueueState::Failed => Some(102),
+        QueueState::ReviewRequired => None,
         QueueState::Cancelled => Some(103),
         QueueState::Queued => None,
     }

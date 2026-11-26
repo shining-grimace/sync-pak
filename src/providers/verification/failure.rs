@@ -38,7 +38,9 @@ impl From<ProviderError> for VerificationFailure {
             ProviderError::Transport(error) => Self::Connectivity(error.into()),
             ProviderError::Unavailable => Self::Unavailable,
             ProviderError::Unsupported => Self::Unsupported,
-            ProviderError::Unexpected => Self::UnexpectedResponse,
+            ProviderError::Unexpected | ProviderError::DestinationExists => {
+                Self::UnexpectedResponse
+            }
         }
     }
 }

@@ -21,6 +21,7 @@ use crate::providers::capabilities::ObjectMetadataReader;
 // Box SDK request futures at the transport boundary to bound enclosing future layout depth.
 pub struct S3Transport {
     pub(crate) client: Client,
+    pub(crate) create_only: bool,
 }
 
 impl S3Transport {
@@ -72,6 +73,7 @@ impl S3Transport {
         }
         Ok(Self {
             client: Client::from_conf(config.build()),
+            create_only: false,
         })
     }
 }

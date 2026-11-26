@@ -7,7 +7,7 @@ use crate::{
         ObjectPrefixCreator, ObjectWriteMetadata, ObjectWriter, ProviderResult,
         SOURCE_MODIFIED_TIME_METADATA_KEY,
     },
-    providers::s3::error::provider_error,
+    providers::s3::error::{provider_error, write_error},
     providers::s3::transport::S3Transport,
 };
 
@@ -28,12 +28,15 @@ impl ObjectWriter for S3Transport {
         if let Some(modified) = metadata.source_modified_unix_seconds {
             request = request.metadata(SOURCE_MODIFIED_TIME_METADATA_KEY, modified.to_string());
         }
+        if self.create_only {
+            request = request.if_none_match("*");
+        }
         request
             .send()
             .boxed()
             .await
             .map(|_| ())
-            .map_err(provider_error)
+            .map_err(|error| write_error(error, self.create_only))
     }
 }
 

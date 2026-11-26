@@ -1,5 +1,5 @@
 <resources>
     <string name="widget_standard_name">SyncPak</string>
     <string name="widget_picker_title">Choose connection</string>
-    <string name="widget_description">Run a saved connection without opening SyncPak. Connections must have Show Preview turned off.</string>
+    <string name="widget_description">Run a saved connection from your home screen. Preview-enabled syncs can run when no files need to be overwritten or deleted.</string>
 </resources>

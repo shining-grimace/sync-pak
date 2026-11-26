@@ -22,6 +22,7 @@ pub enum ExecutionState {
     Completed,
     Failed,
     Cancelled,
+    ReviewRequired,
 }
 
 /// The immutable outcome of an operation, including work left by a partial run.
@@ -53,10 +54,18 @@ impl ExecutionResult {
         }
     }
 
+    #[cfg(feature = "provider-s3")]
+    pub fn review_required() -> Self {
+        Self::before_start(ExecutionState::ReviewRequired)
+    }
+
     pub fn is_terminal(&self) -> bool {
         matches!(
             self.state,
-            ExecutionState::Completed | ExecutionState::Failed | ExecutionState::Cancelled
+            ExecutionState::Completed
+                | ExecutionState::Failed
+                | ExecutionState::Cancelled
+                | ExecutionState::ReviewRequired
         )
     }
 
